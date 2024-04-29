@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2024 Trevor Williams <phase1geo@icloud.com> -->
+<component type="desktop-application">
+  <id>com.github.phase1geo.mosaic-note</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0+</project_license>
+  <name>Journaler</name>
+  <summary>Make every day a memory</summary>
+  <description>
+    <p>
+      Make memories in life and never forget them with Journaler, a journaling application that allows you to easily and
+      expressively capture the details and thoughts about your life.  Review past entries in new and interesting ways.
+      Stay motivated to keep writing.  Easily export your data when needed.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Support for multiple journals.</li>
+      <li>Application-wide password protection.</li>
+      <li>Markdown writing support.</li>
+      <li>Add images to each journal entry.</li>
+      <li>Tagging support.</li>
+      <li>Expressive and robust journal entry review features.</li>
+      <li>Fullscreen distraction-free writing and review mode.</li>
+      <li>Template support.</li>
+      <li>Motivation support with entry length goals, awards, inspirational quotes, and customizations.</li>
+      <li>Built-in entry trash support.</li>
+      <li>Import from XML</li>
+      <li>Export to XML and JSON.</li>
+    </ul>
+  </description>
+  <provides>
+    <binary>com.github.phase1geo.mosaic-note</binary>
+  </provides>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Entry Panel</caption>
+      <image>https://raw.githubusercontent.com/phase1geo/Journaler/master/data/screenshots/screenshot-entry-solarized.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Review Panel</caption>
+      <image>https://raw.githubusercontent.com/phase1geo/Journaler/master/data/screenshots/screenshot-review-solarized.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Awards Panel</caption>
+      <image>https://raw.githubusercontent.com/phase1geo/Journaler/master/data/screenshots/screenshot-awards.png</image>
+    </screenshot>
+  </screenshots>
+  <launchable type="desktop-id">com.github.phase1geo.mosaic-note.desktop</launchable>
+  <developer_name>Trevor Williams</developer_name>
+  <url type="homepage">https://github.com/phase1geo/MosaicNote/</url>
+  <url type="bugtracker">https://github.com/phase1geo/MosaicNote/issues/</url>
+  <custom>
+    <value key="x-appcenter-color-primary">#b15210</value>
+    <value key="x-appcenter-color-primary-text">rgb(255, 255, 255)</value>
+    <value key="x-appcenter-suggested-price">10</value>
+    <value key="x-appcenter-stripe"></value>
+  </custom>
+  <content_rating type="oars-1.1" />
+  <releases>
+  </releases>
+</component>

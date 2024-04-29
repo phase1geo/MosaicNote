@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/com/github/phase1geo/mosaic-note">
+    <file alias="Application.css" compressed="true">Application.css</file>
+    <file alias="shortcuts.ui" compressed="true">com.github.phase1geo.mosaic-note.shortcuts.ui</file>
+    <file alias="mosaic-note-logo.png">icons/128/com.github.phase1geo.mosaic-note.svg</file>
+  </gresource>
+</gresources>

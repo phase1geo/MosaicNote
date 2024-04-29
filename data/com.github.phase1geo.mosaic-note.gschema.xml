@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema path="/com/github/phase1geo/mosaic-note/" id="com.github.phase1geo.mosaic-note" gettext-domain="com.github.phase1geo.mosaic-note">
+    <key name="window-w" type="i">
+      <default>1000</default>
+      <summary>Most recent width of minder window</summary>
+      <description>Most recent width of minder window</description>
+    </key>
+    <key name="window-h" type="i">
+      <default>800</default>
+      <summary>Most recent height of minder window</summary>
+      <description>Most recent height of minder window</description>
+    </key>
+    <key name="last-directory" type="s">
+      <default>""</default>
+      <summary>Stores the last directory accessed by the file dialog</summary>
+      <description>Stores the last directory accessed by the file dialog</description>
+    </key>
+    <key name="default-theme" type="s">
+      <default>"Adwaita"</default>
+      <summary>Name of default theme to use in text fields</summary>
+      <description>Name of default theme to use in text fields</description>
+    </key>
+    <key name="editor-font-family" type="s">
+      <default>"Sans"</default>
+      <summary>Font family used in text editor areas</summary>
+      <description>Font family used in text editor areas</description>
+    </key>
+    <key name="editor-font-size" type="i">
+      <default>12</default>
+      <summary>Font size used in text editor areas</summary>
+      <description>Font size used in text editor areas</description>
+    </key>
+    <key name="editor-margin" type="i">
+      <default>20</default>
+      <summary>Margin (in pixels) used in the editor</summary>
+      <description>Margin (in pixels) used in the editor</description>
+    </key>
+    <key name="editor-line-spacing" type="i">
+      <default>5</default>
+      <summary>Amount of space between lines of the editor</summary>
+      <description>Amount of space between lines of the editor</description>
+    </key>
+    <key name="enable-spellchecker" type="b">
+      <default>true</default>
+      <summary>Enables or disables the spelling checker</summary>
+      <description>Enables or disables the spelling checker</description>
+    </key>
+    <key name="developer-mode" type="b">
+      <default>false</default>
+      <summary>This values is not recommended for MosaicNote non-developers</summary>
+    </key>
+  </schema>
+</schemalist>
