@@ -33,18 +33,21 @@ public class Favorites {
 	// Default constructor
 	public Favorites() {
 		_model = new ListStore( Type.OBJECT );
+		load();
 	}
 
 	// Favorites the given notebook
 	public void favorite_notebook( Notebook nb ) {
 		var fav = new Favorite( true, nb.id );
 		_model.insert( 0, fav );
+		_modified = true;
 	}
 
 	// Favorites the given note
 	public void favorite_note( Note note ) {
 		var fav = new Favorite( false, note.id );
 		_model.insert( 0, fav );
+		_modified = true;
 	}
 
 	// Removes the given favorite from the favorite list
@@ -52,6 +55,7 @@ public class Favorites {
 		uint pos;
 		if( _model.find( fav, out pos ) ) {
 			_model.remove( pos );
+			_modified = true;
 		}
 	}
 
@@ -66,7 +70,7 @@ public class Favorites {
 	  Xml.Doc*  doc  = new Xml.Doc( "1.0" );
 	  Xml.Node* root = new Xml.Node( null, "favorites" );
 
-	  root->set_prop( "version", MosaicNote.version );
+	  root->set_prop( "version", MosaicNote.current_version );
 
 	  for( uint i=0; i<_model.get_n_items(); i++ ) {
 	  	var fav = (Favorite)_model.get_object( i );
@@ -77,6 +81,8 @@ public class Favorites {
 	  doc->save_format_file( xml_file(), 1 );
 	
 	  delete doc;
+
+	  _modified = false;
 
 	}
 

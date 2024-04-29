@@ -34,6 +34,12 @@ public class Note : Object {
 
 	public bool modified { get; private set; default = false; }
 
+	public int id {
+		get {
+			return( _id );
+		}
+	}
+
 	public string title {
 		get {
 			return( _title );
@@ -90,10 +96,12 @@ public class Note : Object {
 		load( node );
 	}
 
+	// Adds the given note item to this list of items at the given position.
 	public void add_note_item( uint pos, NoteItem item ) {
 		_items.append_val( item );
 	}
 
+	// Removes the note item at the given position.
 	public void delete_note_item( uint pos ) {
 		_items.remove_index( pos );
 		_modified = true;
@@ -102,6 +110,11 @@ public class Note : Object {
 	// Returns the result of comparing our note to the given note
 	public static int compare( Note a, Note b ) {
 		return( (int)(a._id > b._id) - (int)(a._id < b._id) );
+	}
+
+	// Returns true if this note contains a tag with the given string.
+	public bool contains_tag( string tag ) {
+		return( _tags.contains_tag( tag ) );
 	}
 
 	// Saves the note in XML format
@@ -121,7 +134,7 @@ public class Note : Object {
 		node->set_prop( "changed", _changed.format_iso8601() );
 		node->set_prop( "locked",  _locked.to_string() );
 
-		node->append_child( _tags.save() );
+		node->add_child( _tags.save() );
 
 		// Save the note items
 		for( int i=0; i<_items.length; i++ ) {
@@ -130,6 +143,8 @@ public class Note : Object {
 		node->add_child( items );
 
 		modified = true;
+
+		return( node );
 
 	}
 
@@ -148,19 +163,19 @@ public class Note : Object {
 
 		var c = node->get_prop( "created" );
 		if( c != null ) {
-      _created = new DateTime.from_iso8601( c );
+      _created = new DateTime.from_iso8601( c, null );
 		}
 
 		var m = node->get_prop( "changed" );
 		if( m != null ) {
-			_changed = new DateTime.from_iso8601( m );
+			_changed = new DateTime.from_iso8601( m, null );
 		}
 
-		for( Xml.Node* it=node->children; it!=null; it++ ) {
+		for( Xml.Node* it = node->children; it != null; it = it->next ) {
 			if( it->type == Xml.ElementType.ELEMENT_NODE ) {
 				switch( it->name ) {
 					case "tags"  :  _tags.load( it );  break;
-					case "items" :  load_items();  break;
+					case "items" :  load_items( it );  break;
 				}
 			}
 		}
@@ -168,30 +183,30 @@ public class Note : Object {
 	}
 
 	private void load_items( Xml.Node* node ) {
-		for( Xml.Node* it=node->children; it!=null; it++ ) {
+		for( Xml.Node* it = node->children; it != null; it = it->next ) {
 			if( it->type == Xml.ElementType.ELEMENT_NODE ) {
         switch( it->name ) {
-        	case "markdown" :  load_markdown_item( it );
-        	case "code"     :  load_code_item( it );
-        	case "image"    :  load_image_item( it );
+        	case "markdown" :  load_markdown_item( it );  break;
+        	case "code"     :  load_code_item( it );  break;
+        	case "image"    :  load_image_item( it );  break;
         }
 			}
 		}
 	}
 
 	private void load_markdown_item( Xml.Node* node ) {
-		var item = new ItemMarkdown.from_xml( node );
-		items.append_val( item );
+		var item = new NoteItemMarkdown.from_xml( node );
+		_items.append_val( item );
 	}
 
 	private void load_code_item( Xml.Node* node ) {
-		var item = new ItemCode.from_xml( node );
-		items.append_val( item );
+		var item = new NoteItemCode.from_xml( node );
+		_items.append_val( item );
 	}
 
 	private void load_image_item( Xml.Node* node ) {
-		var item = new ItemImage.from_xml( node );
-		items.append_val( item );
+		var item = new NoteItemImage.from_xml( node );
+		_items.append_val( item );
 	}
 
 }

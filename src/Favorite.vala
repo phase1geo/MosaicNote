@@ -47,6 +47,22 @@ public class Favorite : Object {
 		load( node );
 	}
 
+	// Returns the name of the notebook or title of the note that represents this favorite
+	public string? get_name( NotebookTree notebooks ) {
+		if( _nb ) {
+			var nb = notebooks.find_notebook( _id );
+			if( nb != null ) {
+        return( nb.name );
+			}
+		} else {
+			var note = notebooks.find_note( _id );
+			if( note != null ) {
+				return( note.title );
+			}
+		}
+		return( null );
+	}
+
 	// Save the contents of this favorite to XML format
 	public Xml.Node* save() {
 

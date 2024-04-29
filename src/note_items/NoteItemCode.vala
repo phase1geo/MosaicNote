@@ -54,6 +54,7 @@ public class NoteItemCode : NoteItem {
 	}
 
 	public NoteItemCode.from_xml( Xml.Node* node ) {
+		base( "code", _( "Code" ) );
 		load( node );
 	}
 

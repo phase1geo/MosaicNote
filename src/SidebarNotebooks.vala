@@ -23,18 +23,20 @@ using Gtk;
 
 public class SidebarNotebooks : Box {
 
-	private NotebookTree _tree;
+	private MainWindow _win;
 
 	// Default constructor
-	public SidebarNotebooks() {
+	public SidebarNotebooks( MainWindow win ) {
 
-		// Create the notebook tree
-		_tree = new NotebookTree.from_xml();
+		Object( orientation: Orientation.VERTICAL, spacing: 5 );
+
+		_win = win;
 
 		var expander = new Expander( _( "Notebooks" ) );
 
-		if( _tree.root != null ) {
-  		expander.child = make_expand_tree( _tree.root );
+		for( int i=0; i<_win.notebooks.size(); i++ ) {
+			var node = _win.notebooks.get_node( i );
+  		expander.child = make_expand_tree( node );
   	}
 
     append( expander );
@@ -44,11 +46,11 @@ public class SidebarNotebooks : Box {
 	// Create expander tree
 	public Box? make_expand_tree( NotebookTree.Node parent ) {
 
-		if( parent.num_children() > 0 ) {
+		if( parent.size() > 0 ) {
 
-  		var box = new Box( Orientation.VERTICAL );
+  		var box = new Box( Orientation.VERTICAL, 5 );
 
-		  for( int i=0; i<parent.num_children(); i++ ) {
+		  for( int i=0; i<parent.size(); i++ ) {
 			  var child    = parent.get_child( i );
 			  var expander = new Expander( child.name ) {
 				  child = make_expand_tree( child )

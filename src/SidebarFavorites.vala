@@ -23,14 +23,19 @@ using Gtk;
 
 public class SidebarFavorites : Box {
 
-	private ListBox   _lb;
-	private ListModel _model;
+	private MainWindow _win;
+	private ListBox    _lb;
 
 	// Default constructor
-	public SidebarFavorites() {
+	public SidebarFavorites( MainWindow win ) {
 
+		Object( orientation: Orientation.VERTICAL, spacing: 5 );
+
+		_win = win;
+
+		// Create listbox
     _lb = new ListBox();
-    _lb.bind_model( _model, create_favorite );
+    _lb.bind_model( _win.favorites.model, create_favorite );
 
 		var expander = new Expander( _( "Favorites" ) ) {
 			child = _lb
@@ -40,8 +45,11 @@ public class SidebarFavorites : Box {
 
 	}
 
+	// Returns a widget containing the name of the notebook/note that the given favorite represents
 	private Widget create_favorite( Object item ) {
 		var fav = (Favorite)item;
+		var name = new Label( fav.get_name( _win.notebooks ) );
+		return( name );
 	}
 
 }

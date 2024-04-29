@@ -28,18 +28,20 @@ public class Sidebar : Box {
 	private SidebarTags      _tags;
 
 	// Default constructor
-  public Sidebar() {
+  public Sidebar( MainWindow win ) {
+
+  	Object( orientation: Orientation.VERTICAL, spacing: 20 );
 
   	// Favorites section
-  	_favorites = new SidebarFavorites();
+  	_favorites = new SidebarFavorites( win );
   	append( _favorites );
 
   	// Notebooks section
-  	_notebooks = new SidebarNotebooks();
+  	_notebooks = new SidebarNotebooks( win );
   	append( _notebooks );
 
   	// Tags section
-  	_tags = new SidebarTags();
+  	_tags = new SidebarTags( win );
   	append( _tags );
 
   }

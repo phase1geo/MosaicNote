@@ -42,6 +42,7 @@ public class NoteItemImage : NoteItem {
 
 	// Constructor from XML format
 	public NoteItemImage.from_xml( Xml.Node* node ) {
+		base( "image", _( "Image" ) );
 		load( node );
 	}
 

@@ -24,10 +24,22 @@ public class FullTags {
 	private Array<FullTag> _tags;
 	private bool           _modified = false;
 
+	public signal void changed();
+
 	// Default constructor
 	public FullTags() {
 		_tags = new Array<FullTag>();
 		load();
+	}
+
+	// Returns the number of tags in this list.
+	public int size() {
+		return( (int)_tags.length );
+	}
+
+	// Returns the tag at the given position in the list.
+	public FullTag get_tag( int pos ) {
+		return( _tags.index( pos ) );
 	}
 
 	// XML file which stores that full list of tags
@@ -35,21 +47,11 @@ public class FullTags {
 		return( Utils.user_location( "tags.xml" ) );
 	}
 
-	public ListStore get_model() {
-
-		var list = new ListStore( Type.OBJECT );
-
-		list.append_val()
-
-		return( list );
-		
-	}
-
 	// Returns the list of tags which match the given match string.
 	public bool get_matches( Array<string> matches, string match_str ) {
 		matches.remove_range( 0, matches.length );
     for( int i=0; i<_tags.length; i++ ) {
-    	if( _tags.index( i ).name.contains( str ) ) {
+    	if( _tags.index( i ).name.contains( match_str ) ) {
     		matches.append_val( _tags.index( i ).name );
     	}
     }
@@ -68,6 +70,7 @@ public class FullTags {
     	_tags.sort( FullTag.compare );
     }
     _modified = true;
+    changed();
 	}
 
 	// Decrements the tag count and, if it is zero, deletes the tag
@@ -78,10 +81,12 @@ public class FullTags {
 	  	if( _tags.index( pos ).count > 0 ) {
 	  		_tags.index( pos ).adjust_count( -1 );
 	  	  _modified = true;
+	  	  changed();
 	  	}
 	  	if( _tags.index( pos ).count == 0 ) {
   	  	_tags.remove_index( pos );
 	  	  _modified = true;
+	  	  changed();
   	  }
 	  }
 	}
@@ -92,7 +97,7 @@ public class FullTags {
     Xml.Doc*  doc  = new Xml.Doc( "1.0" );
 	  Xml.Node* root = new Xml.Node( null, "tags" );
 
-	  root->set_prop( "version", MosaicNote.version );
+	  root->set_prop( "version", MosaicNote.current_version );
 
 	  for( uint i=0; i<_tags.length; i++ ) {
 	  	var tag = _tags.index( i );

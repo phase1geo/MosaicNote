@@ -23,9 +23,16 @@ public class Notebook : Object {
 
 	public static int current_id = 0;
 
+	private int         _id;
 	private string      _name;
 	private Array<Note> _notes;
 	private bool        _modified = false;
+
+	public int id {
+		get {
+			return( _id );
+		}
+	}
 
 	public string name {
 		get {
@@ -48,6 +55,7 @@ public class Notebook : Object {
 
 	// Construct from XML file
 	public Notebook.from_xml( int id ) {
+		_notes = new Array<Note>();
 		load( id );
 	}
 
@@ -69,11 +77,30 @@ public class Notebook : Object {
     }
   }
 
+  // Searches the list of notes for one that matches the given ID.  If it is found, return it; otherwise, return null.
+  public Note? find_note( int id ) {
+  	for( int i=0; i<_notes.length; i++ ) {
+  		if( _notes.index( i ).id == id ) {
+  			return( _notes.index( i ) );
+  		}
+  	}
+  	return( null );
+  }
+
+  // Searches for notes that contain the given tag and appends them to the given notes list.
+  public void get_notes_with_tag( string tag, Array<Note> notes ) {
+  	for( int i=0; i<_notes.length; i++ ) {
+  		if( _notes.index( i ).contains_tag( tag ) ) {
+  			notes.append_val( _notes.index( i ) );
+  		}
+  	}
+  }
+
   // Returns true if anything has been modified by the user in this notebook
   public bool is_modified() {
   	if( !_modified ) {
       for( int i=0; i<_notes.length; i++ ) {
-      	if( _notes.modified ) {
+      	if( _notes.index( i ).modified ) {
       		return( true );
       	}
       }
@@ -83,7 +110,7 @@ public class Notebook : Object {
   }
 
   // Name of Notebook XML file
-  private string xml_file() {
+  private string xml_file( int id ) {
     return( Utils.user_location( GLib.Path.build_filename( "notebook-%d".printf( id ), "notebook.xml" ) ) );
   }
 
@@ -93,9 +120,9 @@ public class Notebook : Object {
 	  Xml.Doc*  doc  = new Xml.Doc( "1.0" );
 	  Xml.Node* root = new Xml.Node( null, "notebook" );
 
-	  root->set_prop( "version", MosaicNote.version );
+	  root->set_prop( "version", MosaicNote.current_version );
 	  root->set_prop( "name", _name );
-	  root->set_prop( "id",   _id );
+	  root->set_prop( "id",   _id.to_string() );
 
 	  for( uint i=0; i<_notes.length; i++ ) {
 	  	var note = _notes.index( i );
@@ -103,7 +130,7 @@ public class Notebook : Object {
 	  } 
 	
 	  doc->set_root_element( root );
-	  doc->save_format_file( xml_file(), 1 );
+	  doc->save_format_file( xml_file( _id ), 1 );
 	
 	  delete doc;
 
@@ -112,9 +139,9 @@ public class Notebook : Object {
   }
 
   // Loads the contents of this notebook from XML format
-  private void load() {
+  private void load( int id ) {
 
-    var doc = Xml.Parser.read_file( xml_file(), null, (Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING) );
+    var doc = Xml.Parser.read_file( xml_file( id ), null, (Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING) );
     if( doc == null ) {
       return;
     }
@@ -126,24 +153,30 @@ public class Notebook : Object {
       check_version( verson );
     }
 
-    var n = node->get_prop( "name" );
+    var n = root->get_prop( "name" );
     if( n != null ) {
     	_name = n;
     }
 
-    var i = node->get_prop( "id" );
+    var i = root->get_prop( "id" );
     if( i != null ) {
     	_id = int.parse( i );
     }
   
     for( Xml.Node* it = root->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "note") ) {
-      	var note = new Note.from_xml( it );
+      	var note = new Note.from_xml( this, it );
       	_notes.append_val( note );
       }
     }
     
     delete doc;
+
+  }
+
+  private void check_version( string version ) {
+
+  	// Nothing to do here yet
 
   }
 

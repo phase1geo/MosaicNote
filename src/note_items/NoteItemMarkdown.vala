@@ -41,6 +41,7 @@ public class NoteItemMarkdown : NoteItem {
 	}
 
 	public NoteItemMarkdown.from_xml( Xml.Node* node ) {
+		base( "markdown", _( "Markdown" ) );
 		load( node );
 	}
 

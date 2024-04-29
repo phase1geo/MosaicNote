@@ -30,12 +30,13 @@ public class MosaicNote : Gtk.Application {
 
   private static bool show_version = false;
   public  static GLib.Settings settings;
+  public  static string        current_version = "1.0.0";
 
   private MainWindow appwin;
 
   public MosaicNote () {
 
-    Object( application_id: "com.github.phase1geo.mosaic-note", version: "1.0.0", flags: ApplicationFlags.HANDLES_OPEN );
+    Object( application_id: "com.github.phase1geo.mosaic-note", version: current_version, flags: ApplicationFlags.HANDLES_OPEN );
 
     Intl.setlocale( LocaleCategory.ALL, "" );
     Intl.bindtextdomain( GETTEXT_PACKAGE, LOCALEDIR );

@@ -35,7 +35,8 @@ public class Tags {
 
 	// Returns true if the list of tags contains the given tag
 	public bool contains_tag( string tag ) {
-		return( _tags.binary_search( tag, strcmp ) );
+		uint pos;
+		return( _tags.binary_search( tag, strcmp, out pos ) );
 	}
 
 	// Adds the tag if it is unique to this list
@@ -58,8 +59,8 @@ public class Tags {
 		Xml.Node* node = new Xml.Node( null, "tags" );
 		for( int i=0; i<_tags.length; i++ ) {
 			Xml.Node* tag = new Xml.Node( null, "tag" );
-			tag->set_prop( "name", tag );
-			node.add_child( tag );
+			tag->set_prop( "name", _tags.index( i ) );
+			node->add_child( tag );
 		}
 		return( node );
 	}

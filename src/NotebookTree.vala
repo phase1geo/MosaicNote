@@ -43,7 +43,7 @@ public class NotebookTree {
 				if( _name != value ) {
 					_name = value;
 					if( _notebook != null ) {
-						_notebook.title = value;
+						_notebook.name = value;
 					}
 				}
 			}
@@ -59,9 +59,9 @@ public class NotebookTree {
 		}
 
 		// Constructor from XML format
-		public Node.from_xml( Xml.Node* node ) {
+		public Node.from_xml( Xml.Node* node, Node? parent ) {
 			_children = new Array<Node>();
-			load( node );
+			load( node, parent );
 		}
 
 		// Adds the given notebook to the list of children
@@ -89,7 +89,7 @@ public class NotebookTree {
 		}
 
 		// Returns the number of children
-		public int num_children() {
+		public int size() {
 			return( (int)_children.length );
 		}
 
@@ -116,9 +116,46 @@ public class NotebookTree {
 		// Returns the notebook associated with this node
 		public Notebook get_notebook() {
 			if( _notebook == null ) {
-				_notebook = new Notebook.load_xml( id );
+				_notebook = new Notebook.from_xml( id );
 			}
 			return( _notebook );
+		}
+
+		// Searches for a notebook with the given ID.  If it is found, return it; otherwise, returns null.
+		public Notebook? find_notebook( int id ) {
+			if( get_notebook().id == id ) {
+				return( get_notebook() );
+			}
+			for( int i=0; i<_children.length; i++ ) {
+				var nb = _children.index( i ).find_notebook( id );
+				if( nb != null ) {
+					return( nb );
+				}
+			}
+			return( null );
+		}
+
+		// Searches for a note with the given ID.  If it is found, return it; otherwise, returns null.
+		public Note? find_note( int id ) {
+			var note = get_notebook().find_note( id );
+			if( note != null ) {
+				return( note );
+			}
+			for( int i=0; i<_children.length; i++ ) {
+				note = _children.index( i ).find_note( id );
+				if( note != null ) {
+					return( note );
+				}
+			}
+			return( null );
+		}
+
+		// Populates the given list of notes that contain the given tag.
+		public void get_notes_with_tag( string tag, Array<Note> notes ) {
+			get_notebook().get_notes_with_tag( tag, notes );
+			for( int i=0; i<_children.length; i++ ) {
+				_children.index( i ).get_notes_with_tag( tag, notes );
+			}
 		}
 
 		/* Saves this notebook node in XML format */
@@ -127,8 +164,9 @@ public class NotebookTree {
 			node->set_prop( "id",   _id.to_string() );
 			node->set_prop( "name", _name );
 			for( int i=0; i<_children.length; i++ ) {
-				node->add_child( _nodes.index( i ).save() );
+				node->add_child( _children.index( i ).save() );
 			}
+			return( node );
 		}
 
 		/* Loads the notebook node from XML format */
@@ -137,7 +175,7 @@ public class NotebookTree {
 			if( id != null ) {
         _id = int.parse( id );
 			}
-			var n = node->get_prop( "name" );
+			var name = node->get_prop( "name" );
 			if( name != null ) {
 				_name = name;
 			}
@@ -151,17 +189,59 @@ public class NotebookTree {
 			}
 		}
 
-	}
+	}  // class Node
 
-	private Node _root = null;
+	private Array<Node> _nodes;
 
 	// Default constructor
-	public NotebookTree() {}
+	public NotebookTree() {
+		_nodes = new Array<Node>();
+	}
 
 	// Constructor from XML
 	public NotebookTree.from_xml() {
+		_nodes = new Array<Node>();
 		load();
 	}
+
+	// Returns the number of notebooks at the top-most level
+	public int size() {
+		return( (int)_nodes.length );
+	}
+
+	// Returns the node at the given top-level position
+	public Node? get_node( int pos ) {
+		return( _nodes.index( pos ) );
+	}
+
+	// Searches the notebooks for one that matches the given ID
+	public Notebook? find_notebook( int id ) {
+		for( int i=0; i<_nodes.length; i++ ) {
+			var nb = _nodes.index( i ).find_notebook( id );
+			if( nb != null ) {
+				return( nb );
+			}
+		}
+		return( null );
+	}
+
+	// Searches the notebooks for a note that matches the given ID
+	public Note? find_note( int id ) {
+		for( int i=0; i<_nodes.length; i++ ) {
+			var note = _nodes.index( i ).find_note( id );
+			if( note != null ) {
+				return( note );
+			}
+		}
+		return( null );
+	}
+
+	// Searches the tree of notebooks for notes that contain the given tag
+  public void get_notes_with_tag( string tag, Array<Note> notes ) {
+  	for( int i=0; i<_nodes.length; i++ ) {
+  		_nodes.index( i ).get_notes_with_tag( tag, notes );
+  	}
+  }
 
 	private string xml_file() {
 		return( Utils.user_location( "notebooks.xml" ) );
@@ -173,12 +253,12 @@ public class NotebookTree {
 	  Xml.Doc*  doc  = new Xml.Doc( "1.0" );
 	  Xml.Node* root = new Xml.Node( null, "notebooks" );
 
-	  root->set_prop( "version", MosaicNote.version );
+	  root->set_prop( "version", MosaicNote.current_version );
 	  root->set_prop( "notebook-id", Notebook.current_id.to_string() );
 	  root->set_prop( "note-id", Note.current_id.to_string() );
 
-	  if( _root != null ) {
-	  	root.add_child( _root.save() );
+	  for( int i=0; i<_nodes.length; i++ ) {
+	  	root->add_child( _nodes.index( i ).save() );
 	  }
 	
 	  doc->set_root_element( root );
@@ -213,20 +293,10 @@ public class NotebookTree {
     	Note.current_id = int.parse( nt_id );
     }
 
-    var n = node->get_prop( "name" );
-    if( n != null ) {
-    	_name = n;
-    }
-
-    var i = node->get_prop( "id" );
-    if( i != null ) {
-    	_id = int.parse( i );
-    }
-  
     for( Xml.Node* it = root->children; it != null; it = it->next ) {
-      if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "note") ) {
-      	var note = new Note.from_xml( it );
-      	_notes.append_val( note );
+      if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "node") ) {
+      	var node = new Node.from_xml( it, null );
+      	_nodes.append_val( node );
       }
     }
     

@@ -25,6 +25,10 @@ using Gdk;
 public class MainWindow : Gtk.ApplicationWindow {
 
   private GLib.Settings   _settings;
+  private Favorites       _favorites;
+  private NotebookTree    _notebooks;
+  private FullTags        _full_tags;
+
   private ShortcutsWindow _shortcuts = null;
   private Sidebar         _sidebar;
   private NotesPanel      _notes;
@@ -44,6 +48,24 @@ public class MainWindow : Gtk.ApplicationWindow {
   public GLib.Settings settings {
     get {
       return( _settings );
+    }
+  }
+
+  public Favorites favorites {
+    get {
+      return( _favorites );
+    }
+  }
+
+  public NotebookTree notebooks {
+    get {
+      return( _notebooks );
+    }
+  }
+
+  public FullTags full_tags {
+    get {
+      return( _full_tags );
     }
   }
 
@@ -75,11 +97,16 @@ public class MainWindow : Gtk.ApplicationWindow {
     /* Add keyboard shortcuts */
     add_keyboard_shortcuts( app );
 
+    /* Load application data */
+    _favorites = new Favorites();
+    _notebooks = new NotebookTree();
+    _full_tags = new FullTags();
+
     /* Create title toolbar */
     // TODO
 
     /* Create content area */
-    _sidebar = new Sidebar();
+    _sidebar = new Sidebar( this );
     _notes   = new NotesPanel();
     _note    = new NotePanel();
 
