@@ -94,7 +94,8 @@ public class SidebarNotebooks : Box {
 
 	// Populates the notebook tree with the updated version of win.notebooks
 	private void populate_tree() {
-		_node_box.remove_all();
+		// _node_box.remove_all();
+    Utils.clear_listbox( _node_box );
 		for( int i=0; i<_win.notebooks.size(); i++ ) {
 			var node = _win.notebooks.get_node( i );
   		_node_box.append( make_expand_tree( node, 1 ) );
