@@ -28,6 +28,8 @@ public class NotebookTree {
 		private string      _name;
 		private Notebook?   _notebook;
 		private Array<Node> _children;
+		private bool        _expanded = true;
+		private bool        _modified = false;
 
 		public int id {
 			get {
@@ -42,12 +44,40 @@ public class NotebookTree {
 			set {
 				if( _name != value ) {
 					_name = value;
+					_modified = true;
 					if( _notebook != null ) {
 						_notebook.name = value;
 					}
 				}
 			}
 		}
+
+		public bool expanded {
+			get {
+				return( _expanded );
+			}
+			set {
+				if( _expanded != value ) {
+					_expanded = value;
+					_modified = true;
+				}
+			}
+		}
+
+		public bool modified {
+			get {
+				if( !_modified ) {
+					for( int i=0; i<_children.length; i++ ) {
+						if( _children.index( i ).modified ) {
+							return( true );
+						}
+					}
+				}
+				return( _modified );
+			}
+		}
+
+		public signal void changed();
 
 		// Default constructor
 		public Node( Node? parent, Notebook nb ) {
@@ -56,6 +86,8 @@ public class NotebookTree {
 			_name     = nb.name;
 			_notebook = nb;
 			_children = new Array<Node>();
+			_modified = true;
+			changed();
 		}
 
 		// Constructor from XML format
@@ -64,10 +96,17 @@ public class NotebookTree {
 			load( node, parent );
 		}
 
+		private void node_changed() {
+			changed();
+		}
+
 		// Adds the given notebook to the list of children
 		public void add_notebook( Notebook nb ) {
 			var node = new Node( this, nb );
+			node.changed.connect( node_changed );
 			_children.append_val( node );
+			_modified = true;
+			changed();
 		}
 
 		// Removes the given notebook from the tree
@@ -82,7 +121,10 @@ public class NotebookTree {
 		public void remove_child( Node node ) {
 			for( int i=0; i<_children.length; i++ ) {
 				if( node == _children.index( i ) ) {
+					node.changed.disconnect( node_changed );
 					_children.remove_index( i );
+				  _modified = true;
+				  changed();
 					break;
 				}
 			}
@@ -166,6 +208,7 @@ public class NotebookTree {
 			for( int i=0; i<_children.length; i++ ) {
 				node->add_child( _children.index( i ).save() );
 			}
+			_modified = false;
 			return( node );
 		}
 
@@ -192,16 +235,36 @@ public class NotebookTree {
 	}  // class Node
 
 	private Array<Node> _nodes;
+	private bool        _modified = false;
+
+	public signal void changed();
 
 	// Default constructor
 	public NotebookTree() {
 		_nodes = new Array<Node>();
+		load();
 	}
 
-	// Constructor from XML
-	public NotebookTree.from_xml() {
-		_nodes = new Array<Node>();
-		load();
+	private void set_modified() {
+		_modified = true;
+		changed();
+	}
+
+	// Adds the given notebook to the end of the list
+	public void add_notebook( Notebook nb ) {
+		var node = new Node( null, nb );
+		node.changed.connect( set_modified );
+		_nodes.append_val( node );
+		_modified = true;
+		changed();
+	}
+
+	// Removes the notebook at the specified position
+	public void remove_notebook( int pos ) {
+		_nodes.index( pos ).changed.disconnect( set_modified );
+		_nodes.remove_index( pos );
+		_modified = true;
+		changed();
 	}
 
 	// Returns the number of notebooks at the top-most level
@@ -250,6 +313,8 @@ public class NotebookTree {
 	// Saves the current notebook tree in XML format
 	public void save() {
 
+		if( !_modified ) return;
+
 	  Xml.Doc*  doc  = new Xml.Doc( "1.0" );
 	  Xml.Node* root = new Xml.Node( null, "notebooks" );
 
@@ -266,10 +331,14 @@ public class NotebookTree {
 	
 	  delete doc;
 
+	  _modified = false;
+
   }
 
   // Loads the contents of this notebook from XML format
   private void load() {
+
+  	stdout.printf( "In NotebookTree.load\n" );
 
     var doc = Xml.Parser.read_file( xml_file(), null, (Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING) );
     if( doc == null ) {
@@ -295,7 +364,9 @@ public class NotebookTree {
 
     for( Xml.Node* it = root->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "node") ) {
+      	stdout.printf( "Found notebook tree node\n" );
       	var node = new Node.from_xml( it, null );
+      	node.changed.connect( set_modified );
       	_nodes.append_val( node );
       }
     }

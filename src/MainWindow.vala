@@ -28,6 +28,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private Favorites       _favorites;
   private NotebookTree    _notebooks;
   private FullTags        _full_tags;
+  private Notebook?       _notebook = null;
 
   private ShortcutsWindow _shortcuts = null;
   private Sidebar         _sidebar;
@@ -109,6 +110,11 @@ public class MainWindow : Gtk.ApplicationWindow {
     _sidebar = new Sidebar( this );
     _notes   = new NotesPanel();
     _note    = new NotePanel();
+
+    _sidebar.selected_notebook.connect((nb) => {
+      _notebook = nb;
+      _notes.populate_with_notebook( nb );
+    });
 
     _notes_pw = new Paned( Orientation.HORIZONTAL ) {
       start_child = _notes,

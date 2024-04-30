@@ -313,4 +313,19 @@ public class Utils {
 
   }
 
+  // Clears the given box widget
+  public static void clear_box( Box box ) {
+    while( box.get_first_child() != null ) {
+      box.remove( box.get_first_child() );
+    } 
+  }
+
+  // Returns the child widget at the given index of the parent widget (or null if one does not exist)
+  public static Widget? get_child_at_index( Widget parent, int index ) {
+    var child = parent.get_first_child();
+    while( (child != null) && (index-- > 0) ) {
+      child = child.get_next_sibling();
+    }
+    return( child );
+  } 
 }

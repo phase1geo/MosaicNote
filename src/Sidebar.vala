@@ -27,10 +27,12 @@ public class Sidebar : Box {
 	private SidebarNotebooks _notebooks;
 	private SidebarTags      _tags;
 
+	public signal void selected_notebook( Notebook nb );
+
 	// Default constructor
   public Sidebar( MainWindow win ) {
 
-  	Object( orientation: Orientation.VERTICAL, spacing: 20 );
+  	Object( orientation: Orientation.VERTICAL, spacing: 20, margin_top: 10, margin_bottom: 10, margin_start: 10, margin_end: 10 );
 
   	// Favorites section
   	_favorites = new SidebarFavorites( win );
@@ -38,11 +40,30 @@ public class Sidebar : Box {
 
   	// Notebooks section
   	_notebooks = new SidebarNotebooks( win );
+  	_notebooks.notebook_selected.connect((nb) => {
+  		selected_notebook( nb );
+ 		});
   	append( _notebooks );
 
   	// Tags section
   	_tags = new SidebarTags( win );
   	append( _tags );
+
+  	var add_nb_btn = new Button.from_icon_name( "list-add-symbolic" ) {
+  		halign = Align.START,
+  		has_frame = false
+  	};
+
+  	add_nb_btn.clicked.connect(() => {
+  		_notebooks.add_notebook();
+		});
+
+  	var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
+  		valign = Align.END,
+  		vexpand = true
+  	};
+  	bbox.append( add_nb_btn );
+  	append( bbox );
 
   }
 	

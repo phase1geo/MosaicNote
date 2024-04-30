@@ -28,6 +28,8 @@ public class Notebook : Object {
 	private Array<Note> _notes;
 	private bool        _modified = false;
 
+	public signal void changed();
+
 	public int id {
 		get {
 			return( _id );
@@ -42,6 +44,7 @@ public class Notebook : Object {
 			if( _name != value ) {
 				_name = value;
 				_modified = true;
+				changed();
 			}
 		}
 	}
@@ -59,6 +62,16 @@ public class Notebook : Object {
 		load( id );
 	}
 
+	// Number of stores notes
+	public int size() {
+		return( (int)_notes.length );
+	}
+
+	// Returns the note at the given position
+	public Note get_note( int pos ) {
+		return( _notes.index( pos ) );
+	}
+
 	// Returns true if the given ID matches our own
 	public bool matches( int id ) {
 		return( _id == id );
@@ -67,6 +80,8 @@ public class Notebook : Object {
 	// Adds the given note to the notebook
   public void add_note( Note note ) {
   	_notes.append_val( note );
+  	_modified = true;
+  	changed();
   }	
 
   // Searches for and deletes the note (if found) in the notebook
@@ -74,6 +89,8 @@ public class Notebook : Object {
   	uint pos;
   	if( _notes.binary_search( note, Note.compare, out pos ) ) {
     	_notes.remove_index( pos );
+    	_modified = true;
+    	changed();
     }
   }
 
@@ -109,13 +126,20 @@ public class Notebook : Object {
   	return( true );
   }
 
+  private string notebook_directory( int id ) {
+  	return( Utils.user_location( GLib.Path.build_filename( "notebooks", "notebook-%d".printf( id ) ) ) );
+  }
+
   // Name of Notebook XML file
   private string xml_file( int id ) {
-    return( Utils.user_location( GLib.Path.build_filename( "notebook-%d".printf( id ), "notebook.xml" ) ) );
+    return( GLib.Path.build_filename( notebook_directory( id ), "notebook.xml" ) );
   }
 
   // Saves the contents of the notebook to XML formatted file
 	public void save() {
+
+		// Make sure that the notebook directory exists
+		Utils.create_dir( notebook_directory( _id ) );
 
 	  Xml.Doc*  doc  = new Xml.Doc( "1.0" );
 	  Xml.Node* root = new Xml.Node( null, "notebook" );

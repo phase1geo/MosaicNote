@@ -23,11 +23,84 @@ using Gtk;
 
 public class NotesPanel : Box {
 
+	private Notebook _nb;
+	private ListBox _list;
+
+	public signal void note_selected( Note note );
+
 	// Default constructor
 	public NotesPanel() {
 
-		// TODO
+		Object( orientation: Orientation.VERTICAL, spacing: 5, margin_top: 5, margin_bottom: 5, margin_start: 5, margin_end: 5 );
+
+		_list = new ListBox() {
+			valign = Align.FILL,
+			selection_mode = SelectionMode.BROWSE
+		};
+
+		_list.row_selected.connect((row) => {
+			if( row != null ) {
+  			note_selected( _nb.get_note( row.get_index() ) );
+  		}
+  	});
+
+		var add_btn = new Button.from_icon_name( "list-add-symbolic" ) {
+			tooltip_text = _( "Add new note" )
+		};
+
+		add_btn.clicked.connect(() => {
+			var note = new Note( _nb );
+			_nb.add_note( note );
+		});
+
+		var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
+			valign = Align.END,
+			vexpand = true
+		};
+
+		bbox.append( add_btn );
+
+		append( _list );
+		append( bbox );
 
 	}
+
+	// Populates the notes list from the given notebook
+  public void populate_with_notebook( Notebook nb ) {
+  	_nb = nb;
+  	_nb.changed.connect(() => {
+  		populate();
+		});
+  	populate();
+  }
+
+  private void populate() {
+
+  	_list.remove_all();
+
+  	for( int i=0; i<_nb.size(); i++ ) {
+  		_list.append( create_note( _nb.get_note( i ) ) );
+  	}
+
+  }	
+
+  // Adds the given note
+  private Box create_note( Note note ) {
+
+  	var title = new Label( note.title );
+    var preview = new Label( "" );
+
+    var box = new Box( Orientation.VERTICAL, 5 ) {
+    	margin_top = 5,
+    	margin_bottom = 5,
+    	margin_start = 5,
+    	margin_end = 5
+    };
+    box.append( title );
+    box.append( preview );
+
+    return( box );
+
+  }
 
 }
