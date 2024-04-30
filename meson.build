@@ -43,7 +43,7 @@ core_deps = [
     dependency('gtksourceview-5'),
     dependency('sqlite3'),
     dependency('json-glib-1.0'),
-    dependency('webkitgtk-6.0')
+    #    dependency('webkitgtk-6.0')
 ]
 
 e = executable('com.github.phase1geo.mosaic-note',

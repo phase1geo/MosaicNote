@@ -42514,9 +42514,14 @@
 	},
 	"expanded_folders":
 	[
+<<<<<<< Updated upstream
 		"/home/trevorw/projects/MosaicNote",
 		"/home/trevorw/projects/MosaicNote/src",
 		"/home/trevorw/projects/MosaicNote/src/note_items"
+=======
+		"/Users/trevorw/projects/MosaicNote",
+		"/Users/trevorw/projects/MosaicNote/src"
+>>>>>>> Stashed changes
 	],
 	"file_history":
 	[
