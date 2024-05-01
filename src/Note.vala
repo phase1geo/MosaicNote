@@ -101,7 +101,10 @@ public class Note : Object {
 
 	// Constructs note from XML node
 	public Note.from_xml( Notebook nb, Xml.Node* node ) {
-		_nb = nb;
+		_nb    = nb;
+    _tags  = new Tags();
+    _items = new Array<NoteItem>();
+
 		load( node );
 	}
 

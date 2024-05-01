@@ -212,6 +212,15 @@ public class NotebookTree {
 			return( node );
 		}
 
+    /* Saves all of the modified notebooks */
+    public void save_notebooks() {
+      var nb = get_notebook();
+      nb.save();
+      for( int i=0; i<_children.length; i++ ) {
+        _children.index( i ).save_notebooks();
+      }
+    }
+
 		/* Loads the notebook node from XML format */
 		private void load( Xml.Node* node, Node? parent ) {
 			var id = node->get_prop( "id" );
@@ -333,6 +342,13 @@ public class NotebookTree {
 
 	  _modified = false;
 
+  }
+
+  /* Saves all of the modified notebooks */
+  public void save_notebooks() {
+    for( int i=0; i<_nodes.length; i++ ) {
+      _nodes.index( i ).save_notebooks();
+    }
   }
 
   // Loads the contents of this notebook from XML format

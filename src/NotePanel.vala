@@ -27,10 +27,12 @@ public class NotePanel : Box {
 
   private Stack _stack;
 
-  private Entry _title;
-  private Box   _created_box;
-  private Label _created;
-  private Box   _content;
+  private DropDown _item_selector;
+  private Entry    _title;
+  private Box      _created_box;
+  private Label    _created;
+  private Box      _content;
+  private int      _current_item = -1;
 
 	// Default constructor
 	public NotePanel() {
@@ -71,6 +73,39 @@ public class NotePanel : Box {
   // Creates the note UI
   private Widget create_note_ui() {
 
+    string[] item_types = { _( "Markdown" ), _( "Code" ), _( "Image" ) };
+
+    _item_selector = new DropDown.from_strings( item_types ) {
+      halign = Align.START,
+      show_arrow = true,
+      selected = 0,
+      sensitive = false
+    };
+
+    _item_selector.notify["selected"].connect(() => {
+      stdout.printf( "Item selector activated\n" );
+      NoteItem new_item;
+      switch( _item_selector.get_selected() ) {
+        case 0 :  new_item = new NoteItemMarkdown();  break;
+        case 1 :  new_item = new NoteItemCode();  break;
+        case 2 :  new_item = new NoteItemImage();  break;
+        default :  assert_not_reached();
+      }
+      stdout.printf( "Converting note item: %d\n", _current_item );
+      _note.convert_note_item( _current_item, new_item );
+
+      var w = Utils.get_child_at_index( _content, _current_item );
+      _content.remove( w );
+      switch( _item_selector.get_selected() ) {
+        case 0 :  w = add_markdown_item( (NoteItemMarkdown)new_item, _current_item );  break;
+        case 1 :  w = add_code_item( (NoteItemCode)new_item, _current_item );  break;
+        case 2 :  w = add_image_item( (NoteItemImage)new_item, _current_item );  break;
+        default :  assert_not_reached();
+      }
+      w.grab_focus();
+
+    });
+
     var created_lbl = new Label( _( "Created:" ) );
     _created = new Label( "" );
     _created_box = new Box( Orientation.HORIZONTAL, 5 ) {
@@ -84,6 +119,7 @@ public class NotePanel : Box {
     var hbox = new Box( Orientation.HORIZONTAL, 5 ) {
       halign = Align.FILL
     };
+    hbox.append( _item_selector );
     hbox.append( _created_box );
 
     _title = new Entry() {
@@ -138,7 +174,7 @@ public class NotePanel : Box {
     if( _note != null ) {
 
       _created_box.visible = true;
-      _created.label = note.created.to_string(); 
+      _created.label = note.created.format( "%b%e, %Y" );
       _title.text    = note.title;
       _title.grab_focus();
       _stack.visible_child_name = "note";
@@ -193,7 +229,7 @@ public class NotePanel : Box {
       if( (bool)(state & Gdk.ModifierType.SHIFT_MASK) && (keyval == Gdk.Key.Return) ) {
         var index = Utils.get_child_index( _content, text );
         var item  = new NoteItemCode();
-        _note.add_note_item( (uint)index, item );
+        _note.add_note_item( (uint)(index + 1), item );
         var w = add_code_item( item, index );
         w.grab_focus();
         return( true );
@@ -209,6 +245,21 @@ public class NotePanel : Box {
     } else {
       var sibling = Utils.get_child_at_index( _content, pos );
       _content.insert_child_after( w, sibling );
+    }
+  }
+
+  // Sets the current item and updates the UI
+  private void set_current_item( int index ) {
+    _current_item = index;
+    _item_selector.sensitive = (index != -1);
+    if( index != -1 ) {
+      var item = _note.get_item( index );
+      switch( item.name ) {
+        case "markdown" :  _item_selector.selected = 0;  break;
+        case "code"     :  _item_selector.selected = 1;  break;
+        case "image"    :  _item_selector.selected = 2;  break;
+        default         :  assert_not_reached();
+      }
     }
   }
 
@@ -238,6 +289,8 @@ public class NotePanel : Box {
     text.add_controller( focus );
 
     focus.enter.connect(() => {
+      set_current_item( Utils.get_child_index( _content, text ) );
+
       // Make the UI display Markdown toolbar
       // text.has_frame = true;
     });
@@ -298,6 +351,7 @@ public class NotePanel : Box {
     text.add_controller( focus );
 
     focus.enter.connect(() => {
+      set_current_item( Utils.get_child_index( _content, text ) );
       // Make the UI display Markdown toolbar
     });
 

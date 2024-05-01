@@ -108,7 +108,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Create content area */
     _sidebar = new Sidebar( this );
+    _sidebar.set_size_request( 200, -1 );
     _notes   = new NotesPanel();
+    _notes.set_size_request( 200, -1 );
     _note    = new NotePanel();
 
     _sidebar.selected_notebook.connect((nb) => {
@@ -178,9 +180,12 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Save the current entry to the database */
+  /* Save everything */
   public void action_save() {
-    // TODO
+    _favorites.save();
+    _notebooks.save();
+    _notebooks.save_notebooks();
+    _full_tags.save();
   }
 
   /* Called when the user uses the Control-q keyboard shortcut */

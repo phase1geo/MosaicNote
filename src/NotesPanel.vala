@@ -108,7 +108,7 @@ public class NotesPanel : Box {
       xalign = 0
     };
 
-    var preview = new Label( note.created.to_string() ) {
+    var preview = new Label( note.created.format( "%b%e, %Y") ) {
       xalign = 0
     };
 
