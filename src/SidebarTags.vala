@@ -56,7 +56,8 @@ public class SidebarTags : Box {
 	// Adds the full list of tags to the listbox
 	private void populate_listbox() {
 
-		_lb.remove_all();
+		// _lb.remove_all();
+		Utils.clear_listbox( _lb );
 
 		for( int i=0; i<_win.full_tags.size(); i++ ) {
 			_lb.append( create_tag( _win.full_tags.get_tag( i ) ) );

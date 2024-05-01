@@ -117,13 +117,17 @@ public class MainWindow : Gtk.ApplicationWindow {
     });
 
     _notes_pw = new Paned( Orientation.HORIZONTAL ) {
-      start_child = _notes,
-      end_child   = _note
+      start_child        = _notes,
+      end_child          = _note,
+      resize_start_child = false,
+      resize_end_child   = true
     };
 
     _sidebar_pw = new Paned( Orientation.HORIZONTAL ) {
-      start_child = _sidebar,
-      end_child   = _notes_pw
+      start_child        = _sidebar,
+      end_child          = _notes_pw,
+      resize_start_child = false,
+      resize_end_child   = true
     };
 
     // Make the sidebar paned window the child of the window

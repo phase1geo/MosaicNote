@@ -36,7 +36,7 @@ public class MosaicNote : Gtk.Application {
 
   public MosaicNote () {
 
-    Object( application_id: "com.github.phase1geo.mosaic-note", version: current_version, flags: ApplicationFlags.HANDLES_OPEN );
+    Object( application_id: "com.github.phase1geo.mosaic-note", flags: ApplicationFlags.HANDLES_OPEN );
 
     Intl.setlocale( LocaleCategory.ALL, "" );
     Intl.bindtextdomain( GETTEXT_PACKAGE, LOCALEDIR );
@@ -125,7 +125,7 @@ public class MosaicNote : Gtk.Application {
 
     /* If the version was specified, output it and then exit */
     if( show_version ) {
-      stdout.printf( version + "\n" );
+      stdout.printf( current_version + "\n" );
       Process.exit( 0 );
     }
 

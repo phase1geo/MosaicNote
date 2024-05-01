@@ -24,7 +24,8 @@ using Gtk;
 public class NotesPanel : Box {
 
 	private Notebook _nb;
-	private ListBox _list;
+	private ListBox  _list;
+  private Button   _add;
 
 	public signal void note_selected( Note note );
 
@@ -44,11 +45,11 @@ public class NotesPanel : Box {
   		}
   	});
 
-		var add_btn = new Button.from_icon_name( "list-add-symbolic" ) {
+		_add = new Button.from_icon_name( "list-add-symbolic" ) {
 			tooltip_text = _( "Add new note" )
 		};
 
-		add_btn.clicked.connect(() => {
+		_add.clicked.connect(() => {
 			var note = new Note( _nb );
 			_nb.add_note( note );
 		});
@@ -58,7 +59,7 @@ public class NotesPanel : Box {
 			vexpand = true
 		};
 
-		bbox.append( add_btn );
+		bbox.append( _add );
 
 		append( _list );
 		append( bbox );
@@ -66,21 +67,29 @@ public class NotesPanel : Box {
 	}
 
 	// Populates the notes list from the given notebook
-  public void populate_with_notebook( Notebook nb ) {
+  public void populate_with_notebook( Notebook? nb ) {
   	_nb = nb;
-  	_nb.changed.connect(() => {
-  		populate();
-		});
-  	populate();
+    if( _nb != null ) {
+      _nb.changed.connect(() => {
+        populate();
+      });
+      populate();
+    }
   }
 
   private void populate() {
 
-  	_list.remove_all();
+  	// _list.remove_all();
+    Utils.clear_listbox( _list );
 
-  	for( int i=0; i<_nb.size(); i++ ) {
-  		_list.append( create_note( _nb.get_note( i ) ) );
-  	}
+    if( _nb != null ) {
+  	  for( int i=0; i<_nb.size(); i++ ) {
+  		  _list.append( create_note( _nb.get_note( i ) ) );
+  	  }
+      _add.sensitive = true;
+    } else {
+      _add.sensitive = false;
+    }
 
   }	
 

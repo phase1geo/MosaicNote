@@ -78,6 +78,12 @@ public class Note : Object {
 		}
 	}
 
+  public Tags tags {
+    get {
+      return( _tags );
+    }
+  }
+
 	// Default constructor
 	public Note( Notebook nb ) {
 		_nb      = nb;
@@ -95,6 +101,16 @@ public class Note : Object {
 		_nb = nb;
 		load( node );
 	}
+
+  // Returns the number of note items in the array
+  public int size() {
+    return( (int)_items.length );
+  }
+
+  // Returns the note item at the given position
+  public NoteItem get_item( int pos ) {
+    return( _items.index( pos ) );
+  }
 
 	// Adds the given note item to this list of items at the given position.
 	public void add_note_item( uint pos, NoteItem item ) {

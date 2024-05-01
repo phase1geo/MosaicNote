@@ -245,6 +245,7 @@ public class Utils {
 #endif
   }
 
+  /*
   public static void set_chooser_folder( FileDialog chooser ) {
     var dir = MosaicNote.settings.get_string( "last-directory" );
     if( dir != "" ) {
@@ -252,6 +253,7 @@ public class Utils {
       chooser.set_initial_folder( fdir );
     }
   }
+  */
 
   public static void store_chooser_folder( string file, bool is_dir ) {
     var dir = is_dir ? file : GLib.Path.get_dirname( file );
@@ -296,6 +298,7 @@ public class Utils {
   }
 
   /* Creates a file chooser dialog and returns it to the code */
+  /*
   public static Gtk.FileDialog make_file_chooser( string user_title, string user_accept_label ) {
 
     var gtk_settings = Gtk.Settings.get_default();
@@ -312,12 +315,20 @@ public class Utils {
     return( dialog );
 
   }
+  */
 
   // Clears the given box widget
   public static void clear_box( Box box ) {
     while( box.get_first_child() != null ) {
       box.remove( box.get_first_child() );
     } 
+  }
+
+  // Clears the given listbox widget
+  public static void clear_listbox( ListBox box ) {
+    while( box.get_row_at_index( 0 ) != null ) {
+      box.remove( box.get_row_at_index( 0 ) );
+    }
   }
 
   // Returns the child widget at the given index of the parent widget (or null if one does not exist)
