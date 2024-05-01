@@ -37,11 +37,11 @@ public class NoteItemCode : NoteItem {
 
 	// Default constructor
 	public NoteItemCode() {
-		base( "code", _( "Code" ) );
+		base( NoteItemType.CODE );
 	}
 
 	public NoteItemCode.from_xml( Xml.Node* node ) {
-		base( "code", _( "Code" ) );
+		base( NoteItemType.CODE );
 		load( node );
 	}
 

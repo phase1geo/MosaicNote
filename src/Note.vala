@@ -215,10 +215,12 @@ public class Note : Object {
 	private void load_items( Xml.Node* node ) {
 		for( Xml.Node* it = node->children; it != null; it = it->next ) {
 			if( it->type == Xml.ElementType.ELEMENT_NODE ) {
-        switch( it->name ) {
-        	case "markdown" :  load_markdown_item( it );  break;
-        	case "code"     :  load_code_item( it );  break;
-        	case "image"    :  load_image_item( it );  break;
+        var type = NoteItemType.parse( it->name );
+        switch( type ) {
+        	case NoteItemType.MARKDOWN :  load_markdown_item( it );  break;
+        	case NoteItemType.CODE     :  load_code_item( it );  break;
+        	case NoteItemType.IMAGE    :  load_image_item( it );  break;
+          default                    :  break;
         }
 			}
 		}

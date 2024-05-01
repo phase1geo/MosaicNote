@@ -19,13 +19,80 @@
 * Authored by: Trevor Williams <phase1geo@gmail.com>
 */
 
+public enum NoteItemType {
+	MARKDOWN,
+	CODE,
+	IMAGE,
+	NUM;
+
+	public string to_string() {
+		switch( this ) {
+			case MARKDOWN :  return( "markdown" );
+			case CODE     :  return( "code" );
+			case IMAGE    :  return( "image" );
+			default       :  assert_not_reached();
+		}
+	}
+
+	public string label() {
+		switch( this ) {
+			case MARKDOWN :  return( _( "Markdown" ) );
+			case CODE     :  return( _( "Code" ) );
+			case IMAGE    :  return( _( "Image" ) );
+			default       :  assert_not_reached();
+		}
+	}
+
+	public static NoteItemType parse( string str ) {
+		switch( str ) {
+			case "markdown" :  return( MARKDOWN );
+			case "code"     :  return( CODE );
+			case "image"    :  return( IMAGE );
+			default         :  return( NUM );
+		}
+	}
+
+	public NoteItem create() {
+		switch( this ) {
+			case MARKDOWN :  return( new NoteItemMarkdown() );
+			case CODE     :  return( new NoteItemCode() );
+			case IMAGE    :  return( new NoteItemImage() );
+			default       :  assert_not_reached();
+		}
+	}
+
+	public void initialize_text( GtkSource.View text ) {
+		switch( this ) {
+			case MARKDOWN :  initialize_markdown_text( text );  break;
+			case CODE     :  initialize_code_text( text );  break;
+			default       :  break;
+		}
+	}
+
+	private void initialize_markdown_text( GtkSource.View text ) {
+		text.wrap_mode = Gtk.WrapMode.WORD;
+	}
+
+	private void initialize_code_text( GtkSource.View text ) {
+		text.wrap_mode = Gtk.WrapMode.NONE;
+    text.show_line_numbers = true;
+    text.show_line_marks = true;
+    text.auto_indent = true;
+    text.indent_width = 3;
+    text.insert_spaces_instead_of_tabs = true;
+    text.smart_backspace = true;
+    text.tab_width = 3;
+    text.monospace = true;
+	}
+
+}
+
 public class NoteItem {
 
   private string _content = "";
 
-	public string name     { get; private set; default = ""; }
-	public string label    { get; private set; default = ""; }
-	public bool   modified { get; protected set; default = false; }
+  public NoteItemType item_type { get; private set; default = NoteItemType.MARKDOWN; }
+	public bool         modified  { get; protected set; default = false; }
 
   public string content {
     get {
@@ -40,9 +107,8 @@ public class NoteItem {
   }
 
 	// Default constructor
-	public NoteItem( string name, string label ) {
-    this.name  = name;
-    this.label = label;
+	public NoteItem( NoteItemType type ) {
+    this.item_type = type;
 	}
 
   // Copy method (can be used to convert one item to another as well)
@@ -58,7 +124,7 @@ public class NoteItem {
 
 	// Saves this note item
 	public virtual Xml.Node* save() {
-		Xml.Node* node = new Xml.Node( null, name );
+		Xml.Node* node = new Xml.Node( null, item_type.to_string() );
     node->add_content( content );
 		modified = false;
 		return( node );

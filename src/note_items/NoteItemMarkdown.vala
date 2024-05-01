@@ -23,11 +23,11 @@ public class NoteItemMarkdown : NoteItem {
 
 	// Default constructor
 	public NoteItemMarkdown() {
-		base( "markdown", _( "Markdown" ) );
+		base( NoteItemType.MARKDOWN );
 	}
 
 	public NoteItemMarkdown.from_xml( Xml.Node* node ) {
-		base( "markdown", _( "Markdown" ) );
+		base( NoteItemType.MARKDOWN );
 		load( node );
 	}
 
