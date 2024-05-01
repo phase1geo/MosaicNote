@@ -186,20 +186,22 @@ public class NotePanel : Box {
 
   }
 
+  /* Adds the contents of the current note into the content area */
   private void populate_content() {
-
     Utils.clear_box( _content );
-
     for( int i=0; i<_note.size(); i++ ) {
-      var item = _note.get_item( i );
-      switch( item.item_type ) {
-        case NoteItemType.MARKDOWN :  add_markdown_item( (NoteItemMarkdown)item );  break;
-        case NoteItemType.CODE     :  add_code_item( (NoteItemCode)item );          break;
-        case NoteItemType.IMAGE    :  add_image_item( (NoteItemImage)item );        break;
-        default         :  assert_not_reached();
-      }
+      insert_content_item( _note.get_item( i ) );
     }
+  }
 
+  /* Inserts the given NoteItem at the given position */
+  private Widget insert_content_item( NoteItem item, int pos = -1 ) {
+    switch( item.item_type ) {
+      case NoteItemType.MARKDOWN :  return( add_markdown_item( (NoteItemMarkdown)item, pos ) );
+      case NoteItemType.CODE     :  return( add_code_item( (NoteItemCode)item, pos ) );
+      case NoteItemType.IMAGE    :  return( add_image_item( (NoteItemImage)item, pos ) );
+      default         :  assert_not_reached();
+    }
   }
 
   // Sets the height of the text widget
@@ -214,6 +216,97 @@ public class NotePanel : Box {
 
   }
 
+  // Adds a new item above or below the item at the given index.
+  private void add_item( int index, bool above ) {
+
+    var item = new NoteItemMarkdown();
+    _note.add_note_item( (uint)(above ? index : (index + 1)), item );
+    var w = add_markdown_item( item, (above ? index : (index + 1)) );
+    w.grab_focus();
+
+  }
+
+  // Split the current item into two items at the insertion point.
+  private void split_item( int index ) {
+
+    // Get the current text widget and figure out the location of
+    // the insertion cursor.
+    var text   = (GtkSource.View)Utils.get_child_at_index( _content, index );
+    var cursor = text.buffer.cursor_position;
+
+    // Create a copy of the new item, assign it the text after
+    // the insertion cursor, and remove the text after the insertion
+    // cursor from the original item.
+    var item     = _note.get_item( index );
+    var first    = item.content.substring( 0, cursor ); 
+    var last     = item.content.substring( cursor );
+    var new_item = item.item_type.create();
+
+    item.content = first;
+    new_item.content = last;
+    _note.add_note_item( (uint)(index + 1), new_item );
+
+    // Update the original item contents and add the new item
+    // after the original.
+    text.buffer.text = item.content;
+    text = (GtkSource.View)insert_content_item( new_item, (index + 1) );
+
+    // Adjust the insertion cursor to the beginning of the new text
+    TextIter iter;
+    var insert = text.buffer.get_insert();
+    text.buffer.get_start_iter( out iter );
+    text.buffer.move_mark( insert, iter );
+
+    text.grab_focus();
+
+  }
+
+  // Joins the item at the given index with the item above it.
+  private bool join_items( int index ) {
+
+    // Find the item above the current one that matches the type
+    var above_index = (index - 1);
+    var item_type   = _note.get_item( index ).item_type;
+    while( (above_index >= 0) && (_note.get_item( above_index ).item_type != item_type) ) {
+      above_index--;
+    }
+
+    // If we are unable to join with anything, return false immediately
+    if( above_index == -1 ) {
+      return( false );
+    }
+
+    // Merge the note text, delete the note item and delete the item from the content area
+    var above_text   = (GtkSource.View)Utils.get_child_at_index( _content, above_index );
+    var text         = (GtkSource.View)Utils.get_child_at_index( _content, index );
+    var text_to_move = text.buffer.text;
+
+    if( text_to_move != "" ) {
+
+      // Update notes
+      _note.get_item( above_index ).content += text_to_move;
+
+      // Update above text UI
+      TextIter iter;
+      var insert = above_text.buffer.get_insert();
+      above_text.buffer.get_iter_at_mark( out iter, insert );
+      above_text.buffer.text += text.buffer.text;
+      above_text.buffer.move_mark( insert, iter );
+
+    }
+
+    // Remove the current item
+    _note.delete_note_item( (uint)index );
+    _content.remove( text );
+
+    // Grab the above text widget for keyboard input
+    above_text.grab_focus();
+
+    return( true );
+
+  }
+
+  // Adds and handles any text events.
   private void handle_text_events( GtkSource.View text ) {
 
     var key = new EventControllerKey();
@@ -221,13 +314,31 @@ public class NotePanel : Box {
     text.add_controller( key );
 
     key.key_pressed.connect((keyval, keycode, state) => {
-      if( (bool)(state & Gdk.ModifierType.SHIFT_MASK) && (keyval == Gdk.Key.Return) ) {
-        var index = Utils.get_child_index( _content, text );
-        var item  = new NoteItemMarkdown();
-        _note.add_note_item( (uint)(index + 1), item );
-        var w = add_markdown_item( item, (index + 1) );
-        w.grab_focus();
-        return( true );
+      var shift   = (bool)(state & Gdk.ModifierType.SHIFT_MASK);
+      var control = (bool)(state & Gdk.ModifierType.CONTROL_MASK);
+      var index   = Utils.get_child_index( _content, text );
+      switch( keyval ) {
+        case Gdk.Key.Return : 
+          if( control && shift ) {
+            add_item( index, true );
+            return( true );
+          } else if( control ) {
+            add_item( index, false );
+            return( true );
+          } else if( shift ) {
+            split_item( index );
+            return( true );
+          }
+          break;
+        case Gdk.Key.BackSpace :
+          if( index > 0 ) {
+            TextIter start;
+            text.buffer.get_iter_at_offset( out start, 0 );
+            if( start.is_cursor_position() && join_items( index ) ) {
+              return( true );
+            }
+          }
+          break;
       }
       return( false );
     });
