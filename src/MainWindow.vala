@@ -116,6 +116,10 @@ public class MainWindow : Gtk.ApplicationWindow {
       _notes.populate_with_notebook( nb );
     });
 
+    _notes.note_selected.connect((note) => {
+      _note.populate_with_note( note );
+    });
+
     _notes_pw = new Paned( Orientation.HORIZONTAL ) {
       start_child        = _notes,
       end_child          = _note,

@@ -21,8 +21,7 @@
 
 public class NoteItemCode : NoteItem {
 
-	private string _lang;
-	private string _content;
+	private string _lang = "vala";  // TODO
 
 	public string lang {
 	  get {
@@ -32,18 +31,6 @@ public class NoteItemCode : NoteItem {
 	  	if( _lang != value ) {
 	  		_lang    = value;
         modified = true;
-	  	}
-	  }
-	}
-
-	public string content {
-	  get {
-	  	return( _content );
-	  }
-	  set {
-	  	if( _content != value ) {
-	  		_content = value;
-	  		modified = true;
 	  	}
 	  }
 	}
@@ -58,29 +45,28 @@ public class NoteItemCode : NoteItem {
 		load( node );
 	}
 
-	// Searches the content for the given string
-	public override bool search( string str ) {
-		return( content.contains( str ) );
-	}
+  public override void copy( NoteItem item ) {
+    base.copy( item );
+    var code = (item as NoteItemCode);
+    if( code != null ) {
+      this._lang = code._lang;
+    }
+  }
 
 	// Saves the content in XML format
 	public override Xml.Node* save() {
     Xml.Node* node = base.save();
     node->set_prop( "lang", lang );
-    node->add_content( content );
     return( node );
 	}
 
 	// Loads the content from XML format
-	private void load( Xml.Node* node ) {
-
+	protected override void load( Xml.Node* node ) {
+    base.load( node );
 		var l = node->get_prop( "lang" );
 		if( l != null ) {
 			lang = l;
 		}
-
-    content = node->get_content();
-
 	}
 
 }

@@ -134,6 +134,9 @@ public class MosaicNote : Gtk.Application {
   /* Main routine which gets everything started */
   public static int main( string[] args ) {
 
+    // Make sure that we initialize the GtkSource library
+    GtkSource.init();
+
     var app = new MosaicNote();
     app.parse_arguments( ref args );
 

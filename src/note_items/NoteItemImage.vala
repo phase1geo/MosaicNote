@@ -46,6 +46,14 @@ public class NoteItemImage : NoteItem {
 		load( node );
 	}
 
+  public override void copy( NoteItem item ) {
+    base.copy( item );
+    var image = (item as NoteItemImage);
+    if( image != null ) {
+      this._uri = image._uri;
+    }
+  }
+
 	// Saves the content in XML format
 	public override Xml.Node* save() {
     Xml.Node* node = base.save();
@@ -54,7 +62,8 @@ public class NoteItemImage : NoteItem {
 	}
 
 	// Loads the content from XML format
-	private void load( Xml.Node* node ) {
+	protected override void load( Xml.Node* node ) {
+    base.load( node );
 		var u = node->get_prop( "uri" );
 		if( u != null ) {
 			uri = u;

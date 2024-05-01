@@ -21,20 +21,6 @@
 
 public class NoteItemMarkdown : NoteItem {
 
-	private string _content = "";
-
-	public string content {
-	  get {
-	  	return( _content );
-   	}
-   	set {
-   		if( _content != value ) {
-   			content  = value;
-   			modified = true;
-   		}
-   	}
-  }
-
 	// Default constructor
 	public NoteItemMarkdown() {
 		base( "markdown", _( "Markdown" ) );
@@ -43,23 +29,6 @@ public class NoteItemMarkdown : NoteItem {
 	public NoteItemMarkdown.from_xml( Xml.Node* node ) {
 		base( "markdown", _( "Markdown" ) );
 		load( node );
-	}
-
-	// Searches the content for the given string
-	public override bool search( string str ) {
-		return( content.contains( str ) );
-	}
-
-	// Saves the content in XML format
-	public override Xml.Node* save() {
-    Xml.Node* node = base.save();
-    node->add_content( content );
-    return( node );
-	}
-
-	// Loads the content from XML format
-	private void load( Xml.Node* node ) {
-    content = node->get_content();
 	}
 
 }

@@ -41,17 +41,21 @@ public class NotesPanel : Box {
 
 		_list.row_selected.connect((row) => {
 			if( row != null ) {
+        stdout.printf( "Calling note_selected, index: %d\n", row.get_index() );
   			note_selected( _nb.get_note( row.get_index() ) );
   		}
   	});
 
 		_add = new Button.from_icon_name( "list-add-symbolic" ) {
-			tooltip_text = _( "Add new note" )
+      has_frame = false,
+			tooltip_text = _( "Add new note" ),
+      sensitive = false
 		};
 
 		_add.clicked.connect(() => {
 			var note = new Note( _nb );
 			_nb.add_note( note );
+      populate();
 		});
 
 		var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
@@ -91,13 +95,22 @@ public class NotesPanel : Box {
       _add.sensitive = false;
     }
 
+    // Select the first row
+    // _list.select_row( _list.get_row_at_index( 0 ) );
+
   }	
 
   // Adds the given note
   private Box create_note( Note note ) {
 
-  	var title = new Label( note.title );
-    var preview = new Label( "" );
+  	var title = new Label( Utils.make_title( note.title ) ) {
+      use_markup = true,
+      xalign = 0
+    };
+
+    var preview = new Label( note.created.to_string() ) {
+      xalign = 0
+    };
 
     var box = new Box( Orientation.VERTICAL, 5 ) {
     	margin_top = 5,

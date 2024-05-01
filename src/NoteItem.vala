@@ -21,9 +21,23 @@
 
 public class NoteItem {
 
+  private string _content = "";
+
 	public string name     { get; private set; default = ""; }
 	public string label    { get; private set; default = ""; }
 	public bool   modified { get; protected set; default = false; }
+
+  public string content {
+    get {
+      return( _content );
+    }
+    set {
+      if( _content != value ) {
+        _content = value;
+        modified = true;
+      }
+    }
+  }
 
 	// Default constructor
 	public NoteItem( string name, string label ) {
@@ -31,16 +45,29 @@ public class NoteItem {
     this.label = label;
 	}
 
+  // Copy method (can be used to convert one item to another as well)
+  public virtual void copy( NoteItem item ) {
+    this._content = item._content;
+    this.modified = item.modified;
+  }
+
 	// Used for string searching
 	public virtual bool search( string str ) {
-	  return( false );	
+    return( content.contains( str ) );
 	}
 
 	// Saves this note item
 	public virtual Xml.Node* save() {
 		Xml.Node* node = new Xml.Node( null, name );
+    node->add_content( content );
 		modified = false;
 		return( node );
 	}
+
+  // Loads the content from XML format
+  protected virtual void load( Xml.Node* node ) {
+    content = node->get_content();
+  }
+
 
 }

@@ -25,6 +25,8 @@ public class NotePanel : Box {
 
   private Note  _note;
 
+  private Stack _stack;
+
   private Entry _title;
   private Box   _created_box;
   private Label _created;
@@ -41,6 +43,33 @@ public class NotePanel : Box {
       margin_start: 5,
       margin_end: 5
     );
+
+    _stack = new Stack() {
+      hhomogeneous = true,
+      vhomogeneous = true,
+      halign       = Align.FILL,
+      valign       = Align.FILL
+    };
+
+    _stack.add_named( create_blank_ui(), "blank" );
+    _stack.add_named( create_note_ui(), "note" );
+    _stack.visible_child_name = "blank";
+
+    append( _stack );
+
+  }
+
+  // Creates the blank UI
+  private Widget create_blank_ui() {
+
+    var none = new Label( _( "No Note Selected" ) );
+
+    return( none );
+
+  }
+
+  // Creates the note UI
+  private Widget create_note_ui() {
 
     var created_lbl = new Label( _( "Created:" ) );
     _created = new Label( "" );
@@ -63,11 +92,19 @@ public class NotePanel : Box {
       halign = Align.FILL
     };
 
+    _title.activate.connect(() => {
+      if( _note != null ) {
+        _note.title = _title.text;
+      }
+      var first_item = Utils.get_child_at_index( _content, 0 );
+      first_item.grab_focus();
+    });
+
     var separator = new Separator( Orientation.HORIZONTAL );
 
-    _content = new Box( Orientation.VERTICAL, 0 ) {
+    _content = new Box( Orientation.VERTICAL, 5 ) {
       halign = Align.FILL,
-      valign = Align.FILL,
+      valign = Align.START,
       vexpand = true
     };
 
@@ -82,27 +119,35 @@ public class NotePanel : Box {
     // Add an initial markdown item
     add_markdown_item( null );
 
-    append( hbox );
-    append( _title );
-    append( separator );
-    append( sw );
+    var box = new Box( Orientation.VERTICAL, 5 );
+    box.append( hbox );
+    box.append( _title );
+    box.append( separator );
+    box.append( sw );
+
+    return( box );
 
 	}
 
+  // Populates the note panel UI with the contents of the provided note.  If note is
+  // null, clears the UI.
   public void populate_with_note( Note? note ) {
 
     _note = note;
 
     if( _note != null ) {
+
       _created_box.visible = true;
       _created.label = note.created.to_string(); 
       _title.text    = note.title;
-    } else {
-      _created_box.visible = false;
-      _title.text = "";
-    }
+      _title.grab_focus();
+      _stack.visible_child_name = "note";
 
-    populate_content();
+      populate_content();
+
+    } else {
+      _stack.visible_child_name = "blank";
+    }
 
   }
 
@@ -110,9 +155,9 @@ public class NotePanel : Box {
 
     Utils.clear_box( _content );
 
-    if( _note != null ) {
+    if( _note.size() > 0 ) {
       for( int i=0; i<_note.size(); i++ ) {
-        var item = _note.get_item( i ); 
+        var item = _note.get_item( i );
         switch( item.name ) {
           case "markdown" :  add_markdown_item( (NoteItemMarkdown)item );  break;
           case "code"     :  add_code_item( (NoteItemCode)item );          break;
@@ -126,7 +171,48 @@ public class NotePanel : Box {
 
   }
 
-  private void add_markdown_item( NoteItemMarkdown? item ) {
+  // Sets the height of the text widget
+  private void set_text_height( GtkSource.View text ) {
+
+    TextIter iter;
+    Gdk.Rectangle location;
+
+    text.buffer.get_start_iter( out iter );
+    text.get_iter_location( iter, out location );
+    text.set_size_request( -1, (location.height + 2) );
+
+  }
+
+  private void handle_text_events( GtkSource.View text ) {
+
+    var key = new EventControllerKey();
+
+    text.add_controller( key );
+
+    key.key_pressed.connect((keyval, keycode, state) => {
+      if( (bool)(state & Gdk.ModifierType.SHIFT_MASK) && (keyval == Gdk.Key.Return) ) {
+        var index = Utils.get_child_index( _content, text );
+        var item  = new NoteItemCode();
+        _note.add_note_item( (uint)index, item );
+        var w = add_code_item( item, index );
+        w.grab_focus();
+        return( true );
+      }
+      return( false );
+    });
+
+  }
+
+  private void add_item_to_content( Widget w, int pos = -1 ) {
+    if( pos == -1 ) {
+      _content.append( w );
+    } else {
+      var sibling = Utils.get_child_at_index( _content, pos );
+      _content.insert_child_after( w, sibling );
+    }
+  }
+
+  private Widget add_markdown_item( NoteItemMarkdown? item, int pos = -1 ) {
 
     var lang_mgr = new GtkSource.LanguageManager();
     var lang     = lang_mgr.get_language( "markdown" );
@@ -145,6 +231,70 @@ public class NotePanel : Box {
       wrap_mode = WrapMode.WORD,
       editable  = true
     };
+
+    set_text_height( text );
+    handle_text_events( text );
+
+    text.add_controller( focus );
+
+    focus.enter.connect(() => {
+      // Make the UI display Markdown toolbar
+      // text.has_frame = true;
+    });
+
+    focus.leave.connect(() => {
+      if( item != null ) {
+        item.content = buffer.text;
+      }
+    });
+
+    add_item_to_content( text, pos );
+
+    return( text );
+
+  }
+
+  private Widget add_code_item( NoteItemCode? item, int pos = -1 ) {
+
+    var lang_mgr = new GtkSource.LanguageManager();
+    var lang     = lang_mgr.get_language( item.lang );
+
+    var scheme_mgr = new GtkSource.StyleSchemeManager();
+    /*
+    var scheme_ids = scheme_mgr.get_scheme_ids();
+    foreach( var scheme_id in scheme_ids ) {
+      stdout.printf( "  scheme_id: %s\n", scheme_id );
+    }
+    */
+    var scheme     = scheme_mgr.get_scheme( "oblivion" );
+
+    var buffer   = new GtkSource.Buffer.with_language( lang ) {
+      highlight_syntax = true,
+      enable_undo      = true,
+      style_scheme     = scheme,
+      text             = (item == null) ? "" : item.content
+    };
+
+    var focus = new EventControllerFocus();
+    var text = new GtkSource.View.with_buffer( buffer ) {
+      halign    = Align.FILL,
+      valign    = Align.FILL,
+      vexpand   = true,
+      wrap_mode = WrapMode.NONE,
+      editable  = true,
+      show_line_numbers = true,
+      show_line_marks = true,
+      auto_indent = true,
+      indent_width = 3,
+      insert_spaces_instead_of_tabs = true,
+      smart_backspace = true,
+      tab_width = 3,
+      monospace = true
+    };
+
+    set_text_height( text );
+    handle_text_events( text );
+
     text.add_controller( focus );
 
     focus.enter.connect(() => {
@@ -157,15 +307,19 @@ public class NotePanel : Box {
       }
     });
 
-    _content.append( text );
+    add_item_to_content( text, pos );
+
+    return( text );
 
   }
 
-  private void add_code_item( NoteItemCode item ) {
+  private Widget add_image_item( NoteItemImage item, int pos = -1 ) {
 
-  }
+    var label = new Label( "This is an image" );
 
-  private void add_image_item( NoteItemImage item ) {
+    add_item_to_content( label, pos );
+
+    return( label );
 
   }
 

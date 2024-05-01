@@ -27,7 +27,7 @@ public class Note : Object {
 	private int             _id;
 	private string          _title;
 	private DateTime        _created;
-	private DateTime        _changed;
+	private DateTime        _updated;
 	private bool            _locked;
 	private Tags            _tags;
 	private Array<NoteItem> _items;
@@ -47,7 +47,6 @@ public class Note : Object {
 		set {
 			if( _title != value ) {
 				_title = value;
-				_changed = new DateTime.now_local();
 				modified = true;
 			}
 		}
@@ -59,9 +58,9 @@ public class Note : Object {
 		}
 	}
 
-	public DateTime changed {
+	public DateTime updated {
 		get {
-			return( _changed );
+			return( _updated );
 		}
 	}
 
@@ -72,7 +71,6 @@ public class Note : Object {
 		set {
 			if( _locked != value ) {
 				_locked  = value;
-				_changed = new DateTime.now_local();
         modified = true;
 			}
 		}
@@ -84,16 +82,21 @@ public class Note : Object {
     }
   }
 
+  public signal void changed();
+
 	// Default constructor
 	public Note( Notebook nb ) {
 		_nb      = nb;
 		_id      = current_id++;
-		_title   = "";
+		_title   = _( "Untitled Note" );
 		_created = new DateTime.now_local();
-		_changed = new DateTime.now_local();
+		_updated = new DateTime.now_local();
 		_locked  = false;
 		_tags    = new Tags();
     _items   = new Array<NoteItem>();
+
+    var item = new NoteItemMarkdown();
+    add_note_item( 0, item );
 	}
 
 	// Constructs note from XML node
@@ -114,7 +117,7 @@ public class Note : Object {
 
 	// Adds the given note item to this list of items at the given position.
 	public void add_note_item( uint pos, NoteItem item ) {
-		_items.append_val( item );
+		_items.insert_val( pos, item );
 	}
 
 	// Removes the note item at the given position.
@@ -122,6 +125,14 @@ public class Note : Object {
 		_items.remove_index( pos );
 		_modified = true;
 	}
+
+  // Converts the current note item to the specified item and stores this
+  // new item in its place.
+  public void convert_note_item( uint pos, NoteItem to_item ) {
+    to_item.copy( get_item( (int)pos ) );
+    _items.data[pos] = to_item;
+    _modified = true;
+  }
 
 	// Returns the result of comparing our note to the given note
 	public static int compare( Note a, Note b ) {
@@ -137,7 +148,7 @@ public class Note : Object {
 	public Xml.Node* save() {
 
 		if( modified ) {
-			_changed = new DateTime.now_local();
+			_updated = new DateTime.now_local();
 			modified = false;
 		}
 
@@ -147,7 +158,7 @@ public class Note : Object {
 		node->set_prop( "id",      _id.to_string() );
 		node->set_prop( "title",   _title );
 		node->set_prop( "created", _created.format_iso8601() );
-		node->set_prop( "changed", _changed.format_iso8601() );
+		node->set_prop( "updated", _updated.format_iso8601() );
 		node->set_prop( "locked",  _locked.to_string() );
 
 		node->add_child( _tags.save() );
@@ -182,9 +193,9 @@ public class Note : Object {
       _created = new DateTime.from_iso8601( c, null );
 		}
 
-		var m = node->get_prop( "changed" );
+		var m = node->get_prop( "updated" );
 		if( m != null ) {
-			_changed = new DateTime.from_iso8601( m, null );
+			_updated = new DateTime.from_iso8601( m, null );
 		}
 
 		for( Xml.Node* it = node->children; it != null; it = it->next ) {
