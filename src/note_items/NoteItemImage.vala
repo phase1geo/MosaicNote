@@ -38,6 +38,7 @@ public class NoteItemImage : NoteItem {
 	// Default constructor
 	public NoteItemImage() {
 		base( NoteItemType.IMAGE );
+		stdout.printf( "Creating NoteItemImage\n" );
 	}
 
 	// Constructor from XML format
@@ -47,10 +48,14 @@ public class NoteItemImage : NoteItem {
 	}
 
   public override void copy( NoteItem item ) {
+  	stdout.printf( "In copy, type: %s\n", item.item_type.to_string() );
     base.copy( item );
     var image = (item as NoteItemImage);
     if( image != null ) {
-      this._uri = image._uri;
+      this.uri = image.uri;
+    } else if( Utils.is_url( item.content ) ) {
+    	this.uri = item.content;
+    	this.content = "";
     }
   }
 

@@ -317,6 +317,21 @@ public class Utils {
   }
   */
 
+  /* Creates a file chooser dialog and returns it to the code */
+  public static Gtk.FileChooserNative make_file_chooser( string title, Gtk.Window win, Gtk.FileChooserAction action, string accept_label ) {
+
+    var gtk_settings = Gtk.Settings.get_default();
+
+    var use_header = gtk_settings.gtk_dialogs_use_header;
+    gtk_settings.gtk_dialogs_use_header = true;
+
+    var dialog = new FileChooserNative( title, win, action, accept_label, _( "Cancel" ) );
+    gtk_settings.gtk_dialogs_use_header = use_header;
+
+    return( dialog );
+
+  }
+
   // Clears the given box widget
   public static void clear_box( Box box ) {
     while( box.get_first_child() != null ) {

@@ -25,7 +25,8 @@ public class NotePanel : Box {
 
   private Note  _note;
 
-  private Stack _stack;
+  private MainWindow _win;
+  private Stack      _stack;
 
   private DropDown _item_selector;
   private Entry    _title;
@@ -36,7 +37,7 @@ public class NotePanel : Box {
   private bool     _ignore = false;
 
 	// Default constructor
-	public NotePanel() {
+	public NotePanel( MainWindow win ) {
 
     Object(
       orientation: Orientation.VERTICAL,
@@ -46,6 +47,8 @@ public class NotePanel : Box {
       margin_start: 5,
       margin_end: 5
     );
+
+    _win = win;
 
     _stack = new Stack() {
       hhomogeneous = true,
@@ -88,10 +91,12 @@ public class NotePanel : Box {
     };
 
     _item_selector.notify["selected"].connect(() => {
+      stdout.printf( "HERE A, _ignore: %s\n", _ignore.to_string() );
       if( _ignore ) {
         _ignore = false;
         return;
       }
+      stdout.printf( "HERE B\n" );
       var type     = (NoteItemType)_item_selector.get_selected();
       var new_item = type.create();
       _note.convert_note_item( _current_item, new_item );
@@ -363,8 +368,10 @@ public class NotePanel : Box {
     _item_selector.sensitive = (index != -1);
     if( index != -1 ) {
       var item = _note.get_item( index );
-      _ignore = true;
-      _item_selector.selected = item.item_type;
+      if( _item_selector.selected != item.item_type ) {
+        _ignore = true;
+        _item_selector.selected = item.item_type;
+      }
     }
   }
 
@@ -442,11 +449,42 @@ public class NotePanel : Box {
 
   private Widget add_image_item( NoteItemImage item, int pos = -1 ) {
 
-    var label = new Label( "This is an image" );
+    var image = new Picture() {
+      halign = Align.FILL,
+      valign = Align.FILL
+      // content_fit = ContentFit.CONTAINS 
+    };
 
-    add_item_to_content( label, pos );
+    if( item.uri == "" ) {
 
-    return( label );
+      var dialog = Utils.make_file_chooser( _( "Open Image" ), _win, FileChooserAction.OPEN, _( "Open" ) );
+
+      dialog.response.connect((id) => {
+        if( id == ResponseType.ACCEPT ) {
+          var file = dialog.get_file();
+          if( file != null ) {
+            item.uri = file.get_uri();
+            image.file = file;
+          }
+        } else {
+          stdout.printf( "NEED TO REMOVE IMAGE ITEM\n" );
+        }
+        dialog.destroy();
+      });
+
+      dialog.show();
+
+    } else {
+
+      image.file = File.new_for_uri( item.uri );
+
+    }
+
+    stdout.printf( "item.uri: %s\n", item.uri );
+
+    add_item_to_content( image, pos );
+
+    return( image );
 
   }
 

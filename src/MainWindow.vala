@@ -111,7 +111,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     _sidebar.set_size_request( 200, -1 );
     _notes   = new NotesPanel();
     _notes.set_size_request( 200, -1 );
-    _note    = new NotePanel();
+    _note    = new NotePanel( this );
 
     _sidebar.selected_notebook.connect((nb) => {
       _notebook = nb;
