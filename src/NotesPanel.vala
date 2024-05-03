@@ -41,7 +41,6 @@ public class NotesPanel : Box {
 
 		_list.row_selected.connect((row) => {
 			if( row != null ) {
-        stdout.printf( "Calling note_selected, index: %d\n", row.get_index() );
   			note_selected( _nb.get_note( row.get_index() ) );
   		}
   	});

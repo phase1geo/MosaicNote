@@ -91,26 +91,23 @@ public class NotePanel : Box {
     };
 
     _item_selector.notify["selected"].connect(() => {
-      stdout.printf( "HERE A, _ignore: %s\n", _ignore.to_string() );
       if( _ignore ) {
         _ignore = false;
         return;
       }
-      stdout.printf( "HERE B\n" );
       var type     = (NoteItemType)_item_selector.get_selected();
       var new_item = type.create();
       _note.convert_note_item( _current_item, new_item );
 
-      var w = Utils.get_child_at_index( _content, _current_item );
+      var w = get_item( _current_item );
       _content.remove( w );
       switch( type ) {
-        case NoteItemType.MARKDOWN :  w = add_markdown_item( (NoteItemMarkdown)new_item, _current_item );  break;
-        case NoteItemType.CODE     :  w = add_code_item( (NoteItemCode)new_item, _current_item );  break;
-        case NoteItemType.IMAGE    :  w = add_image_item( (NoteItemImage)new_item, _current_item );  break;
+        case NoteItemType.MARKDOWN :  add_markdown_item( (NoteItemMarkdown)new_item, _current_item );  break;
+        case NoteItemType.CODE     :  add_code_item( (NoteItemCode)new_item, _current_item );  break;
+        case NoteItemType.IMAGE    :  add_image_item( (NoteItemImage)new_item, _current_item );  break;
         default                    :  break;
       }
-      w.grab_focus();
-
+      grab_focus_of_item( _current_item );
     });
 
     var created_lbl = new Label( _( "Created:" ) );
@@ -139,8 +136,7 @@ public class NotePanel : Box {
       if( _note != null ) {
         _note.title = _title.text;
       }
-      var first_item = Utils.get_child_at_index( _content, 0 );
-      first_item.grab_focus();
+      grab_focus_of_item( 0 );
     });
 
     var separator = new Separator( Orientation.HORIZONTAL );
@@ -209,6 +205,32 @@ public class NotePanel : Box {
     }
   }
 
+  // Returns the item at the given position
+  private Widget get_item( int pos ) {
+    return( Utils.get_child_at_index( _content, pos ) );
+  }
+
+  // Returns the text item at the given index if it exists; otherwise, returns null.
+  private GtkSource.View get_item_text( int pos ) {
+    var w = get_item( pos );
+    return( Utils.get_child_at_index( w, 0 ) as GtkSource.View );
+  }
+
+  // Returns the image item at the given index if it exists; otherwise, returns null.
+  private Picture get_item_image( int pos ) {
+    var w = get_item( pos );
+    return( Utils.get_child_at_index( w, 0 ) as Picture );
+  }
+
+  // Grabs the focus of the note item at the specified position.
+  private void grab_focus_of_item( int pos ) {
+    if( _note.get_item( pos ).item_type.is_text() ) {
+      get_item_text( pos ).grab_focus();
+    } else {
+      get_item_image( pos ).grab_focus();
+    }
+  }
+
   // Sets the height of the text widget
   private void set_text_height( GtkSource.View text ) {
 
@@ -223,12 +245,11 @@ public class NotePanel : Box {
 
   // Adds a new item above or below the item at the given index.
   private void add_item( int index, bool above ) {
-
     var item = new NoteItemMarkdown();
-    _note.add_note_item( (uint)(above ? index : (index + 1)), item );
-    var w = add_markdown_item( item, (above ? index : (index + 1)) );
-    w.grab_focus();
-
+    var ins_index = above ? index : (index + 1);
+    _note.add_note_item( (uint)ins_index, item );
+    add_markdown_item( item, ins_index );
+    grab_focus_of_item( ins_index );
   }
 
   // Split the current item into two items at the insertion point.
@@ -236,13 +257,14 @@ public class NotePanel : Box {
 
     // Get the current text widget and figure out the location of
     // the insertion cursor.
-    var text   = (GtkSource.View)Utils.get_child_at_index( _content, index );
+    var text   = get_item_text( index );
     var cursor = text.buffer.cursor_position;
 
     // Create a copy of the new item, assign it the text after
     // the insertion cursor, and remove the text after the insertion
     // cursor from the original item.
     var item     = _note.get_item( index );
+    item.content = text.buffer.text;
     var first    = item.content.substring( 0, cursor ); 
     var last     = item.content.substring( cursor );
     var new_item = item.item_type.create();
@@ -254,13 +276,13 @@ public class NotePanel : Box {
     // Update the original item contents and add the new item
     // after the original.
     text.buffer.text = item.content;
-    text = (GtkSource.View)insert_content_item( new_item, (index + 1) );
+    insert_content_item( new_item, (index + 1) );
+    text = get_item_text( index + 1 );
 
     // Adjust the insertion cursor to the beginning of the new text
     TextIter iter;
-    var insert = text.buffer.get_insert();
     text.buffer.get_start_iter( out iter );
-    text.buffer.move_mark( insert, iter );
+    text.buffer.place_cursor( iter );
 
     text.grab_focus();
 
@@ -282,27 +304,26 @@ public class NotePanel : Box {
     }
 
     // Merge the note text, delete the note item and delete the item from the content area
-    var above_text   = (GtkSource.View)Utils.get_child_at_index( _content, above_index );
-    var text         = (GtkSource.View)Utils.get_child_at_index( _content, index );
+    var above_text   = get_item_text( above_index );
+    var text         = get_item_text( index );
     var text_to_move = text.buffer.text;
 
     if( text_to_move != "" ) {
 
-      // Update notes
-      _note.get_item( above_index ).content += text_to_move;
-
       // Update above text UI
       TextIter iter;
-      var insert = above_text.buffer.get_insert();
-      above_text.buffer.get_iter_at_mark( out iter, insert );
-      above_text.buffer.text += text.buffer.text;
-      above_text.buffer.move_mark( insert, iter );
+      above_text.buffer.get_end_iter( out iter );
+      var above_end = above_text.buffer.create_mark( "__end", iter, true );
+      above_text.buffer.insert( ref iter, text.buffer.text, text.buffer.text.length );
+      above_text.buffer.get_iter_at_mark( out iter, above_end );
+      above_text.buffer.place_cursor( iter );
+      above_text.buffer.delete_mark( above_end );
 
     }
 
     // Remove the current item
     _note.delete_note_item( (uint)index );
-    _content.remove( text );
+    _content.remove( get_item( index ) );
 
     // Grab the above text widget for keyboard input
     above_text.grab_focus();
@@ -321,25 +342,28 @@ public class NotePanel : Box {
     key.key_pressed.connect((keyval, keycode, state) => {
       var shift   = (bool)(state & Gdk.ModifierType.SHIFT_MASK);
       var control = (bool)(state & Gdk.ModifierType.CONTROL_MASK);
-      var index   = Utils.get_child_index( _content, text );
+      var index   = Utils.get_child_index( _content, text.parent );
       switch( keyval ) {
         case Gdk.Key.Return : 
           if( control && shift ) {
             add_item( index, true );
             return( true );
-          } else if( control ) {
+          } else if( shift ) {
             add_item( index, false );
             return( true );
-          } else if( shift ) {
+          }
+          break;
+        case Gdk.Key.slash :
+          if( control ) {
             split_item( index );
             return( true );
           }
           break;
         case Gdk.Key.BackSpace :
           if( index > 0 ) {
-            TextIter start;
-            text.buffer.get_iter_at_offset( out start, 0 );
-            if( start.is_cursor_position() && join_items( index ) ) {
+            TextIter cursor;
+            text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );
+            if( cursor.is_start() && join_items( index ) ) {
               return( true );
             }
           }
@@ -357,7 +381,7 @@ public class NotePanel : Box {
     } else if( pos == 0 ) {
       _content.prepend( w );
     } else {
-      var sibling = Utils.get_child_at_index( _content, (pos - 1) );
+      var sibling = get_item( pos - 1 );
       _content.insert_child_after( w, sibling );
     }
   }
@@ -375,7 +399,7 @@ public class NotePanel : Box {
     }
   }
 
-  private GtkSource.View add_text_item( NoteItem item, string lang_id, int pos = -1 ) {
+  private Widget add_text_item( NoteItem item, string lang_id, int pos = -1 ) {
 
     var lang_mgr = new GtkSource.LanguageManager();
     var lang     = lang_mgr.get_language( lang_id );
@@ -391,7 +415,15 @@ public class NotePanel : Box {
       halign    = Align.FILL,
       valign    = Align.FILL,
       vexpand   = true,
-      editable  = true
+      editable  = true,
+      margin_top = 5,
+      margin_bottom = 5,
+      margin_start  = 5,
+      margin_end    = 5
+    };
+
+    var frame = new Frame( null ) {
+      child = text
     };
 
     item.item_type.initialize_text( text );
@@ -402,7 +434,7 @@ public class NotePanel : Box {
     text.add_controller( focus );
 
     focus.enter.connect(() => {
-      set_current_item( Utils.get_child_index( _content, text ) );
+      set_current_item( Utils.get_child_index( _content, frame ) );
 
       // Make the UI display Markdown toolbar
       // text.has_frame = true;
@@ -412,24 +444,21 @@ public class NotePanel : Box {
       item.content = buffer.text;
     });
 
-    add_item_to_content( text, pos );
+    add_item_to_content( frame, pos );
 
-    return( text );
+    return( frame );
 
   }
 
   // Adds a new Markdown item at the given position in the content area
   private Widget add_markdown_item( NoteItemMarkdown item, int pos = -1 ) {
-
-    var text = add_text_item( item, "markdown", pos );
-
-    return( text );
-
+    return( add_text_item( item, "markdown", pos ) );
   }
 
   private Widget add_code_item( NoteItemCode item, int pos = -1 ) {
 
-    var text = add_text_item( item, item.lang, pos );
+    var frame  = add_text_item( item, item.lang, pos );
+    var text   = (GtkSource.View)Utils.get_child_at_index( frame, 0 );
     var buffer = (GtkSource.Buffer)text.buffer;
 
     var scheme_mgr = new GtkSource.StyleSchemeManager();
@@ -443,7 +472,7 @@ public class NotePanel : Box {
     }
     */
 
-    return( text );
+    return( frame );
 
   }
 
@@ -480,11 +509,13 @@ public class NotePanel : Box {
 
     }
 
-    stdout.printf( "item.uri: %s\n", item.uri );
+    var frame = new Frame( null ) {
+      child = image
+    };
 
-    add_item_to_content( image, pos );
+    add_item_to_content( frame, pos );
 
-    return( image );
+    return( frame );
 
   }
 
