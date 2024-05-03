@@ -190,6 +190,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   /* Called when the user uses the Control-q keyboard shortcut */
   private void action_quit() {
+    GtkSource.finalize();
     destroy();
   }
 

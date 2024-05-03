@@ -65,6 +65,15 @@ public enum NoteItemType {
 		}
 	}
 
+  public ToolbarItem create_toolbar() {
+    switch( this ) {
+      case MARKDOWN :  return( new ToolbarMarkdown() );
+      case CODE     :  return( new ToolbarCode() );
+      case IMAGE    :  return( new ToolbarItem() );
+      default       :  assert_not_reached();
+    }
+  }
+
 	public void initialize_text( GtkSource.View text ) {
 		switch( this ) {
 			case MARKDOWN :  initialize_markdown_text( text );  break;

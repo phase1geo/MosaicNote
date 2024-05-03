@@ -29,6 +29,7 @@ public class NotePanel : Box {
   private Stack      _stack;
 
   private DropDown _item_selector;
+  private Stack    _toolbar_stack;
   private Entry    _title;
   private Box      _created_box;
   private Label    _created;
@@ -110,6 +111,18 @@ public class NotePanel : Box {
       grab_focus_of_item( _current_item );
     });
 
+    // Create the toolbar stack for each item type
+    _toolbar_stack = new Stack() {
+      halign = Align.FILL,
+      hexpand = true
+    };
+    _toolbar_stack.add_named( new ToolbarItem(), "none" );
+    for( int i=0; i<NoteItemType.NUM; i++ ) {
+      var type = (NoteItemType)i;
+      _toolbar_stack.add_named( type.create_toolbar(), type.to_string() );
+    }
+    _toolbar_stack.visible_child_name = "none";
+
     var created_lbl = new Label( _( "Created:" ) );
     _created = new Label( "" );
     _created_box = new Box( Orientation.HORIZONTAL, 5 ) {
@@ -124,6 +137,7 @@ public class NotePanel : Box {
       halign = Align.FILL
     };
     hbox.append( _item_selector );
+    hbox.append( _toolbar_stack );
     hbox.append( _created_box );
 
     _title = new Entry() {
@@ -386,8 +400,20 @@ public class NotePanel : Box {
     }
   }
 
+  private void set_toolbar_for_index( int index, GtkSource.Buffer? buffer ) {
+    var item = _note.get_item( index );
+    if( item.item_type.is_text() ) {
+      var toolbar = _toolbar_stack.get_child_by_name( item.item_type.to_string() );
+      if( (toolbar as ToolbarMarkdown) != null ) {
+        ((ToolbarMarkdown)toolbar).buffer = buffer;
+      } else if( (toolbar as ToolbarCode) != null ) {
+        ((ToolbarCode)toolbar).buffer = buffer;
+      }
+    }
+  }
+
   // Sets the current item and updates the UI
-  private void set_current_item( int index ) {
+  private void set_current_item( int index, GtkSource.Buffer? buffer ) {
     _current_item = index;
     _item_selector.sensitive = (index != -1);
     if( index != -1 ) {
@@ -395,13 +421,15 @@ public class NotePanel : Box {
       if( _item_selector.selected != item.item_type ) {
         _ignore = true;
         _item_selector.selected = item.item_type;
+        set_toolbar_for_index( index, buffer );
+        _toolbar_stack.visible_child_name = item.item_type.to_string();
       }
     }
   }
 
   private Widget add_text_item( NoteItem item, string lang_id, int pos = -1 ) {
 
-    var lang_mgr = new GtkSource.LanguageManager();
+    var lang_mgr = GtkSource.LanguageManager.get_default();
     var lang     = lang_mgr.get_language( lang_id );
 
     var buffer   = new GtkSource.Buffer.with_language( lang ) {
@@ -434,7 +462,7 @@ public class NotePanel : Box {
     text.add_controller( focus );
 
     focus.enter.connect(() => {
-      set_current_item( Utils.get_child_index( _content, frame ) );
+      set_current_item( Utils.get_child_index( _content, frame ), buffer );
 
       // Make the UI display Markdown toolbar
       // text.has_frame = true;
