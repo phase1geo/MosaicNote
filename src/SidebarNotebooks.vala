@@ -39,6 +39,7 @@ public class SidebarNotebooks : Box {
 		_win.notebooks.changed.connect( populate_tree );
 
 		_node_box = new ListBox() {
+      margin_top = 10,
 			selection_mode = SelectionMode.SINGLE
 		};
 
@@ -50,10 +51,11 @@ public class SidebarNotebooks : Box {
 			}
    	});
 
-		var expander = new Expander( _( "Notebooks" ) ) {
+		var expander = new Expander( Utils.make_title( _( "Notebooks" ) ) ) {
 			halign = Align.START,
 			hexpand = true,
 			expanded = true,
+      use_markup = true,
 			child = _node_box
 		};
 

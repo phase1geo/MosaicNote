@@ -39,7 +39,8 @@ public class SidebarTags : Box {
 		};
 		_lb.row_selected.connect( tag_selected );
 
-		var expander = new Expander( _( "Tags" ) ) {
+		var expander = new Expander( Utils.make_title( _( "Tags" ) ) ) {
+			use_markup = true,
 			child = _lb
 		};
 

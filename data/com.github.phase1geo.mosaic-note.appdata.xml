@@ -38,7 +38,7 @@
     <value key="x-appcenter-suggested-price">10</value>
     <value key="x-appcenter-stripe">12345678</value>
   </custom>
-  <content_rating type="oars-1.1" />
+  <content_rating type="oars-1.1"/>
   <releases>
   </releases>
 </component>

@@ -451,8 +451,8 @@ public class NotePanel : Box {
 
     var image = new Picture() {
       halign = Align.FILL,
-      valign = Align.FILL
-      // content_fit = ContentFit.CONTAINS 
+      valign = Align.FILL // ,
+ //     content_fit = ContentFit.SCALE_DOWN
     };
 
     if( item.uri == "" ) {

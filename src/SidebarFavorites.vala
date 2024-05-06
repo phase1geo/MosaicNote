@@ -34,10 +34,14 @@ public class SidebarFavorites : Box {
 		_win = win;
 
 		// Create listbox
-    _lb = new ListBox();
+    _lb = new ListBox() {
+    	margin_top = 10
+    };
+
     _lb.bind_model( _win.favorites.model, create_favorite );
 
-		var expander = new Expander( _( "Favorites" ) ) {
+		var expander = new Expander( Utils.make_title( _( "Favorites" ) ) ) {
+			use_markup = true,
 			child = _lb
 		};
 

@@ -1,0 +1,11 @@
+src/Application.vala
+src/MainWindow.vala
+src/NoteItem.vala
+src/NotePanel.vala
+src/NotesPanel.vala
+src/Note.vala
+src/SidebarFavorites.vala
+src/SidebarNotebooks.vala
+src/SidebarTags.vala
+src/Utils.vala
+data/com.github.phase1geo.mosaic-note.shortcuts.ui

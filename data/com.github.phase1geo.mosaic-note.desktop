@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=MosaicNote
+GenericName=MosaicNote
+Comment=Application Developer Notebook
+Categories=Utility;Office;
+Exec=com.github.phase1geo.mosaic-note
+Icon=com.github.phase1geo.mosaic-note
+Terminal=false
+Type=Application
+MimeType=application/com.github.phase1geo.mosaic-note;
+X-GNOME-Gettext-Domain=MosaicNote
+X-GNOME-UsesNotifications=true
+Keywords=Notebook;Notes;Development;

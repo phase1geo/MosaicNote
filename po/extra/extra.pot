@@ -1,0 +1,57 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the extra package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: extra\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-05-06 17:41-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: data/com.github.phase1geo.mosaic-note.desktop.in:3
+#: data/com.github.phase1geo.mosaic-note.desktop.in:4
+#: data/com.github.phase1geo.mosaic-note.appdata.xml.in:7
+msgid "MosaicNote"
+msgstr ""
+
+#: data/com.github.phase1geo.mosaic-note.desktop.in:5
+msgid "Application Developer Notebook"
+msgstr ""
+
+#: data/com.github.phase1geo.mosaic-note.desktop.in:14
+msgid "Notebook;Notes;Development;"
+msgstr ""
+
+#: data/com.github.phase1geo.mosaic-note.appdata.xml.in:8
+msgid "When you want more than just Markdown for your notes."
+msgstr ""
+
+#: data/com.github.phase1geo.mosaic-note.appdata.xml.in:10
+#: data/com.github.phase1geo.mosaic-note.appdata.xml.in:15
+msgid "TBD"
+msgstr ""
+
+#: data/com.github.phase1geo.mosaic-note.appdata.xml.in:13
+msgid "Features:"
+msgstr ""
+
+#: data/com.github.phase1geo.mosaic-note.appdata.xml.in:23
+msgid "Entry Panel"
+msgstr ""
+
+#: data/com.github.phase1geo.mosaic-note.appdata.xml.in:27
+msgid "Review Panel"
+msgstr ""
+
+#: data/com.github.phase1geo.mosaic-note.appdata.xml.in:32
+msgid "Trevor Williams"
+msgstr ""
