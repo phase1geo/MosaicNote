@@ -354,8 +354,6 @@ public class NotebookTree {
   // Loads the contents of this notebook from XML format
   private void load() {
 
-  	stdout.printf( "In NotebookTree.load\n" );
-
     var doc = Xml.Parser.read_file( xml_file(), null, (Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING) );
     if( doc == null ) {
       return;
@@ -380,7 +378,6 @@ public class NotebookTree {
 
     for( Xml.Node* it = root->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "node") ) {
-      	stdout.printf( "Found notebook tree node\n" );
       	var node = new Node.from_xml( it, null );
       	node.changed.connect( set_modified );
       	_nodes.append_val( node );

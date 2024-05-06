@@ -16,6 +16,9 @@ sources += files(
     'SidebarNotebooks.vala',
     'SidebarTags.vala',
     'Tags.vala',
+    'ToolbarCode.vala',
+    'ToolbarItem.vala',
+    'ToolbarMarkdown.vala',
     'Utils.vala'
 )
 

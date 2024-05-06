@@ -52,6 +52,10 @@ public enum NoteItemType {
 		}
 	}
 
+  public bool is_text() {
+    return( (this == MARKDOWN) || (this == CODE) );
+  }
+
 	public NoteItem create() {
 		switch( this ) {
 			case MARKDOWN :  return( new NoteItemMarkdown() );
@@ -60,6 +64,15 @@ public enum NoteItemType {
 			default       :  assert_not_reached();
 		}
 	}
+
+  public ToolbarItem create_toolbar() {
+    switch( this ) {
+      case MARKDOWN :  return( new ToolbarMarkdown() );
+      case CODE     :  return( new ToolbarCode() );
+      case IMAGE    :  return( new ToolbarItem() );
+      default       :  assert_not_reached();
+    }
+  }
 
 	public void initialize_text( GtkSource.View text ) {
 		switch( this ) {
