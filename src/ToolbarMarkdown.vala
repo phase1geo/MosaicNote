@@ -23,26 +23,72 @@ using Gtk;
 
 public class ToolbarMarkdown : ToolbarItem {
 
-  public TextBuffer? buffer { get; set; default = null; }
+  public GtkSource.View? view { get; set; default = null; }
 
   // Constructor
   public ToolbarMarkdown() {
 
     base( NoteItemType.MARKDOWN );
 
-    var bold = new Button.from_icon_name( "format-text-bold-symbolic" ) {
-      has_frame = false
+    var bold = new Button() {
+      has_frame = false,
+      tooltip_markup = Utils.tooltip_with_accel( _( "Bold" ), "<Control>b" ),
+      child = create_label( " <b>B</b> " )
     };
-
     bold.clicked.connect( insert_bold );
-
     append( bold );
+
+    var italics = new Button() {
+      has_frame = false,
+      tooltip_markup = Utils.tooltip_with_accel( _( "Italic" ), "<Control>i" ),
+      child = create_label( " <i>I</i> " )
+    };
+    italics.clicked.connect( insert_italics );
+    append( italics );
+
+    var strike = new Button() {
+      has_frame = false,
+      tooltip_text = _( "Strikethrough" ),
+      child = create_label( " <s>S</s>" )
+    };
+    strike.clicked.connect( insert_strike );
+    append( strike );
+
+    var code = new Button() {
+      has_frame = false,
+      tooltip_text = _( "Code Block" ),
+      child = create_label( "{ }" )
+    };
+    code.clicked.connect( insert_code );
+    append( code );
 
   }
 
-  // If text is selected, surrounds text with bold
+  private Widget create_label( string markup ) {
+    var lbl = new Label( "<span size=\"large\">" + markup + "</span>" ) {
+      use_markup = true
+    };
+    return( lbl );
+  }
+
   private void insert_bold() {
-    stdout.printf( "HERE!\n" );
+    MarkdownFuncs.insert_bold_text( view, view.buffer );
+    view.grab_focus();
+  }
+
+  private void insert_italics() {
+    MarkdownFuncs.insert_italicize_text( view, view.buffer );
+    view.grab_focus();
+  }
+
+  private void insert_strike() {
+    MarkdownFuncs.insert_strikethrough_text( view, view.buffer );
+    view.grab_focus();
+  }
+
+  private void insert_code() {
+    MarkdownFuncs.insert_code_text( view, view.buffer );
+    view.grab_focus();
   }
 
 }

@@ -16,6 +16,16 @@
       <summary>Stores the last directory accessed by the file dialog</summary>
       <description>Stores the last directory accessed by the file dialog</description>
     </key>
+    <key name="last-notebook" type="i">
+      <default>0</default>
+      <summary>Stores the notebook ID of the last selected notebook before application was quit.</summary>
+      <description>Stores the notebook ID of the last selected notebook before application was quit.</description>
+    </key>
+    <key name="last-note" type="i">
+      <default>0</default>
+      <summary>Stores the note ID of the last selected note before application was quite.</summary>
+      <description>Stores the note ID of the last selected note before application was quite.</description>
+    </key>
     <key name="default-theme" type="s">
       <default>"Adwaita"</default>
       <summary>Name of default theme to use in text fields</summary>
@@ -31,20 +41,25 @@
       <summary>Font size used in text editor areas</summary>
       <description>Font size used in text editor areas</description>
     </key>
-    <key name="editor-margin" type="i">
-      <default>20</default>
-      <summary>Margin (in pixels) used in the editor</summary>
-      <description>Margin (in pixels) used in the editor</description>
-    </key>
     <key name="editor-line-spacing" type="i">
       <default>5</default>
       <summary>Amount of space between lines of the editor</summary>
       <description>Amount of space between lines of the editor</description>
     </key>
+    <key name="editor-vim-mode" type="b">
+      <default>false</default>
+      <summary>Specifies if the code editor should enable Vim mode</summary>
+      <description>Specifies if the code editor should enable Vim mode</description>
+    </key>
     <key name="enable-spellchecker" type="b">
       <default>true</default>
       <summary>Enables or disables the spelling checker</summary>
       <description>Enables or disables the spelling checker</description>
+    </key>
+    <key name="spellchecker-language" type="s">
+      <default>"system"</default>
+      <summary>Specifies the spelling checker language dictionary</summary>
+      <description>Specifies the spelling checker language dictionary</description>
     </key>
     <key name="developer-mode" type="b">
       <default>false</default>

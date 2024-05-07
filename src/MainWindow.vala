@@ -104,7 +104,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     _full_tags = new FullTags();
 
     /* Create title toolbar */
-    // TODO
+    header.pack_end( create_miscellaneous() );
 
     /* Create content area */
     _sidebar = new Sidebar( this );
@@ -116,10 +116,12 @@ public class MainWindow : Gtk.ApplicationWindow {
     _sidebar.selected_notebook.connect((nb) => {
       _notebook = nb;
       _notes.populate_with_notebook( nb );
+      MosaicNote.settings.set_int( "last-notebook", nb.id );
     });
 
     _notes.note_selected.connect((note) => {
       _note.populate_with_note( note );
+      MosaicNote.settings.set_int( "last-note", note.id );
     });
 
     _notes_pw = new Paned( Orientation.HORIZONTAL ) {
@@ -173,10 +175,29 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Adds keyboard shortcuts for the menu actions */
   private void add_keyboard_shortcuts( Gtk.Application app ) {
 
-    app.set_accels_for_action( "win.action_save",                { "<Control>s" } );
-    app.set_accels_for_action( "win.action_quit",                { "<Control>q" } );
-    app.set_accels_for_action( "win.action_shortcuts",           { "<Control>question" } );
-    app.set_accels_for_action( "win.action_preferences",         { "<Control>comma" } );
+    app.set_accels_for_action( "win.action_save",        { "<Control>s" } );
+    app.set_accels_for_action( "win.action_quit",        { "<Control>q" } );
+    app.set_accels_for_action( "win.action_shortcuts",   { "<Control>question" } );
+    app.set_accels_for_action( "win.action_preferences", { "<Control>comma" } );
+
+  }
+
+  /* Creates the miscellaneous menu and menu button for the header bar */
+  private Widget create_miscellaneous() {
+
+    var menu = new GLib.Menu();
+    var img  = new Image.from_icon_name( get_header_icon_name( "emblem-system" ) );
+
+    menu.append( _( "Shorcuts Cheatsheet…" ), "win.action_shortcuts" );
+    menu.append( _( "Preferences…" ), "win.action_preferences" );
+
+    var mb = new MenuButton() {
+      has_frame = !on_elementary,
+      child = img,
+      menu_model = menu
+    };
+
+    return( mb );
 
   }
 
@@ -213,23 +234,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   /* Displays the preferences window and then handles its closing */
   private void action_preferences() {
-
-    /* TODO
-    _prefs = new Preferences( this, _journals );
-    _prefs.show();
-
-    _prefs.close_request.connect(() => {
-      Idle.add(() => {
-        if( is_active ) {
-          _prefs = null;
-          return( false );
-        }
-        return( true );
-      });
-      return( false );
-    });
-    */
-
+    var prefs = new Preferences( this );
+    prefs.show();
   }
 
   /* Generate a notification */

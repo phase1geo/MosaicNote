@@ -401,20 +401,20 @@ public class NotePanel : Box {
     }
   }
 
-  private void set_toolbar_for_index( int index, GtkSource.Buffer? buffer ) {
+  private void set_toolbar_for_index( int index, GtkSource.View? view ) {
     var item = _note.get_item( index );
     if( item.item_type.is_text() ) {
       var toolbar = _toolbar_stack.get_child_by_name( item.item_type.to_string() );
       if( (toolbar as ToolbarMarkdown) != null ) {
-        ((ToolbarMarkdown)toolbar).buffer = buffer;
+        ((ToolbarMarkdown)toolbar).view = view;
       } else if( (toolbar as ToolbarCode) != null ) {
-        ((ToolbarCode)toolbar).buffer = buffer;
+        ((ToolbarCode)toolbar).view = view;
       }
     }
   }
 
   // Sets the current item and updates the UI
-  private void set_current_item( int index, GtkSource.Buffer? buffer ) {
+  private void set_current_item( int index, GtkSource.View? view ) {
     _current_item = index;
     _item_selector.sensitive = (index != -1);
     if( index != -1 ) {
@@ -422,7 +422,7 @@ public class NotePanel : Box {
       if( _item_selector.selected != item.item_type ) {
         _ignore = true;
         _item_selector.selected = item.item_type;
-        set_toolbar_for_index( index, buffer );
+        set_toolbar_for_index( index, view );
         _toolbar_stack.visible_child_name = item.item_type.to_string();
       }
     }
@@ -445,6 +445,7 @@ public class NotePanel : Box {
       valign    = Align.FILL,
       vexpand   = true,
       editable  = true,
+      enable_snippets = true,
       margin_top = 5,
       margin_bottom = 5,
       margin_start  = 5,
@@ -462,7 +463,7 @@ public class NotePanel : Box {
     text.add_controller( focus );
 
     focus.enter.connect(() => {
-      set_current_item( Utils.get_child_index( _content, box ), buffer );
+      set_current_item( Utils.get_child_index( _content, box ), text );
       box.add_css_class( "active-item" );
 
       // Make the UI display Markdown toolbar

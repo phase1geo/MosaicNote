@@ -42,6 +42,20 @@ public class Utils {
     }
   }
 
+  /* Checks to see if the given URI image extension is supported */
+  public static bool is_uri_supported_image( string uri ) {
+    var parts   = uri.split( "." );
+    var uri_ext = parts[parts.length - 1].down();
+    foreach( var format in Pixbuf.get_formats() ) {
+      foreach( var ext in format.get_extensions() ) {
+        if( ext == uri_ext ) {
+          return( true );
+        }
+      }
+    }
+    return( false );
+  }
+
   /*
    Returns a regular expression useful for parsing clickable URLs.
   */
