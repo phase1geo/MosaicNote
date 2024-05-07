@@ -145,6 +145,7 @@ public class NotePanel : Box {
       placeholder_text = _( "Title (Optional)" ),
       halign = Align.FILL
     };
+    _title.add_css_class( "note-title" );
 
     _title.activate.connect(() => {
       if( _note != null ) {
@@ -153,7 +154,8 @@ public class NotePanel : Box {
       grab_focus_of_item( 0 );
     });
 
-    var separator = new Separator( Orientation.HORIZONTAL );
+    var separator1 = new Separator( Orientation.HORIZONTAL );
+    var separator2 = new Separator( Orientation.HORIZONTAL );
 
     _content = new Box( Orientation.VERTICAL, 10 ) {
       halign = Align.FILL,
@@ -172,8 +174,9 @@ public class NotePanel : Box {
 
     var box = new Box( Orientation.VERTICAL, 5 );
     box.append( hbox );
+    box.append( separator1 );
     box.append( _title );
-    box.append( separator );
+    box.append( separator2 );
     box.append( sw );
 
     return( box );
@@ -419,12 +422,10 @@ public class NotePanel : Box {
     _item_selector.sensitive = (index != -1);
     if( index != -1 ) {
       var item = _note.get_item( index );
-      if( _item_selector.selected != item.item_type ) {
-        _ignore = true;
-        _item_selector.selected = item.item_type;
-        set_toolbar_for_index( index, view );
-        _toolbar_stack.visible_child_name = item.item_type.to_string();
-      }
+      _ignore = true;
+      _item_selector.selected = item.item_type;
+      set_toolbar_for_index( index, view );
+      _toolbar_stack.visible_child_name = item.item_type.to_string();
     }
   }
 
@@ -493,15 +494,34 @@ public class NotePanel : Box {
     var buffer = (GtkSource.Buffer)text.buffer;
 
     var scheme_mgr = new GtkSource.StyleSchemeManager();
-    var scheme     = scheme_mgr.get_scheme( "oblivion" );
+    var scheme     = scheme_mgr.get_scheme( MosaicNote.settings.get_string( "default-theme" ) );
     buffer.style_scheme = scheme;
 
-    /*
-    var scheme_ids = scheme_mgr.get_scheme_ids();
-    foreach( var scheme_id in scheme_ids ) {
-      stdout.printf( "  scheme_id: %s\n", scheme_id );
+    var im_context = new GtkSource.VimIMContext();
+    im_context.set_client_widget( text );
+
+    var key = new EventControllerKey();
+    key.set_im_context( im_context );
+    key.set_propagation_phase( PropagationPhase.CAPTURE );
+
+    // Handle command_bar_text and command_text
+
+    if( MosaicNote.settings.get_boolean( "editor-vim-mode" ) ) {
+      text.add_controller( key );
     }
-    */
+
+    MosaicNote.settings.changed["default-theme"].connect(() => {
+      buffer.style_scheme = scheme_mgr.get_scheme( MosaicNote.settings.get_string( "default-theme" ) );
+    });
+
+    // Handle any changes to the Vim mode
+    MosaicNote.settings.changed["editor-vim-mode"].connect(() => {
+      if( MosaicNote.settings.get_boolean( "editor-vim-mode" ) ) {
+        text.add_controller( key );
+      } else {
+        text.remove_controller( key );
+      }
+    });
 
     return( frame );
 

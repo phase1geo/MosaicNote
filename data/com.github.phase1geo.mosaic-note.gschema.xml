@@ -11,6 +11,16 @@
       <summary>Most recent height of minder window</summary>
       <description>Most recent height of minder window</description>
     </key>
+    <key name="sidebar-width" type="i">
+      <default>200</default>
+      <summary>Specifies the default width of the sidebar panel.</summary>
+      <description>Specifies the default width of the sidebar panel.</description>
+    </key>
+    <key name="notes-width" type="i">
+      <default>200</default>
+      <summary>Specifies the default width of the notes panel.</summary>
+      <description>Specifies the default width of the notes panel.</description>
+    </key>
     <key name="last-directory" type="s">
       <default>""</default>
       <summary>Stores the last directory accessed by the file dialog</summary>

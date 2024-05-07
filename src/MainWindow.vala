@@ -108,9 +108,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Create content area */
     _sidebar = new Sidebar( this );
-    _sidebar.set_size_request( 200, -1 );
     _notes   = new NotesPanel();
-    _notes.set_size_request( 200, -1 );
     _note    = new NotePanel( this );
 
     _sidebar.selected_notebook.connect((nb) => {
@@ -128,23 +126,30 @@ public class MainWindow : Gtk.ApplicationWindow {
       start_child        = _notes,
       end_child          = _note,
       resize_start_child = false,
-      resize_end_child   = true
+      resize_end_child   = true,
+      position           = settings.get_int( "notes-width" )
     };
 
     _sidebar_pw = new Paned( Orientation.HORIZONTAL ) {
       start_child        = _sidebar,
       end_child          = _notes_pw,
       resize_start_child = false,
-      resize_end_child   = true
+      resize_end_child   = true,
+      position           = settings.get_int( "sidebar-width" )
     };
 
     // Make the sidebar paned window the child of the window
     child = _sidebar_pw;
 
+    // Select the notebook and note that was last saved (if valid)
+    _sidebar.select_notebook_and_note( settings.get_int( "last-notebook" ), settings.get_int( "last-note" ) );
+
     show();
 
     /* Handle any request to close the window */
     close_request.connect(() => {
+      settings.set_int( "sidebar-width", _sidebar_pw.position );
+      settings.set_int( "notes-width", _notes_pw.position );
       action_save();
       return( false );
     });

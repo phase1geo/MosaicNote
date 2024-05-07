@@ -94,6 +94,10 @@ public class SidebarNotebooks : Box {
 
 	}
 
+  public void select_notebook( int id ) {
+    // FOOBAR
+  }
+
 	// Populates the notebook tree with the updated version of win.notebooks
 	private void populate_tree() {
 		// _node_box.remove_all();

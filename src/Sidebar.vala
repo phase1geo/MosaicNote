@@ -66,5 +66,9 @@ public class Sidebar : Box {
   	append( bbox );
 
   }
+
+  public void select_notebook_and_note( int notebook_id, int note_id ) {
+    _notebooks.select_notebook( notebook_id );
+  }
 	
 }
