@@ -37,6 +37,8 @@ public class NotePanel : Box {
   private int      _current_item = -1;
   private bool     _ignore = false;
 
+  private SpellChecker _spell;
+
 	// Default constructor
 	public NotePanel( MainWindow win ) {
 
@@ -64,7 +66,63 @@ public class NotePanel : Box {
 
     append( _stack );
 
+    // Initialize the spell checker
+    initialize_spell_checker();
+
   }
+
+  private void initialize_spell_checker() {
+
+    _spell = new SpellChecker();
+    // _spell.populate_extra_menu.connect( populate_extra_menu );
+
+    update_spell_language();
+
+  }
+
+  private void update_spell_language() {
+
+    var lang        = MosaicNote.settings.get_string( "spellchecker-language" );
+    var lang_exists = false;
+
+    if( lang == "system" ) {
+      var env_lang = Environment.get_variable( "LANG" ).split( "." );
+      lang = env_lang[0];
+    }
+ 
+    var lang_list = new Gee.ArrayList<string>();
+    _spell.get_language_list( lang_list );
+
+    /* Check to see if the given language exists */
+    lang_list.foreach((elem) => {
+      if( elem == lang ) {
+        _spell.set_language( lang );
+        lang_exists = true;
+        return( false );
+      }
+      return( true );
+    });
+
+    /* Based on the search, set the language to use in the spell checker */
+    if( lang_list.size == 0 ) {
+      _spell.set_language( null );
+    } else if( !lang_exists ) {
+      _spell.set_language( lang_list.get( 0 ) );
+    }
+
+  }
+
+  /* Sets the spellchecker for the current textview widget */
+  private void set_spellchecker( GtkSource.View text ) {
+
+    _spell.detach();
+
+    if( MosaicNote.settings.get_boolean( "enable-spellchecker" ) ) {
+      _spell.attach( text ); 
+    }
+
+  }
+
 
   // Creates the blank UI
   private Widget create_blank_ui() {
@@ -425,6 +483,7 @@ public class NotePanel : Box {
       _ignore = true;
       _item_selector.selected = item.item_type;
       set_toolbar_for_index( index, view );
+      set_spellchecker( view );
       _toolbar_stack.visible_child_name = item.item_type.to_string();
     }
   }
@@ -450,7 +509,8 @@ public class NotePanel : Box {
       margin_top = 5,
       margin_bottom = 5,
       margin_start  = 5,
-      margin_end    = 5
+      margin_end    = 5,
+      extra_menu    = new GLib.Menu()
     };
 
     var box = new Box( Orientation.VERTICAL, 0 );
