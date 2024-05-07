@@ -158,7 +158,8 @@ public class NotePanel : Box {
     _content = new Box( Orientation.VERTICAL, 10 ) {
       halign = Align.FILL,
       valign = Align.START,
-      vexpand = true
+      vexpand = true,
+      margin_bottom = 200
     };
 
     var sw = new ScrolledWindow() {
@@ -450,9 +451,8 @@ public class NotePanel : Box {
       margin_end    = 5
     };
 
-    var frame = new Frame( null ) {
-      child = text
-    };
+    var box = new Box( Orientation.VERTICAL, 0 );
+    box.append( text );
 
     item.item_type.initialize_text( text );
 
@@ -462,7 +462,8 @@ public class NotePanel : Box {
     text.add_controller( focus );
 
     focus.enter.connect(() => {
-      set_current_item( Utils.get_child_index( _content, frame ), buffer );
+      set_current_item( Utils.get_child_index( _content, box ), buffer );
+      box.add_css_class( "active-item" );
 
       // Make the UI display Markdown toolbar
       // text.has_frame = true;
@@ -470,11 +471,12 @@ public class NotePanel : Box {
 
     focus.leave.connect(() => {
       item.content = buffer.text;
+      box.remove_css_class( "active-item" );
     });
 
-    add_item_to_content( frame, pos );
+    add_item_to_content( box, pos );
 
-    return( frame );
+    return( box );
 
   }
 
@@ -537,13 +539,13 @@ public class NotePanel : Box {
 
     }
 
-    var frame = new Frame( null ) {
-      child = image
-    };
+    var box = new Box( Orientation.VERTICAL, 0 );
+    box.append( image );
+    box.set_size_request( -1, 500 );
 
-    add_item_to_content( frame, pos );
+    add_item_to_content( box, pos );
 
-    return( frame );
+    return( box );
 
   }
 

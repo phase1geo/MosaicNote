@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: com.github.phase1geo.mosaic-note\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-06 17:41-0500\n"
+"POT-Creation-Date: 2024-05-06 19:22-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -47,27 +47,27 @@ msgstr ""
 msgid "Image"
 msgstr ""
 
-#: src/NotePanel.vala:71
+#: src/NotePanel.vala:72
 msgid "No Note Selected"
 msgstr ""
 
-#: src/NotePanel.vala:116
+#: src/NotePanel.vala:126
 msgid "Created:"
 msgstr ""
 
-#: src/NotePanel.vala:134
+#: src/NotePanel.vala:145
 msgid "Title (Optional)"
 msgstr ""
 
-#: src/NotePanel.vala:460
+#: src/NotePanel.vala:519
 msgid "Open Image"
 msgstr ""
 
-#: src/NotePanel.vala:460
+#: src/NotePanel.vala:519
 msgid "Open"
 msgstr ""
 
-#: src/NotesPanel.vala:51
+#: src/NotesPanel.vala:50
 msgid "Add new note"
 msgstr ""
 

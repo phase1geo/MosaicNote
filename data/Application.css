@@ -1,3 +1,8 @@
 .listbox-head {
    font-size: 12pt;
 }
+
+.active-item {
+   border-style: solid;
+   border-width: 1px;
+}
