@@ -56,6 +56,10 @@ public enum NoteItemType {
     return( (this == MARKDOWN) || (this == CODE) );
   }
 
+  public bool spell_checkable() {
+    return( this == MARKDOWN );
+  }
+
 	public NoteItem create() {
 		switch( this ) {
 			case MARKDOWN :  return( new NoteItemMarkdown() );

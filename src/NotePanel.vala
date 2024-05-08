@@ -74,9 +74,17 @@ public class NotePanel : Box {
   private void initialize_spell_checker() {
 
     _spell = new SpellChecker();
-    // _spell.populate_extra_menu.connect( populate_extra_menu );
+    _spell.populate_extra_menu.connect( populate_extra_menu );
 
     update_spell_language();
+
+  }
+
+  private void populate_extra_menu( TextView view ) {
+
+    var extra = new GLib.Menu();
+
+    view.extra_menu = extra;
 
   }
 
@@ -483,7 +491,9 @@ public class NotePanel : Box {
       _ignore = true;
       _item_selector.selected = item.item_type;
       set_toolbar_for_index( index, view );
-      set_spellchecker( view );
+      if( item.item_type.spell_checkable() ) {
+        set_spellchecker( view );
+      }
       _toolbar_stack.visible_child_name = item.item_type.to_string();
     }
   }
@@ -509,8 +519,7 @@ public class NotePanel : Box {
       margin_top = 5,
       margin_bottom = 5,
       margin_start  = 5,
-      margin_end    = 5,
-      extra_menu    = new GLib.Menu()
+      margin_end    = 5
     };
 
     var box = new Box( Orientation.VERTICAL, 0 );

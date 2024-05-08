@@ -43,7 +43,7 @@ public class SpellChecker {
     { "action_none",              null },
   };
 
-  public signal void populate_extra_menu();
+  public signal void populate_extra_menu( TextView view );
 
   /* Default constructor */
   public SpellChecker() {
@@ -267,7 +267,7 @@ public class SpellChecker {
     get_word_extents_from_mark( out start, out end, mark_click );
 
     view.extra_menu = null;
-    populate_extra_menu();
+    populate_extra_menu( view );
 
     if( !start.has_tag( tag_highlight ) ) {
       return;
