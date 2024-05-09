@@ -456,6 +456,34 @@ public class NotePanel : Box {
             }
           }
           break;
+        case Gdk.Key.Up :
+          if( index > 0 ) {
+            TextIter cursor;
+            text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );
+            if( cursor.is_start() ) {
+              TextIter iter;
+              var t = get_item_text( index - 1 );
+              t.buffer.get_end_iter( out iter );
+              t.buffer.place_cursor( iter );
+              t.grab_focus();
+              return( true );
+            }
+          }
+          return( false );
+        case Gdk.Key.Down :
+          if( index < (_note.size() - 1) ) {
+            TextIter cursor;
+            text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );
+            if( cursor.is_end() ) {
+              TextIter iter;
+              var t = get_item_text( index + 1 );
+              t.buffer.get_start_iter( out iter );
+              t.buffer.place_cursor( iter );
+              t.grab_focus();
+              return( true );
+            }
+          }
+          return( false );
       }
       return( false );
     });
@@ -582,7 +610,7 @@ public class NotePanel : Box {
     key.set_im_context( im_context );
     key.set_propagation_phase( PropagationPhase.CAPTURE );
 
-    // Handle command_bar_text and command_text
+    // TODO - Handle command_bar_text and command_text
 
     if( MosaicNote.settings.get_boolean( "editor-vim-mode" ) ) {
       text.add_controller( key );
@@ -610,7 +638,6 @@ public class NotePanel : Box {
     var image = new Picture() {
       halign = Align.FILL,
       valign = Align.FILL // ,
- //     content_fit = ContentFit.SCALE_DOWN
     };
 
     if( item.uri == "" ) {
