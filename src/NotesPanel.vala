@@ -27,7 +27,7 @@ public class NotesPanel : Box {
 	private ListBox  _list;
   private Button   _add;
 
-	public signal void note_selected( Note note );
+	public signal void note_selected( Note? note );
 
 	// Default constructor
 	public NotesPanel() {
@@ -40,7 +40,9 @@ public class NotesPanel : Box {
 		};
 
 		_list.row_selected.connect((row) => {
-			if( row != null ) {
+			if( row == null ) {
+        note_selected( null );
+      } else {
   			note_selected( _nb.get_note( row.get_index() ) );
   		}
   	});

@@ -119,7 +119,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _notes.note_selected.connect((note) => {
       _note.populate_with_note( note );
-      MosaicNote.settings.set_int( "last-note", note.id );
+      MosaicNote.settings.set_int( "last-note", ((note == null) ? -1 : note.id) );
     });
 
     _notes_pw = new Paned( Orientation.HORIZONTAL ) {

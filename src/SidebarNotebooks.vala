@@ -75,20 +75,11 @@ public class SidebarNotebooks : Box {
 
     entry.activate.connect(() => {
       var nb = new Notebook( entry.text );
-      if( _selected_node == null ) {
-        _win.notebooks.add_notebook( nb );
-      } else {
-      	_selected_node.add_notebook( nb );
-      }
+      _win.notebooks.add_notebook( nb );
       notebook_selected( nb );
     });
 
-    if( _selected_lb == null ) {
-      _node_box.append( entry );
-    } else {
-    	var row = _selected_lb.get_selected_row();
-      _selected_lb.insert( entry, (row.get_index() + 1) );
-    }
+    _node_box.append( entry );
 
     entry.grab_focus();
 
