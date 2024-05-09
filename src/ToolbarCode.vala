@@ -49,6 +49,8 @@ public class ToolbarCode : ToolbarItem {
     var lang_mgr = GtkSource.LanguageManager.get_default();
     _supported_langs = lang_mgr.get_language_ids();
 
+    var label = new Label( _( "Language:" ) );
+
     _lang = new DropDown.from_strings( _supported_langs ) {
       enable_search = true //,
       // 4.12 feature:  search_match_mode = StringFilterMatchMode.PREFIX
@@ -66,6 +68,7 @@ public class ToolbarCode : ToolbarItem {
       }
     });
 
+    append( label );
     append( _lang );
 
   }

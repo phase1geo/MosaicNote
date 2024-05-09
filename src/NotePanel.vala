@@ -69,6 +69,15 @@ public class NotePanel : Box {
     // Initialize the spell checker
     initialize_spell_checker();
 
+    // Handle any theme updates
+    update_theme();
+    MosaicNote.settings.changed.connect((key) => {
+      switch( key ) {
+        case "editor-font-family" :
+        case "editor-font-size"   :  update_theme();  break;
+      }
+    });
+
   }
 
   private void initialize_spell_checker() {
@@ -203,7 +212,7 @@ public class NotePanel : Box {
     _created_box.append( created_lbl );
     _created_box.append( _created );
 
-    var hbox = new Box( Orientation.HORIZONTAL, 5 ) {
+    var hbox = new Box( Orientation.HORIZONTAL, 10 ) {
       halign = Align.FILL
     };
     hbox.append( _item_selector );
@@ -289,7 +298,24 @@ public class NotePanel : Box {
       case NoteItemType.MARKDOWN :  return( add_markdown_item( (NoteItemMarkdown)item, pos ) );
       case NoteItemType.CODE     :  return( add_code_item( (NoteItemCode)item, pos ) );
       case NoteItemType.IMAGE    :  return( add_image_item( (NoteItemImage)item, pos ) );
-      default         :  assert_not_reached();
+      default                    :  assert_not_reached();
+    }
+  }
+
+  // Gets the next text item.
+  private int get_next_text_item( int start_index, bool above ) {
+    if( above ) {
+      var index = (start_index - 1);
+      while( (index >= 0) && !_note.get_item( index ).item_type.is_text() ) {
+        index--;
+      }
+      return( index );
+    } else {
+      var index = (start_index + 1);
+      while( (index < _note.size()) && !_note.get_item( index ).item_type.is_text() ) {
+        index++;
+      }
+      return( (index == _note.size()) ? -1 : index );
     }
   }
 
@@ -380,11 +406,7 @@ public class NotePanel : Box {
   private bool join_items( int index ) {
 
     // Find the item above the current one that matches the type
-    var above_index = (index - 1);
-    var item_type   = _note.get_item( index ).item_type;
-    while( (above_index >= 0) && (_note.get_item( above_index ).item_type != item_type) ) {
-      above_index--;
-    }
+    var above_index = get_next_text_item( index, true );
 
     // If we are unable to join with anything, return false immediately
     if( above_index == -1 ) {
@@ -461,12 +483,15 @@ public class NotePanel : Box {
             TextIter cursor;
             text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );
             if( cursor.is_start() ) {
-              TextIter iter;
-              var t = get_item_text( index - 1 );
-              t.buffer.get_end_iter( out iter );
-              t.buffer.place_cursor( iter );
-              t.grab_focus();
-              return( true );
+              index = get_next_text_item( index, true );
+              if( index != -1 ) {
+                TextIter iter;
+                var t = get_item_text( index );
+                t.buffer.get_end_iter( out iter );
+                t.buffer.place_cursor( iter );
+                t.grab_focus();
+                return( true );
+              }
             }
           }
           return( false );
@@ -475,12 +500,15 @@ public class NotePanel : Box {
             TextIter cursor;
             text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );
             if( cursor.is_end() ) {
-              TextIter iter;
-              var t = get_item_text( index + 1 );
-              t.buffer.get_start_iter( out iter );
-              t.buffer.place_cursor( iter );
-              t.grab_focus();
-              return( true );
+              index = get_next_text_item( index, false );
+              if( index != -1 ) {
+                TextIter iter;
+                var t = get_item_text( index );
+                t.buffer.get_start_iter( out iter );
+                t.buffer.place_cursor( iter );
+                t.grab_focus();
+                return( true );
+              }
             }
           }
           return( false );
@@ -530,6 +558,19 @@ public class NotePanel : Box {
     }
   }
 
+  private void set_line_spacing( NoteItem item, GtkSource.View text ) {
+
+    var wrap    = MosaicNote.settings.get_int( "editor-line-spacing" );
+    var spacing = (item.item_type == NoteItemType.MARKDOWN) ? (wrap * 4) : wrap;
+    var above   = ((spacing % 2) == 0) ? (spacing / 2) : ((spacing - 1) / 2);
+    var below   = spacing - above;
+
+    text.pixels_above_lines = above;
+    text.pixels_below_lines = below;
+    text.pixels_inside_wrap = wrap;
+
+  }
+
   private Widget add_text_item( NoteItem item, string lang_id, int pos = -1 ) {
 
     var lang_mgr = GtkSource.LanguageManager.get_default();
@@ -559,6 +600,7 @@ public class NotePanel : Box {
 
     item.item_type.initialize_text( text );
 
+    set_line_spacing( item, text );
     set_text_height( text );
     handle_text_events( text );
 
@@ -572,6 +614,10 @@ public class NotePanel : Box {
     focus.leave.connect(() => {
       item.content = buffer.text;
       box.remove_css_class( "active-item" );
+    });
+
+    MosaicNote.settings.changed["editor-line-spacing"].connect(() => {
+      set_line_spacing( item, text );
     });
 
     // Attach the spell checker temporarily
@@ -588,9 +634,33 @@ public class NotePanel : Box {
 
   }
 
+  private void update_theme() {
+
+    var font_family = MosaicNote.settings.get_string( "editor-font-family" );
+    var font_size   = MosaicNote.settings.get_int( "editor-font-size" );
+
+    var provider = new CssProvider();
+    var css_data = """
+      .markdown-text {
+        font-family: %s;
+        font-size: %dpt;
+      }
+      .code-text {
+        font-family: monospace;
+        font-size: %dpt;
+      }
+    """.printf( font_family, font_size, font_size );
+    provider.load_from_data( css_data.data );
+    StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
+
+  }
+
   // Adds a new Markdown item at the given position in the content area
   private Widget add_markdown_item( NoteItemMarkdown item, int pos = -1 ) {
-    return( add_text_item( item, "markdown", pos ) );
+    var frame = add_text_item( item, "markdown", pos );
+    var text   = (GtkSource.View)Utils.get_child_at_index( frame, 0 );
+    text.add_css_class( "markdown-text" );
+    return( frame );
   }
 
   private Widget add_code_item( NoteItemCode item, int pos = -1 ) {
@@ -602,6 +672,8 @@ public class NotePanel : Box {
     var scheme_mgr = new GtkSource.StyleSchemeManager();
     var scheme     = scheme_mgr.get_scheme( MosaicNote.settings.get_string( "default-theme" ) );
     buffer.style_scheme = scheme;
+
+    text.add_css_class( "code-text" );
 
     var im_context = new GtkSource.VimIMContext();
     im_context.set_client_widget( text );
