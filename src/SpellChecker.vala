@@ -302,14 +302,12 @@ public class SpellChecker {
     ignore_all();
   }
 
-  private void set_buffer( TextView? new_view ) {
+  public void set_buffer( TextView? new_view ) {
 
     TextIter start, end;
 
     if( view != null ) {
       SignalHandler.disconnect_matched( view.buffer, SignalMatchType.DATA, 0, 0, null, null, this );
-      view.buffer.get_bounds( out start, out end );
-      view.buffer.remove_tag( tag_highlight, start, end );
       tag_highlight = null;
 
       view.buffer.delete_mark( mark_insert_start );
@@ -371,6 +369,16 @@ public class SpellChecker {
     set_buffer( null );
     view = null;
     deferred_check = false;
+  }
+
+  public void remove_highlights( TextView view ) {
+    TextIter start, end;
+    var tagtable  = view.buffer.get_tag_table();
+    var highlight = tagtable.lookup( "misspelled-tag" );
+    if( highlight != null ) {
+      view.buffer.get_bounds( out start, out end );
+      view.buffer.remove_tag( highlight, start, end );
+    }
   }
 
   public void recheck_all() {

@@ -123,10 +123,14 @@ public class NotePanel : Box {
   /* Sets the spellchecker for the current textview widget */
   private void set_spellchecker( GtkSource.View text ) {
 
+    var enabled = MosaicNote.settings.get_boolean( "enable-spellchecker" );
+
     _spell.detach();
 
-    if( MosaicNote.settings.get_boolean( "enable-spellchecker" ) ) {
+    if( enabled ) {
       _spell.attach( text ); 
+    } else {
+      _spell.remove_highlights( text );
     }
 
   }
@@ -544,6 +548,14 @@ public class NotePanel : Box {
       item.content = buffer.text;
       box.remove_css_class( "active-item" );
     });
+
+    // Attach the spell checker temporarily
+    if( item.item_type.spell_checkable() ) {
+      set_spellchecker( text );
+      MosaicNote.settings.changed["enable-spellchecker"].connect(() => {
+        set_spellchecker( text );
+      });
+    }
 
     add_item_to_content( box, pos );
 
