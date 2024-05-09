@@ -492,7 +492,7 @@ public class NotePanel : Box {
     _item_selector.sensitive = (index != -1);
     if( index != -1 ) {
       var item = _note.get_item( index );
-      _ignore = true;
+      _ignore = (_item_selector.selected != item.item_type);
       _item_selector.selected = item.item_type;
       set_toolbar_for_index( index, view );
       if( item.item_type.spell_checkable() ) {
@@ -539,9 +539,6 @@ public class NotePanel : Box {
     focus.enter.connect(() => {
       set_current_item( Utils.get_child_index( _content, box ), text );
       box.add_css_class( "active-item" );
-
-      // Make the UI display Markdown toolbar
-      // text.has_frame = true;
     });
 
     focus.leave.connect(() => {

@@ -48,6 +48,7 @@ public class Note : Object {
 			if( _title != value ) {
 				_title = value;
 				modified = true;
+        title_changed();
 			}
 		}
 	}
@@ -83,6 +84,7 @@ public class Note : Object {
   }
 
   public signal void changed();
+  public signal void title_changed();
 
 	// Default constructor
 	public Note( Notebook nb ) {

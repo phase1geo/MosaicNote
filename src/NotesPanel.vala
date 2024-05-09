@@ -55,6 +55,7 @@ public class NotesPanel : Box {
 			var note = new Note( _nb );
 			_nb.add_note( note );
       populate();
+      _list.select_row( _list.get_row_at_index( _nb.size() - 1 ) );
 		});
 
 		var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
@@ -95,7 +96,9 @@ public class NotesPanel : Box {
     }
 
     // Select the first row
-    // _list.select_row( _list.get_row_at_index( 0 ) );
+    if( _nb.size() > 0 ) {
+      _list.select_row( _list.get_row_at_index( 0 ) );
+    }
 
   }	
 
@@ -106,6 +109,10 @@ public class NotesPanel : Box {
       use_markup = true,
       xalign = 0
     };
+
+    note.title_changed.connect(() => {
+      title.label = Utils.make_title( note.title );
+    });
 
     var preview = new Label( note.created.format( "%b%e, %Y") ) {
       xalign = 0
