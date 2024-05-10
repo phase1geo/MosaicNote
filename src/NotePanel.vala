@@ -320,7 +320,7 @@ public class NotePanel : Box {
   }
 
   // Returns the item at the given position
-  private Widget get_item( int pos ) {
+  private Widget? get_item( int pos ) {
     return( Utils.get_child_at_index( _content, pos ) );
   }
 
@@ -480,34 +480,48 @@ public class NotePanel : Box {
           break;
         case Gdk.Key.Up :
           if( index > 0 ) {
-            TextIter cursor;
-            text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );
-            if( cursor.is_start() ) {
-              index = get_next_text_item( index, true );
-              if( index != -1 ) {
-                TextIter iter;
-                var t = get_item_text( index );
-                t.buffer.get_end_iter( out iter );
-                t.buffer.place_cursor( iter );
-                t.grab_focus();
-                return( true );
+            if( control ) {
+              _note.move_item( index, (index - 1) );
+              var w = get_item( index );
+              _content.reorder_child_after( w, get_item( index - 2 ) );
+              return( true );
+            } else {
+              TextIter cursor;
+              text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );
+              if( cursor.is_start() ) {
+                index = get_next_text_item( index, true );
+                if( index != -1 ) {
+                  TextIter iter;
+                  var t = get_item_text( index );
+                  t.buffer.get_end_iter( out iter );
+                  t.buffer.place_cursor( iter );
+                  t.grab_focus();
+                  return( true );
+                }
               }
             }
           }
           return( false );
         case Gdk.Key.Down :
           if( index < (_note.size() - 1) ) {
-            TextIter cursor;
-            text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );
-            if( cursor.is_end() ) {
-              index = get_next_text_item( index, false );
-              if( index != -1 ) {
-                TextIter iter;
-                var t = get_item_text( index );
-                t.buffer.get_start_iter( out iter );
-                t.buffer.place_cursor( iter );
-                t.grab_focus();
-                return( true );
+            if( control ) {
+              _note.move_item( index, (index + 1) );
+              var w = get_item( index );
+              _content.reorder_child_after( w, get_item( index + 1 ) );
+              return( true );
+            } else {
+              TextIter cursor;
+              text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );
+              if( cursor.is_end() ) {
+                index = get_next_text_item( index, false );
+                if( index != -1 ) {
+                  TextIter iter;
+                  var t = get_item_text( index );
+                  t.buffer.get_start_iter( out iter );
+                  t.buffer.place_cursor( iter );
+                  t.grab_focus();
+                  return( true );
+                }
               }
             }
           }
