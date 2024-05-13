@@ -4,8 +4,12 @@ src/NoteItem.vala
 src/NotePanel.vala
 src/NotesPanel.vala
 src/Note.vala
+src/Preferences.vala
 src/SidebarFavorites.vala
 src/SidebarNotebooks.vala
 src/SidebarTags.vala
+src/SpellChecker.vala
+src/ToolbarCode.vala
+src/ToolbarMarkdown.vala
 src/Utils.vala
 data/com.github.phase1geo.mosaic-note.shortcuts.ui

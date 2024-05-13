@@ -8,13 +8,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: com.github.phase1geo.mosaic-note\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-06 19:22-0500\n"
+"POT-Creation-Date: 2024-05-09 16:17-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #: src/Application.vala:112
@@ -35,6 +35,14 @@ msgstr ""
 msgid "MosaicNote"
 msgstr ""
 
+#: src/MainWindow.vala:196
+msgid "Shorcuts Cheatsheet…"
+msgstr ""
+
+#: src/MainWindow.vala:197
+msgid "Preferences…"
+msgstr ""
+
 #: src/NoteItem.vala:39
 msgid "Markdown"
 msgstr ""
@@ -47,32 +55,75 @@ msgstr ""
 msgid "Image"
 msgstr ""
 
-#: src/NotePanel.vala:72
+#: src/NotePanel.vala:151
 msgid "No Note Selected"
 msgstr ""
 
-#: src/NotePanel.vala:126
+#: src/NotePanel.vala:205
 msgid "Created:"
 msgstr ""
 
-#: src/NotePanel.vala:145
+#: src/NotePanel.vala:224
 msgid "Title (Optional)"
 msgstr ""
 
-#: src/NotePanel.vala:519
+#: src/NotePanel.vala:717
 msgid "Open Image"
 msgstr ""
 
-#: src/NotePanel.vala:519
+#: src/NotePanel.vala:717
 msgid "Open"
 msgstr ""
 
-#: src/NotesPanel.vala:50
+#: src/NotesPanel.vala:52
 msgid "Add new note"
 msgstr ""
 
-#: src/Note.vala:91
+#: src/Note.vala:93
 msgid "Untitled Note"
+msgstr ""
+
+#: src/Preferences.vala:43
+msgid "Preferences"
+msgstr ""
+
+#: src/Preferences.vala:59
+#: data/com.github.phase1geo.mosaic-note.shortcuts.ui:11
+#: data/com.github.phase1geo.mosaic-note.shortcuts.ui:15
+#: data/com.github.phase1geo.mosaic-note.shortcuts.ui:92
+msgid "General"
+msgstr ""
+
+#: src/Preferences.vala:60
+msgid "Editor"
+msgstr ""
+
+#: src/Preferences.vala:100
+msgid "Enable spell checker"
+msgstr ""
+
+#: src/Preferences.vala:104
+msgid "Spell checker language"
+msgstr ""
+
+#: src/Preferences.vala:122 src/Preferences.vala:143 src/Preferences.vala:155
+msgid "Use System Language"
+msgstr ""
+
+#: src/Preferences.vala:177
+msgid "Default Theme"
+msgstr ""
+
+#: src/Preferences.vala:181
+msgid "Font Size"
+msgstr ""
+
+#: src/Preferences.vala:185
+msgid "Line Spacing"
+msgstr ""
+
+#: src/Preferences.vala:189
+msgid "Enable Vim Mode"
 msgstr ""
 
 #: src/SidebarFavorites.vala:43
@@ -91,23 +142,60 @@ msgstr ""
 msgid "Tags"
 msgstr ""
 
-#: src/Utils.vala:93 src/Utils.vala:99
+#: src/SpellChecker.vala:235
+msgid "No suggestions"
+msgstr ""
+
+#: src/SpellChecker.vala:247
+msgid "More Suggestions"
+msgstr ""
+
+#: src/SpellChecker.vala:252
+#, c-format
+msgid "Add \"%s\" to Dictionary"
+msgstr ""
+
+#: src/SpellChecker.vala:253
+msgid "Ignore All"
+msgstr ""
+
+#: src/SpellChecker.vala:260
+msgid "Spell Check"
+msgstr ""
+
+#: src/ToolbarCode.vala:52
+msgid "Language:"
+msgstr ""
+
+#: src/ToolbarMarkdown.vala:35
+#: data/com.github.phase1geo.mosaic-note.shortcuts.ui:160
+msgid "Bold"
+msgstr ""
+
+#: src/ToolbarMarkdown.vala:43
+msgid "Italic"
+msgstr ""
+
+#: src/ToolbarMarkdown.vala:51
+#: data/com.github.phase1geo.mosaic-note.shortcuts.ui:174
+msgid "Strikethrough"
+msgstr ""
+
+#: src/ToolbarMarkdown.vala:59
+msgid "Code Block"
+msgstr ""
+
+#: src/Utils.vala:107 src/Utils.vala:113
 #, c-format
 msgid "error: %s\n"
 msgstr ""
 
-#: src/Utils.vala:328
+#: src/Utils.vala:342
 msgid "Cancel"
 msgstr ""
 
 #: data/com.github.phase1geo.mosaic-note.shortcuts.ui:6
 msgid "MosaicNote Shortcuts"
-msgstr ""
-
-#: data/com.github.phase1geo.mosaic-note.shortcuts.ui:11
-#: data/com.github.phase1geo.mosaic-note.shortcuts.ui:15
-#: data/com.github.phase1geo.mosaic-note.shortcuts.ui:92
-msgid "General"
 msgstr ""
 
 #: data/com.github.phase1geo.mosaic-note.shortcuts.ui:20
@@ -186,16 +274,8 @@ msgstr ""
 msgid "Markdown Formatting"
 msgstr ""
 
-#: data/com.github.phase1geo.mosaic-note.shortcuts.ui:160
-msgid "Bold"
-msgstr ""
-
 #: data/com.github.phase1geo.mosaic-note.shortcuts.ui:167
 msgid "Italicize"
-msgstr ""
-
-#: data/com.github.phase1geo.mosaic-note.shortcuts.ui:174
-msgid "Strikethrough"
 msgstr ""
 
 #: data/com.github.phase1geo.mosaic-note.shortcuts.ui:181
