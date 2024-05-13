@@ -28,6 +28,7 @@ public class NotePanel : Box {
   private MainWindow _win;
   private Stack      _stack;
 
+  private TagBox   _tags;
   private DropDown _item_selector;
   private Stack    _toolbar_stack;
   private Entry    _title;
@@ -157,6 +158,13 @@ public class NotePanel : Box {
   // Creates the note UI
   private Widget create_note_ui() {
 
+    _tags = new TagBox( _win );
+
+    var tbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign = Align.FILL
+    };
+    tbox.append( _tags );
+
     string[] item_types = {};
     for( int i=0; i<NoteItemType.NUM; i++ ) {
       var type = (NoteItemType)i;
@@ -252,6 +260,7 @@ public class NotePanel : Box {
     };
 
     var box = new Box( Orientation.VERTICAL, 5 );
+    box.append( tbox );
     box.append( hbox );
     box.append( separator1 );
     box.append( _title );

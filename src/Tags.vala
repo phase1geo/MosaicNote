@@ -30,7 +30,25 @@ public class Tags {
 
 	// Constructor from XML
 	public Tags.from_xml( Xml.Node* node ) {
+		_tags = new Array<string>();
 		load( node );
+	}
+
+	// Copies the given Tags object to this object
+	public void copy( Tags tags ) {
+		for( int i=0; i<tags._tags.length; i++ ) {
+			_tags.append_val( tags._tags.index( i ) );
+		}
+	}
+
+	// Size of the tag list
+	public int size() {
+		return( (int)_tags.length );
+	}
+
+	// Returns the tag at the given position
+	public string get_tag( int pos ) {
+		return( _tags.index( pos ) );
 	}
 
 	// Returns true if the list of tags contains the given tag
@@ -52,6 +70,11 @@ public class Tags {
 		if( _tags.binary_search( tag, strcmp, out pos ) ) {
       _tags.remove_index( pos );
 		}
+	}
+
+	// Removes all of the tags
+	public void clear() {
+		_tags.remove_range( 0, _tags.length );
 	}
 
 	// Saves the tags in XML format

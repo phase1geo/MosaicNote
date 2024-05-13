@@ -18,6 +18,8 @@ sources += files(
     'SidebarNotebooks.vala',
     'SidebarTags.vala',
     'SpellChecker.vala',
+    'TagBox.vala',
+    'TagEntry.vala',
     'Tags.vala',
     'ToolbarCode.vala',
     'ToolbarItem.vala',
