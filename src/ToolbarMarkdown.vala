@@ -62,6 +62,13 @@ public class ToolbarMarkdown : ToolbarItem {
     code.clicked.connect( insert_code );
     append( code );
 
+    var link = new Button.from_icon_name( "insert-link-symbolic" ) {
+      has_frame = false,
+      tooltip_text = _( "Add Link" )
+    };
+    link.clicked.connect( insert_link );
+    append( link );
+
   }
 
   private Widget create_label( string markup ) {
@@ -88,6 +95,11 @@ public class ToolbarMarkdown : ToolbarItem {
 
   private void insert_code() {
     MarkdownFuncs.insert_code_text( view, view.buffer );
+    view.grab_focus();
+  }
+
+  private void insert_link() {
+    MarkdownFuncs.insert_link_text( view, view.buffer );
     view.grab_focus();
   }
 

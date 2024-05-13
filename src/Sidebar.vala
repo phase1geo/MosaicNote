@@ -32,7 +32,7 @@ public class Sidebar : Box {
 	// Default constructor
   public Sidebar( MainWindow win ) {
 
-  	Object( orientation: Orientation.VERTICAL, spacing: 20, margin_top: 10, margin_bottom: 10, margin_start: 10, margin_end: 10 );
+  	Object( orientation: Orientation.VERTICAL, spacing: 20, margin_top: 5, margin_bottom: 5, margin_start: 5, margin_end: 5 );
 
   	// Favorites section
   	_favorites = new SidebarFavorites( win );

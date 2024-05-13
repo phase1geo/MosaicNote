@@ -131,6 +131,17 @@ public class Note : Object {
 		_modified = true;
 	}
 
+  // Moves the item at the old position to the new position in the item array.
+  public void move_item( int old_pos, int new_pos ) {
+    var item = _items.index( old_pos );
+    _items.remove_index( old_pos );
+    if( new_pos == -1 ) {
+      _items.append_val( item );
+    } else {
+      _items.insert_val( new_pos, item );
+    }
+  }
+
   // Converts the current note item to the specified item and stores this
   // new item in its place.
   public void convert_note_item( uint pos, NoteItem to_item ) {

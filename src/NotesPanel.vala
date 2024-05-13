@@ -116,7 +116,8 @@ public class NotesPanel : Box {
       title.label = Utils.make_title( note.title );
     });
 
-    var preview = new Label( note.created.format( "%b%e, %Y") ) {
+    var preview = new Label( "<small>" + note.created.format( "%b%e, %Y") + "</small>" ) {
+      use_markup = true,
       xalign = 0
     };
 
