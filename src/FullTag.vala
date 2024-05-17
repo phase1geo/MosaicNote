@@ -19,37 +19,55 @@
 * Authored by: Trevor Williams <phase1geo@gmail.com>
 */
 
-public class FullTag {
+using Gee;
 
-	public string name  { get; private set; default = ""; }
-	public int    count { get; private set; default = 0; }
+public class FullTag : Object {
+
+	public string       name  { get; private set; default = ""; }
+	public HashSet<int> notes { get; private set; }
 
 	// Default constructor
 	public FullTag( string tag_name ) {
-    name = tag_name;
-    count++; 
+    name  = tag_name;
+    notes = new HashSet<int>();
 	}
 
 	// Constructor from XML format
 	public FullTag.from_xml( Xml.Node* node ) {
+    notes = new HashSet<int>();
 		load( node );
 	}
 
 	// Comparison function for searching
-	public static int compare( FullTag a, FullTag b ) {
-		return( strcmp( a.name, b.name ) );
+	public bool matches( string name ) {
+		return( this.name == name );
 	}
 
-	// Adjusts the tag count by the given number
-	public void adjust_count( int num ) {
-		count += num;
+	// Adds a note ID to the list
+	public void add_note_id( int id ) {
+		notes.add( id );
+	}
+
+	// Removes the given note ID to the list
+	public void remove_note_id( int id ) {
+		notes.remove( id );
+	}
+
+	// Returns the number of notes with this tag
+	public int count() {
+		return( notes.size );
 	}
 
 	// Saves the contents of this tag in XML format
 	public Xml.Node* save() {
 		Xml.Node* node = new Xml.Node( null, "tag" );
+		string[]  ids  = {};
+		notes.foreach((id) => {
+			ids += id.to_string();
+			return( true );
+  	});
 		node->set_prop( "name", name );
-		node->set_prop( "count", count.to_string() );
+		node->set_prop( "ids", string.joinv( ",", ids ) );
 		return( node );
 	}
 
@@ -59,9 +77,11 @@ public class FullTag {
 	  if( n != null ) {
 	  	name = n;
 	  }	
-	  var c = node->get_prop( "count" );
-	  if( c != null ) {
-	  	count = int.parse( c );
+	  var i = node->get_prop( "ids" );
+	  if( i != null ) {
+	  	foreach( var id in i.split( "," ) ) {
+	  		notes.add( int.parse( id ) );
+	  	}
 	  }
 	}
 

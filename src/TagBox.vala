@@ -54,6 +54,8 @@ public class TagBox : Box {
     }
   }
 
+  public signal void added( string name );
+  public signal void removed( string name );
   public signal void changed();
 
   /* Default constructor */
@@ -72,6 +74,7 @@ public class TagBox : Box {
     _new_tag_entry.activated.connect((tag) => {
       _tags.add_tag( tag );
       update_tags();
+      added( tag );
       changed();
     });
 
@@ -181,6 +184,7 @@ public class TagBox : Box {
     var entry = (Entry)btn;
     _tags.delete_tag( entry.text );
     update_tags();
+    removed( tag );
     changed();
   }
 

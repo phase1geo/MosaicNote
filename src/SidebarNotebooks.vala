@@ -122,6 +122,8 @@ public class SidebarNotebooks : Box {
 				halign = Align.START,
 				hexpand = true,
       	margin_start = (depth * margin),
+      	margin_top = 5,
+      	margin_bottom = 5,
       	child = box,
       	expanded = node.expanded
       };
@@ -141,7 +143,9 @@ public class SidebarNotebooks : Box {
 			var label = new Label( node.name ) {
 				halign = Align.START,
 				hexpand = true,
-				margin_start = (depth * margin)
+				margin_start = (depth * margin),
+				margin_top = 5,
+				margin_bottom = 5
 			};
 
 			return( label );

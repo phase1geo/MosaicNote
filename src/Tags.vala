@@ -36,6 +36,7 @@ public class Tags {
 
 	// Copies the given Tags object to this object
 	public void copy( Tags tags ) {
+		_tags.remove_range( 0, _tags.length );
 		for( int i=0; i<tags._tags.length; i++ ) {
 			_tags.append_val( tags._tags.index( i ) );
 		}

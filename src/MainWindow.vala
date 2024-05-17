@@ -122,6 +122,13 @@ public class MainWindow : Gtk.ApplicationWindow {
       MosaicNote.settings.set_int( "last-note", ((note == null) ? -1 : note.id) );
     });
 
+    _note.tag_added.connect((tag, note_id) => {
+      _full_tags.add_tag( tag, note_id );
+    });
+    _note.tag_removed.connect((tag, note_id) => {
+      _full_tags.delete_tag( tag, note_id );
+    });
+
     _notes_pw = new Paned( Orientation.HORIZONTAL ) {
       start_child        = _notes,
       end_child          = _note,
@@ -150,6 +157,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     close_request.connect(() => {
       settings.set_int( "sidebar-width", _sidebar_pw.position );
       settings.set_int( "notes-width", _notes_pw.position );
+      stdout.printf( "In close_request\n" );
       action_save();
       return( false );
     });

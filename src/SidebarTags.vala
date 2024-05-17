@@ -34,6 +34,7 @@ public class SidebarTags : Box {
 		_win = win;
 
 		_lb = new ListBox() {
+			margin_top = 10,
 			selection_mode = SelectionMode.SINGLE,
       activate_on_single_click = true
 		};
@@ -41,6 +42,7 @@ public class SidebarTags : Box {
 
 		var expander = new Expander( Utils.make_title( _( "Tags" ) ) ) {
 			use_markup = true,
+			expanded = (_win.full_tags.size() > 0),
 			child = _lb
 		};
 
@@ -73,13 +75,16 @@ public class SidebarTags : Box {
       halign  = Align.START,
       hexpand = true
   	};
-  	var count = new Label( tag.count.to_string() ) {
+  	var count = new Label( tag.count().to_string() ) {
   		halign = Align.END
   	};
+  	count.add_css_class( "tag-count" );
 
     var box = new Box( Orientation.HORIZONTAL, 5 ) {
-    	halign  = Align.START,
-    	hexpand = true
+    	margin_start  = 20,
+    	margin_top    = 1,
+    	margin_bottom = 1,
+    	halign        = Align.FILL
     };
     box.append( name );
     box.append( count );

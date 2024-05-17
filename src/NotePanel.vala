@@ -40,6 +40,9 @@ public class NotePanel : Box {
 
   private SpellChecker _spell;
 
+  public signal void tag_added( string name, int note_id );
+  public signal void tag_removed( string name, int note_id );
+
 	// Default constructor
 	public NotePanel( MainWindow win ) {
 
@@ -159,6 +162,15 @@ public class NotePanel : Box {
   private Widget create_note_ui() {
 
     _tags = new TagBox( _win );
+    _tags.added.connect((tag) => {
+      tag_added( tag, _note.id );
+    });
+    _tags.removed.connect((tag) => {
+      tag_removed( tag, _note.id );
+    });
+    _tags.changed.connect(() => {
+      _note.tags.copy( _tags.tags );
+    });
 
     var tbox = new Box( Orientation.HORIZONTAL, 5 ) {
       halign = Align.FILL
@@ -283,6 +295,8 @@ public class NotePanel : Box {
       _created.label = note.created.format( "%b%e, %Y" );
       _title.text    = note.title;
       _title.grab_focus();
+      _tags.clear_tags();
+      _tags.add_tags( note.tags );
       _stack.visible_child_name = "note";
 
       populate_content();
@@ -767,6 +781,13 @@ public class NotePanel : Box {
     add_item_to_content( box, pos );
 
     return( box );
+
+  }
+
+  private void save_note() {
+
+    _note.title = _title.text;
+    // FOOBAR
 
   }
 
