@@ -21,6 +21,7 @@ sources += files(
     'TagBox.vala',
     'TagEntry.vala',
     'Tags.vala',
+    'Themes.vala',
     'ToolbarCode.vala',
     'ToolbarItem.vala',
     'ToolbarMarkdown.vala',

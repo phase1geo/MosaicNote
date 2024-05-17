@@ -79,6 +79,12 @@ public class SidebarTags : Box {
   		halign = Align.END
   	};
   	count.add_css_class( "tag-count" );
+  	count.add_css_class( _win.themes.dark_mode ? "tag-count-dark" : "tag-count-light" );
+
+  	_win.themes.theme_changed.connect((theme) => {
+  		count.remove_css_class( _win.themes.dark_mode ? "tag-count-light" : "tag-count-dark" );
+  		count.add_css_class( _win.themes.dark_mode ? "tag-count-dark" : "tag-count-light" );
+ 		});
 
     var box = new Box( Orientation.HORIZONTAL, 5 ) {
     	margin_start  = 20,

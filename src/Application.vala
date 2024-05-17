@@ -72,29 +72,14 @@ public class MosaicNote : Gtk.Application {
     gtk_settings.gtk_application_prefer_dark_theme = (
       granite_settings.prefers_color_scheme == Granite.Settings.ColorScheme.DARK
     );
-    // appwin.themes.dark_mode = gtk_settings.gtk_application_prefer_dark_theme;
+    appwin.themes.dark_mode = gtk_settings.gtk_application_prefer_dark_theme;
 
     granite_settings.notify["prefers-color-scheme"].connect (() => {
       gtk_settings.gtk_application_prefer_dark_theme = (
         granite_settings.prefers_color_scheme == Granite.Settings.ColorScheme.DARK
       );
-      // appwin.themes.dark_mode = gtk_settings.gtk_application_prefer_dark_theme;
+      appwin.themes.dark_mode = gtk_settings.gtk_application_prefer_dark_theme;
     });
-
-    /* Handle any changes to the position of the window */
-    /* DONT_KNOW_HOW_TO_HANDLE_YET
-    appwin.configure_event.connect(() => {
-      int root_x, root_y;
-      int size_w, size_h;
-      appwin.get_position( out root_x, out root_y );
-      appwin.get_size( out size_w, out size_h );
-      settings.set_int( "window-x", root_x );
-      settings.set_int( "window-y", root_y );
-      settings.set_int( "window-w", size_w );
-      settings.set_int( "window-h", size_h );
-      return( false );
-    });
-    */
 
   }
 

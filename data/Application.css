@@ -13,7 +13,14 @@
 }
 
 .tag-count {
-   background-color: #ccc;
    padding: 4px;
    border-radius: 5px;
+}
+
+.tag-count-light {
+   background-color: #ccc;
+}
+
+.tag-count-dark {
+   background-color: #555;
 }

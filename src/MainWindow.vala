@@ -29,6 +29,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private NotebookTree    _notebooks;
   private FullTags        _full_tags;
   private Notebook?       _notebook = null;
+  private Themes          _themes;
 
   private ShortcutsWindow _shortcuts = null;
   private Sidebar         _sidebar;
@@ -49,6 +50,12 @@ public class MainWindow : Gtk.ApplicationWindow {
   public GLib.Settings settings {
     get {
       return( _settings );
+    }
+  }
+
+  public Themes themes {
+    get {
+      return( _themes );
     }
   }
 
@@ -102,6 +109,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     _favorites = new Favorites();
     _notebooks = new NotebookTree();
     _full_tags = new FullTags();
+    _themes    = new Themes();
 
     /* Create title toolbar */
     header.pack_end( create_miscellaneous() );

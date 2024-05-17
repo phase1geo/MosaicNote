@@ -73,13 +73,19 @@ public class NotePanel : Box {
     // Initialize the spell checker
     initialize_spell_checker();
 
+    // Initialize the theme
+    update_theme( _win.themes.get_current_theme() );
+
     // Handle any theme updates
-    update_theme();
     MosaicNote.settings.changed.connect((key) => {
       switch( key ) {
         case "editor-font-family" :
-        case "editor-font-size"   :  update_theme();  break;
+        case "editor-font-size"   :  update_theme( _win.themes.get_current_theme() );  break;
       }
+    });
+
+    _win.themes.theme_changed.connect((theme) => {
+      update_theme( theme );
     });
 
   }
@@ -245,6 +251,7 @@ public class NotePanel : Box {
       halign = Align.FILL
     };
     _title.add_css_class( "note-title" );
+    _title.add_css_class( "themed" );
 
     _title.activate.connect(() => {
       if( _note != null ) {
@@ -262,6 +269,7 @@ public class NotePanel : Box {
       vexpand = true,
       margin_bottom = 200
     };
+    _content.add_css_class( "themed" );
 
     var sw = new ScrolledWindow() {
       halign = Align.FILL,
@@ -271,13 +279,17 @@ public class NotePanel : Box {
       child = _content
     };
 
+    var cbox = new Box( Orientation.VERTICAL, 5 );
+    cbox.add_css_class( "themed" );
+    cbox.append( _title );
+    cbox.append( separator2 );
+    cbox.append( sw );
+
     var box = new Box( Orientation.VERTICAL, 5 );
     box.append( tbox );
     box.append( hbox );
     box.append( separator1 );
-    box.append( _title );
-    box.append( separator2 );
-    box.append( sw );
+    box.append( cbox );
 
     return( box );
 
@@ -671,7 +683,10 @@ public class NotePanel : Box {
 
   }
 
-  private void update_theme() {
+  private void update_theme( string theme ) {
+
+    var style_mgr = GtkSource.StyleSchemeManager.get_default();
+    var style     = style_mgr.get_scheme( theme );
 
     var font_family = MosaicNote.settings.get_string( "editor-font-family" );
     var font_size   = MosaicNote.settings.get_int( "editor-font-size" );
@@ -686,18 +701,40 @@ public class NotePanel : Box {
         font-family: monospace;
         font-size: %dpt;
       }
-    """.printf( font_family, font_size, font_size );
+      .themed {
+        background-color: %s;
+      }
+    """.printf( font_family, font_size, font_size, style.get_style( "text" ).background );
     provider.load_from_data( css_data.data );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
+
+    /* Update the affected content */
+    if( _note != null ) {
+      for( int i=0; i<_note.size(); i++ ) {
+        if( _note.get_item( i ).item_type == NoteItemType.MARKDOWN ) {
+          var text = get_item_text( i );
+          var buffer = (GtkSource.Buffer)text.buffer;
+          buffer.style_scheme = style;
+        }
+      }
+    }
 
   }
 
   // Adds a new Markdown item at the given position in the content area
   private Widget add_markdown_item( NoteItemMarkdown item, int pos = -1 ) {
-    var frame = add_text_item( item, "markdown", pos );
-    var text   = (GtkSource.View)Utils.get_child_at_index( frame, 0 );
+
+    var frame     = add_text_item( item, "markdown", pos );
+    var text      = (GtkSource.View)Utils.get_child_at_index( frame, 0 );
+    var buffer    = (GtkSource.Buffer)text.buffer;
+    var style_mgr = new GtkSource.StyleSchemeManager();
+    var style     = style_mgr.get_scheme( _win.themes.get_current_theme() );
+
+    buffer.style_scheme = style;
     text.add_css_class( "markdown-text" );
+
     return( frame );
+
   }
 
   private Widget add_code_item( NoteItemCode item, int pos = -1 ) {
@@ -777,6 +814,7 @@ public class NotePanel : Box {
     var box = new Box( Orientation.VERTICAL, 0 );
     box.append( image );
     box.set_size_request( -1, 500 );
+    box.add_css_class( "themed" );
 
     add_item_to_content( box, pos );
 
