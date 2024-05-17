@@ -29,6 +29,7 @@ public class Note : Object {
 	private DateTime        _created;
 	private DateTime        _updated;
 	private bool            _locked;
+  private bool            _favorite;
 	private Tags            _tags;
 	private Array<NoteItem> _items;
 
@@ -77,6 +78,18 @@ public class Note : Object {
 		}
 	}
 
+  public bool favorite {
+    get {
+      return( _favorite );
+    }
+    set {
+      if( _favorite != value ) {
+        _favorite = value;
+        modified  = true;
+      }
+    }
+  }
+
   public Tags tags {
     get {
       return( _tags );
@@ -88,14 +101,15 @@ public class Note : Object {
 
 	// Default constructor
 	public Note( Notebook nb ) {
-		_nb      = nb;
-		_id      = current_id++;
-		_title   = _( "Untitled Note" );
-		_created = new DateTime.now_local();
-		_updated = new DateTime.now_local();
-		_locked  = false;
-		_tags    = new Tags();
-    _items   = new Array<NoteItem>();
+		_nb       = nb;
+		_id       = current_id++;
+		_title    = _( "Untitled Note" );
+		_created  = new DateTime.now_local();
+		_updated  = new DateTime.now_local();
+		_locked   = false;
+    _favorite = false;
+		_tags     = new Tags();
+    _items    = new Array<NoteItem>();
 
     var item = new NoteItemMarkdown();
     add_note_item( 0, item );
@@ -176,6 +190,7 @@ public class Note : Object {
 		node->set_prop( "created", _created.format_iso8601() );
 		node->set_prop( "updated", _updated.format_iso8601() );
 		node->set_prop( "locked",  _locked.to_string() );
+    node->set_prop( "favorite", _favorite.to_string() );
 
 		node->add_child( _tags.save() );
 
@@ -213,6 +228,16 @@ public class Note : Object {
 		if( m != null ) {
 			_updated = new DateTime.from_iso8601( m, null );
 		}
+
+    var l = node->get_prop( "locked" );
+    if( l != null ) {
+      _locked = bool.parse( l );
+    }
+
+    var f = node->get_prop( "favorite" );
+    if( f != null ) {
+      _favorite = bool.parse( f );
+    }
 
 		for( Xml.Node* it = node->children; it != null; it = it->next ) {
 			if( it->type == Xml.ElementType.ELEMENT_NODE ) {

@@ -31,6 +31,7 @@ public class NotePanel : Box {
   private TagBox   _tags;
   private DropDown _item_selector;
   private Stack    _toolbar_stack;
+  private Button   _favorite;
   private Entry    _title;
   private Box      _created_box;
   private Label    _created;
@@ -178,10 +179,26 @@ public class NotePanel : Box {
       _note.tags.copy( _tags.tags );
     });
 
+    _favorite = new Button.from_icon_name( "non-starred-symbolic" ) {
+      has_frame = false,
+      halign = Align.END,
+      tooltip_text = _( "Add to Favorites" )
+    };
+    _favorite.clicked.connect(() => {
+      if( _favorite.icon_name == "non-starred-symbolic" ) {
+        _favorite.icon_name = "starred-symbolic";
+        _note.favorite = true;
+      } else {
+        _favorite.icon_name = "non-starred-symbolic";
+        _note.favorite = false;
+      }
+    });
+
     var tbox = new Box( Orientation.HORIZONTAL, 5 ) {
       halign = Align.FILL
     };
     tbox.append( _tags );
+    tbox.append( _favorite );
 
     string[] item_types = {};
     for( int i=0; i<NoteItemType.NUM; i++ ) {
@@ -309,6 +326,7 @@ public class NotePanel : Box {
       _title.grab_focus();
       _tags.clear_tags();
       _tags.add_tags( note.tags );
+      _favorite.icon_name = _note.favorite ? "starred-symbolic" : "non-starred-symbolic";
       _stack.visible_child_name = "note";
 
       populate_content();
