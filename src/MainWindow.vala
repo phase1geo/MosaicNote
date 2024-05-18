@@ -163,9 +163,12 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Handle any request to close the window */
     close_request.connect(() => {
+      int width, height;
+      get_default_size( out width, out height );
+      settings.set_int( "window-w", width );
+      settings.set_int( "window-h", height );
       settings.set_int( "sidebar-width", _sidebar_pw.position );
       settings.set_int( "notes-width", _notes_pw.position );
-      stdout.printf( "In close_request\n" );
       action_save();
       return( false );
     });

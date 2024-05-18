@@ -288,25 +288,25 @@ public class NotePanel : Box {
     };
     _content.add_css_class( "themed" );
 
+    var cbox = new Box( Orientation.VERTICAL, 5 );
+    cbox.add_css_class( "themed" );
+    cbox.append( _title );
+    cbox.append( separator2 );
+    cbox.append( _content );
+
     var sw = new ScrolledWindow() {
       halign = Align.FILL,
       valign = Align.FILL,
       hscrollbar_policy = PolicyType.NEVER,
       vscrollbar_policy = PolicyType.AUTOMATIC,
-      child = _content
+      child = cbox
     };
-
-    var cbox = new Box( Orientation.VERTICAL, 5 );
-    cbox.add_css_class( "themed" );
-    cbox.append( _title );
-    cbox.append( separator2 );
-    cbox.append( sw );
 
     var box = new Box( Orientation.VERTICAL, 5 );
     box.append( tbox );
     box.append( hbox );
     box.append( separator1 );
-    box.append( cbox );
+    box.append( sw );
 
     return( box );
 
@@ -328,6 +328,7 @@ public class NotePanel : Box {
       _tags.add_tags( note.tags );
       _favorite.icon_name = _note.favorite ? "starred-symbolic" : "non-starred-symbolic";
       _stack.visible_child_name = "note";
+      _note.reviewed();
 
       populate_content();
 

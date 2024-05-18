@@ -28,6 +28,7 @@ public class Note : Object {
 	private string          _title;
 	private DateTime        _created;
 	private DateTime        _updated;
+	private DateTime        _viewed;
 	private bool            _locked;
   private bool            _favorite;
 	private Tags            _tags;
@@ -63,6 +64,12 @@ public class Note : Object {
 	public DateTime updated {
 		get {
 			return( _updated );
+		}
+	}
+
+	public DateTime viewed {
+		get {
+			return( _viewed );
 		}
 	}
 
@@ -106,6 +113,7 @@ public class Note : Object {
 		_title    = _( "Untitled Note" );
 		_created  = new DateTime.now_local();
 		_updated  = new DateTime.now_local();
+		_viewed   = new DateTime.now_local();
 		_locked   = false;
     _favorite = false;
 		_tags     = new Tags();
@@ -122,6 +130,11 @@ public class Note : Object {
     _items = new Array<NoteItem>();
 
 		load( node );
+	}
+
+	// Updates the viewed timestamp
+	public void reviewed() {
+		_viewed = new DateTime.now_local();
 	}
 
   // Returns the number of note items in the array
@@ -189,6 +202,7 @@ public class Note : Object {
 		node->set_prop( "title",   _title );
 		node->set_prop( "created", _created.format_iso8601() );
 		node->set_prop( "updated", _updated.format_iso8601() );
+		node->set_prop( "viewed",  _viewed.format_iso8601() );
 		node->set_prop( "locked",  _locked.to_string() );
     node->set_prop( "favorite", _favorite.to_string() );
 
@@ -227,6 +241,13 @@ public class Note : Object {
 		var m = node->get_prop( "updated" );
 		if( m != null ) {
 			_updated = new DateTime.from_iso8601( m, null );
+		}
+
+		var v = node->get_prop( "viewed" );
+		if( v != null ) {
+			_viewed = new DateTime.from_iso8601( v, null );
+		} else {
+			_viewed = new DateTime.from_iso8601( _created.format_iso8601(), null );
 		}
 
     var l = node->get_prop( "locked" );
