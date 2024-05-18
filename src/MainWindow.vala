@@ -27,6 +27,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private GLib.Settings   _settings;
   private Favorites       _favorites;
   private NotebookTree    _notebooks;
+  private SmartNotebooks  _smart_notebooks;
   private FullTags        _full_tags;
   private Notebook?       _notebook = null;
   private Themes          _themes;
@@ -71,6 +72,12 @@ public class MainWindow : Gtk.ApplicationWindow {
     }
   }
 
+  public SmartNotebooks smart_notebooks {
+    get {
+      return( _smart_notebooks );
+    }
+  }
+
   public FullTags full_tags {
     get {
       return( _full_tags );
@@ -108,6 +115,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     /* Load application data */
     _favorites = new Favorites();
     _notebooks = new NotebookTree();
+    _smart_notebooks = new SmartNotebooks();
     _full_tags = new FullTags();
     _themes    = new Themes();
 

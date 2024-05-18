@@ -17,6 +17,9 @@ sources += files(
     'SidebarFavorites.vala',
     'SidebarNotebooks.vala',
     'SidebarTags.vala',
+    'SmartFilter.vala',
+    'SmartNotebook.vala',
+    'SmartNotebooks.vala',
     'SpellChecker.vala',
     'TagBox.vala',
     'TagEntry.vala',
@@ -28,4 +31,5 @@ sources += files(
     'Utils.vala'
 )
 
+subdir('filters')
 subdir('note_items')
