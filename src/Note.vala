@@ -23,18 +23,24 @@ public class Note : Object {
 
 	public static int current_id = 0;
 
-	private Notebook        _nb;
+	private Notebook        _nb;        // done
 	private int             _id;
 	private string          _title;
-	private DateTime        _created;
-	private DateTime        _updated;
-	private DateTime        _viewed;
+	private DateTime        _created;   // done
+	private DateTime        _updated;   // done
+	private DateTime        _viewed;    // done
 	private bool            _locked;
-  private bool            _favorite;
-	private Tags            _tags;
+  private bool            _favorite;  // done
+	private Tags            _tags;      // done
 	private Array<NoteItem> _items;
 
 	public bool modified { get; private set; default = false; }
+
+	public Notebook notebook {
+		get {
+			return( _nb );
+		}
+	}
 
 	public int id {
 		get {

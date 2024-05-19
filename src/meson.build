@@ -17,6 +17,7 @@ sources += files(
     'SidebarFavorites.vala',
     'SidebarNotebooks.vala',
     'SidebarTags.vala',
+    'SmartDateFilter.vala',
     'SmartFilter.vala',
     'SmartNotebook.vala',
     'SmartNotebooks.vala',

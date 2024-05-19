@@ -1,4 +1,9 @@
 sources += files(
+  'FilterCreated.vala',
   'FilterFavorite.vala',
-  'FilterTag.vala'
+  'FilterLocked.vala',
+  'FilterNotebook.vala',
+  'FilterTag.vala',
+  'FilterUpdated.vala',
+  'FilterViewed.vala'
 )
