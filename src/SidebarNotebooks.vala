@@ -85,6 +85,11 @@ public class SidebarNotebooks : Box {
 
 	}
 
+  // Clears the currently selected notebook
+  public void clear_selection() {
+    _node_box.select_row( null );
+  }
+
   public void select_notebook( int id ) {
     // FOOBAR
   }

@@ -23,7 +23,7 @@ using Gtk;
 
 public class NotePanel : Box {
 
-  private Note  _note;
+  private Note?      _note = null;
 
   private MainWindow _win;
   private Stack      _stack;
@@ -43,6 +43,7 @@ public class NotePanel : Box {
 
   public signal void tag_added( string name, int note_id );
   public signal void tag_removed( string name, int note_id );
+  public signal void save_note( Note note );
 
 	// Default constructor
 	public NotePanel( MainWindow win ) {
@@ -315,6 +316,10 @@ public class NotePanel : Box {
   // Populates the note panel UI with the contents of the provided note.  If note is
   // null, clears the UI.
   public void populate_with_note( Note? note ) {
+
+    if( _note != null ) {
+      save_note( _note );
+    }
 
     _note = note;
 
@@ -838,13 +843,6 @@ public class NotePanel : Box {
     add_item_to_content( box, pos );
 
     return( box );
-
-  }
-
-  private void save_note() {
-
-    _note.title = _title.text;
-    // FOOBAR
 
   }
 

@@ -23,11 +23,12 @@ using Gtk;
 
 public class Sidebar : Box {
 
-	private SidebarFavorites _favorites;
+	private SidebarBuiltins  _builtins;
 	private SidebarNotebooks _notebooks;
 	private SidebarTags      _tags;
 
 	public signal void selected_notebook( Notebook nb );
+  public signal void selected_smart_notebook( SmartNotebook nb );
 
 	// Default constructor
   public Sidebar( MainWindow win ) {
@@ -35,18 +36,30 @@ public class Sidebar : Box {
   	Object( orientation: Orientation.VERTICAL, spacing: 20, margin_top: 5, margin_bottom: 5, margin_start: 5, margin_end: 5 );
 
   	// Favorites section
-  	_favorites = new SidebarFavorites( win );
-  	append( _favorites );
+  	_builtins = new SidebarBuiltins( win );
+    _builtins.notebook_selected.connect((nb) => {
+      _notebooks.clear_selection();
+      _tags.clear_selection();
+      selected_smart_notebook( nb );
+    });
+  	append( _builtins );
 
   	// Notebooks section
   	_notebooks = new SidebarNotebooks( win );
   	_notebooks.notebook_selected.connect((nb) => {
+      _builtins.clear_selection();
+      _tags.clear_selection();
   		selected_notebook( nb );
  		});
   	append( _notebooks );
 
   	// Tags section
   	_tags = new SidebarTags( win );
+    _tags.notebook_selected.connect((nb) => {
+      _builtins.clear_selection();
+      _notebooks.clear_selection();
+      selected_smart_notebook( nb );
+    });
   	append( _tags );
 
   	var add_nb_btn = new Button.from_icon_name( "list-add-symbolic" ) {

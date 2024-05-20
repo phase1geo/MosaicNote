@@ -19,17 +19,52 @@
 * Authored by: Trevor Williams <phase1geo@gmail.com>
 */
 
+public enum SmartNotebookType {
+  USER,
+  BUILTIN,
+  TAG,
+  NUM;
+
+  public string to_string() {
+    switch( this ) {
+      case USER    :  return( "user" );
+      case BUILTIN :  return( "builtin" );
+      case TAG     :  return( "tag" );
+      default      :  assert_not_reached();
+    }
+  }
+
+  public static SmartNotebookType parse( string val ) {
+    switch( val ) {
+      case "user"    :  return( USER );
+      case "builtin" :  return( BUILTIN );
+      case "tag"     :  return( TAG );
+      default        :  assert_not_reached();
+    }
+  }
+
+}
+
 public class SmartNotebook {
 
-  Array<SmartFilter> _filters;
-  Gee.HashSet<int>   _notes;
+  private Array<SmartFilter> _filters;
+  private Gee.HashSet<int>   _notes;
+  private bool               _modified = false;
+  private SmartNotebookType  _type     = SmartNotebookType.USER;
 
-  bool _modified = false;
+  public string            name { get; set; default = ""; }
+  public SmartNotebookType notebook_type {
+    get {
+      return( _type );
+    }
+  }
 
   // Default constructor
-  public SmartNotebook() {
+  public SmartNotebook( string name, SmartNotebookType type ) {
     _filters = new Array<SmartFilter>();
     _notes   = new Gee.HashSet<int>();
+    this.name = name;
+    _type     = type;
   }
 
   // Constructor from XML data
@@ -41,8 +76,42 @@ public class SmartNotebook {
   }
 
   // Returns the number of matched notes
-  public int count() {
+  public int note_count() {
     return( _notes.size );
+  }
+
+  // Returns the model containing the list of stored notes.
+  public ListModel get_model( NotebookTree notebooks ) {
+
+    var list = new ListStore( typeof(Note) );
+
+    _notes.foreach((id) => {
+      list.append( notebooks.find_note( id ) );
+      return( true );
+    });
+
+    return( list );
+
+  }
+
+  // Returns the number of stored filters
+  public int filter_size() {
+    return( (int)_filters.length );
+  }
+
+  // Returns the filter at the given index location
+  public SmartFilter get_filter( int index ) {
+    return( _filters.index( index ) );
+  }
+
+  // Adds the given smart filter to the list of filters
+  public void add_filter( SmartFilter filter ) {
+    _filters.append_val( filter );
+  }
+
+  // Removes the filter at the given index
+  public void remove_filter( int index ) {
+    _filters.remove_index( index );
   }
 
   // Checks the given note to see if this notebook should
@@ -51,15 +120,19 @@ public class SmartNotebook {
 
     bool modified = false;
 
+    stdout.printf( "In handle_note for %s\n", name );
+
     // Check to see if the note passes all of the stored filters
     for( int i=0; i<_filters.length; i++ ) {
       if( !_filters.index( i ).check_note( note ) ) {
+        stdout.printf( "  i: %d\n", i );
         modified = _notes.remove( note.id );
         _modified |= modified;
         return( modified );
       }
     }
 
+    stdout.printf( "  Adding note to notes list\n" );
     // If all of the filters passed, add the note ID if it doesn't already exist
     modified = _notes.add( note.id );
     _modified |= modified;
@@ -80,6 +153,8 @@ public class SmartNotebook {
       return( true );
     });
 
+    node->set_prop( "name", name );
+    node->set_prop( "type", _type.to_string() );
     node->set_prop( "ids", string.joinv( ",", ids ) );
 
     for( int i=0; i<_filters.length; i++ ) {
@@ -95,6 +170,16 @@ public class SmartNotebook {
   // Loads the contents of this smart folder from XML format
   public void load( Xml.Node* node ) {
 
+    var n = node->get_prop( "name" );
+    if( n != null ) {
+      name = n;
+    }
+
+    var t = node->get_prop( "type" );
+    if( t != null ) {
+      _type = SmartNotebookType.parse( t );
+    }
+
     var i = node->get_prop( "ids" );
     if( i != null ) {
       var ids = i.split( "," );
@@ -104,9 +189,23 @@ public class SmartNotebook {
     }
 
     for( Xml.Node* it = node->children; it != null; it = it->next ) {
-      if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "smart-filter") ) {
-        var filter = new SmartFilter.from_xml( it );
-        _filters.append_val( filter );
+      if( it->type == Xml.ElementType.ELEMENT_NODE ) {
+        SmartFilter? filter = null;
+        switch( it->name ) {
+          case "created"   :  filter = new FilterCreated.from_xml( it );  break;
+          case "favorite"  :  filter = new FilterFavorite.from_xml( it );  break;
+          case "item"      :  filter = new FilterItem.from_xml( it );  break;
+          case "item-text" :  filter = new FilterItemText.from_xml( it );  break;
+          case "locked"    :  filter = new FilterLocked.from_xml( it );  break;
+          case "notebook"  :  filter = new FilterNotebook.from_xml( it );  break;
+          case "tag"       :  filter = new FilterTag.from_xml( it );  break;
+          case "title"     :  filter = new FilterTitle.from_xml( it );  break;
+          case "updated"   :  filter = new FilterUpdated.from_xml( it );  break;
+          case "viewed"    :  filter = new FilterViewed.from_xml( it );  break;
+        }
+        if( filter != null ) {
+          _filters.append_val( filter );
+        }
       }
     }
 

@@ -113,24 +113,28 @@ public class MainWindow : Gtk.ApplicationWindow {
     add_keyboard_shortcuts( app );
 
     /* Load application data */
-    _favorites = new Favorites();
-    _notebooks = new NotebookTree();
+    _favorites       = new Favorites();
+    _notebooks       = new NotebookTree();
+    _full_tags       = new FullTags();
+    _themes          = new Themes();
     _smart_notebooks = new SmartNotebooks();
-    _full_tags = new FullTags();
-    _themes    = new Themes();
 
     /* Create title toolbar */
     header.pack_end( create_miscellaneous() );
 
     /* Create content area */
     _sidebar = new Sidebar( this );
-    _notes   = new NotesPanel();
+    _notes   = new NotesPanel( this );
     _note    = new NotePanel( this );
 
     _sidebar.selected_notebook.connect((nb) => {
       _notebook = nb;
       _notes.populate_with_notebook( nb );
       MosaicNote.settings.set_int( "last-notebook", nb.id );
+    });
+
+    _sidebar.selected_smart_notebook.connect((nb) => {
+      _notes.populate_with_smart_notebook( nb );
     });
 
     _notes.note_selected.connect((note) => {
@@ -141,8 +145,13 @@ public class MainWindow : Gtk.ApplicationWindow {
     _note.tag_added.connect((tag, note_id) => {
       _full_tags.add_tag( tag, note_id );
     });
+
     _note.tag_removed.connect((tag, note_id) => {
       _full_tags.delete_tag( tag, note_id );
+    });
+
+    _note.save_note.connect((note) => {
+      _smart_notebooks.handle_note( note );
     });
 
     _notes_pw = new Paned( Orientation.HORIZONTAL ) {
@@ -239,6 +248,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     _notebooks.save();
     _notebooks.save_notebooks();
     _full_tags.save();
+    _smart_notebooks.save();
   }
 
   /* Called when the user uses the Control-q keyboard shortcut */

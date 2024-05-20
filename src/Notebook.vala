@@ -72,6 +72,19 @@ public class Notebook : Object {
 		return( _notes.index( pos ) );
 	}
 
+  // Returns the model containing the list of stored notes
+  public ListModel get_model() {
+
+    var list = new ListStore( typeof(Note) );
+
+    for( int i=0; i<_notes.length; i++ ) {
+      list.append( _notes.index( i ) );
+    }
+
+    return( list );
+
+  }
+
 	// Returns true if the given ID matches our own
 	public bool matches( int id ) {
 		return( _id == id );

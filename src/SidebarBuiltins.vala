@@ -21,15 +21,15 @@
 
 using Gtk;
 
-public class SidebarTags : Box {
+public class SidebarBuiltins : Box {
 
 	private MainWindow _win;
 	private ListBox    _lb;
 
-  public signal void notebook_selected( SmartNotebook? nb );
+  public signal void notebook_selected( SmartNotebook? notebook );
 
 	// Default constructor
-	public SidebarTags( MainWindow win ) {
+	public SidebarBuiltins( MainWindow win ) {
 
 		Object( orientation: Orientation.VERTICAL, spacing: 5 );
 
@@ -40,18 +40,15 @@ public class SidebarTags : Box {
 			selection_mode = SelectionMode.SINGLE,
       activate_on_single_click = true
 		};
-		_lb.row_selected.connect( tag_selected );
+		_lb.row_selected.connect( list_selected );
 
-		var expander = new Expander( Utils.make_title( _( "Tags" ) ) ) {
+		var label = new Label( Utils.make_title( _( "Library" ) ) ) {
 			use_markup = true,
-			expanded = (_win.full_tags.size() > 0),
-			child = _lb
+      xalign = (float)0
 		};
 
-		append( expander );
-
-		// If the list of tags changes, update the listbox
-		_win.full_tags.changed.connect( populate_listbox );
+		append( label );
+    append( _lb );
 
 		// Initially populate the listbox
 		populate_listbox();
@@ -66,23 +63,25 @@ public class SidebarTags : Box {
 	// Adds the full list of tags to the listbox
 	private void populate_listbox() {
 
-		// _lb.remove_all();
 		Utils.clear_listbox( _lb );
 
-		for( int i=0; i<_win.full_tags.size(); i++ ) {
-			_lb.append( create_tag( _win.full_tags.get_tag( i ) ) );
+		for( int i=0; i<_win.smart_notebooks.size(); i++ ) {
+      var notebook = _win.smart_notebooks.get_notebook( i );
+      if( notebook.notebook_type == SmartNotebookType.BUILTIN ) {
+  			_lb.append( create_notebook( notebook ) );
+      }
 		}
 
 	}
 
 	// Creates a tag
-	private Box create_tag( FullTag tag ) {
+	private Box create_notebook( SmartNotebook notebook ) {
 
-  	var name = new Label( tag.name ) {
+  	var name = new Label( notebook.name ) {
       halign  = Align.START,
       hexpand = true
   	};
-  	var count = new Label( tag.count().to_string() ) {
+  	var count = new Label( notebook.note_count().to_string() ) {
   		halign = Align.END
   	};
   	count.add_css_class( "tag-count" );
@@ -108,7 +107,7 @@ public class SidebarTags : Box {
 
 	// Called whenever the user selects a tag in this widget.  We will take care to search
 	// and populate the notes panel with a list of notes that contain the given tag.
-	private void tag_selected( ListBoxRow? row ) {
+	private void list_selected( ListBoxRow? row ) {
 
 		if( row == null ) {
       notebook_selected( null );
@@ -117,7 +116,7 @@ public class SidebarTags : Box {
       var count = 0;
       for( int i=0; i<_win.smart_notebooks.size(); i++ ) {
         var notebook = _win.smart_notebooks.get_notebook( i );
-        if( (notebook.notebook_type == SmartNotebookType.TAG) && (index == count) ) {
+        if( (notebook.notebook_type == SmartNotebookType.BUILTIN) && (index == count) ) {
           notebook_selected( notebook );
         }
         count++;

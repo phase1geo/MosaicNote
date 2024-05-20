@@ -30,9 +30,32 @@ public class SmartNotebooks {
     load();
   }
 
+  // Returns the number of stored smart notebooks
+  public int size() {
+    return( (int)_notebooks.length );
+  }
+
+  // Returns the notebook at the given index
+  public SmartNotebook get_notebook( int index ) {
+    return( _notebooks.index( index ) );
+  }
+
+  // Adds a new smart notebook to the list of smart notebooks
+  public void add_notebook( SmartNotebook notebook ) {
+    _notebooks.append_val( notebook );
+    _modified = true;
+  }
+
+  // Removes the notebook at the given index
+  public void remove_notebook( int index ) {
+    _notebooks.remove_index( index );
+    _modified = true;
+  }
+
   // Handles any changes to the given note, updating all stored
   // smart notebooks.
   public void handle_note( Note note ) {
+    stdout.printf( "Handling note\n" );
     for( int i=0; i<_notebooks.length; i++ ) {
       _modified |= _notebooks.index( i ).handle_note( note );
     }
@@ -41,6 +64,25 @@ public class SmartNotebooks {
   // Returns the path of the smart notebooks XML file
   private string xml_file() {
     return( Utils.user_location( "smart-notebooks.xml" ) );
+  }
+
+  // Creates the required default notebooks if we were unable to load any smart notebooks.
+  private void create_default_notebooks() {
+
+    var favorites = new SmartNotebook( _( "Favorites" ), SmartNotebookType.BUILTIN );
+    favorites.add_filter( new FilterFavorite( true ) );
+    add_notebook( favorites );
+
+    var recents = new SmartNotebook( _( "Recents" ), SmartNotebookType.BUILTIN );
+    recents.add_filter( new FilterUpdated() );  // TODO
+    add_notebook( recents );
+
+    var all = new SmartNotebook( _( "All Notes" ), SmartNotebookType.BUILTIN );
+    add_notebook( all );
+
+    // Save the notebooks
+    save();
+
   }
 
   // Saves the contents of the notebook array in XML format
@@ -71,6 +113,7 @@ public class SmartNotebooks {
 
     var doc = Xml.Parser.read_file( xml_file(), null, (Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING) );
     if( doc == null ) {
+      create_default_notebooks();
       return;
     }
 

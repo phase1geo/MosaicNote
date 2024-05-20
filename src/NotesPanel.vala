@@ -23,28 +23,33 @@ using Gtk;
 
 public class NotesPanel : Box {
 
-	private Notebook _nb;
-	private ListBox  _list;
-  private Button   _add;
+  private MainWindow _win;
+	private Notebook?  _nb  = null;
+	private ListBox    _list;
+  private ListModel  _model;
+  private Button     _add;
 
 	public signal void note_selected( Note? note );
 
 	// Default constructor
-	public NotesPanel() {
+	public NotesPanel( MainWindow win ) {
 
 		Object( orientation: Orientation.VERTICAL, spacing: 5, margin_top: 5, margin_bottom: 5, margin_start: 5, margin_end: 5 );
 
+    _win = win;
+
 		_list = new ListBox() {
 			valign = Align.FILL,
-			selection_mode = SelectionMode.BROWSE
+			selection_mode = SelectionMode.BROWSE,
+      show_separators = true
 		};
 
 		_list.row_selected.connect((row) => {
 			if( row == null ) {
         note_selected( null );
       } else {
-  			note_selected( _nb.get_note( row.get_index() ) );
-  		}
+  			note_selected( (Note)_model.get_item( row.get_index() ) );
+      }
   	});
 
 		_add = new Button.from_icon_name( "list-add-symbolic" ) {
@@ -56,7 +61,7 @@ public class NotesPanel : Box {
 		_add.clicked.connect(() => {
 			var note = new Note( _nb );
 			_nb.add_note( note );
-      populate();
+      populate_with_notebook( _nb );
       _list.select_row( _list.get_row_at_index( _nb.size() - 1 ) );
 		});
 
@@ -76,45 +81,35 @@ public class NotesPanel : Box {
   public void populate_with_notebook( Notebook? nb ) {
   	_nb = nb;
     if( _nb != null ) {
-      _nb.changed.connect(() => {
-        populate();
-      });
-      populate();
+      _model = nb.get_model();
+      _list.bind_model( _model, create_note );
+    } else {
+      _model = null;
+      _list.bind_model( null, create_note );
     }
+    _add.sensitive = (_nb != null);
   }
 
-  private void populate() {
-
-  	// _list.remove_all();
-    Utils.clear_listbox( _list );
-
-    if( _nb != null ) {
-  	  for( int i=0; i<_nb.size(); i++ ) {
-  		  _list.append( create_note( _nb.get_note( i ) ) );
-  	  }
-      _add.sensitive = true;
+  public void populate_with_smart_notebook( SmartNotebook? nb ) {
+    if( nb != null ) {
+      _model = nb.get_model( _win.notebooks );
+      _list.bind_model( _model, create_note );
     } else {
-      _add.sensitive = false;
+      _model = null;
+      _list.bind_model( null, create_note );
     }
-
-    // Select the first row
-    if( _nb.size() > 0 ) {
-      _list.select_row( _list.get_row_at_index( 0 ) );
-    }
-
-  }	
+    _add.sensitive = false;
+  }
 
   // Adds the given note
-  private Box create_note( Note note ) {
+  private Box create_note( Object obj ) {
+
+    var note = (Note)obj;
 
   	var title = new Label( Utils.make_title( note.title ) ) {
       use_markup = true,
       xalign = 0
     };
-
-    note.title_changed.connect(() => {
-      title.label = Utils.make_title( note.title );
-    });
 
     var preview = new Label( "<small>" + note.created.format( "%b%e, %Y") + "</small>" ) {
       use_markup = true,
