@@ -38,9 +38,11 @@ public class Sidebar : Box {
   	// Favorites section
   	_builtins = new SidebarBuiltins( win );
     _builtins.notebook_selected.connect((nb) => {
-      _notebooks.clear_selection();
-      _tags.clear_selection();
-      selected_smart_notebook( nb );
+      if( nb != null ) {
+        _notebooks.clear_selection();
+        _tags.clear_selection();
+        selected_smart_notebook( nb );
+      }
     });
   	append( _builtins );
 

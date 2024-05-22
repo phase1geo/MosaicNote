@@ -21,7 +21,7 @@
 
 public class NotebookTree {
 
-	public class Node {
+	public class Node : Object {
 
 		private Node?       _parent;
 		private int         _id;
@@ -136,7 +136,7 @@ public class NotebookTree {
 		}
 
 		// Returns the child at the given position
-		public Node get_child( int pos ) {
+		public Node get_node( int pos ) {
 			return( _children.index( pos ) );
 		}
 
