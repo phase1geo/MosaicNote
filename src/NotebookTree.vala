@@ -77,6 +77,8 @@ public class NotebookTree {
 			}
 		}
 
+    public ulong handler_id { set; get; default = 0; }
+
 		public signal void changed();
 
 		// Default constructor

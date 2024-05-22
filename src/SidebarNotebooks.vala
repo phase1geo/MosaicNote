@@ -41,33 +41,29 @@ public class SidebarNotebooks : Box {
     var factory = new SignalListItemFactory();
     factory.setup.connect( setup_tree );
     factory.bind.connect( bind_tree );
+    factory.unbind.connect( unbind_tree );
     
     _store        = new GLib.ListStore( typeof( NotebookTree.Node ) );
     var model     = new TreeListModel( _store, false, false, add_tree_node );
     var selection = new SingleSelection( model ) {
-    	autoselect = true,
-    	can_unselect = true
+    	// autoselect = true,
+    	// can_unselect = true
     };
     var motion = new EventControllerMotion();
 		_list_view = new ListView( selection, factory ) {
 			margin_top = 10,
-			single_click_activate = true
+			// single_click_activate = true
 		};
 		_list_view.add_controller( motion );
 
-		_list_view.activate.connect((index) => {
-			var row  = model.get_child_row(index);
-			_selected_node = (NotebookTree.Node)row.get_item();
-			notebook_selected( _selected_node.get_notebook() );
-		});
-
+    /*
 		motion.enter.connect((x, y) => {
 			_list_view.grab_focus();
 		});
 		motion.leave.connect(() => {
 			var okay = _list_view.model.unselect_all();
-			stdout.printf( "okay: %s\n", okay.to_string() );
 		});
+*/
 
 		var label = new Label( Utils.make_title( _( "Notebooks" ) ) ) {
 			halign = Align.START,
@@ -168,11 +164,34 @@ public class SidebarNotebooks : Box {
 		var node     = (NotebookTree.Node)row.get_item();
 		var nb       = node.get_notebook();
 
+    stdout.printf( "Called bind_tree for %s\n", nb.name );
+
+    node.handler_id = item.notify["selected"].connect(() => {
+      stdout.printf( "Selected changed\n" );
+      if( item.selected ) {
+        stdout.printf( "Selected %s\n", nb.name );
+        _selected_node = node;
+        notebook_selected( nb );
+      }
+    });
+
 		expander.set_list_row( row );
 		label.label = nb.name;
 		count.label = nb.size().to_string();
 
 	}
+
+  private void unbind_tree( Object obj ) {
+
+    var item = (ListItem)obj;
+    var row  = (TreeListRow)item.get_item();
+    var node = (NotebookTree.Node)row.get_item();
+
+    stdout.printf( "Called unbind_tree for %s\n", node.name );
+
+    item.disconnect( node.handler_id );
+
+  }
 
 	// Create expander tree
 	public ListModel? add_tree_node( Object obj ) {
