@@ -140,6 +140,21 @@ public class NotebookTree {
 			return( _children.index( pos ) );
 		}
 
+		// Returns the node at the given position in the tree
+		public Node? get_node_at_position( ref int pos ) {
+			if( pos-- == 0 ) {
+				return( this );
+			} else {
+  			for( int i=0; i<_children.length; i++ ) {
+          var node = _children.index( i ).get_node_at_position( ref pos );
+          if( node != null ) {
+          	return( node );
+          }
+  			}
+  		}
+      return( null );
+		}
+		
 		// Returns a reference to the notebook that matches the given ID
 		public Node? find_node( int id ) {
 			if( _id == id ) {
@@ -284,6 +299,16 @@ public class NotebookTree {
 	// Returns the node at the given top-level position
 	public Node? get_node( int pos ) {
 		return( _nodes.index( pos ) );
+	}
+
+	public Node? get_node_at_position( int pos ) {
+		for( int i=0; i<_nodes.length; i++ ) {
+  		var node = _nodes.index( i ).get_node_at_position( ref pos );
+			if( node != null ) {
+				return( node );
+			}
+		}
+		return( null );
 	}
 
 	// Searches the notebooks for one that matches the given ID

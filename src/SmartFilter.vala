@@ -32,6 +32,8 @@ public class SmartFilter {
     return( false );
   }
 
+  // protected bool check_date( DateTime a, DateTime b, Time)
+
   // Saves the filter setup in XML format
   public virtual Xml.Node* save() {
     Xml.Node* node = new Xml.Node( null, "smart-filter" );

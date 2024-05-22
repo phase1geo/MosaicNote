@@ -35,12 +35,26 @@ public class SidebarTags : Box {
 
 		_win = win;
 
+		var motion = new EventControllerMotion();
+
 		_lb = new ListBox() {
 			margin_top = 10,
 			selection_mode = SelectionMode.SINGLE,
       activate_on_single_click = true
 		};
-		_lb.row_selected.connect( tag_selected );
+		_lb.add_controller( motion );
+		_lb.row_activated.connect( tag_selected );
+
+		motion.enter.connect((x, y) => {
+			_lb.grab_focus();
+		});
+		motion.motion.connect((x, y) => {
+			var row = _lb.get_row_at_y( (int)y );
+			_lb.select_row( row );
+		});
+		motion.leave.connect(() => {
+			_lb.unselect_all();
+		});
 
 		var expander = new Expander( Utils.make_title( _( "Tags" ) ) ) {
 			use_markup = true,

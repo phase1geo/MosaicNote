@@ -26,6 +26,7 @@ public class SidebarNotebooks : Box {
 	private MainWindow         _win;
 	private NotebookTree.Node? _selected_node = null;
 	private GLib.ListStore     _store;
+	private ListView           _list_view;
 
   public signal void notebook_selected( Notebook nb );
 
@@ -44,18 +45,28 @@ public class SidebarNotebooks : Box {
     _store        = new GLib.ListStore( typeof( NotebookTree.Node ) );
     var model     = new TreeListModel( _store, false, false, add_tree_node );
     var selection = new SingleSelection( model ) {
-    	autoselect = false,
+    	autoselect = true,
     	can_unselect = true
     };
-		var list_view = new ListView( selection, factory ) {
+    var motion = new EventControllerMotion();
+		_list_view = new ListView( selection, factory ) {
 			margin_top = 10,
 			single_click_activate = true
 		};
+		_list_view.add_controller( motion );
 
-		list_view.activate.connect((index) => {
-			stdout.printf( "index: %u\n", index );
-			_selected_node = _win.notebooks.get_node( (int)index );
+		_list_view.activate.connect((index) => {
+			var row  = model.get_child_row(index);
+			_selected_node = (NotebookTree.Node)row.get_item();
 			notebook_selected( _selected_node.get_notebook() );
+		});
+
+		motion.enter.connect((x, y) => {
+			_list_view.grab_focus();
+		});
+		motion.leave.connect(() => {
+			var okay = _list_view.model.unselect_all();
+			stdout.printf( "okay: %s\n", okay.to_string() );
 		});
 
 		var label = new Label( Utils.make_title( _( "Notebooks" ) ) ) {
@@ -65,7 +76,7 @@ public class SidebarNotebooks : Box {
 		};
 
     append( label );
-    append( list_view );
+    append( _list_view );
 
     // Go ahead and populate ourselves to get started
     populate_tree();
@@ -94,7 +105,8 @@ public class SidebarNotebooks : Box {
 
   // Clears the currently selected notebook
   public void clear_selection() {
-  	// TBD
+  	var okay = _list_view.model.unselect_all();
+  	stdout.printf( "okay: %s\n", okay.to_string() );
   }
 
   public void select_notebook( int id ) {
@@ -113,6 +125,7 @@ public class SidebarNotebooks : Box {
 	private void setup_tree( Object obj ) {
 
 		var item  = (ListItem)obj;
+
     var label = new Label( null ) {
     	halign = Align.START
     };
@@ -145,6 +158,7 @@ public class SidebarNotebooks : Box {
 	}
 
 	private void bind_tree( Object obj ) {
+
 		var item     = (ListItem)obj;
 		var expander = (TreeExpander)item.child;
 		var box      = (Box)expander.child;
@@ -152,10 +166,12 @@ public class SidebarNotebooks : Box {
 		var count    = (Label)Utils.get_child_at_index( box, 1 );
 		var row      = (TreeListRow)item.get_item();
 		var node     = (NotebookTree.Node)row.get_item();
+		var nb       = node.get_notebook();
 
 		expander.set_list_row( row );
-		label.label = node.name;
-		count.label = node.get_notebook().size().to_string();
+		label.label = nb.name;
+		count.label = nb.size().to_string();
+
 	}
 
 	// Create expander tree
