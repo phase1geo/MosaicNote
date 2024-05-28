@@ -261,13 +261,6 @@ public class TextItem : Box {
     var scheme     = scheme_mgr.get_scheme( "oblivion" );
     buffer.style_scheme = scheme;
 
-    /*
-    var scheme_ids = scheme_mgr.get_scheme_ids();
-    foreach( var scheme_id in scheme_ids ) {
-      stdout.printf( "  scheme_id: %s\n", scheme_id );
-    }
-    */
-
     return( text );
 
   }

@@ -48,6 +48,7 @@ public class SidebarTags : Box {
 		motion.enter.connect((x, y) => {
 			_lb.grab_focus();
 		});
+		/*
 		motion.motion.connect((x, y) => {
 			var row = _lb.get_row_at_y( (int)y );
 			_lb.select_row( row );
@@ -55,6 +56,7 @@ public class SidebarTags : Box {
 		motion.leave.connect(() => {
 			_lb.unselect_all();
 		});
+    */
 
 		var expander = new Expander( Utils.make_title( _( "Tags" ) ) ) {
 			use_markup = true,

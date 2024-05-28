@@ -22,13 +22,15 @@
 public class FullTags {
 
   private SList<FullTag> _tags;
+  private NotebookTree   _notebooks;
   private bool           _modified = false;
 
   public signal void changed();
 
   // Default constructor
-  public FullTags() {
+  public FullTags( NotebookTree notebooks ) {
     _tags = new SList<FullTag>();
+    _notebooks = notebooks;
     load();
   }
 
@@ -61,13 +63,12 @@ public class FullTags {
   // Adds the given tag (it it currently does not exist), adjusts the count
   // and sorts the tags in alphabetical order
   public void add_tag( string tag_name, int note_id ) {
-    var tag = new FullTag( tag_name );
+    var tag = new FullTag( tag_name, _notebooks );
     CompareFunc<FullTag> compare = (a, b) => {
       return( strcmp( a.name, b.name ) );
     };
     unowned var match = _tags.find_custom( tag, compare );
     if( match != null ) {
-    	stdout.printf( "Found match for %s, adding note_id: %d\n", tag_name, note_id );
       match.data.add_note_id( note_id );
     } else {
       tag.add_note_id( note_id );
@@ -80,7 +81,7 @@ public class FullTags {
 
   // Decrements the tag count and, if it is zero, deletes the tag
   public void delete_tag( string tag_name, int note_id ) {
-    var tag = new FullTag( tag_name );  
+    var tag = new FullTag( tag_name, _notebooks );  
     CompareFunc<FullTag> compare = (a, b) => {
       return( strcmp( a.name, b.name ) );
     };
@@ -134,7 +135,7 @@ public class FullTags {
 
     for( Xml.Node* it = root->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "tag") ) {
-        var tag = new FullTag.from_xml( it );
+        var tag = new FullTag.from_xml( it, _notebooks );
         _tags.append( tag );
       }
     }

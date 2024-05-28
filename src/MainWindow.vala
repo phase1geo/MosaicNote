@@ -25,15 +25,14 @@ using Gdk;
 public class MainWindow : Gtk.ApplicationWindow {
 
   private GLib.Settings   _settings;
-  private Favorites       _favorites;
+  // private Favorites       _favorites;
   private NotebookTree    _notebooks;
   private SmartNotebooks  _smart_notebooks;
   private FullTags        _full_tags;
-  private Notebook?       _notebook = null;
   private Themes          _themes;
 
   private ShortcutsWindow _shortcuts = null;
-  private Sidebar         _sidebar;
+  private SidebarNew      _sidebar;
   private NotesPanel      _notes;
   private NotePanel       _note;
   private Paned           _notes_pw;
@@ -60,11 +59,13 @@ public class MainWindow : Gtk.ApplicationWindow {
     }
   }
 
+  /*
   public Favorites favorites {
     get {
       return( _favorites );
     }
   }
+  */
 
   public NotebookTree notebooks {
     get {
@@ -113,28 +114,26 @@ public class MainWindow : Gtk.ApplicationWindow {
     add_keyboard_shortcuts( app );
 
     /* Load application data */
-    _favorites       = new Favorites();
+    // _favorites       = new Favorites();
     _notebooks       = new NotebookTree();
-    _full_tags       = new FullTags();
+    _full_tags       = new FullTags( _notebooks );
+    _smart_notebooks = new SmartNotebooks( _notebooks );
     _themes          = new Themes();
-    _smart_notebooks = new SmartNotebooks();
 
     /* Create title toolbar */
     header.pack_end( create_miscellaneous() );
 
     /* Create content area */
-    _sidebar = new Sidebar( this );
+    _sidebar = new SidebarNew( this );
     _notes   = new NotesPanel( this );
     _note    = new NotePanel( this );
 
-    _sidebar.selected_notebook.connect((nb) => {
-      _notebook = nb;
+    _sidebar.notebook_selected.connect((nb) => {
+      var notebook = (nb as Notebook);
       _notes.populate_with_notebook( nb );
-      MosaicNote.settings.set_int( "last-notebook", nb.id );
-    });
-
-    _sidebar.selected_smart_notebook.connect((nb) => {
-      _notes.populate_with_smart_notebook( nb );
+      if( notebook != null ) {
+        MosaicNote.settings.set_int( "last-notebook", notebook.id );
+      }
     });
 
     _notes.note_selected.connect((note) => {
@@ -174,7 +173,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     child = _sidebar_pw;
 
     // Select the notebook and note that was last saved (if valid)
-    _sidebar.select_notebook_and_note( settings.get_int( "last-notebook" ), settings.get_int( "last-note" ) );
+    // TBD - _sidebar.select_notebook_and_note( settings.get_int( "last-notebook" ), settings.get_int( "last-note" ) );
 
     show();
 
@@ -244,7 +243,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   /* Save everything */
   public void action_save() {
-    _favorites.save();
+    // _favorites.save();
     _notebooks.save();
     _notebooks.save_notebooks();
     _full_tags.save();

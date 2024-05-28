@@ -21,20 +21,24 @@
 
 using Gee;
 
-public class FullTag : Object {
+public class FullTag : BaseNotebook {
 
-	public string       name  { get; private set; default = ""; }
+	private NotebookTree _notebooks;
+
 	public HashSet<int> notes { get; private set; }
 
 	// Default constructor
-	public FullTag( string tag_name ) {
-    name  = tag_name;
+	public FullTag( string tag_name, NotebookTree notebooks ) {
+		base( tag_name );
     notes = new HashSet<int>();
+    _notebooks = notebooks;
 	}
 
 	// Constructor from XML format
-	public FullTag.from_xml( Xml.Node* node ) {
+	public FullTag.from_xml( Xml.Node* node, NotebookTree notebooks ) {
+		base( "" );
     notes = new HashSet<int>();
+    _notebooks = notebooks;
 		load( node );
 	}
 
@@ -54,9 +58,23 @@ public class FullTag : Object {
 	}
 
 	// Returns the number of notes with this tag
-	public int count() {
+	public override int count() {
 		return( notes.size );
 	}
+
+	// Returns the list model required by the NotesPanel
+  public override ListModel? get_model() {
+
+    var list = new ListStore( typeof(Note) );
+
+    notes.foreach((id) => {
+      list.append( _notebooks.find_note( id ) );
+      return( true );
+    });
+
+    return( list );
+
+  }
 
 	// Saves the contents of this tag in XML format
 	public Xml.Node* save() {
@@ -66,17 +84,14 @@ public class FullTag : Object {
 			ids += id.to_string();
 			return( true );
   	});
-		node->set_prop( "name", name );
+		base_save( node );
 		node->set_prop( "ids", string.joinv( ",", ids ) );
 		return( node );
 	}
 
 	// Loads the contents of this tag from XML format
 	public void load( Xml.Node* node ) {
-	  var n = node->get_prop( "name" );
-	  if( n != null ) {
-	  	name = n;
-	  }	
+		base_load( node );
 	  var i = node->get_prop( "ids" );
 	  if( i != null ) {
 	  	foreach( var id in i.split( "," ) ) {

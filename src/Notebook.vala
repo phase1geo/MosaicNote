@@ -19,16 +19,13 @@
 * Authored by: Trevor Williams <phase1geo@gmail.com>
 */
 
-public class Notebook : Object {
+public class Notebook : BaseNotebook {
 
 	public static int current_id = 0;
 
 	private int         _id;
-	private string      _name;
 	private Array<Note> _notes;
 	private bool        _modified = false;
-
-	public signal void changed();
 
 	public int id {
 		get {
@@ -36,34 +33,22 @@ public class Notebook : Object {
 		}
 	}
 
-	public string name {
-		get {
-			return( _name );
-		}
-		set {
-			if( _name != value ) {
-				_name = value;
-				_modified = true;
-				changed();
-			}
-		}
-	}
-
 	// Default constructor
 	public Notebook( string name ) {
-		_name  = name;
+    base( name );
 		_id    = current_id++;
 	  _notes = new Array<Note>();	
 	}
 
 	// Construct from XML file
 	public Notebook.from_xml( int id ) {
+    base( "" );
 		_notes = new Array<Note>();
 		load( id );
 	}
 
 	// Number of stores notes
-	public int size() {
+	public override int count() {
 		return( (int)_notes.length );
 	}
 
@@ -73,7 +58,7 @@ public class Notebook : Object {
 	}
 
   // Returns the model containing the list of stored notes
-  public ListModel get_model() {
+  public override ListModel? get_model() {
 
     var list = new ListStore( typeof(Note) );
 
@@ -158,8 +143,9 @@ public class Notebook : Object {
 	  Xml.Node* root = new Xml.Node( null, "notebook" );
 
 	  root->set_prop( "version", MosaicNote.current_version );
-	  root->set_prop( "name", _name );
 	  root->set_prop( "id",   _id.to_string() );
+
+    base_save( root );
 
 	  for( uint i=0; i<_notes.length; i++ ) {
 	  	var note = _notes.index( i );
@@ -190,15 +176,12 @@ public class Notebook : Object {
       check_version( verson );
     }
 
-    var n = root->get_prop( "name" );
-    if( n != null ) {
-    	_name = n;
-    }
-
     var i = root->get_prop( "id" );
     if( i != null ) {
     	_id = int.parse( i );
     }
+
+    base_load( root );
   
     for( Xml.Node* it = root->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "note") ) {

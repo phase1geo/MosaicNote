@@ -21,74 +21,17 @@
 
 using Gtk;
 
-/*
-public class NotebookSelection : SelectionModel {
+public class SidebarNew : Box {
 
-	private Bitset _bitset;
+	private MainWindow     _win;
+	private BaseNotebook?  _selected_node = null;
+	private GLib.ListStore _store;
+	private ListView       _list_view;
 
-	// Default constructor
-	public NotebookSelection() {
-		_bitset = new Bitset.empty();
-    selection_changed.connect((pos, num) => {
-    	stdout.printf( "Selection changed, pos: %u, num: %u\n", pos, num );
-  	});
-	}
-
-	public Bitset get_selection_in_range( uint position, uint n_items ) {
-		var bitset = new Bitset.empty();
-		return( bitset );
-	}
-
-	public bool is_selected( uint position ) {
-		return( _bitset.contains( position ) );
-	}
-
-	public bool select_all() {
-		// TODO
-    return( false );
-	}
-
-	public bool select_item( uint position, bool unselect_rest ) {
-		_bitset.remove_all();
-		_bitset.add( position );
-		return( true );
-	}
-
-	public bool select_range( uint position, uint n_items, bool unselect_rest ) {
-		return( false );
-	}
-
-	public bool set_selection( Bitset selected, Bitset mask ) {
-		return( false );
-	}
-
-  public bool unselect_all() {
-  	_bitset.remove_all();
-  	return( true );
-  }
-
-  public bool unselect_item( uint position ) {
-  	return( false );
-  }
-
-  public bool unselect_range( uint position, uint n_items	) {
-  	return( false );
-  }
-
-}
-*/
-
-public class SidebarNotebooks : Box {
-
-	private MainWindow         _win;
-	private NotebookTree.Node? _selected_node = null;
-	private GLib.ListStore     _store;
-	private ListView           _list_view;
-
-  public signal void notebook_selected( Notebook nb );
+  public signal void notebook_selected( BaseNotebook nb );
 
 	// Default constructor
-	public SidebarNotebooks( MainWindow win ) {
+	public SidebarNew( MainWindow win ) {
 
 		Object( orientation: Orientation.VERTICAL, spacing: 5 );
 
@@ -98,46 +41,40 @@ public class SidebarNotebooks : Box {
     var factory = new SignalListItemFactory();
     factory.setup.connect( setup_tree );
     factory.bind.connect( bind_tree );
-    // factory.unbind.connect( unbind_tree );
-    // factory.teardown.connect( teardown_tree );
     
-    _store        = new GLib.ListStore( typeof( NotebookTree.Node ) );
+    _store        = new GLib.ListStore( typeof( BaseNotebook ) );
     var model     = new TreeListModel( _store, false, false, add_tree_node );
-    var selection = new MultiSelection( model ) {
-    	// autoselect = false,
-    	// can_unselect = true
-    };
-    var motion = new EventControllerMotion();
+    var selection = new SingleSelection( model );
+
 		_list_view = new ListView( selection, factory ) {
 			margin_top = 10,
 			single_click_activate = true
 		};
-		_list_view.add_controller( motion );
 
-		/*
 		_list_view.activate.connect((pos) => {
-			item_selected( pos );
-			stdout.printf( "Activate pos: %u\n", pos );
+			var row = model.get_row( pos );
+			var nb  = (BaseNotebook)row.get_item();
+			notebook_selected( nb );
 		});
-    */
 
-		motion.enter.connect((x, y) => {
-			_list_view.grab_focus();
-		});
-		/*
-		motion.leave.connect(() => {
-			var okay = _list_view.model.unselect_all();
-		});
-*/
-
-		var label = new Label( Utils.make_title( _( "Notebooks" ) ) ) {
-			halign = Align.START,
-			hexpand = true,
-      use_markup = true
-		};
-
-    append( label );
     append( _list_view );
+
+    var add_nb_btn = new Button.from_icon_name( "list-add-symbolic" ) {
+  		halign = Align.START,
+  		has_frame = false
+  	};
+
+  	add_nb_btn.clicked.connect(() => {
+  		add_notebook();
+		});
+
+  	var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
+  		valign = Align.END,
+  		vexpand = true
+  	};
+  	bbox.append( add_nb_btn );
+
+  	append( bbox );
 
     // Go ahead and populate ourselves to get started
     populate_tree();
@@ -169,31 +106,41 @@ public class SidebarNotebooks : Box {
   	_list_view.model.unselect_all();
   }
 
-  public void select_notebook( int id ) {
-    // FOOBAR
-  }
-
 	// Populates the notebook tree with the updated version of win.notebooks
 	private void populate_tree() {
+
 		_store.remove_all();
+
+		var library = new BaseNotebook( _( "Library" ) );
+		_store.append( library );
+
+		for( int i=0; i<_win.smart_notebooks.size(); i++ ) {
+      var notebook = _win.smart_notebooks.get_notebook( i );
+      if( notebook.notebook_type == SmartNotebookType.BUILTIN ) {
+      	_store.append( notebook );
+      }
+		}
+
+		var notebooks = new BaseNotebook( _( "Notebooks" ) );
+		_store.append( notebooks );
+
 		for( int i=0; i<_win.notebooks.size(); i++ ) {
 			var node = _win.notebooks.get_node( i );
 			_store.append( node );
   	}
+
+  	var tags = new BaseNotebook( _( "Tags" ) );
+  	_store.append( tags );
+
+		for( int i=0; i<_win.full_tags.size(); i++ ) {
+			_store.append( _win.full_tags.get_tag( i ) );
+		}
+
 	}
 
 	private void setup_tree( Object obj ) {
 
 		var item  = (ListItem)obj;
-		// item.selectable = false;
-
-		_list_view.activate.connect((pos) => {
-			stdout.printf( "item_selected, pos: %u, position: %u\n", pos, item.position );
-			if( pos == item.position ) {
-				item.selectable = true;
-				// item.selected   = true;
-			}
-		});
 
     var label = new Label( null ) {
     	halign = Align.START
@@ -201,7 +148,8 @@ public class SidebarNotebooks : Box {
 
     var count = new Label( null ) {
     	halign = Align.END,
-    	hexpand = true
+    	hexpand = true,
+    	margin_end = 5
     };
 
     count.add_css_class( "tag-count" );
@@ -234,26 +182,42 @@ public class SidebarNotebooks : Box {
 		var label    = (Label)Utils.get_child_at_index( box, 0 );
 		var count    = (Label)Utils.get_child_at_index( box, 1 );
 		var row      = (TreeListRow)item.get_item();
-		var node     = (NotebookTree.Node)row.get_item();
-		var nb       = node.get_notebook();
+		var nb       = (BaseNotebook)row.get_item();
 
-		expander.set_list_row( row );
-		label.label = nb.name;
-		count.label = nb.count().to_string();
+		if( ((nb as NotebookTree.Node) == null) && ((nb as SmartNotebook) == null) && ((nb as FullTag) == null) ) {
+			item.selectable   = false;
+			item.activatable  = false;
+			// item.focusable    = false;
+			label.label       = Utils.make_title( nb.name );
+			label.use_markup  = true;
+			label.margin_start = 5;
+			count.visible     = false;
+			box.margin_top    = 10;
+			box.margin_bottom = 10;
+		} else {
+		  expander.set_list_row( row );
+		  label.label = nb.name;
+		  count.label = nb.count().to_string();
+		  if( nb.count() == 0 ) {
+		  	expander.margin_top = 6;
+		  	expander.margin_bottom = 6;
+		  	count.visible = false;
+		  }
+		}
 
 	}
 
 	// Create expander tree
 	public ListModel? add_tree_node( Object obj ) {
-		if( obj != null ) {
+		if( (obj != null) && ((obj as NotebookTree.Node) != null) ) {
   		var node = (NotebookTree.Node)obj;
-  		if( node.size() > 0 ) {
-  			var store = new GLib.ListStore( typeof( NotebookTree.Node ) );
-	  		for( int i=0; i<node.size(); i++ ) {
-		  		store.append( node.get_node( i ) );
-			  }
-			  return( store );
-			}
+   		if( node.size() > 0 ) {
+ 	  		var store = new GLib.ListStore( typeof( BaseNotebook ) );
+  	  	for( int i=0; i<node.size(); i++ ) {
+	  	  	store.append( node.get_node( i ) );
+		    }
+		    return( store );
+		  }
 		}
   	return( null );
 	}

@@ -24,7 +24,7 @@ using Gtk;
 public class NotesPanel : Box {
 
   private MainWindow _win;
-	private Notebook?  _nb  = null;
+	private Notebook?  _nb = null;
 	private ListBox    _list;
   private ListModel  _model;
   private Button     _add;
@@ -62,7 +62,7 @@ public class NotesPanel : Box {
 			var note = new Note( _nb );
 			_nb.add_note( note );
       populate_with_notebook( _nb );
-      _list.select_row( _list.get_row_at_index( _nb.size() - 1 ) );
+      _list.select_row( _list.get_row_at_index( _nb.count() - 1 ) );
 		});
 
 		var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
@@ -78,9 +78,9 @@ public class NotesPanel : Box {
 	}
 
 	// Populates the notes list from the given notebook
-  public void populate_with_notebook( Notebook? nb ) {
-  	_nb = nb;
-    if( _nb != null ) {
+  public void populate_with_notebook( BaseNotebook? nb ) {
+  	_nb = (nb as Notebook);
+    if( nb != null ) {
       _model = nb.get_model();
       _list.bind_model( _model, create_note );
     } else {
@@ -88,17 +88,6 @@ public class NotesPanel : Box {
       _list.bind_model( null, create_note );
     }
     _add.sensitive = (_nb != null);
-  }
-
-  public void populate_with_smart_notebook( SmartNotebook? nb ) {
-    if( nb != null ) {
-      _model = nb.get_model( _win.notebooks );
-      _list.bind_model( _model, create_note );
-    } else {
-      _model = null;
-      _list.bind_model( null, create_note );
-    }
-    _add.sensitive = false;
   }
 
   // Adds the given note

@@ -48,6 +48,7 @@ public class SidebarBuiltins : Box {
     motion.enter.connect((x, y) => {
       _lb.grab_focus();
     });
+    /*
     motion.motion.connect((x, y) => {
       var row = _lb.get_row_at_y( (int)y );
       _lb.select_row( row );
@@ -55,6 +56,7 @@ public class SidebarBuiltins : Box {
     motion.leave.connect(() => {
       _lb.unselect_all();
     });
+    */
 
 		var label = new Label( Utils.make_title( _( "Library" ) ) ) {
 			use_markup = true,
@@ -95,8 +97,8 @@ public class SidebarBuiltins : Box {
       halign  = Align.START,
       hexpand = true
   	};
-  	var count = new Label( notebook.note_count().to_string() ) {
-  		halign = Align.END
+  	var count = new Label( notebook.count().to_string() ) {
+  		halign  = Align.END
   	};
   	count.add_css_class( "tag-count" );
   	count.add_css_class( _win.themes.dark_mode ? "tag-count-dark" : "tag-count-light" );

@@ -21,11 +21,10 @@
 
 public class NotebookTree {
 
-	public class Node : Object {
+	public class Node : BaseNotebook {
 
 		private Node?       _parent;
 		private int         _id;
-		private string      _name;
 		private Notebook?   _notebook;
 		private Array<Node> _children;
 		private bool        _expanded = true;
@@ -34,21 +33,6 @@ public class NotebookTree {
 		public int id {
 			get {
 				return( _id );
-			}
-		}
-
-		public string name {
-			get {
-				return( _name );
-			}
-			set {
-				if( _name != value ) {
-					_name = value;
-					_modified = true;
-					if( _notebook != null ) {
-						_notebook.name = value;
-					}
-				}
 			}
 		}
 
@@ -79,13 +63,11 @@ public class NotebookTree {
 
     public ulong handler_id { set; get; default = 0; }
 
-		public signal void changed();
-
 		// Default constructor
 		public Node( Node? parent, Notebook nb ) {
+			base( nb.name );
 			_parent   = parent;
 			_id       = nb.id;
-			_name     = nb.name;
 			_notebook = nb;
 			_children = new Array<Node>();
 			_modified = true;
@@ -94,6 +76,7 @@ public class NotebookTree {
 
 		// Constructor from XML format
 		public Node.from_xml( Xml.Node* node, Node? parent ) {
+			base( "" );
 			_children = new Array<Node>();
 			load( node, parent );
 		}
@@ -132,9 +115,19 @@ public class NotebookTree {
 			}
 		}
 
-		// Returns the number of children
+		// Returns the number of child notebooks
 		public int size() {
 			return( (int)_children.length );
+		}
+
+		// Returns the number of notes stored in this notebook
+		public override int count() {
+		  return( get_notebook().count() );
+		}
+
+		// Returns the notes model associated with the notebook
+		public override ListModel? get_model() {
+			return( get_notebook().get_model() );
 		}
 
 		// Returns the child at the given position
@@ -221,7 +214,7 @@ public class NotebookTree {
 		public Xml.Node* save() {
 			Xml.Node* node = new Xml.Node( null, "node" );
 			node->set_prop( "id",   _id.to_string() );
-			node->set_prop( "name", _name );
+			base_save( node );
 			for( int i=0; i<_children.length; i++ ) {
 				node->add_child( _children.index( i ).save() );
 			}
@@ -244,10 +237,7 @@ public class NotebookTree {
 			if( id != null ) {
         _id = int.parse( id );
 			}
-			var name = node->get_prop( "name" );
-			if( name != null ) {
-				_name = name;
-			}
+			base_load( node );
 			_parent   = parent;
 			_notebook = null;
 			for( Xml.Node* it = node->children; it != null; it = it->next ) {

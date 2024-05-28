@@ -23,6 +23,7 @@ public enum SmartNotebookType {
   USER,
   BUILTIN,
   TAG,
+  TRASH,
   NUM;
 
   public string to_string() {
@@ -30,6 +31,7 @@ public enum SmartNotebookType {
       case USER    :  return( "user" );
       case BUILTIN :  return( "builtin" );
       case TAG     :  return( "tag" );
+      case TRASH   :  return( "trash" );
       default      :  assert_not_reached();
     }
   }
@@ -39,20 +41,21 @@ public enum SmartNotebookType {
       case "user"    :  return( USER );
       case "builtin" :  return( BUILTIN );
       case "tag"     :  return( TAG );
+      case "trash"   :  return( TRASH );
       default        :  assert_not_reached();
     }
   }
 
 }
 
-public class SmartNotebook {
+public class SmartNotebook : BaseNotebook {
 
   private Array<SmartFilter> _filters;
   private Gee.HashSet<int>   _notes;
   private bool               _modified = false;
   private SmartNotebookType  _type     = SmartNotebookType.USER;
+  private NotebookTree       _notebooks;
 
-  public string            name { get; set; default = ""; }
   public SmartNotebookType notebook_type {
     get {
       return( _type );
@@ -60,33 +63,36 @@ public class SmartNotebook {
   }
 
   // Default constructor
-  public SmartNotebook( string name, SmartNotebookType type ) {
-    _filters = new Array<SmartFilter>();
-    _notes   = new Gee.HashSet<int>();
-    this.name = name;
-    _type     = type;
+  public SmartNotebook( string name, SmartNotebookType type, NotebookTree notebooks ) {
+    base( name );
+    _filters   = new Array<SmartFilter>();
+    _notes     = new Gee.HashSet<int>();
+    _type      = type;
+    _notebooks = notebooks;
   }
 
   // Constructor from XML data
-  public SmartNotebook.from_xml( Xml.Node* node ) {
-    _filters = new Array<SmartFilter>();
-    _notes   = new Gee.HashSet<int>();
+  public SmartNotebook.from_xml( Xml.Node* node, NotebookTree notebooks ) {
+    base( "" );
+    _filters   = new Array<SmartFilter>();
+    _notes     = new Gee.HashSet<int>();
+    _notebooks = notebooks;
 
     load( node );
   }
 
   // Returns the number of matched notes
-  public int note_count() {
+  public override int count() {
     return( _notes.size );
   }
 
   // Returns the model containing the list of stored notes.
-  public ListModel get_model( NotebookTree notebooks ) {
+  public override ListModel? get_model() {
 
     var list = new ListStore( typeof(Note) );
 
     _notes.foreach((id) => {
-      list.append( notebooks.find_note( id ) );
+      list.append( _notebooks.find_note( id ) );
       return( true );
     });
 
@@ -120,19 +126,15 @@ public class SmartNotebook {
 
     bool modified = false;
 
-    stdout.printf( "In handle_note for %s\n", name );
-
     // Check to see if the note passes all of the stored filters
     for( int i=0; i<_filters.length; i++ ) {
       if( !_filters.index( i ).check_note( note ) ) {
-        stdout.printf( "  i: %d\n", i );
         modified = _notes.remove( note.id );
         _modified |= modified;
         return( modified );
       }
     }
 
-    stdout.printf( "  Adding note to notes list\n" );
     // If all of the filters passed, add the note ID if it doesn't already exist
     modified = _notes.add( note.id );
     _modified |= modified;

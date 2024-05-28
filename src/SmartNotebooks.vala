@@ -21,12 +21,14 @@
 
 public class SmartNotebooks {
 
-  Array<SmartNotebook> _notebooks;
-  bool _modified = false;
+  private Array<SmartNotebook> _notebooks;
+  private NotebookTree         _notebook_tree;
+  private bool                 _modified = false;
 
   // Default constructor
-  public SmartNotebooks() {
+  public SmartNotebooks( NotebookTree notebook_tree ) {
     _notebooks = new Array<SmartNotebook>();
+    _notebook_tree = notebook_tree;
     load();
   }
 
@@ -55,7 +57,6 @@ public class SmartNotebooks {
   // Handles any changes to the given note, updating all stored
   // smart notebooks.
   public void handle_note( Note note ) {
-    stdout.printf( "Handling note\n" );
     for( int i=0; i<_notebooks.length; i++ ) {
       _modified |= _notebooks.index( i ).handle_note( note );
     }
@@ -69,16 +70,19 @@ public class SmartNotebooks {
   // Creates the required default notebooks if we were unable to load any smart notebooks.
   private void create_default_notebooks() {
 
-    var favorites = new SmartNotebook( _( "Favorites" ), SmartNotebookType.BUILTIN );
+    var favorites = new SmartNotebook( _( "Favorites" ), SmartNotebookType.BUILTIN, _notebook_tree );
     favorites.add_filter( new FilterFavorite( true ) );
     add_notebook( favorites );
 
-    var recents = new SmartNotebook( _( "Recents" ), SmartNotebookType.BUILTIN );
+    var recents = new SmartNotebook( _( "Recents" ), SmartNotebookType.BUILTIN, _notebook_tree );
     recents.add_filter( new FilterUpdated() );  // TODO
     add_notebook( recents );
 
-    var all = new SmartNotebook( _( "All Notes" ), SmartNotebookType.BUILTIN );
+    var all = new SmartNotebook( _( "All Notes" ), SmartNotebookType.BUILTIN, _notebook_tree );
     add_notebook( all );
+
+    var trash = new SmartNotebook( _( "Trash" ), SmartNotebookType.TRASH, _notebook_tree );
+    add_notebook( trash );
 
     // Save the notebooks
     save();
@@ -126,7 +130,7 @@ public class SmartNotebooks {
 
     for( Xml.Node* it = root->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "smart-notebook") ) {
-        var notebook = new SmartNotebook.from_xml( it );
+        var notebook = new SmartNotebook.from_xml( it, _notebook_tree );
         _notebooks.append_val( notebook );
       }
     }
