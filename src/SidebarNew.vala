@@ -44,11 +44,18 @@ public class SidebarNew : Box {
     
     _store        = new GLib.ListStore( typeof( BaseNotebook ) );
     var model     = new TreeListModel( _store, false, false, add_tree_node );
-    var selection = new SingleSelection( model );
+    var selection = new SingleSelection( model ) {
+      autoselect = false
+    };
+
+    selection.selection_changed.connect((pos, num) => {
+      var row = model.get_row( selection.selected );
+      var nb  = (BaseNotebook)row.get_item();
+      notebook_selected( nb );
+    });
 
 		_list_view = new ListView( selection, factory ) {
-			margin_top = 10,
-			single_click_activate = true
+			single_click_activate = false
 		};
 
 		_list_view.activate.connect((pos) => {
@@ -57,7 +64,15 @@ public class SidebarNew : Box {
 			notebook_selected( nb );
 		});
 
-    append( _list_view );
+    var sw = new ScrolledWindow() {
+      hscrollbar_policy = PolicyType.NEVER,
+      vscrollbar_policy = PolicyType.AUTOMATIC,
+      valign = Align.FILL,
+      vexpand = true,
+      child = _list_view
+    };
+
+    append( sw );
 
     var add_nb_btn = new Button.from_icon_name( "list-add-symbolic" ) {
   		halign = Align.START,
@@ -65,12 +80,11 @@ public class SidebarNew : Box {
   	};
 
   	add_nb_btn.clicked.connect(() => {
-  		add_notebook();
+  		add_notebook( add_nb_btn );
 		});
 
   	var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
-  		valign = Align.END,
-  		vexpand = true
+  		valign = Align.END
   	};
   	bbox.append( add_nb_btn );
 
@@ -82,21 +96,33 @@ public class SidebarNew : Box {
 	}
 
 	// Adds a new notebook to the end of the list
-	public void add_notebook() {
+	public void add_notebook( Button add_btn ) {
+
+    var key = new EventControllerKey();
 
     var entry = new Entry() {
       placeholder_text = _( "Enter notebook name" )
     };
+    entry.add_controller( key );
+
+    key.key_released.connect((keyval, keycode, state) => {
+      if( keyval == Gdk.Key.Escape ) {
+        remove( entry );
+        add_btn.sensitive = true;
+      }
+    });
 
     entry.activate.connect(() => {
       var nb = new Notebook( entry.text );
       _win.notebooks.add_notebook( nb );
+      add_btn.sensitive = true;
       remove( entry );
       notebook_selected( nb );
     });
 
     append( entry );
 
+    add_btn.sensitive = false;
     entry.grab_focus();
 
 	}
@@ -164,10 +190,38 @@ public class SidebarNew : Box {
     box.append( label );
     box.append( count );
 
+    var stack = new Stack() {
+      hhomogeneous = true,
+      vhomogeneous = false
+    };
+
+    var key = new EventControllerKey();
+    var entry = new Entry();
+    entry.add_controller( key );
+
+    entry.activate.connect(() => {
+      if( entry.text.chomp() != "" ) {
+        var row = (TreeListRow)item.get_item();
+        var nb  = (BaseNotebook)row.get_item();
+        nb.name = entry.text;
+      }
+      stack.visible_child_name = "display";
+    });
+
+    key.key_released.connect((keyval, keycode, state) => {
+      if( keyval == Gdk.Key.Escape ) {
+        stack.visible_child_name = "display";
+      }
+    });
+
+    stack.add_named( box, "display" );
+    stack.add_named( entry, "rename" );
+    stack.visible_child_name = "display";
+
     var expander = new TreeExpander() {
     	margin_top = 2,
     	margin_bottom = 2,
-    	child = box
+    	child = stack
     };
 
     item.child = expander;
@@ -178,7 +232,8 @@ public class SidebarNew : Box {
 
 		var item     = (ListItem)obj;
 		var expander = (TreeExpander)item.child;
-		var box      = (Box)expander.child;
+    var stack    = (Stack)expander.child;
+		var box      = (Box)stack.get_child_by_name( "display" );
 		var label    = (Label)Utils.get_child_at_index( box, 0 );
 		var count    = (Label)Utils.get_child_at_index( box, 1 );
 		var row      = (TreeListRow)item.get_item();

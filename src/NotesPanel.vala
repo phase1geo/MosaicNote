@@ -23,23 +23,24 @@ using Gtk;
 
 public class NotesPanel : Box {
 
-  private MainWindow _win;
-	private Notebook?  _nb = null;
-	private ListBox    _list;
-  private ListModel  _model;
-  private Button     _add;
+  private MainWindow         _win;
+	private NotebookTree.Node? _node = null;
+	private ListBox            _list;
+  private ListModel          _model;
+  private Button             _add;
 
 	public signal void note_selected( Note? note );
 
 	// Default constructor
 	public NotesPanel( MainWindow win ) {
 
-		Object( orientation: Orientation.VERTICAL, spacing: 5, margin_top: 5, margin_bottom: 5, margin_start: 5, margin_end: 5 );
+		Object( orientation: Orientation.VERTICAL, spacing: 5 );
 
     _win = win;
 
 		_list = new ListBox() {
 			valign = Align.FILL,
+      vexpand = true,
 			selection_mode = SelectionMode.BROWSE,
       show_separators = true
 		};
@@ -59,15 +60,15 @@ public class NotesPanel : Box {
 		};
 
 		_add.clicked.connect(() => {
-			var note = new Note( _nb );
-			_nb.add_note( note );
-      populate_with_notebook( _nb );
-      _list.select_row( _list.get_row_at_index( _nb.count() - 1 ) );
+      var nb   = _node.get_notebook();
+			var note = new Note( nb );
+			nb.add_note( note );
+      populate_with_notebook( _node );
+      _list.select_row( _list.get_row_at_index( nb.count() - 1 ) );
 		});
 
 		var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
-			valign = Align.END,
-			vexpand = true
+			valign = Align.END
 		};
 
 		bbox.append( _add );
@@ -79,7 +80,7 @@ public class NotesPanel : Box {
 
 	// Populates the notes list from the given notebook
   public void populate_with_notebook( BaseNotebook? nb ) {
-  	_nb = (nb as Notebook);
+    _node = (nb as NotebookTree.Node);
     if( nb != null ) {
       _model = nb.get_model();
       _list.bind_model( _model, create_note );
@@ -87,7 +88,7 @@ public class NotesPanel : Box {
       _model = null;
       _list.bind_model( null, create_note );
     }
-    _add.sensitive = (_nb != null);
+    _add.sensitive = (_node != null);
   }
 
   // Adds the given note
