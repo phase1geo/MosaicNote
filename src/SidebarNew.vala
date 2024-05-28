@@ -26,7 +26,17 @@ public class SidebarNew : Box {
 	private MainWindow     _win;
 	private BaseNotebook?  _selected_node = null;
 	private GLib.ListStore _store;
+  private TreeListModel  _model;
 	private ListView       _list_view;
+  private Button         _add_nb_btn;
+
+  private const GLib.ActionEntry[] action_entries = {
+    { "action_add_notebook",    action_add_notebook, "i" },
+    { "action_rename_notebook", action_rename_notebook, "i" },
+    { "action_delete_notebook", action_delete_notebook, "i" },
+  };
+
+  private signal void rename_requested( int pos );
 
   public signal void notebook_selected( BaseNotebook nb );
 
@@ -43,23 +53,32 @@ public class SidebarNew : Box {
     factory.bind.connect( bind_tree );
     
     _store        = new GLib.ListStore( typeof( BaseNotebook ) );
-    var model     = new TreeListModel( _store, false, false, add_tree_node );
-    var selection = new SingleSelection( model ) {
+    _model        = new TreeListModel( _store, false, false, add_tree_node );
+    var selection = new SingleSelection( _model ) {
       autoselect = false
     };
 
     selection.selection_changed.connect((pos, num) => {
-      var row = model.get_row( selection.selected );
+      var row = _model.get_row( selection.selected );
       var nb  = (BaseNotebook)row.get_item();
       notebook_selected( nb );
     });
 
+    var clicked = new GestureClick() {
+      button = Gdk.BUTTON_SECONDARY
+    };
+
 		_list_view = new ListView( selection, factory ) {
 			single_click_activate = false
 		};
+    _list_view.add_controller( clicked );
+
+    clicked.pressed.connect((n_items, x, y) => {
+      var child = _list_view.get_focus_child();
+    });
 
 		_list_view.activate.connect((pos) => {
-			var row = model.get_row( pos );
+			var row = _model.get_row( pos );
 			var nb  = (BaseNotebook)row.get_item();
 			notebook_selected( nb );
 		});
@@ -74,21 +93,26 @@ public class SidebarNew : Box {
 
     append( sw );
 
-    var add_nb_btn = new Button.from_icon_name( "list-add-symbolic" ) {
+    _add_nb_btn = new Button.from_icon_name( "list-add-symbolic" ) {
   		halign = Align.START,
   		has_frame = false
   	};
 
-  	add_nb_btn.clicked.connect(() => {
-  		add_notebook( add_nb_btn );
+  	_add_nb_btn.clicked.connect(() => {
+  		add_notebook();
 		});
 
   	var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
   		valign = Align.END
   	};
-  	bbox.append( add_nb_btn );
+  	bbox.append( _add_nb_btn );
 
   	append( bbox );
+
+    /* Set the stage for menu actions */
+    var actions = new SimpleActionGroup ();
+    actions.add_action_entries( action_entries, this );
+    insert_action_group( "sidebar", actions );
 
     // Go ahead and populate ourselves to get started
     populate_tree();
@@ -96,7 +120,7 @@ public class SidebarNew : Box {
 	}
 
 	// Adds a new notebook to the end of the list
-	public void add_notebook( Button add_btn ) {
+	public void add_notebook() {
 
     var key = new EventControllerKey();
 
@@ -108,29 +132,24 @@ public class SidebarNew : Box {
     key.key_released.connect((keyval, keycode, state) => {
       if( keyval == Gdk.Key.Escape ) {
         remove( entry );
-        add_btn.sensitive = true;
+        _add_nb_btn.sensitive = true;
       }
     });
 
     entry.activate.connect(() => {
       var nb = new Notebook( entry.text );
       _win.notebooks.add_notebook( nb );
-      add_btn.sensitive = true;
+      _add_nb_btn.sensitive = true;
       remove( entry );
       notebook_selected( nb );
     });
 
     append( entry );
 
-    add_btn.sensitive = false;
+    _add_nb_btn.sensitive = false;
     entry.grab_focus();
 
 	}
-
-  // Clears the currently selected notebook
-  public void clear_selection() {
-  	_list_view.model.unselect_all();
-  }
 
 	// Populates the notebook tree with the updated version of win.notebooks
 	private void populate_tree() {
@@ -186,9 +205,33 @@ public class SidebarNew : Box {
   		count.add_css_class( _win.themes.dark_mode ? "tag-count-dark" : "tag-count-light" );
  		});
 
+    var click = new GestureClick() {
+      button = Gdk.BUTTON_SECONDARY
+    };
     var box = new Box( Orientation.HORIZONTAL, 5 );
+    box.add_controller( click );
     box.append( label );
     box.append( count );
+
+    var popover = new PopoverMenu.from_model( null );
+    popover.set_parent( box );
+
+    click.pressed.connect((n_press, x, y) => {
+      var row = (TreeListRow)item.get_item();
+      var nb  = (BaseNotebook)row.get_item();
+      if( (nb as NotebookTree.Node) != null ) {
+        var top_menu = new GLib.Menu();
+        top_menu.append( _( "New Sub-Notebook" ), "sidebar.action_add_notebook(%u)".printf( item.position ) );
+        top_menu.append( _( "Rename Notebook" ), "sidebar.action_rename_notebook(%u)".printf( item.position ) );
+        var bot_menu = new GLib.Menu();
+        bot_menu.append( _( "Delete Notebook" ), "sidebar.action_delete_notebook(%u)".printf( item.position ) );
+        var menu = new GLib.Menu();
+        menu.append_section( null, top_menu );
+        menu.append_section( null, bot_menu );
+        popover.menu_model = menu;
+        popover.popup();
+      }
+    });
 
     var stack = new Stack() {
       hhomogeneous = true,
@@ -225,6 +268,16 @@ public class SidebarNew : Box {
     };
 
     item.child = expander;
+
+    // Handle any rename requests
+    rename_requested.connect((pos) => {
+      if( pos == item.position ) {
+        var row = (TreeListRow)item.get_item();
+        var nb  = (BaseNotebook)row.get_item();
+        entry.text = nb.name;
+        stack.visible_child_name = "rename";
+      }
+    });
 
 	}
 
@@ -276,5 +329,25 @@ public class SidebarNew : Box {
 		}
   	return( null );
 	}
+
+  private void action_add_notebook( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      var pos = variant.get_int32();
+    }
+  }
+
+  private void action_rename_notebook( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      var pos = variant.get_int32();
+      rename_requested( pos );
+    }
+  }
+
+  private void action_delete_notebook( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      var pos = variant.get_int32();
+      _store.remove( pos );
+    }
+  }
 
 }
