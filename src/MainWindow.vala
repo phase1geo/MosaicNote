@@ -147,6 +147,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _note.tag_removed.connect((tag, note_id) => {
       _full_tags.delete_tag( tag, note_id );
+      _notes.update_notes();
     });
 
     _note.save_note.connect((note) => {

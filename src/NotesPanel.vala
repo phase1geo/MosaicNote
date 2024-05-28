@@ -55,14 +55,19 @@ public class NotesPanel : Box {
 
 		_add = new Button.from_icon_name( "list-add-symbolic" ) {
       has_frame = false,
+      margin_start = 5,
+      margin_top = 5,
+      margin_bottom = 5,
 			tooltip_text = _( "Add new note" ),
       sensitive = false
 		};
 
 		_add.clicked.connect(() => {
+      stdout.printf( "Adding note\n" );
       var nb   = _node.get_notebook();
 			var note = new Note( nb );
 			nb.add_note( note );
+      stdout.printf( "Populating with notebook %s\n", _node.name );
       populate_with_notebook( _node );
       _list.select_row( _list.get_row_at_index( nb.count() - 1 ) );
 		});
@@ -77,6 +82,11 @@ public class NotesPanel : Box {
 		append( bbox );
 
 	}
+
+  // Update UI from the current notebook
+  public void update_notes() {
+    populate_with_notebook( _node );
+  }
 
 	// Populates the notes list from the given notebook
   public void populate_with_notebook( BaseNotebook? nb ) {

@@ -274,6 +274,9 @@ public class NotePanel : Box {
     _title.activate.connect(() => {
       if( _note != null ) {
         _note.title = _title.text;
+        if( _note != null ) {
+          save_note( _note );
+        }
       }
       grab_focus_of_item( 0 );
     });

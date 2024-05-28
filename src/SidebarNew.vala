@@ -64,18 +64,9 @@ public class SidebarNew : Box {
       notebook_selected( nb );
     });
 
-    var clicked = new GestureClick() {
-      button = Gdk.BUTTON_SECONDARY
-    };
-
 		_list_view = new ListView( selection, factory ) {
 			single_click_activate = false
 		};
-    _list_view.add_controller( clicked );
-
-    clicked.pressed.connect((n_items, x, y) => {
-      var child = _list_view.get_focus_child();
-    });
 
 		_list_view.activate.connect((pos) => {
 			var row = _model.get_row( pos );
@@ -95,6 +86,9 @@ public class SidebarNew : Box {
 
     _add_nb_btn = new Button.from_icon_name( "list-add-symbolic" ) {
   		halign = Align.START,
+  		margin_start = 5,
+  		margin_top = 5,
+  		margin_bottom = 5,
   		has_frame = false
   	};
 
@@ -103,7 +97,7 @@ public class SidebarNew : Box {
 		});
 
   	var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
-  		valign = Align.END
+  		valign = Align.END,
   	};
   	bbox.append( _add_nb_btn );
 
