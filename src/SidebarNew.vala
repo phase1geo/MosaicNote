@@ -21,6 +21,18 @@
 
 using Gtk;
 
+public class LabelNotebook : BaseNotebook {
+  public LabelNotebook( string label ) {
+    base( label );
+  }
+}
+
+public class HiddenNotebook : BaseNotebook {
+  public HiddenNotebook() {
+    base( "" );
+  }
+}
+
 public class SidebarNew : Box {
 
 	private MainWindow     _win;
@@ -29,6 +41,7 @@ public class SidebarNew : Box {
   private TreeListModel  _model;
 	private ListView       _list_view;
   private Button         _add_nb_btn;
+  private bool           _adding = false;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_add_notebook",    action_add_notebook, "i" },
@@ -36,6 +49,7 @@ public class SidebarNew : Box {
     { "action_delete_notebook", action_delete_notebook, "i" },
   };
 
+  private signal void add_requested( int pos );
   private signal void rename_requested( int pos );
 
   public signal void notebook_selected( BaseNotebook nb );
@@ -93,7 +107,7 @@ public class SidebarNew : Box {
   	};
 
   	_add_nb_btn.clicked.connect(() => {
-  		add_notebook();
+  		add_requested( 4 + _win.notebooks.size() + 1 );
 		});
 
   	var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
@@ -113,44 +127,12 @@ public class SidebarNew : Box {
 
 	}
 
-	// Adds a new notebook to the end of the list
-	public void add_notebook() {
-
-    var key = new EventControllerKey();
-
-    var entry = new Entry() {
-      placeholder_text = _( "Enter notebook name" )
-    };
-    entry.add_controller( key );
-
-    key.key_released.connect((keyval, keycode, state) => {
-      if( keyval == Gdk.Key.Escape ) {
-        remove( entry );
-        _add_nb_btn.sensitive = true;
-      }
-    });
-
-    entry.activate.connect(() => {
-      var nb = new Notebook( entry.text );
-      _win.notebooks.add_notebook( nb );
-      _add_nb_btn.sensitive = true;
-      remove( entry );
-      notebook_selected( nb );
-    });
-
-    append( entry );
-
-    _add_nb_btn.sensitive = false;
-    entry.grab_focus();
-
-	}
-
 	// Populates the notebook tree with the updated version of win.notebooks
 	private void populate_tree() {
 
 		_store.remove_all();
 
-		var library = new BaseNotebook( _( "Library" ) );
+		var library = new LabelNotebook( _( "Library" ) );
 		_store.append( library );
 
 		for( int i=0; i<_win.smart_notebooks.size(); i++ ) {
@@ -160,7 +142,7 @@ public class SidebarNew : Box {
       }
 		}
 
-		var notebooks = new BaseNotebook( _( "Notebooks" ) );
+		var notebooks = new LabelNotebook( _( "Notebooks" ) );
 		_store.append( notebooks );
 
 		for( int i=0; i<_win.notebooks.size(); i++ ) {
@@ -168,7 +150,10 @@ public class SidebarNew : Box {
 			_store.append( node );
   	}
 
-  	var tags = new BaseNotebook( _( "Tags" ) );
+    var new_notebook = new HiddenNotebook();
+    _store.append( new_notebook );
+
+  	var tags = new LabelNotebook( _( "Tags" ) );
   	_store.append( tags );
 
 		for( int i=0; i<_win.full_tags.size(); i++ ) {
@@ -233,16 +218,32 @@ public class SidebarNew : Box {
     };
 
     var key = new EventControllerKey();
-    var entry = new Entry();
+    var entry = new Entry() {
+      placeholder_text = _( "Enter Notebook Name" )
+    };
     entry.add_controller( key );
 
     entry.activate.connect(() => {
-      if( entry.text.chomp() != "" ) {
-        var row = (TreeListRow)item.get_item();
-        var nb  = (BaseNotebook)row.get_item();
-        nb.name = entry.text;
+      var row = (TreeListRow)item.get_item();
+      var nb  = (BaseNotebook)row.get_item();
+      if( (nb as NotebookTree.Node) != null ) {
+        if( entry.text.chomp() != "" ) {
+          nb.name = entry.text;
+        }
+        stack.visible_child_name = "display";
+      } else {
+        if( entry.text.chomp() != "" ) {
+          var new_nb = new Notebook( entry.text );
+          stack.visible = false;
+          row = row.get_parent();
+          if( row == null ) {
+            _win.notebooks.add_notebook( new_nb );
+          } else {
+            var parent = (NotebookTree.Node)row.get_item();
+            parent.add_notebook( new_nb );
+          }
+        }
       }
-      stack.visible_child_name = "display";
     });
 
     key.key_released.connect((keyval, keycode, state) => {
@@ -262,6 +263,16 @@ public class SidebarNew : Box {
     };
 
     item.child = expander;
+
+    // Handle any add requests to an add notebook
+    add_requested.connect((pos) => {
+      if( pos == item.position ) {
+        var row = (TreeListRow)item.get_item();
+        stack.visible = true;
+        entry.text = "";
+        entry.grab_focus();
+      }
+    });
 
     // Handle any rename requests
     rename_requested.connect((pos) => {
@@ -286,7 +297,7 @@ public class SidebarNew : Box {
 		var row      = (TreeListRow)item.get_item();
 		var nb       = (BaseNotebook)row.get_item();
 
-		if( ((nb as NotebookTree.Node) == null) && ((nb as SmartNotebook) == null) && ((nb as FullTag) == null) ) {
+		if( (nb as LabelNotebook) != null ) {
 			item.selectable   = false;
 			item.activatable  = false;
 			// item.focusable    = false;
@@ -296,6 +307,9 @@ public class SidebarNew : Box {
 			count.visible     = false;
 			box.margin_top    = 10;
 			box.margin_bottom = 10;
+    } else if( (nb as HiddenNotebook) != null ) {
+      stack.visible_child_name = "rename";
+      stack.visible = false;
 		} else {
 		  expander.set_list_row( row );
 		  label.label = nb.name;
@@ -312,21 +326,34 @@ public class SidebarNew : Box {
 	// Create expander tree
 	public ListModel? add_tree_node( Object obj ) {
 		if( (obj != null) && ((obj as NotebookTree.Node) != null) ) {
-  		var node = (NotebookTree.Node)obj;
-   		if( node.size() > 0 ) {
- 	  		var store = new GLib.ListStore( typeof( BaseNotebook ) );
-  	  	for( int i=0; i<node.size(); i++ ) {
-	  	  	store.append( node.get_node( i ) );
-		    }
-		    return( store );
-		  }
+  		var node  = (NotebookTree.Node)obj;
+      var store = new GLib.ListStore( typeof( BaseNotebook ) );
+      if( node.size() > 0 ) {
+   	  	for( int i=0; i<node.size(); i++ ) {
+    	  	store.append( node.get_node( i ) );
+	      }
+      }
+      stdout.printf( "HERE A\n" );
+      if( _adding ) {
+        stdout.printf( "Adding\n" );
+        var new_notebook = new HiddenNotebook();
+        store.append( new_notebook );
+        _adding = false;
+      }
+	    return( (store.get_n_items() == 0) ? null : store );
 		}
   	return( null );
 	}
 
   private void action_add_notebook( SimpleAction action, Variant? variant ) {
     if( variant != null ) {
+      _adding = true;
       var pos = variant.get_int32();
+      var row = _model.get_row( pos );
+      row.expanded = true;
+      row = _model.get_row( pos );
+      var children = row.children;
+      add_requested( (int)(pos + children.get_n_items()) );
     }
   }
 
