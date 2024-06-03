@@ -23,6 +23,7 @@ public enum NoteItemType {
 	MARKDOWN,
 	CODE,
 	IMAGE,
+  UML,
 	NUM;
 
 	public string to_string() {
@@ -30,6 +31,7 @@ public enum NoteItemType {
 			case MARKDOWN :  return( "markdown" );
 			case CODE     :  return( "code" );
 			case IMAGE    :  return( "image" );
+      case UML      :  return( "uml" );
 			default       :  assert_not_reached();
 		}
 	}
@@ -39,6 +41,7 @@ public enum NoteItemType {
 			case MARKDOWN :  return( _( "Markdown" ) );
 			case CODE     :  return( _( "Code" ) );
 			case IMAGE    :  return( _( "Image" ) );
+      case UML      :  return( _( "UML Diagram" ) );
 			default       :  assert_not_reached();
 		}
 	}
@@ -48,6 +51,7 @@ public enum NoteItemType {
 			case "markdown" :  return( MARKDOWN );
 			case "code"     :  return( CODE );
 			case "image"    :  return( IMAGE );
+      case "uml"      :  return( UML );
 			default         :  return( NUM );
 		}
 	}
@@ -65,6 +69,7 @@ public enum NoteItemType {
 			case MARKDOWN :  return( new NoteItemMarkdown() );
 			case CODE     :  return( new NoteItemCode() );
 			case IMAGE    :  return( new NoteItemImage() );
+      case UML      :  return( new NoteItemUML() );
 			default       :  assert_not_reached();
 		}
 	}
@@ -74,6 +79,7 @@ public enum NoteItemType {
       case MARKDOWN :  return( new ToolbarMarkdown() );
       case CODE     :  return( new ToolbarCode() );
       case IMAGE    :  return( new ToolbarItem() );
+      case UML      :  return( new ToolbarItem() );
       default       :  assert_not_reached();
     }
   }

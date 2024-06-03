@@ -360,6 +360,7 @@ public class NotePanel : Box {
       case NoteItemType.MARKDOWN :  return( add_markdown_item( (NoteItemMarkdown)item, pos ) );
       case NoteItemType.CODE     :  return( add_code_item( (NoteItemCode)item, pos ) );
       case NoteItemType.IMAGE    :  return( add_image_item( (NoteItemImage)item, pos ) );
+      case NoteItemType.UML      :  return( add_uml_item( (NoteItemUML)item, pos ) );
       default                    :  assert_not_reached();
     }
   }
@@ -848,5 +849,22 @@ public class NotePanel : Box {
     return( box );
 
   }
+
+  // Adds a new UML item at the given position in the content area
+  private Widget add_uml_item( NoteItemUML item, int pos = -1 ) {
+
+    var frame     = add_text_item( item, "markdown", pos );
+    var text      = (GtkSource.View)Utils.get_child_at_index( frame, 0 );
+    var buffer    = (GtkSource.Buffer)text.buffer;
+    var style_mgr = new GtkSource.StyleSchemeManager();
+    var style     = style_mgr.get_scheme( _win.themes.get_current_theme() );
+
+    buffer.style_scheme = style;
+    text.add_css_class( "markdown-text" );
+
+    return( frame );
+
+  }
+
 
 }
