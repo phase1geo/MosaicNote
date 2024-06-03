@@ -300,6 +300,7 @@ public class SidebarNew : Box {
 		if( (nb as LabelNotebook) != null ) {
 			item.selectable   = false;
 			item.activatable  = false;
+      // TODO - This option is not available in pre 4.10 versions of Gtk
 			// item.focusable    = false;
 			label.label       = Utils.make_title( nb.name );
 			label.use_markup  = true;
@@ -333,9 +334,7 @@ public class SidebarNew : Box {
     	  	store.append( node.get_node( i ) );
 	      }
       }
-      stdout.printf( "HERE A\n" );
       if( _adding ) {
-        stdout.printf( "Adding\n" );
         var new_notebook = new HiddenNotebook();
         store.append( new_notebook );
         _adding = false;

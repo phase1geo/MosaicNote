@@ -59,6 +59,9 @@ public class NotePanel : Box {
 
     _win = win;
 
+    // Initialize the language manager
+    initialize_languages();
+
     _stack = new Stack() {
       hhomogeneous = true,
       vhomogeneous = true,
@@ -89,6 +92,23 @@ public class NotePanel : Box {
     _win.themes.theme_changed.connect((theme) => {
       update_theme( theme );
     });
+
+  }
+
+  // Initialize the language manager to include the specialty languages that MosaicNote
+  // provides (includes PlantUML).
+  private void initialize_languages() {
+
+    foreach( var data_dir in Environment.get_system_data_dirs() ) {
+      var path = GLib.Path.build_filename( data_dir, "mosaic-note", "gtksourceview-5" );
+      if( FileUtils.test( path, FileTest.EXISTS ) ) {
+        var lang_path = GLib.Path.build_filename( path, "language-specs" );
+        var manager   = GtkSource.LanguageManager.get_default();
+        stdout.printf( "HERE! %s exists: %s\n", lang_path, FileUtils.test( lang_path, FileTest.EXISTS ).to_string() );
+        manager.append_search_path( lang_path );
+        break;
+      }
+    }
 
   }
 
@@ -227,8 +247,9 @@ public class NotePanel : Box {
       _content.remove( w );
       switch( type ) {
         case NoteItemType.MARKDOWN :  add_markdown_item( (NoteItemMarkdown)new_item, _current_item );  break;
-        case NoteItemType.CODE     :  add_code_item( (NoteItemCode)new_item, _current_item );  break;
-        case NoteItemType.IMAGE    :  add_image_item( (NoteItemImage)new_item, _current_item );  break;
+        case NoteItemType.CODE     :  add_code_item( (NoteItemCode)new_item, _current_item );          break;
+        case NoteItemType.IMAGE    :  add_image_item( (NoteItemImage)new_item, _current_item );        break;
+        case NoteItemType.UML      :  add_uml_item( (NoteItemUML)new_item, _current_item );            break;
         default                    :  break;
       }
       grab_focus_of_item( _current_item );
@@ -274,9 +295,7 @@ public class NotePanel : Box {
     _title.activate.connect(() => {
       if( _note != null ) {
         _note.title = _title.text;
-        if( _note != null ) {
-          save_note( _note );
-        }
+        save_note( _note );
       }
       grab_focus_of_item( 0 );
     });
@@ -401,8 +420,13 @@ public class NotePanel : Box {
 
   // Grabs the focus of the note item at the specified position.
   private void grab_focus_of_item( int pos ) {
-    if( _note.get_item( pos ).item_type.is_text() ) {
+    var item_type = _note.get_item( pos ).item_type;
+    if( item_type.is_text() ) {
       get_item_text( pos ).grab_focus();
+    } else if( item_type == NoteItemType.UML ) {
+      var w = (Stack)get_item( pos );
+      w.visible_child_name = "input";
+      w.get_child_by_name( "input" ).grab_focus();
     } else {
       get_item_image( pos ).grab_focus();
     }
@@ -648,7 +672,7 @@ public class NotePanel : Box {
 
   }
 
-  private Widget add_text_item( NoteItem item, string lang_id, int pos = -1 ) {
+  private Widget add_text_item( NoteItem item, string lang_id ) {
 
     var lang_mgr = GtkSource.LanguageManager.get_default();
     var lang     = lang_mgr.get_language( lang_id );
@@ -705,8 +729,6 @@ public class NotePanel : Box {
       });
     }
 
-    add_item_to_content( box, pos );
-
     return( box );
 
   }
@@ -752,7 +774,7 @@ public class NotePanel : Box {
   // Adds a new Markdown item at the given position in the content area
   private Widget add_markdown_item( NoteItemMarkdown item, int pos = -1 ) {
 
-    var frame     = add_text_item( item, "markdown", pos );
+    var frame     = add_text_item( item, "markdown" );
     var text      = (GtkSource.View)Utils.get_child_at_index( frame, 0 );
     var buffer    = (GtkSource.Buffer)text.buffer;
     var style_mgr = new GtkSource.StyleSchemeManager();
@@ -761,13 +783,15 @@ public class NotePanel : Box {
     buffer.style_scheme = style;
     text.add_css_class( "markdown-text" );
 
+    add_item_to_content( frame, pos );
+
     return( frame );
 
   }
 
   private Widget add_code_item( NoteItemCode item, int pos = -1 ) {
 
-    var frame  = add_text_item( item, item.lang, pos );
+    var frame  = add_text_item( item, item.lang );
     var text   = (GtkSource.View)Utils.get_child_at_index( frame, 0 );
     var buffer = (GtkSource.Buffer)text.buffer;
 
@@ -802,6 +826,8 @@ public class NotePanel : Box {
         text.remove_controller( key );
       }
     });
+
+    add_item_to_content( frame, pos );
 
     return( frame );
 
@@ -853,18 +879,55 @@ public class NotePanel : Box {
   // Adds a new UML item at the given position in the content area
   private Widget add_uml_item( NoteItemUML item, int pos = -1 ) {
 
-    var frame     = add_text_item( item, "markdown", pos );
-    var text      = (GtkSource.View)Utils.get_child_at_index( frame, 0 );
+    var image = new Picture() {
+      halign = Align.FILL,
+      valign = Align.FILL
+    };
+
+    var label = new Label( _( "UML Diagram Input" ) ) {
+      halign  = Align.START,
+      hexpand = true
+    };
+    var help = new Button.with_label( _( "UML Syntax" ) ) {
+      halign = Align.END
+    };
+    help.clicked.connect(() => {
+      Utils.open_url( "FOOBAR" );
+    });
+    var show = new Button.with_label( _( "Show Diagram" ) ) {
+      halign = Align.END
+    };
+
+    var input     = add_text_item( item, "plantuml" );
+    var text      = (GtkSource.View)Utils.get_child_at_index( input, 0 );
     var buffer    = (GtkSource.Buffer)text.buffer;
     var style_mgr = new GtkSource.StyleSchemeManager();
     var style     = style_mgr.get_scheme( _win.themes.get_current_theme() );
 
     buffer.style_scheme = style;
-    text.add_css_class( "markdown-text" );
+    text.add_css_class( "code-text" );
 
-    return( frame );
+    var stack = new Stack();
+    stack.add_named( input, "input" );
+    stack.add_named( image, "image" );
+
+    show.clicked.connect(() => {
+      item.content = buffer.text;
+    });
+
+    item.diagram_updated.connect((filename) => {
+      if( filename != null ) {
+        image.file = File.new_for_path( filename );
+        stack.visible_child_name = "image";
+      } else {
+        stack.visible_child_name = "input";
+      }
+    });
+
+    add_item_to_content( stack, pos );
+
+    return( stack );
 
   }
-
 
 }

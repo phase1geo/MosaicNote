@@ -88,6 +88,7 @@ public enum NoteItemType {
 		switch( this ) {
 			case MARKDOWN :  initialize_markdown_text( text );  break;
 			case CODE     :  initialize_code_text( text );  break;
+			case UML      :  initialize_uml_text( text );  break;
 			default       :  break;
 		}
 	}
@@ -108,6 +109,16 @@ public enum NoteItemType {
     text.monospace = true;
 	}
 
+	private void initialize_uml_text( GtkSource.View text ) {
+		text.wrap_mode = Gtk.WrapMode.NONE;
+    text.auto_indent = true;
+    text.indent_width = 3;
+    text.insert_spaces_instead_of_tabs = true;
+    text.smart_backspace = true;
+    text.tab_width = 3;
+    text.monospace = true;
+	}
+
 }
 
 public class NoteItem {
@@ -117,6 +128,8 @@ public class NoteItem {
   public NoteItemType item_type { get; private set; default = NoteItemType.MARKDOWN; }
 	public bool         modified  { get; protected set; default = false; }
 
+	public signal void changed();
+
   public string content {
     get {
       return( _content );
@@ -125,6 +138,7 @@ public class NoteItem {
       if( _content != value ) {
         _content = value;
         modified = true;
+        changed();
       }
     }
   }

@@ -31,6 +31,7 @@ public class NoteItemCode : NoteItem {
 	  	if( _lang != value ) {
 	  		_lang    = value;
         modified = true;
+        changed();
 	  	}
 	  }
 	}

@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- vim: tabstop=2 shiftwidth=2
+
+  yaml.lang basic syntax highlighting of YAML for GtkSourceView
+
+  Copyright (C) 2013 Masood Behabadi <masood@dentcat.com>
+
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public License
+  along with this library; if not, see <http://www.gnu.org/licenses/>.
+-->
+
+<language id="plantuml" name="PlantUML" version="2.0">
+
+  <metadata>
+    <property name="mimetypes">application/x-plantuml</property>
+    <property name="globs">*.pu;*.puml;</property>
+  </metadata>
+
+  <styles>
+    <style id="comment"  name="Comment"  map-to="def:comment"/>
+    <style id="string"   name="String"   map-to="def:string"/>
+    <style id="operator" name="Operator" map-to="def:identifier"/>
+    <style id="constant" name="Constant" map-to="def:preprocessor"/>
+    <style id="tag"      name="Tag"      map-to="def:type"/>
+    <style id="keyword"  name="Keyword"  map-to="def:keyword"/>
+    <style id="color"    name="Color"    map-to="def:decimal"/>
+    <style id="arrow"    name="Arrow"    map-to="def:special-char"/>
+    <style id="bold"     name="Bold"     map-to="def:type"/>
+  </styles>
+
+  <definitions>
+
+    <context id="comment" style-ref="comment">
+      <match>/^'.*\n/m</match>
+    </context>
+
+    <context id="operator" style-ref="operator">
+      <keyword>abstract</keyword>
+      <keyword>actor</keyword>
+      <keyword>class</keyword>
+      <keyword>component</keyword>
+      <keyword>enum</keyword>
+      <keyword>interface</keyword>
+      <keyword>object</keyword>
+      <keyword>participant</keyword>
+      <keyword>state</keyword>
+      <keyword>usecase</keyword>
+    </context>
+
+    <context id="bold" style-ref="bold">
+      <match>(\b|^)title\b.*\n</match>
+    </context>
+
+    <context id="keywords" style-ref="keyword">
+      <keyword>activate</keyword>
+      <keyword>again</keyword>
+      <keyword>also</keyword>
+      <keyword>alt</keyword>
+      <keyword>as</keyword>
+      <keyword>autonumber</keyword>
+      <keyword>bottom</keyword>
+      <keyword>box</keyword>
+      <keyword>break</keyword>
+      <keyword>center</keyword>
+      <keyword>create</keyword>
+      <keyword>critical</keyword>
+      <keyword>deactivate</keyword>
+      <keyword>destroy</keyword>
+      <keyword>down</keyword>
+      <keyword>else</keyword>
+      <keyword>end</keyword>
+      <keyword>endif</keyword>
+      <keyword>endwhile</keyword>
+      <keyword>footbox</keyword>
+      <keyword>footer</keyword>
+      <keyword>fork</keyword>
+      <keyword>group</keyword>
+      <keyword>header</keyword>
+      <keyword>hide</keyword>
+      <keyword>if</keyword>
+      <keyword>is</keyword>
+      <keyword>left</keyword>
+      <keyword>link</keyword>
+      <keyword>loop</keyword>
+      <keyword>namespace</keyword>
+      <keyword>newpage</keyword>
+      <keyword>note</keyword>
+      <keyword>of</keyword>
+      <keyword>on</keyword>
+      <keyword>opt</keyword>
+      <keyword>over</keyword>
+      <keyword>package</keyword>
+      <keyword>page</keyword>
+      <keyword>par</keyword>
+      <keyword>partition</keyword>
+      <keyword>ref</keyword>
+      <keyword>repeat</keyword>
+      <keyword>return</keyword>
+      <keyword>right</keyword>
+      <keyword>rotate</keyword>
+      <keyword>show</keyword>
+      <keyword>skin</keyword>
+      <keyword>skinparam</keyword>
+      <keyword>start</keyword>
+      <keyword>stop</keyword>
+      <keyword>title</keyword>
+      <keyword>top</keyword>
+      <keyword>top to bottom direction</keyword>
+      <keyword>up</keyword>
+      <keyword>while</keyword>
+    </context>
+
+    <context id="color" style-ref="color">
+      <keyword>AliceBlue</keyword>
+      <keyword>AntiqueWhite</keyword>
+      <keyword>Aqua</keyword>
+      <keyword>Aquamarine</keyword>
+      <keyword>Azure</keyword>
+      <keyword>Beige</keyword>
+      <keyword>Bisque</keyword>
+      <keyword>Black</keyword>
+      <keyword>BlanchedAlmond</keyword>
+      <keyword>Blue</keyword>
+      <keyword>BlueViolet</keyword>
+      <keyword>Brown</keyword>
+      <keyword>BurlyWood</keyword>
+      <keyword>CadetBlue</keyword>
+      <keyword>Chartreuse</keyword>
+      <keyword>Chocolate</keyword>
+      <keyword>Coral</keyword>
+      <keyword>CornflowerBlue</keyword>
+      <keyword>Cornsilk</keyword>
+      <keyword>Crimson</keyword>
+      <keyword>Cyan</keyword>
+      <keyword>DarkBlue</keyword>
+      <keyword>DarkCyan</keyword>
+      <keyword>DarkGoldenRod</keyword>
+      <keyword>DarkGray</keyword>
+      <keyword>DarkGreen</keyword>
+      <keyword>DarkGrey</keyword>
+      <keyword>DarkKhaki</keyword>
+      <keyword>DarkMagenta</keyword>
+      <keyword>DarkOliveGreen</keyword>
+      <keyword>DarkOrchid</keyword>
+      <keyword>DarkRed</keyword>
+      <keyword>DarkSalmon</keyword>
+      <keyword>DarkSeaGreen</keyword>
+      <keyword>DarkSlateBlue</keyword>
+      <keyword>DarkSlateGray</keyword>
+      <keyword>DarkSlateGrey</keyword>
+      <keyword>DarkTurquoise</keyword>
+      <keyword>DarkViolet</keyword>
+      <keyword>Darkorange</keyword>
+      <keyword>DeepPink</keyword>
+      <keyword>DeepSkyBlue</keyword>
+      <keyword>DimGray</keyword>
+      <keyword>DimGrey</keyword>
+      <keyword>DodgerBlue</keyword>
+      <keyword>FireBrick</keyword>
+      <keyword>FloralWhite</keyword>
+      <keyword>ForestGreen</keyword>
+      <keyword>Fuchsia</keyword>
+      <keyword>Gainsboro</keyword>
+      <keyword>GhostWhite</keyword>
+      <keyword>Gold</keyword>
+      <keyword>GoldenRod</keyword>
+      <keyword>Gray</keyword>
+      <keyword>Green</keyword>
+      <keyword>GreenYellow</keyword>
+      <keyword>Grey</keyword>
+      <keyword>HoneyDew</keyword>
+      <keyword>HotPink</keyword>
+      <keyword>IndianRed</keyword>
+      <keyword>Indigo</keyword>
+      <keyword>Ivory</keyword>
+      <keyword>Khaki</keyword>
+      <keyword>Lavender</keyword>
+      <keyword>LavenderBlush</keyword>
+      <keyword>LawnGreen</keyword>
+      <keyword>LemonChiffon</keyword>
+      <keyword>LightBlue</keyword>
+      <keyword>LightCoral</keyword>
+      <keyword>LightCyan</keyword>
+      <keyword>LightGoldenRodYellow</keyword>
+      <keyword>LightGray</keyword>
+      <keyword>LightGreen</keyword>
+      <keyword>LightGrey</keyword>
+      <keyword>LightPink</keyword>
+      <keyword>LightSalmon</keyword>
+      <keyword>LightSeaGreen</keyword>
+      <keyword>LightSkyBlue</keyword>
+      <keyword>LightSlateGray</keyword>
+      <keyword>LightSlateGrey</keyword>
+      <keyword>LightSteelBlue</keyword>
+      <keyword>LightYellow</keyword>
+      <keyword>Lime</keyword>
+      <keyword>LimeGreen</keyword>
+      <keyword>Linen</keyword>
+      <keyword>Magenta</keyword>
+      <keyword>Maroon</keyword>
+      <keyword>MediumAquaMarine</keyword>
+      <keyword>MediumBlue</keyword>
+      <keyword>MediumOrchid</keyword>
+      <keyword>MediumPurple</keyword>
+      <keyword>MediumSeaGreen</keyword>
+      <keyword>MediumSlateBlue</keyword>
+      <keyword>MediumSpringGreen</keyword>
+      <keyword>MediumTurquoise</keyword>
+      <keyword>MediumVioletRed</keyword>
+      <keyword>MidnightBlue</keyword>
+      <keyword>MintCream</keyword>
+      <keyword>MistyRose</keyword>
+      <keyword>Moccasin</keyword>
+      <keyword>NavajoWhite</keyword>
+      <keyword>Navy</keyword>
+      <keyword>OldLace</keyword>
+      <keyword>Olive</keyword>
+      <keyword>OliveDrab</keyword>
+      <keyword>Orange</keyword>
+      <keyword>OrangeRed</keyword>
+      <keyword>Orchid</keyword>
+      <keyword>PaleGoldenRod</keyword>
+      <keyword>PaleGreen</keyword>
+      <keyword>PaleTurquoise</keyword>
+      <keyword>PaleVioletRed</keyword>
+      <keyword>PapayaWhip</keyword>
+      <keyword>PeachPuff</keyword>
+      <keyword>Peru</keyword>
+      <keyword>Pink</keyword>
+      <keyword>Plum</keyword>
+      <keyword>PowderBlue</keyword>
+      <keyword>Purple</keyword>
+      <keyword>Red</keyword>
+      <keyword>RosyBrown</keyword>
+      <keyword>RoyalBlue</keyword>
+      <keyword>SaddleBrown</keyword>
+      <keyword>Salmon</keyword>
+      <keyword>SandyBrown</keyword>
+      <keyword>SeaGreen</keyword>
+      <keyword>SeaShell</keyword>
+      <keyword>Sienna</keyword>
+      <keyword>Silver</keyword>
+      <keyword>SkyBlue</keyword>
+      <keyword>SlateBlue</keyword>
+      <keyword>SlateGray</keyword>
+      <keyword>SlateGrey</keyword>
+      <keyword>Snow</keyword>
+      <keyword>SpringGreen</keyword>
+      <keyword>SteelBlue</keyword>
+      <keyword>Tan</keyword>
+      <keyword>Teal</keyword>
+      <keyword>Thistle</keyword>
+      <keyword>Tomato</keyword>
+      <keyword>Turquoise</keyword>
+      <keyword>Violet</keyword>
+      <keyword>Wheat</keyword>
+      <keyword>White</keyword>
+      <keyword>WhiteSmoke</keyword>
+      <keyword>Yellow</keyword>
+      <keyword>YellowGreen</keyword>
+    </context>
+
+    <context id="arrow" style-ref="arrow">
+      <match>([A-Za-z_0-9]+) +((-?->)|(&lt;-?-)) +([A-Za-z_0-9]+)(:).*\n</match>
+      <include>
+        <context sub-pattern="1" style-ref="tag"/>
+        <context sub-pattern="2" style-ref="operator"/>
+      </include>
+    </context>
+
+    <context id="double-quote" style-ref="string">
+      <match>\".*\"</match>
+    </context>
+
+    <context id="single-quote" style-ref="string">
+      <match>\'.*\'</match>
+    </context>
+
+    <context id="constant" style-ref="constant">
+      <match>\b[A-Z]+[A-Za-z_0-9]*\b</match>
+    </context>
+
+    <context id="variable" style-ref="tag">
+      <match>\b[a-z_]+[A-Za-z_0-9]*\b</match>
+    </context>
+
+    <context id="plantuml" class="no-spell-check">
+      <include>
+        <context ref="comment"/>
+        <context ref="operator"/>
+        <context ref="bold"/>
+        <context ref="keywords"/>
+        <context ref="color"/>
+        <context ref="arrow"/>
+        <context ref="double-quote"/>
+        <context ref="single-quote"/>
+        <context ref="constant"/>
+        <context ref="variable"/>
+      </include>
+    </context>
+
+  </definitions>
+
+</language>

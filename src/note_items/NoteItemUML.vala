@@ -21,14 +21,48 @@
 
 public class NoteItemUML : NoteItem {
 
+	public signal void diagram_updated( string? filename );
+
 	// Default constructor
 	public NoteItemUML() {
 		base( NoteItemType.UML );
+		changed.connect( update_diagram );
 	}
 
 	public NoteItemUML.from_xml( Xml.Node* node ) {
 		base( NoteItemType.UML );
 		load( node );
+		changed.connect( update_diagram );
+	}
+
+	// Updates the UML diagram
+	public void update_diagram() {
+
+	  var input  = Utils.user_location( "test.txt" );
+	  var output = Utils.user_location( "test.png" );
+
+		// Save the current content to a file
+		try {
+			FileUtils.set_contents( input, content );
+		} catch( FileError e ) {
+			stdout.printf( "Error saving UML diagrame contents to file %s: %s\n", input, e.message );
+			diagram_updated( null );
+			return;
+		}
+
+    try {
+    	var command = "plantuml %s".printf( input );
+    	Process.spawn_command_line_sync( command );
+    	if( FileUtils.test( output, FileTest.EXISTS ) ) {
+    		diagram_updated( output );
+    		return;
+    	}
+    } catch( SpawnError e ) {
+    	stdout.printf( "Error generating PlantUML diagram %s: %s\n", input, e.message );
+    }
+
+    diagram_updated( null );
+
 	}
 
 }
