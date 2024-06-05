@@ -64,12 +64,12 @@ public enum NoteItemType {
     return( this == MARKDOWN );
   }
 
-	public NoteItem create() {
+	public NoteItem create( Note note ) {
 		switch( this ) {
-			case MARKDOWN :  return( new NoteItemMarkdown() );
-			case CODE     :  return( new NoteItemCode() );
-			case IMAGE    :  return( new NoteItemImage() );
-      case UML      :  return( new NoteItemUML() );
+			case MARKDOWN :  return( new NoteItemMarkdown( note ) );
+			case CODE     :  return( new NoteItemCode( note ) );
+			case IMAGE    :  return( new NoteItemImage( note ) );
+      case UML      :  return( new NoteItemUML( note ) );
 			default       :  assert_not_reached();
 		}
 	}
@@ -125,6 +125,7 @@ public class NoteItem {
 
   private string _content = "";
 
+	public Note         note      { get; private set; }
   public NoteItemType item_type { get; private set; default = NoteItemType.MARKDOWN; }
 	public bool         modified  { get; protected set; default = false; }
 
@@ -144,12 +145,14 @@ public class NoteItem {
   }
 
 	// Default constructor
-	public NoteItem( NoteItemType type ) {
+	public NoteItem( Note note, NoteItemType type ) {
+		this.note      = note;
     this.item_type = type;
 	}
 
   // Copy method (can be used to convert one item to another as well)
   public virtual void copy( NoteItem item ) {
+  	this.note     = item.note;
     this._content = item._content;
     this.modified = item.modified;
   }

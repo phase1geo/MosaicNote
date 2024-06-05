@@ -37,15 +37,17 @@ public class NoteItemCode : NoteItem {
 	}
 
 	// Default constructor
-	public NoteItemCode() {
-		base( NoteItemType.CODE );
+	public NoteItemCode( Note note ) {
+		base( note, NoteItemType.CODE );
 	}
 
-	public NoteItemCode.from_xml( Xml.Node* node ) {
-		base( NoteItemType.CODE );
+	// Constructor from XML node
+	public NoteItemCode.from_xml( Note note, Xml.Node* node ) {
+		base( note, NoteItemType.CODE );
 		load( node );
 	}
 
+	// Copies the note item to this one
   public override void copy( NoteItem item ) {
     base.copy( item );
     var code = (item as NoteItemCode);

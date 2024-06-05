@@ -37,16 +37,17 @@ public class NoteItemImage : NoteItem {
 	}
 
 	// Default constructor
-	public NoteItemImage() {
-		base( NoteItemType.IMAGE );
+	public NoteItemImage( Note note ) {
+		base( note, NoteItemType.IMAGE );
 	}
 
 	// Constructor from XML format
-	public NoteItemImage.from_xml( Xml.Node* node ) {
-		base( NoteItemType.IMAGE );
+	public NoteItemImage.from_xml( Note note, Xml.Node* node ) {
+		base( note, NoteItemType.IMAGE );
 		load( node );
 	}
 
+	// Copies the given note item to ourselves
   public override void copy( NoteItem item ) {
     base.copy( item );
     var image = (item as NoteItemImage);

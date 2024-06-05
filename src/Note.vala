@@ -125,7 +125,7 @@ public class Note : Object {
 		_tags     = new Tags();
     _items    = new Array<NoteItem>();
 
-    var item = new NoteItemMarkdown();
+    var item = new NoteItemMarkdown( this );
     add_note_item( 0, item );
 	}
 
@@ -283,8 +283,9 @@ public class Note : Object {
         var type = NoteItemType.parse( it->name );
         switch( type ) {
         	case NoteItemType.MARKDOWN :  load_markdown_item( it );  break;
-        	case NoteItemType.CODE     :  load_code_item( it );  break;
-        	case NoteItemType.IMAGE    :  load_image_item( it );  break;
+        	case NoteItemType.CODE     :  load_code_item( it );      break;
+        	case NoteItemType.IMAGE    :  load_image_item( it );     break;
+        	case NoteItemType.UML      :  load_uml_item( it );       break;
           default                    :  break;
         }
 			}
@@ -292,17 +293,22 @@ public class Note : Object {
 	}
 
 	private void load_markdown_item( Xml.Node* node ) {
-		var item = new NoteItemMarkdown.from_xml( node );
+		var item = new NoteItemMarkdown.from_xml( this, node );
 		_items.append_val( item );
 	}
 
 	private void load_code_item( Xml.Node* node ) {
-		var item = new NoteItemCode.from_xml( node );
+		var item = new NoteItemCode.from_xml( this, node );
 		_items.append_val( item );
 	}
 
 	private void load_image_item( Xml.Node* node ) {
-		var item = new NoteItemImage.from_xml( node );
+		var item = new NoteItemImage.from_xml( this, node );
+		_items.append_val( item );
+	}
+
+	private void load_uml_item( Xml.Node* node ) {
+		var item = new NoteItemUML.from_xml( this, node );
 		_items.append_val( item );
 	}
 

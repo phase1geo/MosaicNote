@@ -24,13 +24,13 @@ public class NoteItemUML : NoteItem {
 	public signal void diagram_updated( string? filename );
 
 	// Default constructor
-	public NoteItemUML() {
-		base( NoteItemType.UML );
+	public NoteItemUML( Note note ) {
+		base( note, NoteItemType.UML );
 		changed.connect( update_diagram );
 	}
 
-	public NoteItemUML.from_xml( Xml.Node* node ) {
-		base( NoteItemType.UML );
+	public NoteItemUML.from_xml( Note note, Xml.Node* node ) {
+		base( note, NoteItemType.UML );
 		load( node );
 		changed.connect( update_diagram );
 	}
@@ -38,28 +38,54 @@ public class NoteItemUML : NoteItem {
 	// Updates the UML diagram
 	public void update_diagram() {
 
-	  var input  = Utils.user_location( "test.txt" );
-	  var output = Utils.user_location( "test.png" );
+		if( content != "" ) {
 
-		// Save the current content to a file
-		try {
-			FileUtils.set_contents( input, content );
-		} catch( FileError e ) {
-			stdout.printf( "Error saving UML diagrame contents to file %s: %s\n", input, e.message );
-			diagram_updated( null );
-			return;
-		}
+		  var input  = Utils.user_location( "test.txt" );
+		  var output = Utils.user_location( "test.png" );
 
-    try {
-    	var command = "plantuml %s".printf( input );
-    	Process.spawn_command_line_sync( command );
-    	if( FileUtils.test( output, FileTest.EXISTS ) ) {
-    		diagram_updated( output );
+		  FileUtils.remove( output );
+
+			// Save the current content to a file
+			try {
+				FileUtils.set_contents( input, content );
+			} catch( FileError e ) {
+				stdout.printf( "Error saving UML diagram contents to file %s: %s\n", input, e.message );
+				diagram_updated( null );
+				return;
+			}
+
+			var loop = new MainLoop();
+
+			try {
+	    	string[] spawn_args = { "plantuml", input };
+    		string[] spawn_env  = Environ.get();
+    		Pid child_pid;
+
+		    Process.spawn_async( "/",
+    			spawn_args,
+		    	spawn_env,
+    			SpawnFlags.SEARCH_PATH | SpawnFlags.DO_NOT_REAP_CHILD,
+		    	null,
+    			out child_pid
+    		);
+
+    		ChildWatch.add( child_pid, (pid, status) => {
+			    Process.close_pid( pid );
+			    loop.quit();
+     	    if( FileUtils.test( output, FileTest.EXISTS ) ) {
+	   		    diagram_updated( output );
+   		    } else {
+  		    	diagram_updated( null );
+   		    }
+		    });
+
+    		loop.run();
     		return;
-    	}
-    } catch( SpawnError e ) {
-    	stdout.printf( "Error generating PlantUML diagram %s: %s\n", input, e.message );
-    }
+    	} catch (SpawnError e) {
+		    print ("Error: %s\n", e.message);
+	    }
+
+	  }
 
     diagram_updated( null );
 

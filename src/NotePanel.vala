@@ -104,7 +104,6 @@ public class NotePanel : Box {
       if( FileUtils.test( path, FileTest.EXISTS ) ) {
         var lang_path = GLib.Path.build_filename( path, "language-specs" );
         var manager   = GtkSource.LanguageManager.get_default();
-        stdout.printf( "HERE! %s exists: %s\n", lang_path, FileUtils.test( lang_path, FileTest.EXISTS ).to_string() );
         manager.append_search_path( lang_path );
         break;
       }
@@ -181,6 +180,7 @@ public class NotePanel : Box {
   private Widget create_blank_ui() {
 
     var none = new Label( _( "No Note Selected" ) );
+    none.add_css_class( "note-title" );
 
     return( none );
 
@@ -240,7 +240,7 @@ public class NotePanel : Box {
         return;
       }
       var type     = (NoteItemType)_item_selector.get_selected();
-      var new_item = type.create();
+      var new_item = type.create( _note );
       _note.convert_note_item( _current_item, new_item );
 
       var w = get_item( _current_item );
@@ -424,9 +424,10 @@ public class NotePanel : Box {
     if( item_type.is_text() ) {
       get_item_text( pos ).grab_focus();
     } else if( item_type == NoteItemType.UML ) {
-      var w = (Stack)get_item( pos );
-      w.visible_child_name = "input";
-      w.get_child_by_name( "input" ).grab_focus();
+      var stack = (Stack)get_item( pos );
+      stack.visible_child_name = "input";
+      var w = Utils.get_child_at_index( stack.get_child_by_name( "input" ), 1 );
+      w.grab_focus();
     } else {
       get_item_image( pos ).grab_focus();
     }
@@ -446,8 +447,9 @@ public class NotePanel : Box {
 
   // Adds a new item above or below the item at the given index.
   private void add_item( int index, bool above ) {
-    var item = new NoteItemMarkdown();
+    var item = new NoteItemMarkdown( _note );
     var ins_index = above ? index : (index + 1);
+    stdout.printf( "ins_index: %d\n", ins_index );
     _note.add_note_item( (uint)ins_index, item );
     add_markdown_item( item, ins_index );
     grab_focus_of_item( ins_index );
@@ -468,7 +470,7 @@ public class NotePanel : Box {
     item.content = text.buffer.text;
     var first    = item.content.substring( 0, cursor ); 
     var last     = item.content.substring( cursor );
-    var new_item = item.item_type.create();
+    var new_item = item.item_type.create( _note );
 
     item.content = first;
     new_item.content = last;
@@ -539,7 +541,13 @@ public class NotePanel : Box {
     key.key_pressed.connect((keyval, keycode, state) => {
       var shift   = (bool)(state & Gdk.ModifierType.SHIFT_MASK);
       var control = (bool)(state & Gdk.ModifierType.CONTROL_MASK);
-      var index   = Utils.get_child_index( _content, text.parent );
+      var parent  = text.parent;
+      var index   = Utils.get_child_index( _content, parent );
+      while( (parent == null) || (index == -1) ) {
+        parent = parent.parent;
+        index  = Utils.get_child_index( _content, parent );
+      }
+      stdout.printf( "index: %d\n", index );
       switch( keyval ) {
         case Gdk.Key.Return : 
           if( control && shift ) {
@@ -621,12 +629,14 @@ public class NotePanel : Box {
 
   // Adds the given item
   private void add_item_to_content( Widget w, int pos = -1 ) {
+    stdout.printf( "In add_item_to_content, pos: %d\n", pos );
     if( pos == -1 ) {
       _content.append( w );
     } else if( pos == 0 ) {
       _content.prepend( w );
     } else {
       var sibling = get_item( pos - 1 );
+      stdout.printf( "sibling pos: %d\n", Utils.get_child_index( _content, sibling ) );
       _content.insert_child_after( w, sibling );
     }
   }
@@ -774,6 +784,8 @@ public class NotePanel : Box {
   // Adds a new Markdown item at the given position in the content area
   private Widget add_markdown_item( NoteItemMarkdown item, int pos = -1 ) {
 
+    stdout.printf( "pos: %d\n", pos );
+
     var frame     = add_text_item( item, "markdown" );
     var text      = (GtkSource.View)Utils.get_child_at_index( frame, 0 );
     var buffer    = (GtkSource.Buffer)text.buffer;
@@ -879,10 +891,12 @@ public class NotePanel : Box {
   // Adds a new UML item at the given position in the content area
   private Widget add_uml_item( NoteItemUML item, int pos = -1 ) {
 
+    var image_click = new GestureClick();
     var image = new Picture() {
       halign = Align.FILL,
       valign = Align.FILL
     };
+    image.add_controller( image_click );
 
     var label = new Label( _( "UML Diagram Input" ) ) {
       halign  = Align.START,
@@ -892,11 +906,16 @@ public class NotePanel : Box {
       halign = Align.END
     };
     help.clicked.connect(() => {
-      Utils.open_url( "FOOBAR" );
+      Utils.open_url( "https://plantuml.com/" );
     });
     var show = new Button.with_label( _( "Show Diagram" ) ) {
       halign = Align.END
     };
+
+    var hbox = new Box( Orientation.HORIZONTAL, 5 );
+    hbox.append( label );
+    hbox.append( help );
+    hbox.append( show );
 
     var input     = add_text_item( item, "plantuml" );
     var text      = (GtkSource.View)Utils.get_child_at_index( input, 0 );
@@ -907,12 +926,28 @@ public class NotePanel : Box {
     buffer.style_scheme = style;
     text.add_css_class( "code-text" );
 
+    var tbox = new Box( Orientation.VERTICAL, 5 );
+    tbox.append( hbox );
+    tbox.append( input );
+
+    var loading = new Label( _( "Generating Diagram..." ) ) {
+      halign = Align.CENTER,
+      valign = Align.CENTER
+    };
+    loading.add_css_class( "note-title" );
+
     var stack = new Stack();
-    stack.add_named( input, "input" );
+    stack.add_named( tbox, "input" );
+    stack.add_named( loading, "loading" );
     stack.add_named( image, "image" );
 
     show.clicked.connect(() => {
-      item.content = buffer.text;
+      stack.visible_child_name = "loading";
+      if( item.content == buffer.text ) {
+        item.update_diagram();
+      } else {
+        item.content = buffer.text;
+      }
     });
 
     item.diagram_updated.connect((filename) => {
@@ -922,6 +957,19 @@ public class NotePanel : Box {
       } else {
         stack.visible_child_name = "input";
       }
+    });
+
+    image_click.pressed.connect((n_press, x, y) => {
+      if( n_press == 2 ) {
+        stack.visible_child_name = "input";
+        text.grab_focus();
+      }
+    });
+
+    Idle.add(() => {
+      stack.visible_child_name = "loading";
+      item.update_diagram();
+      return( false );
     });
 
     add_item_to_content( stack, pos );
