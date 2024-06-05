@@ -449,10 +449,28 @@ public class NotePanel : Box {
   private void add_item( int index, bool above ) {
     var item = new NoteItemMarkdown( _note );
     var ins_index = above ? index : (index + 1);
-    stdout.printf( "ins_index: %d\n", ins_index );
     _note.add_note_item( (uint)ins_index, item );
     add_markdown_item( item, ins_index );
     grab_focus_of_item( ins_index );
+  }
+
+  // Removes the item at the given index
+  private void remove_item( int index ) {
+    var item = get_item( index );
+    if( item != null ) {
+      _content.remove( item );
+      _note.delete_note_item( index );
+      if( get_item( index ) != null ) {
+        grab_focus_of_item( index );
+      } else if( get_item( index - 1 ) != null ) {
+        grab_focus_of_item( index - 1 );
+      } else {
+        var note_item = new NoteItemMarkdown( _note );
+        _note.add_note_item( 0, note_item );
+        add_markdown_item( note_item, 0 );
+        grab_focus_of_item( 0 );
+      }
+    }
   }
 
   // Split the current item into two items at the insertion point.
@@ -547,7 +565,6 @@ public class NotePanel : Box {
         parent = parent.parent;
         index  = Utils.get_child_index( _content, parent );
       }
-      stdout.printf( "index: %d\n", index );
       switch( keyval ) {
         case Gdk.Key.Return : 
           if( control && shift ) {
@@ -565,12 +582,21 @@ public class NotePanel : Box {
           }
           break;
         case Gdk.Key.BackSpace :
-          if( index > 0 ) {
+          if( control ) {
+            remove_item( index );
+            return( true );
+          } else if( index > 0 ) {
             TextIter cursor;
             text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );
             if( cursor.is_start() && join_items( index ) ) {
               return( true );
             }
+          }
+          break;
+        case Gdk.Key.Delete :
+          if( control ) {
+            remove_item( index );
+            return( true );
           }
           break;
         case Gdk.Key.Up :
@@ -629,14 +655,12 @@ public class NotePanel : Box {
 
   // Adds the given item
   private void add_item_to_content( Widget w, int pos = -1 ) {
-    stdout.printf( "In add_item_to_content, pos: %d\n", pos );
     if( pos == -1 ) {
       _content.append( w );
     } else if( pos == 0 ) {
       _content.prepend( w );
     } else {
       var sibling = get_item( pos - 1 );
-      stdout.printf( "sibling pos: %d\n", Utils.get_child_index( _content, sibling ) );
       _content.insert_child_after( w, sibling );
     }
   }
@@ -783,8 +807,6 @@ public class NotePanel : Box {
 
   // Adds a new Markdown item at the given position in the content area
   private Widget add_markdown_item( NoteItemMarkdown item, int pos = -1 ) {
-
-    stdout.printf( "pos: %d\n", pos );
 
     var frame     = add_text_item( item, "markdown" );
     var text      = (GtkSource.View)Utils.get_child_at_index( frame, 0 );
