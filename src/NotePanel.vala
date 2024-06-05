@@ -200,6 +200,16 @@ public class NotePanel : Box {
       _note.tags.copy( _tags.tags );
     });
 
+    var export = new Button.from_icon_name( "document-export-symbolic" ) {
+      has_frame = false,
+      halign = Align.END,
+      tooltip_text = _( "Export note to Markdown" )
+    };
+    export.clicked.connect(() => {
+      var markdown = _note.to_markdown();
+      stdout.printf( markdown );
+    });
+
     _favorite = new Button.from_icon_name( "non-starred-symbolic" ) {
       has_frame = false,
       halign = Align.END,
@@ -219,6 +229,7 @@ public class NotePanel : Box {
       halign = Align.FILL
     };
     tbox.append( _tags );
+    tbox.append( export );
     tbox.append( _favorite );
 
     string[] item_types = {};

@@ -78,6 +78,15 @@ public class Tags {
 		_tags.remove_range( 0, _tags.length );
 	}
 
+	// Returns string version of tags to be used in Markdown YAML front-matter
+	public string to_markdown() {
+    string[] tags = {};
+    for( int i=0; i<_tags.length; i++ ) {
+    	tags += _tags.index( i );
+    }
+    return( string.joinv( ",", tags ) );
+	}
+
 	// Saves the tags in XML format
 	public Xml.Node* save() {
 		Xml.Node* node = new Xml.Node( null, "tags" );

@@ -175,6 +175,17 @@ public class Note : Object {
     }
   }
 
+  // Returns a string containing the content of the note in Markdown format
+  public string to_markdown() {
+  	var str = "---\ntitle: '%s'\ntags: [%s]\n---\n\n".printf( _title, _tags.to_markdown() );
+  	str += "# %s\n\n".printf( _title );
+  	for( int i=0; i<_items.length; i++ ) {
+  		var item = _items.index( i );
+  		str += "%s\n\n".printf( item.to_markdown() );
+  	}
+  	return( str );
+  }
+
   // Converts the current note item to the specified item and stores this
   // new item in its place.
   public void convert_note_item( uint pos, NoteItem to_item ) {

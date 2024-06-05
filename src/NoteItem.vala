@@ -162,6 +162,11 @@ public class NoteItem {
     return( content.contains( str ) );
 	}
 
+	// Returns the markdown text for this item
+	public virtual string to_markdown() {
+		return( "" );
+	}
+
 	// Saves this note item
 	public virtual Xml.Node* save() {
 		Xml.Node* node = new Xml.Node( null, item_type.to_string() );

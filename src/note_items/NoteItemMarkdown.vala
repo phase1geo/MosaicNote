@@ -32,4 +32,9 @@ public class NoteItemMarkdown : NoteItem {
 		load( node );
 	}
 
+	// Converts the content to markdown text
+	public override string to_markdown() {
+		return( content );
+	}
+
 }

@@ -35,6 +35,11 @@ public class NoteItemUML : NoteItem {
 		changed.connect( update_diagram );
 	}
 
+	// Returns the Markdown version of this item
+	public override string to_markdown() {
+		return( "![diagram](file://%s)".printf( Utils.user_location( "test.png" ) ) );
+	}
+
 	// Updates the UML diagram
 	public void update_diagram() {
 

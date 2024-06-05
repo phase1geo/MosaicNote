@@ -59,6 +59,11 @@ public class NoteItemImage : NoteItem {
     }
   }
 
+  // Returns the Markdown code for this item
+  public override string to_markdown() {
+  	return( "![image](%s)".printf( uri ) );
+  }
+
 	// Saves the content in XML format
 	public override Xml.Node* save() {
     Xml.Node* node = base.save();
