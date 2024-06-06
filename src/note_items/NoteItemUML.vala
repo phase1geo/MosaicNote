@@ -37,7 +37,7 @@ public class NoteItemUML : NoteItem {
 
 	// Returns the Markdown version of this item
 	public override string to_markdown() {
-		return( "![diagram](file://%s)".printf( Utils.user_location( "test.png" ) ) );
+		return( "![diagram](file://%s)\\\n".printf( Utils.user_location( "test.png" ) ) );
 	}
 
 	// Updates the UML diagram

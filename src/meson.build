@@ -1,6 +1,7 @@
 sources += files(
     'Application.vala',
     'BaseNotebook.vala',
+    'Export.vala',
     'Favorite.vala',
     'Favorites.vala',
     'FullTag.vala',

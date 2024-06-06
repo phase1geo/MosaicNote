@@ -58,7 +58,7 @@ public class NoteItemCode : NoteItem {
 
   // Returns the Markdown version of this item
   public override string to_markdown() {
-  	return( "``` %s\n%s\n```".printf( _lang, content ) );
+  	return( "```%s\n%s\n```".printf( _lang, content ) );
   }
 
 	// Saves the content in XML format

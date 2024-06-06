@@ -34,3 +34,7 @@ install_data(
     install_dir: join_paths(get_option('datadir'), 'mosaic-note', 'gtksourceview-5', 'language-specs')
 )
 
+install_subdir(
+    'pandoc-langs',
+    install_dir: join_paths(get_option('datadir'), 'mosaic-note')
+)
