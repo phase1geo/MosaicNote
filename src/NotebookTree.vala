@@ -347,6 +347,7 @@ public class NotebookTree {
 	  root->set_prop( "version", MosaicNote.current_version );
 	  root->set_prop( "notebook-id", Notebook.current_id.to_string() );
 	  root->set_prop( "note-id", Note.current_id.to_string() );
+	  root->set_prop( "note-item-id", NoteItem.current_id.to_string() );
 
 	  for( int i=0; i<_nodes.length; i++ ) {
 	  	root->add_child( _nodes.index( i ).save() );
@@ -391,6 +392,11 @@ public class NotebookTree {
     var nt_id = root->get_prop( "note-id" );
     if( nt_id != null ) {
     	Note.current_id = int.parse( nt_id );
+    }
+
+    var ni_id = root->get_prop( "note-item-id" );
+    if( ni_id != null ) {
+    	NoteItem.current_id = int.parse( ni_id );
     }
 
     for( Xml.Node* it = root->children; it != null; it = it->next ) {

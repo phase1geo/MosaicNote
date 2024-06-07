@@ -124,7 +124,7 @@ public class Notebook : BaseNotebook {
   	return( true );
   }
 
-  private string notebook_directory( int id ) {
+  public string notebook_directory( int id ) {
   	return( Utils.user_location( GLib.Path.build_filename( "notebooks", "notebook-%d".printf( id ) ) ) );
   }
 

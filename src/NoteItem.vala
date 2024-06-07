@@ -123,11 +123,13 @@ public enum NoteItemType {
 
 public class NoteItem {
 
+  public static int current_id = 0;
+  private const int max_image_width = 800;
+
   private string _content = "";
 
-  protected const int max_image_width = 800;
-
 	public Note         note      { get; private set; }
+	public int          id        { get; private set; }
   public NoteItemType item_type { get; private set; default = NoteItemType.MARKDOWN; }
 	public bool         modified  { get; protected set; default = false; }
 
@@ -148,8 +150,14 @@ public class NoteItem {
 
 	// Default constructor
 	public NoteItem( Note note, NoteItemType type ) {
+		this.id        = current_id++;
 		this.note      = note;
     this.item_type = type;
+	}
+
+	// Constructor from XML input
+	public NoteItem.from_xml( Xml.Node* node ) {
+		load( node );
 	}
 
   // Copy method (can be used to convert one item to another as well)
@@ -181,9 +189,17 @@ public class NoteItem {
 		return( md );
 	}
 
+	// Returns the filename of the resource file associated with this note item
+  public string get_resource_path( string extension ) {
+  	var dirpath = Utils.user_location( Path.build_filename( note.notebook.notebook_directory( note.notebook.id ), "resources" ) );
+  	Utils.create_dir( dirpath );
+  	return( Path.build_filename( dirpath, "resource-%d.%s".printf( id, extension ) ) );
+  }
+
 	// Saves this note item
 	public virtual Xml.Node* save() {
 		Xml.Node* node = new Xml.Node( null, item_type.to_string() );
+		node->set_prop( "id", id.to_string() );
     node->add_content( content );
 		modified = false;
 		return( node );
@@ -191,7 +207,13 @@ public class NoteItem {
 
   // Loads the content from XML format
   protected virtual void load( Xml.Node* node ) {
-    content = node->get_content();
+  	var i = node->get_prop( "id" );
+  	if( i != null ) {
+  		id = int.parse( i );
+  	} else {
+  		id = current_id++;
+  	}
+    _content = node->get_content();
   }
 
 
