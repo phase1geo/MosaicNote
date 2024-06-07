@@ -176,14 +176,25 @@ public class Note : Object {
   }
 
   // Returns a string containing the content of the note in Markdown format
-  public string to_markdown() {
+  public string to_markdown( bool pandoc = false ) {
   	var str = "---\ntitle: '%s'\ntags: [%s]\n---\n\n".printf( _title, _tags.to_markdown() );
   	str += "# %s\n\n".printf( _title );
   	for( int i=0; i<_items.length; i++ ) {
   		var item = _items.index( i );
-  		str += "%s\n\n".printf( item.to_markdown() );
+  		str += "%s\n\n".printf( item.to_markdown( pandoc ) );
   	}
   	return( str );
+  }
+
+  // Populates the given array with the list of languages that are used by the node.
+  // We use a HashSet so that the final list of languages doesn't contain any duplicates.
+  public void get_needed_languages( Gee.HashSet<string> langs ) {
+  	for( int i=0; i<_items.length; i++ ) {
+  		var item = (_items.index( i ) as NoteItemCode);
+  		if( item != null ) {
+  			langs.add( item.lang );
+  		}
+  	}
   }
 
   // Converts the current note item to the specified item and stores this

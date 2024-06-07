@@ -125,6 +125,8 @@ public class NoteItem {
 
   private string _content = "";
 
+  protected const int max_image_width = 800;
+
 	public Note         note      { get; private set; }
   public NoteItemType item_type { get; private set; default = NoteItemType.MARKDOWN; }
 	public bool         modified  { get; protected set; default = false; }
@@ -163,8 +165,20 @@ public class NoteItem {
 	}
 
 	// Returns the markdown text for this item
-	public virtual string to_markdown() {
+	public virtual string to_markdown( bool pandoc ) {
 		return( "" );
+	}
+
+	// If we are generating for pandoc, adjusts the given markdown image text
+	// if the given image width exceeds the maximum allowed width.
+	protected string format_for_width( string md, string image_file, bool pandoc ) {
+		if( pandoc ) {
+  	  var width = Utils.image_width( image_file );
+  	  if( width > max_image_width ) {
+  	  	return( md + "{ width=%dpx }".printf( max_image_width ) );
+  	  }
+  	}
+		return( md );
 	}
 
 	// Saves this note item

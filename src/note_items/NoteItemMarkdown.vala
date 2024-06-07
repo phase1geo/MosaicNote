@@ -33,7 +33,7 @@ public class NoteItemMarkdown : NoteItem {
 	}
 
 	// Converts the content to markdown text
-	public override string to_markdown() {
+	public override string to_markdown( bool pandoc ) {
 		return( content );
 	}
 

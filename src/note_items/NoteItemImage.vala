@@ -60,8 +60,9 @@ public class NoteItemImage : NoteItem {
   }
 
   // Returns the Markdown code for this item
-  public override string to_markdown() {
-  	return( "![image](%s)".printf( uri ) );
+  public override string to_markdown( bool pandoc ) {
+  	var file = File.new_for_uri( uri );
+	  return( format_for_width( "![image](%s)".printf( uri ), file.get_path(), pandoc ) );
   }
 
 	// Saves the content in XML format

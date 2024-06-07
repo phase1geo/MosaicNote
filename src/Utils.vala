@@ -380,4 +380,11 @@ public class Utils {
     return( (current_child == null) ? -1 : index );
   }
 
+  // Returns the pixel width of the given image
+  public static int image_width( string pathname ) {
+    int width, height;
+    Pixbuf.get_file_info( pathname, out width, out height );
+    return( width );
+  }
+
 }

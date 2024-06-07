@@ -205,10 +205,7 @@ public class NotePanel : Box {
       halign = Align.END,
       tooltip_text = _( "Export note to Markdown" )
     };
-    export.clicked.connect(() => {
-      var markdown = _note.to_markdown();
-      stdout.printf( markdown );
-    });
+    export.clicked.connect( export_note );
 
     _favorite = new Button.from_icon_name( "non-starred-symbolic" ) {
       has_frame = false,
@@ -1008,6 +1005,25 @@ public class NotePanel : Box {
     add_item_to_content( stack, pos );
 
     return( stack );
+
+  }
+
+  // Exports the given note
+  private void export_note() {
+
+    var dialog = Utils.make_file_chooser( _( "Export" ), _win, FileChooserAction.SAVE, _( "Export" ) );
+
+    dialog.response.connect((id) => {
+      if( id == ResponseType.ACCEPT ) {
+        var file = dialog.get_file();
+        if( file != null ) {
+          Export.export( file.get_path(), _note );
+        }
+      }
+      dialog.destroy();
+    });
+
+    dialog.show();
 
   }
 

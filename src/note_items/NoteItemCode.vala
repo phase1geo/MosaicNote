@@ -57,7 +57,7 @@ public class NoteItemCode : NoteItem {
   }
 
   // Returns the Markdown version of this item
-  public override string to_markdown() {
+  public override string to_markdown( bool pandoc ) {
   	return( "```%s\n%s\n```".printf( _lang, content ) );
   }
 
