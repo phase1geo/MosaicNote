@@ -203,7 +203,7 @@ public class NotePanel : Box {
     var export = new Button.from_icon_name( "document-export-symbolic" ) {
       has_frame = false,
       halign = Align.END,
-      tooltip_text = _( "Export note to Markdown" )
+      tooltip_text = _( "Export note" )
     };
     export.clicked.connect( export_note );
 
