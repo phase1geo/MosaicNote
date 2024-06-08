@@ -1,5 +1,12 @@
 #!/usr/bin/tclsh
 
+# Description:
+# This script evaluates the GtkSource.LanguageManager supported languages along with the list of
+# available pandoc languages.  Any languages that cannot be found will be searched for in the KDE
+# syntax-highlight GitHub project and available XML files will be copied into the MosaicNote
+# data/pandoc-langs directory and the associated files will be automatically added to the
+# data/com.github.phase1geo.mosaic-note.gresource.xml file
+
 if {[file tail [pwd]] ne "MosaicNote"} {
   puts "ERROR:  Script must be run from the MosaicNote project directory"
   exit 1

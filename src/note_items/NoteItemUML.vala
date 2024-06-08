@@ -41,13 +41,20 @@ public class NoteItemUML : NoteItem {
 	  return( format_for_width( "![diagram](file://%s)".printf( filename ), filename, pandoc ) );
 	}
 
+  // Returns the resource filename
+  public override string get_resource_filename() {
+    return( get_resource_path( "png" ) );
+  }
+
 	// Updates the UML diagram
 	public void update_diagram() {
 
 		if( content != "" ) {
 
-		  var input  = Utils.user_location( "test.txt" );
-		  var output = Utils.user_location( "test.png" );
+      Utils.create_dir( get_resource_dir() );
+
+		  var input  = get_resource_path( "txt" );
+		  var output = get_resource_path( "png" );
 
 		  FileUtils.remove( output );
 
@@ -63,7 +70,7 @@ public class NoteItemUML : NoteItem {
 			var loop = new MainLoop();
 
 			try {
-	    	string[] spawn_args = { "plantuml", input };
+	    	string[] spawn_args = { "plantuml", "-tpng", "-o", output, input };
     		string[] spawn_env  = Environ.get();
     		Pid child_pid;
 

@@ -160,6 +160,7 @@ public class Note : Object {
 
 	// Removes the note item at the given position.
 	public void delete_note_item( uint pos ) {
+    get_item( (int)pos ).delete_resource();
 		_items.remove_index( pos );
 		_modified = true;
 	}

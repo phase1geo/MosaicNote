@@ -42,10 +42,15 @@ public class Utils {
     }
   }
 
+  // Returns the extension for the given filename
+  public static string get_extension( string filename ) {
+    var parts = filename.split( "." );
+    return( parts[parts.length - 1] );
+  }
+
   /* Checks to see if the given URI image extension is supported */
   public static bool is_uri_supported_image( string uri ) {
-    var parts   = uri.split( "." );
-    var uri_ext = parts[parts.length - 1].down();
+    var uri_ext = get_extension( uri ).down();
     foreach( var format in Pixbuf.get_formats() ) {
       foreach( var ext in format.get_extensions() ) {
         if( ext == uri_ext ) {

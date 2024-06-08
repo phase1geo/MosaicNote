@@ -982,6 +982,7 @@ public class NotePanel : Box {
 
     item.diagram_updated.connect((filename) => {
       if( filename != null ) {
+        stdout.printf( "filename: %s\n", filename );
         image.file = File.new_for_path( filename );
         stack.visible_child_name = "image";
       } else {
@@ -996,11 +997,13 @@ public class NotePanel : Box {
       }
     });
 
-    Idle.add(() => {
-      stack.visible_child_name = "loading";
-      item.update_diagram();
-      return( false );
-    });
+    // Load the image and make it visible (if it exists); otherwise, display the input field.
+    if( FileUtils.test( item.get_resource_filename(), FileTest.EXISTS ) ) {
+      image.file = File.new_for_path( item.get_resource_filename() );
+      stack.visible_child_name = "image";
+    } else {
+      stack.visible_child_name = "input";
+    }
 
     add_item_to_content( stack, pos );
 

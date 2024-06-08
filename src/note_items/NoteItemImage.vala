@@ -29,6 +29,8 @@ public class NoteItemImage : NoteItem {
 	  }
 	  set {
 	  	if( _uri != value ) {
+        var file = File.new_for_uri( value );
+        save_as_resource( file, true );
 	  		_uri     = value;
 	  		modified = true;
 	  		changed();
@@ -63,6 +65,11 @@ public class NoteItemImage : NoteItem {
   public override string to_markdown( bool pandoc ) {
   	var file = File.new_for_uri( uri );
 	  return( format_for_width( "![image](%s)".printf( uri ), file.get_path(), pandoc ) );
+  }
+
+  // Returns the resource filename
+  public override string get_resource_filename() {
+    return( get_resource_path( Utils.get_extension( uri ) ) );
   }
 
 	// Saves the content in XML format

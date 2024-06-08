@@ -189,11 +189,54 @@ public class NoteItem {
 		return( md );
 	}
 
+  // Returns the directory that contains the resource in the notebook associated with this note item's note.
+  protected string get_resource_dir() {
+    return( Path.build_filename( note.notebook.notebook_directory( note.notebook.id ), "resources" ) );
+  }
+
 	// Returns the filename of the resource file associated with this note item
-  public string get_resource_path( string extension ) {
-  	var dirpath = Utils.user_location( Path.build_filename( note.notebook.notebook_directory( note.notebook.id ), "resources" ) );
-  	Utils.create_dir( dirpath );
-  	return( Path.build_filename( dirpath, "resource-%d.%s".printf( id, extension ) ) );
+  protected string get_resource_path( string extension ) {
+  	return( Path.build_filename( get_resource_dir(), "resource-%d.%s".printf( id, extension ) ) );
+  }
+
+  // Returns the resource filename
+  public virtual string get_resource_filename() {
+    return( "" );
+  }
+
+  // Saves the given resource into the resource directory
+  protected bool save_as_resource( File from_file, bool link ) {
+    Utils.create_dir( get_resource_dir() );
+    var to_file = File.new_for_path( get_resource_path( Utils.get_extension( from_file.get_path() ) ) );
+    try {
+      if( link && (from_file.get_uri_scheme() == "file") ) {
+        return( to_file.make_symbolic_link( from_file.get_path() ) );
+      } else {
+        return( from_file.copy( to_file, FileCopyFlags.OVERWRITE ) );
+      }
+    } catch( Error e ) {
+      stdout.printf( "ERROR: %s\n", e.message );
+    }
+    return( false );
+  }
+
+  // Deletes the resource associated with this note item
+  public bool delete_resource() {
+    var resource = get_resource_filename();
+    if( FileUtils.test( resource, FileTest.EXISTS ) ) {
+      if( FileUtils.test( resource, FileTest.IS_SYMLINK ) ) {
+        try {
+          string target_path = FileUtils.read_link( resource );
+          return( FileUtils.unlink( resource ) == 0 );
+        } catch( FileError e ) {
+          stdout.printf( "ERROR:  %s\n", e.message );
+          return( false );
+        }
+      } else {
+        return( FileUtils.unlink( resource ) == 0 );
+      }
+    }
+    return( false );
   }
 
 	// Saves this note item
