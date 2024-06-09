@@ -70,7 +70,7 @@ public class NoteItemUML : NoteItem {
 			var loop = new MainLoop();
 
 			try {
-	    	string[] spawn_args = { "plantuml", "-tpng", "-o", output, input };
+	    	string[] spawn_args = { "plantuml", "-tpng", "-o", get_resource_dir(), input };
     		string[] spawn_env  = Environ.get();
     		Pid child_pid;
 

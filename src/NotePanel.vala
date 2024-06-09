@@ -903,7 +903,7 @@ public class NotePanel : Box {
 
     } else {
 
-      image.file = File.new_for_uri( item.uri );
+      image.file = File.new_for_path( item.get_resource_filename() );
 
     }
 
@@ -972,10 +972,10 @@ public class NotePanel : Box {
     stack.add_named( image, "image" );
 
     show.clicked.connect(() => {
-      stack.visible_child_name = "loading";
       if( item.content == buffer.text ) {
-        item.update_diagram();
+        stack.visible_child_name = "image";
       } else {
+        stack.visible_child_name = "loading";
         item.content = buffer.text;
       }
     });

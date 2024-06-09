@@ -84,7 +84,7 @@ public class NoteItemImage : NoteItem {
     base.load( node );
 		var u = node->get_prop( "uri" );
 		if( u != null ) {
-			uri = u;
+			_uri = u;
 		}
 	}
 
