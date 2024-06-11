@@ -21,7 +21,7 @@
 
 using Gtk;
 
-public class NotePanel : Box {
+public class NoteItemPane : Box {
 
   private Note?      _note = null;
 
@@ -46,7 +46,7 @@ public class NotePanel : Box {
   public signal void save_note( Note note );
 
 	// Default constructor
-	public NotePanel( MainWindow win ) {
+	public NoteItemPane( MainWindow win ) {
 
     Object(
       orientation: Orientation.VERTICAL,
