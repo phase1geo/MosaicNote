@@ -23,7 +23,19 @@ using Gtk;
 
 public class ToolbarItem : Box {
 
+  private GtkSource.View? _text = null;
+
   public NoteItemType item_type { get; private set; default = NoteItemType.NUM; }
+
+  public GtkSource.View? text {
+    get {
+      return( _text );
+    }
+    set {
+      _text = value;
+      text_updated();
+    }
+  }
 
   // Constructor
   public ToolbarItem( NoteItemType? type = null ) {
@@ -35,5 +47,8 @@ public class ToolbarItem : Box {
     }
 
   }
+
+  // Called whenever the text changes
+  protected virtual void text_updated() {}
 
 }

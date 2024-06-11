@@ -23,8 +23,6 @@ using Gtk;
 
 public class ToolbarMarkdown : ToolbarItem {
 
-  public GtkSource.View? view { get; set; default = null; }
-
   // Constructor
   public ToolbarMarkdown() {
 
@@ -79,28 +77,28 @@ public class ToolbarMarkdown : ToolbarItem {
   }
 
   private void insert_bold() {
-    MarkdownFuncs.insert_bold_text( view, view.buffer );
-    view.grab_focus();
+    MarkdownFuncs.insert_bold_text( text, text.buffer );
+    text.grab_focus();
   }
 
   private void insert_italics() {
-    MarkdownFuncs.insert_italicize_text( view, view.buffer );
-    view.grab_focus();
+    MarkdownFuncs.insert_italicize_text( text, text.buffer );
+    text.grab_focus();
   }
 
   private void insert_strike() {
-    MarkdownFuncs.insert_strikethrough_text( view, view.buffer );
-    view.grab_focus();
+    MarkdownFuncs.insert_strikethrough_text( text, text.buffer );
+    text.grab_focus();
   }
 
   private void insert_code() {
-    MarkdownFuncs.insert_code_text( view, view.buffer );
-    view.grab_focus();
+    MarkdownFuncs.insert_code_text( text, text.buffer );
+    text.grab_focus();
   }
 
   private void insert_link() {
-    MarkdownFuncs.insert_link_text( view, view.buffer );
-    view.grab_focus();
+    MarkdownFuncs.insert_link_text( text, text.buffer );
+    text.grab_focus();
   }
 
 }

@@ -26,21 +26,19 @@ public class NoteItemPaneImage : NoteItemPane {
   private Picture _image;
 
 	// Default constructor
-	public NoteItemPaneImage( NoteItem item ) {
-
-    base( item );
-
+	public NoteItemPaneImage( MainWindow win, NoteItem item, SpellChecker spell ) {
+    base( win, item, spell );
   }
 
   // Grabs the focus of the note item at the specified position.
-  private override void grab_focus_of_item() {
+  public override void grab_item_focus( TextCursorPlacement placement ) {
     _image.grab_focus();
   }
 
   // Displays a dialog to request
   private void image_dialog( NoteItemImage item, Picture image ) {
 
-    var dialog = Utils.make_file_chooser( _( "Select Image" ), _win, FileChooserAction.OPEN, _( "Select" ) );
+    var dialog = Utils.make_file_chooser( _( "Select Image" ), win, FileChooserAction.OPEN, _( "Select" ) );
 
     dialog.response.connect((id) => {
       if( id == ResponseType.ACCEPT ) {
@@ -57,7 +55,7 @@ public class NoteItemPaneImage : NoteItemPane {
 
   }
 
-  private override void create_pane() {
+  protected override void create_pane() {
 
     var image_item = (NoteItemImage)item;
 
@@ -75,14 +73,14 @@ public class NoteItemPaneImage : NoteItemPane {
     _image.add_controller( image_click );
     _image.add_controller( image_focus );
 
-    if( item.uri == "" ) {
+    if( image_item.uri == "" ) {
       image_dialog( image_item, _image );
     } else {
       _image.file = File.new_for_path( image_item.get_resource_filename() );
     }
 
     var box = new Box( Orientation.VERTICAL, 0 );
-    box.append( image );
+    box.append( _image );
     box.set_size_request( -1, 500 );
     box.add_css_class( "themed" );
 

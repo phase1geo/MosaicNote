@@ -21,24 +21,29 @@
 
 using Gtk;
 
-public class NoteItemPaneCode : Box {
+public class NoteItemPaneCode : NoteItemPane {
 
   private GtkSource.View _text;
 
 	// Default constructor
-	public NoteItemPaneCode( NoteItem item ) {
+	public NoteItemPaneCode( MainWindow win, NoteItem item, SpellChecker spell ) {
+    base( win, item, spell );
+  }
 
-    base( item );
-
+  // Returns the text associated with this panel item
+  public override GtkSource.View? get_text() {
+    return( _text );
   }
 
   // Grabs the focus of the note item at the specified position.
-  private override void grab_focus_of_item() {
+  public override void grab_item_focus( TextCursorPlacement placement ) {
+    stdout.printf( "Code\n" );
+    place_cursor( _text, placement );
     _text.grab_focus();
   }
 
   // Returns any CSS data that this pane requires
-  public override string get_css_data() {
+  public static string get_css_data() {
     var font_size = MosaicNote.settings.get_int( "editor-font-size" );
     var css_data = """
       .code-text {
@@ -46,25 +51,21 @@ public class NoteItemPaneCode : Box {
         font-size: %dpt;
       }
     """.printf( font_size );
+    return( css_data );
   }
 
-  public override void set_buffer_style( GtkSource.StyleScheme style ) {
-    var buffer = (GtkSource.Buffer)_text.buffer;
-    buffer.style_scheme = style;
-  }
-
-  private override void create_pane() {
+  protected override void create_pane() {
 
     var code_item = (NoteItemCode)item;
 
-    _text = create_text( code_item, code_item.lang );
+    _text = create_text( code_item.lang );
     var buffer = (GtkSource.Buffer)_text.buffer;
 
     var scheme_mgr = new GtkSource.StyleSchemeManager();
     var scheme     = scheme_mgr.get_scheme( MosaicNote.settings.get_string( "default-theme" ) );
     buffer.style_scheme = scheme;
 
-    text.add_css_class( "code-text" );
+    _text.add_css_class( "code-text" );
 
     MosaicNote.settings.changed["default-theme"].connect(() => {
       buffer.style_scheme = scheme_mgr.get_scheme( MosaicNote.settings.get_string( "default-theme" ) );

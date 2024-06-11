@@ -23,20 +23,20 @@ using Gtk;
 
 public class NotePanel : Box {
 
-  private Note?      _note = null;
+  private Note? _note = null;
 
   private MainWindow _win;
   private Stack      _stack;
 
-  private TagBox   _tags;
-  private DropDown _item_selector;
-  private Stack    _toolbar_stack;
-  private Button   _favorite;
-  private Entry    _title;
-  private Box      _created_box;
-  private Label    _created;
+  private TagBox        _tags;
+  private DropDown      _item_selector;
+  private Stack         _toolbar_stack;
+  private Button        _favorite;
+  private Entry         _title;
+  private Box           _created_box;
+  private Label         _created;
   private NoteItemPanes _content;
-  private bool     _ignore = false;
+  private bool          _ignore = false;
 
   public signal void tag_added( string name, int note_id );
   public signal void tag_removed( string name, int note_id );
@@ -102,6 +102,24 @@ public class NotePanel : Box {
         break;
       }
     }
+
+  }
+
+  private void update_theme( string theme ) {
+
+    var style_mgr = GtkSource.StyleSchemeManager.get_default();
+    var style     = style_mgr.get_scheme( theme );
+
+    var provider = new CssProvider();
+    var css_data = """
+      %s
+      %s
+      .themed {
+        background-color: %s;
+      }
+    """.printf( NoteItemPaneMarkdown.get_css_data(), NoteItemPaneCode.get_css_data(), style.get_style( "text" ).background );
+    provider.load_from_data( css_data.data );
+    StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
 
   }
 
@@ -176,20 +194,7 @@ public class NotePanel : Box {
         _ignore = false;
         return;
       }
-      var type     = (NoteItemType)_item_selector.get_selected();
-      var new_item = type.create( _note );
-      _note.convert_note_item( _current_item, new_item );
-
-      var w = get_item( _current_item );
-      _content.remove( w );
-      switch( type ) {
-        case NoteItemType.MARKDOWN :  add_markdown_item( (NoteItemMarkdown)new_item, _current_item );  break;
-        case NoteItemType.CODE     :  add_code_item( (NoteItemCode)new_item, _current_item );          break;
-        case NoteItemType.IMAGE    :  add_image_item( (NoteItemImage)new_item, _current_item );        break;
-        case NoteItemType.UML      :  add_uml_item( (NoteItemUML)new_item, _current_item );            break;
-        default                    :  break;
-      }
-      grab_focus_of_item( _current_item );
+      _content.set_current_item_to_type( (NoteItemType)_item_selector.get_selected() );
     });
 
     // Create the toolbar stack for each item type
@@ -234,18 +239,21 @@ public class NotePanel : Box {
         _note.title = _title.text;
         save_note( _note );
       }
-      grab_focus_of_item( 0 );
+      _content.get_pane( 0 ).grab_item_focus( TextCursorPlacement.START );
     });
 
     var separator1 = new Separator( Orientation.HORIZONTAL );
     var separator2 = new Separator( Orientation.HORIZONTAL );
 
-    _content = new NoteItemPanes() {
+    _content = new NoteItemPanes( _win ) {
       halign = Align.FILL,
       valign = Align.START,
       vexpand = true,
       margin_bottom = 200
     };
+    _content.item_selected.connect((pane) => {
+      set_toolbar_for_pane( pane );
+    });
 
     var cbox = new Box( Orientation.VERTICAL, 5 );
     cbox.add_css_class( "themed" );
@@ -301,31 +309,13 @@ public class NotePanel : Box {
 
   }
 
-  private void set_toolbar_for_index( int index, GtkSource.View? view ) {
-    var item = _note.get_item( index );
-    if( item.item_type.is_text() ) {
-      var toolbar = _toolbar_stack.get_child_by_name( item.item_type.to_string() );
-      if( (toolbar as ToolbarMarkdown) != null ) {
-        ((ToolbarMarkdown)toolbar).view = view;
-      } else if( (toolbar as ToolbarCode) != null ) {
-        ((ToolbarCode)toolbar).view = view;
-      }
-    }
-  }
-
-  // Sets the current item and updates the UI
-  private void set_current_item( int index, GtkSource.View? view ) {
-    _current_item = index;
-    _item_selector.sensitive = (index != -1);
-    if( index != -1 ) {
-      var item = _note.get_item( index );
-      _ignore = (_item_selector.selected != item.item_type);
-      _item_selector.selected = item.item_type;
-      set_toolbar_for_index( index, view );
-      if( item.item_type.spell_checkable() ) {
-        set_spellchecker( view );
-      }
-      _toolbar_stack.visible_child_name = item.item_type.to_string();
+  private void set_toolbar_for_pane( NoteItemPane pane ) {
+    if( pane.item.item_type.is_text() ) {
+      var toolbar = (ToolbarItem)_toolbar_stack.get_child_by_name( pane.item.item_type.to_string() );
+      toolbar.text = pane.get_text();
+      _ignore = (_item_selector.selected != pane.item.item_type);
+      _item_selector.selected = pane.item.item_type;
+      _toolbar_stack.visible_child_name = pane.item.item_type.to_string();
     }
   }
 

@@ -26,19 +26,6 @@ public class ToolbarCode : ToolbarItem {
   private string[] _supported_langs = {};
   private DropDown _lang;
   private bool     _ignore = false;
-  private GtkSource.View? _view = null;
-
-  public GtkSource.View? view {
-    get {
-      return( _view );
-    }
-    set {
-      _view = value;
-      if( _view != null ) {
-        set_language( ((GtkSource.Buffer)_view.buffer).language.id );
-      }
-    }
-  }
 
   // Constructor
   public ToolbarCode() {
@@ -61,10 +48,11 @@ public class ToolbarCode : ToolbarItem {
         _ignore = false;
         return;
       }
-      if( view != null ) {
+      if( text != null ) {
         var mgr  = GtkSource.LanguageManager.get_default();
         var lang = mgr.get_language( _supported_langs[_lang.selected] );
-        ((GtkSource.Buffer)view.buffer).set_language( lang );
+        var buffer = (GtkSource.Buffer)text.buffer;
+        buffer.set_language( lang );
       }
     });
 
@@ -83,6 +71,11 @@ public class ToolbarCode : ToolbarItem {
       }
       index++;
     }
+  }
+
+  protected override void text_updated() {
+    var buffer = (GtkSource.Buffer)text.buffer;
+    set_language( buffer.language.id );
   }
 
 }

@@ -28,28 +28,29 @@ public class NoteItemPaneUML : NoteItemPane {
   private Stack          _stack;
 
 	// Default constructor
-	public NoteItemPaneUML( NoteItem item ) {
+	public NoteItemPaneUML( MainWindow win, NoteItem item, SpellChecker spell ) {
+    base( win, item, spell );
+  }
 
-    base( item );
-
+  public override GtkSource.View? get_text() {
+    if( _stack.visible_child_name == "input" ) {
+      return( _text );
+    }
+    return( null );
   }
 
   // Grabs the focus of the note item at the specified position.
-  public override void grab_focus_of_item( int pos ) {
+  public override void grab_item_focus( TextCursorPlacement placement ) {
     if( _stack.visible_child_name == "input" ) {
+      place_cursor( _text, placement );
       _text.grab_focus();
     } else {
       _image.grab_focus();
     }
   }
 
-  public override void set_buffer_style( GtkSource.StyleScheme style ) {
-    var buffer = (GtkSource.Buffer)_text.buffer;
-    buffer.style_scheme = style;
-  }
-
   // Adds a new UML item at the given position in the content area
-  public override void create_pane() {
+  protected override void create_pane() {
 
     var uml_item = (NoteItemUML)item;
 
@@ -87,16 +88,13 @@ public class NoteItemPaneUML : NoteItemPane {
     hbox.append( show );
 
     _text = create_text( "plantuml" );
-    var buffer    = (GtkSource.Buffer)text.buffer;
-    var style_mgr = new GtkSource.StyleSchemeManager();
-    var style     = style_mgr.get_scheme( _win.themes.get_current_theme() );
+    var buffer = (GtkSource.Buffer)_text.buffer;
 
-    buffer.style_scheme = style;
-    text.add_css_class( "code-text" );
+    _text.add_css_class( "code-text" );
 
     var tbox = new Box( Orientation.VERTICAL, 5 );
     tbox.append( hbox );
-    tbox.append( input );
+    tbox.append( _text );
 
     var loading = new Label( _( "Generating Diagram..." ) ) {
       halign = Align.CENTER,
@@ -105,9 +103,9 @@ public class NoteItemPaneUML : NoteItemPane {
     loading.add_css_class( "note-title" );
 
     _stack = new Stack();
-    _stack.add_named( tbox, "input" );
+    _stack.add_named( tbox,    "input" );
     _stack.add_named( loading, "loading" );
-    _stack.add_named( image, "image" );
+    _stack.add_named( _image,  "image" );
 
     show.clicked.connect(() => {
       if( item.content == buffer.text ) {

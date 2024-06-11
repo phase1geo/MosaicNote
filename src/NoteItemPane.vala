@@ -21,23 +21,38 @@
 
 using Gtk;
 
+public enum TextCursorPlacement {
+  START,
+  END,
+  NO_CHANGE
+}
+
 public class NoteItemPane : Box {
 
-  private NoteItem _item;
+  private MainWindow   _win;
+  private NoteItem     _item;
+  private SpellChecker _spell;
 
-  protected NoteItem item {
+  protected MainWindow win {
+    get {
+      return( _win );
+    }
+  }
+  public NoteItem item {
     get {
       return( _item );
     }
   }
+  public NoteItemPane? prev_pane { get; set; default = null; }
+  public NoteItemPane? next_pane { get; set; default = null; }
 
-  public signal void add_item( bool above );
+  public signal void add_item( bool above, NoteItemType? type );
   public signal void remove_item();
-  public signal void advance_to_next( bool up );
+  public signal void move_item( bool up );
   public signal void set_as_current();
 
 	// Default constructor
-	public NoteItemPane( NoteItem item ) {
+	public NoteItemPane( MainWindow win, NoteItem item, SpellChecker spell ) {
 
     Object(
       orientation: Orientation.VERTICAL,
@@ -45,36 +60,55 @@ public class NoteItemPane : Box {
       margin_top: 5,
       margin_bottom: 5,
       margin_start: 5,
-      margin_end: 5
+      margin_end: 5,
+      halign: Align.FILL
     );
 
-    _item = item;
+    _win   = win;
+    _item  = item;
+    _spell = spell;
 
     // Create the UI
     create_pane();
 
   }
 
-  // Gets the next text item.
-  // TBD
-  private int get_next_text_item( int start_index, bool above ) {
-    if( above ) {
-      var index = (start_index - 1);
-      while( (index >= 0) && !_note.get_item( index ).item_type.is_text() ) {
-        index--;
-      }
-      return( index );
-    } else {
-      var index = (start_index + 1);
-      while( (index < _note.size()) && !_note.get_item( index ).item_type.is_text() ) {
-        index++;
-      }
-      return( (index == _note.size()) ? -1 : index );
+  // Returns the text associated with this note item panel, if available
+  public virtual GtkSource.View? get_text() {
+    return( null );
+  }
+
+  /* Sets the spellchecker for the current textview widget */
+  private void set_spellchecker() {
+
+    var text = get_text();
+    if( text == null ) {
+      return;
     }
+
+    var enabled = MosaicNote.settings.get_boolean( "enable-spellchecker" );
+
+    _spell.detach();
+
+    if( enabled ) {
+      _spell.attach( text );
+    } else {
+      _spell.remove_highlights( text );
+    }
+
   }
 
   // Grabs the focus of the note item at the specified position.
-  public virtual void grab_focus_of_item() {}
+  public virtual void grab_item_focus( TextCursorPlacement placement ) {}
+
+  // Places cursor in the given text based on the value of placement
+  public void place_cursor( GtkSource.View text, TextCursorPlacement placement ) {
+    if( placement != TextCursorPlacement.NO_CHANGE ) {
+      TextIter iter;
+      text.buffer.get_start_iter( out iter );
+      text.buffer.place_cursor( iter );
+    }
+  }
 
   // Sets the height of the text widget
   private void set_text_height( GtkSource.View text ) {
@@ -89,55 +123,45 @@ public class NoteItemPane : Box {
   }
 
   // Split the current item into two items at the insertion point.
-  private void split_item( int index ) {
+  private void split_item() {
 
     // Get the current text widget and figure out the location of
     // the insertion cursor.
-    var text   = get_item_text( index );
+    var text   = get_text();
     var cursor = text.buffer.cursor_position;
 
     // Create a copy of the new item, assign it the text after
     // the insertion cursor, and remove the text after the insertion
     // cursor from the original item.
-    var item     = _note.get_item( index );
     item.content = text.buffer.text;
     var first    = item.content.substring( 0, cursor ); 
     var last     = item.content.substring( cursor );
-    var new_item = item.item_type.create( _note );
 
     item.content = first;
-    new_item.content = last;
-    _note.add_note_item( (uint)(index + 1), new_item );
+    add_item( false, item.item_type );
+    next_pane.item.content = last;
 
     // Update the original item contents and add the new item
     // after the original.
     text.buffer.text = item.content;
-    insert_content_item( new_item, (index + 1) );
-    text = get_item_text( index + 1 );
+    text = next_pane.get_text();
 
     // Adjust the insertion cursor to the beginning of the new text
-    TextIter iter;
-    text.buffer.get_start_iter( out iter );
-    text.buffer.place_cursor( iter );
-
-    text.grab_focus();
+    next_pane.grab_item_focus( TextCursorPlacement.START );
 
   }
 
-  // Joins the item at the given index with the item above it.
-  private bool join_items( int index ) {
-
-    // Find the item above the current one that matches the type
-    var above_index = get_next_text_item( index, true );
+  // Joins the current item with the item above it if they are the same type.
+  private bool join_items() {
 
     // If we are unable to join with anything, return false immediately
-    if( above_index == -1 ) {
+    if( (prev_pane == null) || (prev_pane.item.item_type != item.item_type) ) {
       return( false );
     }
 
     // Merge the note text, delete the note item and delete the item from the content area
-    var above_text   = get_item_text( above_index );
-    var text         = get_item_text( index );
+    var above_text   = prev_pane.get_text();
+    var text         = get_text();
     var text_to_move = text.buffer.text;
 
     if( text_to_move != "" ) {
@@ -153,12 +177,11 @@ public class NoteItemPane : Box {
 
     }
 
-    // Remove the current item
-    _note.delete_note_item( (uint)index );
-    _content.remove( get_item( index ) );
-
     // Grab the above text widget for keyboard input
-    above_text.grab_focus();
+    prev_pane.grab_item_focus( TextCursorPlacement.NO_CHANGE );
+
+    // Remove the current item
+    remove_item();
 
     return( true );
 
@@ -176,52 +199,62 @@ public class NoteItemPane : Box {
     key.key_pressed.connect((keyval, keycode, state) => {
       var shift   = (bool)(state & Gdk.ModifierType.SHIFT_MASK);
       var control = (bool)(state & Gdk.ModifierType.CONTROL_MASK);
-      var index   = Utils.get_child_index( _content, w );
       switch( keyval ) {
         case Gdk.Key.Return :
           if( control && shift ) {
-            add_item( index, true );
+            add_item( true, null );
             return( true );
           } else if( shift ) {
-            add_item( index, false );
+            add_item( false, null );
             return( true );
           }
           break;
         case Gdk.Key.BackSpace :
           if( control ) {
-            remove_item( index );
+            remove_item();
             return( true );
           }
           break;
         case Gdk.Key.Delete :
           if( control ) {
-            remove_item( index );
+            remove_item();
             return( true );
           }
           break;
         case Gdk.Key.Up :
-          if( index > 0 ) {
-            if ( control ) {
-              _note.move_item( index, (index - 1) );
-              var item = get_item( index );
-              _content.reorder_child_after( item, get_item( index - 2 ) );
+          if( prev_pane != null ) {
+            if( control ) {
+              move_item( true );
               return( true );
             } else {
-              advance_to_next( index, true );
+              var text = get_text();
+              if( text != null ) {
+                TextIter iter;
+                text.buffer.get_iter_at_mark( out iter, text.buffer.get_insert() );
+                if( !iter.is_start() ) {
+                  return( false );
+                }
+              }
+              prev_pane.grab_item_focus( TextCursorPlacement.NO_CHANGE ); 
               return( true );
             }
           }
           return( false );
         case Gdk.Key.Down :
-          if( index < (_note.size() - 1) ) {
+          if( next_pane != null ) {
             if( control ) {
-              _note.move_item( index, (index + 1) );
-              var item = get_item( index );
-              _content.reorder_child_after( item, get_item( index + 1 ) );
+              move_item( false );
               return( true );
             } else {
-              stdout.printf( "B Calling advance_to_next, index: %d\n", index );
-              advance_to_next( index, false );
+              var text = get_text();
+              if( text != null ) {
+                TextIter iter;
+                text.buffer.get_iter_at_mark( out iter, text.buffer.get_insert() );
+                if( !iter.is_end() ) {
+                  return( false );
+                }
+              }
+              next_pane.grab_item_focus( TextCursorPlacement.NO_CHANGE );
               return( true );
             }
           }
@@ -241,45 +274,38 @@ public class NoteItemPane : Box {
     key.key_pressed.connect((keyval, keycode, state) => {
       var shift   = (bool)(state & Gdk.ModifierType.SHIFT_MASK);
       var control = (bool)(state & Gdk.ModifierType.CONTROL_MASK);
-      var parent  = text.parent;
-      var index   = Utils.get_child_index( _content, parent );
-      while( (parent == null) || (index == -1) ) {
-        parent = parent.parent;
-        index  = Utils.get_child_index( _content, parent );
-      }
       switch( keyval ) {
         case Gdk.Key.slash :
           if( control ) {
-            split_item( index );
+            split_item();
             return( true );
           }
           break;
         case Gdk.Key.BackSpace :
-          if( (index > 0) && !control ) {
+          if( (prev_pane != null) && !control ) {
             TextIter cursor;
             text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );
-            if( cursor.is_start() && join_items( index ) ) {
+            if( cursor.is_start() && join_items() ) {
               return( true );
             }
           }
           break;
         case Gdk.Key.Up :
-          if( (index > 0) && !control ) {
+          if( (prev_pane != null) && !control ) {
             TextIter cursor;
             text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );
             if( cursor.is_start() ) {
-              advance_to_next( index, true );
+              prev_pane.grab_item_focus( TextCursorPlacement.END );
               return( true );
             }
           }
           break;
         case Gdk.Key.Down :
-          if( (index < (_note.size() - 1)) && !control ) {
+          if( (next_pane != null) && !control ) {
             TextIter cursor;
             text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );
             if( cursor.is_end() ) {
-              stdout.printf( "A Calling advance_to_next, index: %d\n", index );
-              advance_to_next( index, false );
+              next_pane.grab_item_focus( TextCursorPlacement.START );
               return( true );
             }
           }
@@ -352,9 +378,9 @@ public class NoteItemPane : Box {
 
     // Attach the spell checker temporarily
     if( item.item_type.spell_checkable() ) {
-      set_spellchecker( text );
+      set_spellchecker();
       MosaicNote.settings.changed["enable-spellchecker"].connect(() => {
-        set_spellchecker( text );
+        set_spellchecker();
       });
     }
 
@@ -369,8 +395,10 @@ public class NoteItemPane : Box {
       text.add_controller( key );
     }
 
-    MosaicNote.settings.changed["default-theme"].connect(() => {
-      buffer.style_scheme = scheme_mgr.get_scheme( MosaicNote.settings.get_string( "default-theme" ) );
+    var style_mgr = new GtkSource.StyleSchemeManager();
+    buffer.style_scheme = style_mgr.get_scheme( win.themes.get_current_theme() );
+    win.themes.theme_changed.connect((theme) => {
+      buffer.style_scheme = style_mgr.get_scheme( theme );
     });
 
     // Handle any changes to the Vim mode
@@ -386,14 +414,7 @@ public class NoteItemPane : Box {
 
   }
 
-  public virtual void set_buffer_style( GtkSource.StyleScheme style ) {}
-
-  // Returns any CSS data that is required for this pane
-  public virtual string get_css_data() {
-    return( "" );
-  }
-
   // Adds a new UML item at the given position in the content area
-  public virtual void create_pane() {}
+  protected virtual void create_pane() {}
 
 }

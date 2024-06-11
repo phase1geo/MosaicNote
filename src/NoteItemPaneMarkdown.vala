@@ -25,21 +25,24 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
   private GtkSource.View _text;
 
-  private SpellChecker _spell;
-
 	// Default constructor
-	public NoteItemPaneMarkdown( NoteItem item ) {
+	public NoteItemPaneMarkdown( MainWindow win, NoteItem item, SpellChecker spell ) {
+    base( win, item, spell );
+  }
 
-    base( item );
-
+  // Returns the stored text widget
+  public override GtkSource.View? get_text() {
+    return( _text );
   }
 
   // Grabs the focus of the note item at the specified position.
-  public override void grab_focus_of_item() {
+  public override void grab_item_focus( TextCursorPlacement placement ) {
+    place_cursor( _text, placement );
     _text.grab_focus();
   }
 
-  public override string get_css_data() {
+  // Returns CSS data that we need for rendering ourselves
+  public static string get_css_data() {
     var font_family = MosaicNote.settings.get_string( "editor-font-family" );
     var font_size   = MosaicNote.settings.get_int( "editor-font-size" );
     var css_data = """
@@ -48,24 +51,14 @@ public class NoteItemPaneMarkdown : NoteItemPane {
         font-size: %dpt;
       }
     """.printf( font_family, font_size );
-  }
-
-  public override void set_buffer_style( GtkSource.StyleScheme style ) {
-    var buffer = (GtkSource.Buffer)_text.buffer;
-    buffer.style_scheme = style;
+    return( css_data );
   }
 
   // Adds a new Markdown item at the given position in the content area
-  private override void create_pane() {
+  protected override void create_pane() {
 
     _text = create_text( "markdown" );
-    var buffer    = (GtkSource.Buffer)text.buffer;
-
-    var style_mgr = new GtkSource.StyleSchemeManager();
-    var style     = style_mgr.get_scheme( _win.themes.get_current_theme() );
-    buffer.style_scheme = style;
-
-    text.add_css_class( "markdown-text" );
+    _text.add_css_class( "markdown-text" );
 
     handle_key_events( _text );
 
