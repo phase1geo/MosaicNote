@@ -41,7 +41,7 @@ public class NoteItemPane : Box {
 
     Object(
       orientation: Orientation.VERTICAL,
-      spacing: 5,
+      spacing: 10,
       margin_top: 5,
       margin_bottom: 5,
       margin_start: 5,

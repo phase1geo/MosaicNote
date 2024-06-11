@@ -28,12 +28,7 @@ public class NoteItemPanes : Box {
   private SpellChecker _spell;
 
   // Default constructor
-  public NoteItemPanes( Note note ) {
-
-    _note = note;
-
-    // Make sure that we install all of the required languages
-    initialize_languages();
+  public NoteItemPanes() {
 
     // Initialize the spell checker
     initialize_spell_checker();
@@ -41,23 +36,6 @@ public class NoteItemPanes : Box {
     add_css_class( "themed" );
 
     // Populates the UI with the current note content
-    populate_content( note );
-
-  }
-
-  // Initialize the language manager to include the specialty languages that MosaicNote
-  // provides (includes PlantUML).
-  private void initialize_languages() {
-
-    foreach( var data_dir in Environment.get_system_data_dirs() ) {
-      var path = GLib.Path.build_filename( data_dir, "mosaic-note", "gtksourceview-5" );
-      if( FileUtils.test( path, FileTest.EXISTS ) ) {
-        var lang_path = GLib.Path.build_filename( path, "language-specs" );
-        var manager   = GtkSource.LanguageManager.get_default();
-        manager.append_search_path( lang_path );
-        break;
-      }
-    }
 
   }
 
@@ -207,7 +185,9 @@ public class NoteItemPanes : Box {
   }
 
   /* Adds the contents of the current note into the content area */
-  private void populate_content() {
+  private void populate( Note note ) {
+
+    _note = note;
 
     Utils.clear_box( this );
 
