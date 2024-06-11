@@ -1,9 +1,28 @@
 TODO:
 
-  ✔ Create build system @done (24-04-28 15:19)
-  ✔ Create main application @done (24-04-28 15:19)
-  ☐ Add main window panels
-    ☐ Sidebar
-    ☐ Notes
-    ☐ Note
-  ☐ Add Note widget.
+ ☐ Complete work on code restructuring for note item panes.
+   ☐ Base class
+   ☐ Markdown
+   ☐ Code
+   ☐ Image
+   ☐ UML
+ ☐ Complete work on inlined notebook adding/renaming.
+ ☐ Add support for table note item
+   ☐ Use table grid widget with embedded textboxes
+ ☐ Add support for search
+   ☐ Define search "language" for advanced search features and write parser
+   ☐ Add way to save searches as smart notebooks
+     Under the hood, I want searches to essentially be smart notebooks anyways
+ ☐ Add support for note linking
+ ☐ Add support for note traversal history
+ ☐ Add support for undo/redo
+
+＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
+Archive:
+ ✔ Sidebar @done (24-06-10 19:35) @project(TODO)
+ ✔ Notes @done (24-06-10 19:35) @project(TODO)
+ ✔ Note @done (24-06-10 19:35) @project(TODO)
+ ✔ Add main window panels @done (24-06-10 19:35) @project(TODO)
+ ✔ Add Note widget. @done (24-06-10 19:35) @project(TODO)
+ ✔ Create main application @done (24-04-28 15:19) @project(TODO)
+ ✔ Create build system @done (24-04-28 15:19) @project(TODO)
