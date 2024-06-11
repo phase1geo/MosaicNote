@@ -384,15 +384,14 @@ public class NoteItemPane : Box {
       });
     }
 
-    var im_context = new GtkSource.VimIMContext();
-    im_context.set_client_widget( text );
-
-    var key = new EventControllerKey();
-    key.set_im_context( im_context );
-    key.set_propagation_phase( PropagationPhase.CAPTURE );
+    var vim_key     = new EventControllerKey();
+    var vim_context = new GtkSource.VimIMContext();
+    vim_key.set_im_context( vim_context );
+    vim_key.set_propagation_phase( PropagationPhase.CAPTURE );
 
     if( MosaicNote.settings.get_boolean( "editor-vim-mode" ) ) {
-      text.add_controller( key );
+      vim_context.set_client_widget( text );
+      text.add_controller( vim_key );
     }
 
     var style_mgr = new GtkSource.StyleSchemeManager();
@@ -404,9 +403,11 @@ public class NoteItemPane : Box {
     // Handle any changes to the Vim mode
     MosaicNote.settings.changed["editor-vim-mode"].connect(() => {
       if( MosaicNote.settings.get_boolean( "editor-vim-mode" ) ) {
-        text.add_controller( key );
+        text.add_controller( vim_key );
+        vim_context.set_client_widget( text );
       } else {
-        text.remove_controller( key );
+        text.remove_controller( vim_key );
+        vim_context.set_client_widget( null );
       }
     });
 

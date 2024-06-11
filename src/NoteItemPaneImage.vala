@@ -102,7 +102,7 @@ public class NoteItemPaneImage : NoteItemPane {
 
     handle_key_events( _image );
 
-    append( _image );
+    append( box );
 
   }
 
