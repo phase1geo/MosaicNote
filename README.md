@@ -1,5 +1,5 @@
 # MosaicNote
-Developer notebook application that supports multiple types of information in the same note.
+Developer note-taking application that supports multiple types of information in the same note.
 
 <h1 align="center">MosaicNote</h1>
 <p align="center">
