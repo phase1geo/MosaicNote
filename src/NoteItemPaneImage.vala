@@ -57,8 +57,7 @@ public class NoteItemPaneImage : NoteItemPane {
 
   protected override void create_pane() {
 
-    var image_item = (NoteItemImage)item;
-
+    var image_item  = (NoteItemImage)item;
     var image_click = new GestureClick();
     var image_focus = new EventControllerFocus();
     _image = new Picture() {

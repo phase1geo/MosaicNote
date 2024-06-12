@@ -21,6 +21,10 @@
 
 using Gtk;
 
+//-------------------------------------------------------------
+// Contains all of the note item panes for a single note.  Handles
+// any resources that are shared by multiple panes (i.e., spellchecker).
+// Provides functionality for manipulating panes within the browser.
 public class NoteItemPanes : Box {
 
   private MainWindow   _win;
@@ -31,6 +35,7 @@ public class NoteItemPanes : Box {
 
   public signal void item_selected( NoteItemPane pane );
 
+  //-------------------------------------------------------------
   // Default constructor
   public NoteItemPanes( MainWindow win ) {
 
@@ -48,6 +53,9 @@ public class NoteItemPanes : Box {
 
   }
 
+  //-------------------------------------------------------------
+  // Initializes the spell checker that could be used for this
+  // note item pane.
   private void initialize_spell_checker() {
 
     _spell = new SpellChecker();
@@ -57,14 +65,15 @@ public class NoteItemPanes : Box {
 
   }
 
+  //-------------------------------------------------------------
+  // Adding an extra menu for the given text widget.
   private void populate_extra_menu( TextView view ) {
-
     var extra = new GLib.Menu();
-
     view.extra_menu = extra;
-
   }
 
+  //-------------------------------------------------------------
+  // Updates the spelling language based on application gsettings
   private void update_spell_language() {
 
     var lang        = MosaicNote.settings.get_string( "spellchecker-language" );
@@ -97,18 +106,21 @@ public class NoteItemPanes : Box {
 
   }
 
+  //-------------------------------------------------------------
   // Returns the number of panes stored in this structure
   public int size() {
     return( _size );
   }
 
+  //-------------------------------------------------------------
   // Adds a new item of the given type at the given position
   public void add_new_item( NoteItemType type, int pos = -1 ) {
     var new_item = type.create( _note );
     _note.add_note_item( (uint)pos, new_item );
-    add_item( new_item );
+    add_item( new_item, pos );
   }
 
+  //-------------------------------------------------------------
   // Adds an item to the UI at the given position
   public void add_item( NoteItem item, int pos = -1 ) {
 
@@ -126,14 +138,14 @@ public class NoteItemPanes : Box {
       add_new_item( ((type == null) ? NoteItemType.MARKDOWN : type), (above ? index : (index + 1)) );
     });
 
-    pane.remove_item.connect(() => {
+    pane.remove_item.connect((forward) => {
       var index = Utils.get_child_index( this, pane );
       remove( pane );
       _size--;
       _note.delete_note_item( index );
-      if( get_pane( index ) != null ) {
+      if( (forward || (index == 0)) && (get_pane( index ) != null) ) {
         get_pane( index ).grab_item_focus( TextCursorPlacement.NO_CHANGE );
-      } else if( get_pane( index - 1 ) != null ) {
+      } else if( (!forward || (index == (_size - 1))) && (get_pane( index - 1 ) != null) ) {
         get_pane( index - 1 ).grab_item_focus( TextCursorPlacement.NO_CHANGE );
       } else {
         add_new_item( NoteItemType.MARKDOWN, -1 );
@@ -199,6 +211,7 @@ public class NoteItemPanes : Box {
 
   }
 
+  //-------------------------------------------------------------
   // Changes the currently selected item to the given pane type
   public void set_current_item_to_type( NoteItemType type ) {
 
@@ -213,7 +226,8 @@ public class NoteItemPanes : Box {
 
   }
 
-  /* Adds the contents of the current note into the content area */
+  //-------------------------------------------------------------
+  // Adds the contents of the current note into the content area
   public void populate( Note note ) {
 
     _note = note;
@@ -226,6 +240,7 @@ public class NoteItemPanes : Box {
 
   }
 
+  //-------------------------------------------------------------
   // Returns the item at the given position
   public NoteItemPane? get_pane( int pos ) {
     return( (NoteItemPane)Utils.get_child_at_index( this, pos ) );

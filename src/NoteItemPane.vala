@@ -21,12 +21,18 @@
 
 using Gtk;
 
+//-------------------------------------------------------------
+// Specifies how the insertion cursor should be placed when a pane
+// containing text is given keyboard focus.
 public enum TextCursorPlacement {
   START,
   END,
   NO_CHANGE
 }
 
+//-------------------------------------------------------------
+// Base class for a single note item pane.  Contains shared functionality
+// related to panes containing text.
 public class NoteItemPane : Box {
 
   private MainWindow   _win;
@@ -47,10 +53,11 @@ public class NoteItemPane : Box {
   public NoteItemPane? next_pane { get; set; default = null; }
 
   public signal void add_item( bool above, NoteItemType? type );
-  public signal void remove_item();
+  public signal void remove_item( bool forward );
   public signal void move_item( bool up );
   public signal void set_as_current();
 
+  //-------------------------------------------------------------
 	// Default constructor
 	public NoteItemPane( MainWindow win, NoteItem item, SpellChecker spell ) {
 
@@ -73,12 +80,14 @@ public class NoteItemPane : Box {
 
   }
 
+  //-------------------------------------------------------------
   // Returns the text associated with this note item panel, if available
   public virtual GtkSource.View? get_text() {
     return( null );
   }
 
-  /* Sets the spellchecker for the current textview widget */
+  //-------------------------------------------------------------
+  // Sets the spellchecker for the current textview widget
   private void set_spellchecker() {
 
     var text = get_text();
@@ -98,9 +107,11 @@ public class NoteItemPane : Box {
 
   }
 
+  //-------------------------------------------------------------
   // Grabs the focus of the note item at the specified position.
   public virtual void grab_item_focus( TextCursorPlacement placement ) {}
 
+  //-------------------------------------------------------------
   // Places cursor in the given text based on the value of placement
   public void place_cursor( GtkSource.View text, TextCursorPlacement placement ) {
     if( placement != TextCursorPlacement.NO_CHANGE ) {
@@ -110,6 +121,7 @@ public class NoteItemPane : Box {
     }
   }
 
+  //-------------------------------------------------------------
   // Sets the height of the text widget
   private void set_text_height( GtkSource.View text ) {
 
@@ -122,6 +134,7 @@ public class NoteItemPane : Box {
 
   }
 
+  //-------------------------------------------------------------
   // Split the current item into two items at the insertion point.
   private void split_item() {
 
@@ -137,20 +150,22 @@ public class NoteItemPane : Box {
     var first    = item.content.substring( 0, cursor ); 
     var last     = item.content.substring( cursor );
 
+    // Update the original text pane
     item.content = first;
+    text.buffer.text = first;
     add_item( false, item.item_type );
-    next_pane.item.content = last;
 
-    // Update the original item contents and add the new item
-    // after the original.
-    text.buffer.text = item.content;
+    // Update the added text pane
     text = next_pane.get_text();
+    next_pane.item.content = last;
+    text.buffer.text = last;
 
     // Adjust the insertion cursor to the beginning of the new text
     next_pane.grab_item_focus( TextCursorPlacement.START );
 
   }
 
+  //-------------------------------------------------------------
   // Joins the current item with the item above it if they are the same type.
   private bool join_items() {
 
@@ -181,12 +196,13 @@ public class NoteItemPane : Box {
     prev_pane.grab_item_focus( TextCursorPlacement.NO_CHANGE );
 
     // Remove the current item
-    remove_item();
+    remove_item( false );
 
     return( true );
 
   }
 
+  //-------------------------------------------------------------
   // Adds keyboard events when this note item has keyboard input focus.
   // Events will add new items, delete the current item, or move the
   // input focus to the next or previous item.
@@ -211,13 +227,13 @@ public class NoteItemPane : Box {
           break;
         case Gdk.Key.BackSpace :
           if( control ) {
-            remove_item();
+            remove_item( false );
             return( true );
           }
           break;
         case Gdk.Key.Delete :
           if( control ) {
-            remove_item();
+            remove_item( true );
             return( true );
           }
           break;
@@ -264,6 +280,7 @@ public class NoteItemPane : Box {
     });
   }
 
+  //-------------------------------------------------------------
   // Adds and handles any text events.
   private void handle_text_events( GtkSource.View text ) {
 
@@ -316,6 +333,7 @@ public class NoteItemPane : Box {
 
   }
 
+  //-------------------------------------------------------------
   // Adds line spacing
   private void set_line_spacing( GtkSource.View text ) {
 
@@ -330,6 +348,11 @@ public class NoteItemPane : Box {
 
   }
 
+  //-------------------------------------------------------------
+  // Creates a text box with syntax highlighting enabled for the given
+  // language ID.  Note item panes that contain a text widget should
+  // call this function to create and configure the text widget that
+  // can be embedded in the pane.
   protected GtkSource.View create_text( string lang_id ) {
 
     var lang_mgr = GtkSource.LanguageManager.get_default();
@@ -363,6 +386,9 @@ public class NoteItemPane : Box {
     text.add_controller( focus );
 
     focus.enter.connect(() => {
+      if( item.item_type.spell_checkable() ) {
+        set_spellchecker();
+      }
       set_as_current();
       add_css_class( "active-item" );
     });
@@ -378,7 +404,6 @@ public class NoteItemPane : Box {
 
     // Attach the spell checker temporarily
     if( item.item_type.spell_checkable() ) {
-      set_spellchecker();
       MosaicNote.settings.changed["enable-spellchecker"].connect(() => {
         set_spellchecker();
       });
