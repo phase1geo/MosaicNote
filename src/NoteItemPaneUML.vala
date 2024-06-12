@@ -72,8 +72,9 @@ public class NoteItemPaneUML : NoteItemPane {
       halign  = Align.START,
       hexpand = true
     };
-    var help = new Button.with_label( _( "UML Syntax" ) ) {
-      halign = Align.END
+    var help = new Button.from_icon_name( "help-about-symbolic" ) {
+      halign = Align.END,
+      tooltip_text = _( "Open UML Documentation in Browser" )
     };
     help.clicked.connect(() => {
       Utils.open_url( "https://plantuml.com/" );
@@ -82,7 +83,12 @@ public class NoteItemPaneUML : NoteItemPane {
       halign = Align.END
     };
 
-    var hbox = new Box( Orientation.HORIZONTAL, 5 );
+    var hbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      margin_start  = 5,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 5
+    };
     hbox.append( label );
     hbox.append( help );
     hbox.append( show );
@@ -92,8 +98,11 @@ public class NoteItemPaneUML : NoteItemPane {
 
     _text.add_css_class( "code-text" );
 
+    var sep = new Separator( Orientation.HORIZONTAL );
+
     var tbox = new Box( Orientation.VERTICAL, 5 );
     tbox.append( hbox );
+    tbox.append( sep );
     tbox.append( _text );
 
     var loading = new Label( _( "Generating Diagram..." ) ) {
