@@ -34,6 +34,7 @@ public class NoteItemPanes : Box {
   private SpellChecker _spell;
 
   public signal void item_selected( NoteItemPane pane );
+  public signal void note_link_clicked( string link );
 
   //-------------------------------------------------------------
   // Default constructor
@@ -179,6 +180,10 @@ public class NoteItemPanes : Box {
     pane.set_as_current.connect(() => {
       _current_item = Utils.get_child_index( this, pane );
       item_selected( pane );
+    });
+
+    pane.note_link_clicked.connect((link) => {
+      note_link_clicked( link );
     });
 
     // Add the pane at the given position

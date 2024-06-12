@@ -154,6 +154,11 @@ public class MainWindow : Gtk.ApplicationWindow {
       _smart_notebooks.handle_note( note );
     });
 
+    _note.note_link_clicked.connect((link, note_id) => {
+      stdout.printf( "Note link clicked, link: %s, note_id: %d\n", link, note_id );
+      // TODO
+    });
+
     _notes_pw = new Paned( Orientation.HORIZONTAL ) {
       start_child        = _notes,
       end_child          = _note,

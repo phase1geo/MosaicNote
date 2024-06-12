@@ -41,6 +41,7 @@ public class NotePanel : Box {
   public signal void tag_added( string name, int note_id );
   public signal void tag_removed( string name, int note_id );
   public signal void save_note( Note note );
+  public signal void note_link_clicked( string link, int note_id );
 
 	// Default constructor
 	public NotePanel( MainWindow win ) {
@@ -253,6 +254,9 @@ public class NotePanel : Box {
     };
     _content.item_selected.connect((pane) => {
       set_toolbar_for_pane( pane );
+    });
+    _content.note_link_clicked.connect((link) => {
+      note_link_clicked( link, _note.id );
     });
 
     var cbox = new Box( Orientation.VERTICAL, 5 );

@@ -29,10 +29,14 @@ install_data(
     install_dir: join_paths(get_option('datadir'), 'glib-2.0', 'schemas')
 )
 
-install_data(
-    join_paths('syntax', 'plantuml.lang'),
-    install_dir: join_paths(get_option('datadir'), 'mosaic-note', 'gtksourceview-5', 'language-specs')
-)
+langs = ['plantuml', 'mosaic-markdown']
+
+foreach lang : langs
+    install_data(
+        join_paths('syntax', lang + '.lang'),
+        install_dir: join_paths(get_option('datadir'), 'mosaic-note', 'gtksourceview-5', 'language-specs')
+    )
+endforeach
 
 install_subdir(
     'pandoc-langs',

@@ -56,6 +56,7 @@ public class NoteItemPane : Box {
   public signal void remove_item( bool forward );
   public signal void move_item( bool up );
   public signal void set_as_current();
+  public signal void note_link_clicked( string link );
 
   //-------------------------------------------------------------
 	// Default constructor

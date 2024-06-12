@@ -68,7 +68,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
   //-------------------------------------------------------------
   // Returns true if the given text iterator is within a link.
-  private bool iter_within_link( GtkSource.View text, TextIter iter, out TextTag link_tag ) {
+  private bool iter_within_link( TextIter iter, out TextTag link_tag ) {
     TextTag found_tag = null;
     var within_link = false;
     var tags = iter.get_tags();
@@ -83,10 +83,19 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Returns true if the
+  private bool within_note_link( TextIter start, TextIter end ) {
+    var bstart = start;
+    var bend   = end;
+    return( bstart.backward_chars( 2 ) && (_text.buffer.get_text( bstart, start, false ) == "[[") &&
+            bend.forward_chars( 2 )    && (_text.buffer.get_text( end, bend, false ) == "]]") );
+  }
+
+  //-------------------------------------------------------------
   // Adds a new Markdown item at the given position in the content area
   protected override void create_pane() {
 
-    _text = create_text( "markdown" );
+    _text = create_text( "mosaic-markdown" );
     _text.add_css_class( "markdown-text" );
 
     var click = new GestureClick();
@@ -98,7 +107,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
       TextIter iter;
       TextTag  link_tag;
       if( _text.get_iter_at_location( out iter, (int)x, (int)y ) ) {
-        if( iter_within_link( _text, iter, out link_tag ) ) {
+        if( iter_within_link( iter, out link_tag ) ) {
           _text.set_cursor( _cursor_pointer );
         } else {
           _text.set_cursor( _cursor_text );
@@ -113,11 +122,16 @@ public class NoteItemPaneMarkdown : NoteItemPane {
         TextIter start;
         TextTag  link_tag;
         if( _text.get_iter_at_location( out start, (int)x, (int)y ) ) {
-          if( iter_within_link( _text, start, out link_tag ) ) {
+          if( iter_within_link( start, out link_tag ) ) {
             var end = start;
             start.backward_to_tag_toggle( link_tag );
             end.forward_to_tag_toggle( link_tag );
-            Utils.open_url( _text.buffer.get_text( start, end, false ) );
+            var link = _text.buffer.get_text( start, end, false ).strip();
+            if( within_note_link( start, end ) ) {
+              note_link_clicked( link );
+            } else {
+              Utils.open_url( link );
+            }
           }
         }
       }
