@@ -24,8 +24,17 @@ using Gtk;
 public class ToolbarItem : Box {
 
   private GtkSource.View? _text = null;
+  private NoteItem        _item;
 
   public NoteItemType item_type { get; private set; default = NoteItemType.NUM; }
+  public NoteItem item {
+    get {
+      return( _item );
+    }
+    set {
+      _item = value;
+    }
+  }
 
   public GtkSource.View? text {
     get {

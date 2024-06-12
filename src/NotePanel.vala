@@ -91,7 +91,7 @@ public class NotePanel : Box {
   }
 
   // Initialize the language manager to include the specialty languages that MosaicNote
-  // provides (includes PlantUML).
+  // provides (includes PlantUML and Mosaic-Markdown).
   private void initialize_languages() {
 
     foreach( var data_dir in Environment.get_system_data_dirs() ) {
@@ -317,6 +317,7 @@ public class NotePanel : Box {
     if( pane.item.item_type.is_text() ) {
       var toolbar = (ToolbarItem)_toolbar_stack.get_child_by_name( pane.item.item_type.to_string() );
       toolbar.text = pane.get_text();
+      toolbar.item = pane.item;
       _ignore = (_item_selector.selected != pane.item.item_type);
       _item_selector.selected = pane.item.item_type;
       _toolbar_stack.visible_child_name = pane.item.item_type.to_string();

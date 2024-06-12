@@ -33,14 +33,15 @@ public class ToolbarCode : ToolbarItem {
     base( NoteItemType.CODE );
 
     // Get the list of available languages
-    var lang_mgr = GtkSource.LanguageManager.get_default();
-    _supported_langs = lang_mgr.get_language_ids();
+    populate_supported_langs();
 
     var label = new Label( _( "Language:" ) );
 
-    _lang = new DropDown.from_strings( _supported_langs ) {
+    var strlist = new StringList( _supported_langs );
+    var strexpr = new PropertyExpression( typeof(StringObject), null, "string" );
+    _lang = new DropDown( strlist, strexpr ) {
       enable_search = true //,
-      // 4.12 feature:  search_match_mode = StringFilterMatchMode.PREFIX
+      // 4.12 feature:  search_match_mode = StringFilterMatchMode.SUBSTRING
     };
 
     _lang.notify["selected"].connect(() => {
@@ -53,11 +54,30 @@ public class ToolbarCode : ToolbarItem {
         var lang = mgr.get_language( _supported_langs[_lang.selected] );
         var buffer = (GtkSource.Buffer)text.buffer;
         buffer.set_language( lang );
+        var code_item = (item as NoteItemCode);
+        if( code_item != null ) {
+          code_item.lang = _supported_langs[_lang.selected];
+        }
       }
     });
 
     append( label );
     append( _lang );
+
+  }
+
+  //-------------------------------------------------------------
+  // Populates the _supported_langs array with the list of supported
+  // language IDs.
+  private void populate_supported_langs() {
+
+    var lang_mgr = GtkSource.LanguageManager.get_default();
+
+    foreach( var lang in lang_mgr.get_language_ids() ) {
+      if( lang != "mosaic-markdown" ) {
+        _supported_langs += lang;
+      }
+    }
 
   }
 
