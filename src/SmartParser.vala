@@ -76,6 +76,10 @@ public class SmartParser {
       }
     }
 
+    if( token != "" ) {
+      parse_token( token );
+    }
+
     return( (_stack.length() == 1) && !in_double && !in_single && !skip_char );
 
   }
@@ -273,6 +277,7 @@ public class SmartParser {
       pattern    = text.slice( text.index_of_nth_char( 3 ), text.index_of_nth_char( text.char_count() - 1 ) );
       match_type = TextMatchType.REGEXP;
     }
+    stdout.printf( "match_type: %s, pattern: %s, filter_type: %s\n", match_type.to_string(), pattern, filter_type );
     switch( filter_type ) {
       case "title"   :  filter = new FilterTitle( match_type, pattern );     break;
       case "content" :  filter = new FilterItemText( NoteItemType.MARKDOWN, match_type, pattern );  break;

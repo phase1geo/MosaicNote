@@ -38,12 +38,14 @@ public class MainWindow : Gtk.ApplicationWindow {
   private NotePanel       _note;
   private Paned           _notes_pw;
   private Paned           _sidebar_pw;
+  private MenuButton      _search_mb;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_save",        action_save },
     { "action_quit",        action_quit },
     { "action_shortcuts",   action_shortcuts },
     { "action_preferences", action_preferences },
+    { "action_search",      action_search },
   };
 
   private bool on_elementary = Gtk.Settings.get_default().gtk_icon_theme_name == "elementary";
@@ -130,6 +132,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Create title toolbar */
     header.pack_end( create_miscellaneous() );
+    header.pack_end( create_search() );
 
     /* Create content area */
     _sidebar = new SidebarNew( this );
@@ -233,6 +236,64 @@ public class MainWindow : Gtk.ApplicationWindow {
     app.set_accels_for_action( "win.action_quit",        { "<Control>q" } );
     app.set_accels_for_action( "win.action_shortcuts",   { "<Control>question" } );
     app.set_accels_for_action( "win.action_preferences", { "<Control>comma" } );
+    app.set_accels_for_action( "win.action_search",      { "<Control>f" } );
+
+  }
+
+  //-------------------------------------------------------------
+  // Creates the search UI and returns the menubutton that will go
+  // into the header bar to invoke this interface.
+  private Widget create_search() {
+
+    var search_nb = new SmartNotebook( "search", SmartNotebookType.USER, notebooks );
+
+    var search_entry = new SearchEntry() {
+      placeholder_text = _( "Enter Search Query" ),
+      width_chars = 50
+    };
+
+    var search_key = new EventControllerKey();
+    search_entry.add_controller( search_key );
+
+    search_entry.activate.connect(() => {
+      parser.parse( search_entry.text );
+      parser.populate_smart_notebook( search_nb );
+      _notes.populate_with_notebook( search_nb );
+    });
+
+    var sbox = new Box( Orientation.VERTICAL, 5 ) {
+      margin_start  = 5,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 5
+    };
+    sbox.append( search_entry );
+
+    var search_popover = new Popover() {
+      autohide = true,
+      has_arrow = true,
+      child = sbox
+    };
+
+    var img = new Image.from_icon_name( get_header_icon_name( "system-search" ) );
+
+    _search_mb = new MenuButton() {
+      has_frame = !on_elementary,
+      child = img,
+      tooltip_markup = Utils.tooltip_with_accel( _( "Search notes" ), "<control>f" ),
+      popover = search_popover
+    };
+
+    search_key.key_pressed.connect((keyval, keycode, state) => {
+      stdout.printf( "HERE!\n" );
+      if( keyval == Gdk.Key.Escape ) {
+        search_popover.popdown();
+        return( true );
+      }
+      return( false );
+    });
+
+    return( _search_mb );
 
   }
 
@@ -291,6 +352,12 @@ public class MainWindow : Gtk.ApplicationWindow {
   private void action_preferences() {
     var prefs = new Preferences( this );
     prefs.show();
+  }
+
+  //-------------------------------------------------------------
+  // Activates the note search UI.
+  private void action_search() {
+    _search_mb.activate();
   }
 
   /* Generate a notification */
