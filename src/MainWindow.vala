@@ -30,6 +30,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private SmartNotebooks  _smart_notebooks;
   private FullTags        _full_tags;
   private Themes          _themes;
+  private SmartParser     _parser;
 
   private ShortcutsWindow _shortcuts = null;
   private SidebarNew      _sidebar;
@@ -85,6 +86,12 @@ public class MainWindow : Gtk.ApplicationWindow {
     }
   }
 
+  public SmartParser parser {
+    get {
+      return( _parser );
+    }
+  }
+
   /* Create the main window UI */
   public MainWindow( Gtk.Application app, GLib.Settings settings ) {
 
@@ -119,6 +126,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     _full_tags       = new FullTags( _notebooks );
     _smart_notebooks = new SmartNotebooks( _notebooks );
     _themes          = new Themes();
+    _parser          = new SmartParser( _notebooks );
 
     /* Create title toolbar */
     header.pack_end( create_miscellaneous() );

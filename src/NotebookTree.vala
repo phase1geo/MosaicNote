@@ -19,8 +19,14 @@
 * Authored by: Trevor Williams <phase1geo@gmail.com>
 */
 
+//-------------------------------------------------------------
+// Class that stores all of the notebooks, maintaining the
+// tree structure of the notebooks.
 public class NotebookTree {
 
+	//-------------------------------------------------------------
+	// Contains a single notebook and stores any notebooks that are
+	// children of this notebook node.
 	public class Node : BaseNotebook {
 
 		private Node?       _parent;
@@ -63,6 +69,7 @@ public class NotebookTree {
 
     public ulong handler_id { set; get; default = 0; }
 
+		//-------------------------------------------------------------
 		// Default constructor
 		public Node( Node? parent, Notebook nb ) {
 			base( nb.name );
@@ -74,6 +81,7 @@ public class NotebookTree {
 			changed();
 		}
 
+		//-------------------------------------------------------------
 		// Constructor from XML format
 		public Node.from_xml( Xml.Node* node, Node? parent ) {
 			base( "" );
@@ -81,10 +89,13 @@ public class NotebookTree {
 			load( node, parent );
 		}
 
+		//-------------------------------------------------------------
+		// Called when the node has changed in some way.
 		private void node_changed() {
 			changed();
 		}
 
+		//-------------------------------------------------------------
 		// Adds the given notebook to the list of children
 		public void add_notebook( Notebook nb ) {
 			var node = new Node( this, nb );
@@ -94,6 +105,7 @@ public class NotebookTree {
 			changed();
 		}
 
+		//-------------------------------------------------------------
 		// Removes the given notebook from the tree
 		public void remove_notebook( Notebook nb ) {
 			var node = find_node( nb.id );
@@ -102,6 +114,7 @@ public class NotebookTree {
 			}
 		}
 
+		//-------------------------------------------------------------
 		// Removes the given child node from 
 		public void remove_child( Node node ) {
 			for( int i=0; i<_children.length; i++ ) {
@@ -115,26 +128,31 @@ public class NotebookTree {
 			}
 		}
 
+		//-------------------------------------------------------------
 		// Returns the number of child notebooks
 		public int size() {
 			return( (int)_children.length );
 		}
 
+		//-------------------------------------------------------------
 		// Returns the number of notes stored in this notebook
 		public override int count() {
 		  return( get_notebook().count() );
 		}
 
+		//-------------------------------------------------------------
 		// Returns the notes model associated with the notebook
 		public override ListModel? get_model() {
 			return( get_notebook().get_model() );
 		}
 
+		//-------------------------------------------------------------
 		// Returns the child at the given position
 		public Node get_node( int pos ) {
 			return( _children.index( pos ) );
 		}
 
+		//-------------------------------------------------------------
 		// Returns the node at the given position in the tree
 		public Node? get_node_at_position( ref int pos ) {
 			if( pos-- == 0 ) {
@@ -150,6 +168,7 @@ public class NotebookTree {
       return( null );
 		}
 		
+		//-------------------------------------------------------------
 		// Returns a reference to the notebook that matches the given ID
 		public Node? find_node( int id ) {
 			if( _id == id ) {
@@ -165,6 +184,7 @@ public class NotebookTree {
 			}
 		}
 
+		//-------------------------------------------------------------
 		// Returns the notebook associated with this node
 		public Notebook get_notebook() {
 			if( _notebook == null ) {
@@ -173,6 +193,7 @@ public class NotebookTree {
 			return( _notebook );
 		}
 
+		//-------------------------------------------------------------
 		// Searches for a notebook with the given ID.  If it is found, return it; otherwise, returns null.
 		public Notebook? find_notebook( int id ) {
 			if( get_notebook().id == id ) {
@@ -187,6 +208,44 @@ public class NotebookTree {
 			return( null );
 		}
 
+		//-------------------------------------------------------------
+		// Searches for a notebook with the given ID.  The first occurrence
+		// of the notebook match is returned.  If no match can be found,
+		// returns null.
+		public Notebook? find_notebook_by_name( string name ) {
+			if( get_notebook().name == name ) {
+				return( get_notebook() );
+			}
+      for( int i=0; i<_children.length; i++ ) {
+      	var nb = _children.index( i ).find_notebook_by_name( name );
+      	if( nb != null ) {
+      		return( nb );
+      	}
+      }
+      return( null );
+		}
+
+		//-------------------------------------------------------------
+		// Searches for a notebook with the given path.  If it is found,
+		// return it; otherwise, returns null.  The path of the notebook
+		// is the hierarchy of notebooks
+		public Notebook? find_notebook_by_path( string[] path ) {
+			if( (path.length > 0) && (get_notebook().name == path[0]) ) {
+				if( path.length == 1 ) {
+					return( get_notebook() );
+				} else {
+					for( int i=0; i<_children.length; i++ ) {
+						var nb = _children.index( i ).find_notebook_by_path( path[1:path.length] );
+						if( nb != null ) {
+							return( nb );
+						}
+					}
+				}
+			}
+			return( null );
+		}
+
+		//-------------------------------------------------------------
 		// Searches for a note with the given ID.  If it is found, return it; otherwise, returns null.
 		public Note? find_note( int id ) {
 			var note = get_notebook().find_note( id );
@@ -202,6 +261,7 @@ public class NotebookTree {
 			return( null );
 		}
 
+		//-------------------------------------------------------------
 		// Populates the given list of notes that contain the given tag.
 		public void get_notes_with_tag( string tag, Array<Note> notes ) {
 			get_notebook().get_notes_with_tag( tag, notes );
@@ -210,7 +270,18 @@ public class NotebookTree {
 			}
 		}
 
-		/* Saves this notebook node in XML format */
+		//-------------------------------------------------------------
+		// Populates the given smart notebook with the notes that match
+		// the smart notebook configuration.
+    public void populate_smart_notebook( SmartNotebook notebook ) {
+    	get_notebook().populate_smart_notebook( notebook );
+    	for( int i=0; i<_children.length; i++ ) {
+    		_children.index( i ).populate_smart_notebook( notebook );
+    	}
+    }
+
+		//-------------------------------------------------------------
+		// Saves this notebook node in XML format
 		public Xml.Node* save() {
 			Xml.Node* node = new Xml.Node( null, "node" );
 			node->set_prop( "id",   _id.to_string() );
@@ -222,7 +293,8 @@ public class NotebookTree {
 			return( node );
 		}
 
-    /* Saves all of the modified notebooks */
+		//-------------------------------------------------------------
+    // Saves all of the modified notebooks
     public void save_notebooks() {
       var nb = get_notebook();
       nb.save();
@@ -231,7 +303,8 @@ public class NotebookTree {
       }
     }
 
-		/* Loads the notebook node from XML format */
+    //-------------------------------------------------------------
+		// Loads the notebook node from XML format
 		private void load( Xml.Node* node, Node? parent ) {
 			var id = node->get_prop( "id" );
 			if( id != null ) {
@@ -250,22 +323,30 @@ public class NotebookTree {
 
 	}  // class Node
 
+	//-------------------------------------------------------------
+	// START OF NotebookTree CLASS
+	//-------------------------------------------------------------
+
 	private Array<Node> _nodes;
 	private bool        _modified = false;
 
 	public signal void changed();
 
+	//-------------------------------------------------------------
 	// Default constructor
 	public NotebookTree() {
 		_nodes = new Array<Node>();
 		load();
 	}
 
+	//-------------------------------------------------------------
+	// Sets the modified indicator.
 	private void set_modified() {
 		_modified = true;
 		changed();
 	}
 
+	//-------------------------------------------------------------
 	// Adds the given notebook to the end of the list
 	public void add_notebook( Notebook nb ) {
 		var node = new Node( null, nb );
@@ -275,6 +356,7 @@ public class NotebookTree {
 		changed();
 	}
 
+	//-------------------------------------------------------------
 	// Removes the notebook at the specified position
 	public void remove_notebook( int pos ) {
 		_nodes.index( pos ).changed.disconnect( set_modified );
@@ -283,16 +365,20 @@ public class NotebookTree {
 		changed();
 	}
 
+	//-------------------------------------------------------------
 	// Returns the number of notebooks at the top-most level
 	public int size() {
 		return( (int)_nodes.length );
 	}
 
+	//-------------------------------------------------------------
 	// Returns the node at the given top-level position
 	public Node? get_node( int pos ) {
 		return( _nodes.index( pos ) );
 	}
 
+	//-------------------------------------------------------------
+	// Returns the node at the given numerical position.
 	public Node? get_node_at_position( int pos ) {
 		for( int i=0; i<_nodes.length; i++ ) {
   		var node = _nodes.index( i ).get_node_at_position( ref pos );
@@ -303,6 +389,7 @@ public class NotebookTree {
 		return( null );
 	}
 
+	//-------------------------------------------------------------
 	// Searches the notebooks for one that matches the given ID
 	public Notebook? find_notebook( int id ) {
 		for( int i=0; i<_nodes.length; i++ ) {
@@ -314,6 +401,32 @@ public class NotebookTree {
 		return( null );
 	}
 
+	//-------------------------------------------------------------
+	// Searches the notebooks for one that matches the given name.
+	public Notebook? find_notebook_by_name( string name ) {
+		for( int i=0; i<_nodes.length; i++ ) {
+			var nb = _nodes.index( i ).find_notebook_by_name( name );
+			if( nb != null ) {
+				return( nb );
+			}
+		}
+		return( null );
+	}
+
+	//-------------------------------------------------------------
+	// Searches for the notebook that matches the given path.
+	public Notebook? find_notebook_by_path( string path ) {
+		var path_array = path.split( "/" );
+    for( int i=0; i<_nodes.length; i++ ) {
+    	var nb = _nodes.index( i ).find_notebook_by_path( path_array );
+    	if( nb != null ) {
+    		return( nb );
+    	}
+    }
+    return( null );
+	}
+
+	//-------------------------------------------------------------
 	// Searches the notebooks for a note that matches the given ID
 	public Note? find_note( int id ) {
 		for( int i=0; i<_nodes.length; i++ ) {
@@ -325,6 +438,7 @@ public class NotebookTree {
 		return( null );
 	}
 
+	//-------------------------------------------------------------
 	// Searches the tree of notebooks for notes that contain the given tag
   public void get_notes_with_tag( string tag, Array<Note> notes ) {
   	for( int i=0; i<_nodes.length; i++ ) {
@@ -332,10 +446,22 @@ public class NotebookTree {
   	}
   }
 
+  //-------------------------------------------------------------
+  // Populates the given smart notebook with all matching nodes.
+  // This is useful for searching.
+  public void populate_smart_notebook( SmartNotebook notebook ) {
+  	for( int i=0; i<_nodes.length; i++ ) {
+  		_nodes.index( i ).populate_smart_notebook( notebook );
+  	}
+  }
+
+  //-------------------------------------------------------------
+  // Returns the full filename of the notebooks XML file.
 	private string xml_file() {
 		return( Utils.user_location( "notebooks.xml" ) );
 	}
 
+	//-------------------------------------------------------------
 	// Saves the current notebook tree in XML format
 	public void save() {
 
@@ -362,6 +488,7 @@ public class NotebookTree {
 
   }
 
+  //-------------------------------------------------------------
   /* Saves all of the modified notebooks */
   public void save_notebooks() {
     for( int i=0; i<_nodes.length; i++ ) {
@@ -369,6 +496,7 @@ public class NotebookTree {
     }
   }
 
+  //-------------------------------------------------------------
   // Loads the contents of this notebook from XML format
   private void load() {
 
@@ -411,6 +539,8 @@ public class NotebookTree {
 
   }
 
+  //-------------------------------------------------------------
+  // Used to handle differences in read versions.
   private void check_version( string version ) {
 
   	// Nothing to do yet

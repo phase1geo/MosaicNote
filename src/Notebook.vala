@@ -111,6 +111,15 @@ public class Notebook : BaseNotebook {
   	}
   }
 
+  //-------------------------------------------------------------
+  // Populates the given smart notebook with the notes that match
+  // the smart criteria.
+  public void populate_smart_notebook( SmartNotebook notebook ) {
+    for( int i=0; i<_notes.length; i++ ) {
+      notebook.handle_note( _notes.index( i ) );
+    }
+  }
+
   // Returns true if anything has been modified by the user in this notebook
   public bool is_modified() {
   	if( !_modified ) {
