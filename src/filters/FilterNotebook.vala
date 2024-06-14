@@ -23,30 +23,43 @@ public class FilterNotebook : SmartFilter {
 
   private int _id;
 
+  //-------------------------------------------------------------
   // Default constructor
   public FilterNotebook( int notebook_id ) {
     base();
     _id = notebook_id;
   }
 
+  //-------------------------------------------------------------
   // Constructo from XML
   public FilterNotebook.from_xml( Xml.Node* node ) {
     base.from_xml( node );
     load( node );
   }
 
+  //-------------------------------------------------------------
   // Checks the note to see if it matches or does not match the
   // stored tag value.
   public override bool check_note( Note note ) {
     return( note.notebook.id == _id );
   }
 
+  //-------------------------------------------------------------
+  // Returns the contents of this filter as a string.
+  public override string to_string() {
+    return( "notebook:%d".printf( _id ) );
+  }
+
+  //-------------------------------------------------------------
+  // Saves the contents of this filter in XML format.
   public override Xml.Node* save() {
     Xml.Node* node = new Xml.Node( null, "notebook" );
     node->set_prop( "id", _id.to_string() );
     return( node );
   }
 
+  //-------------------------------------------------------------
+  // Loads the contents of this filter from XML.
   public override void load( Xml.Node* node ) {
     var i = node->get_prop( "id" );
     if( i != null ) {

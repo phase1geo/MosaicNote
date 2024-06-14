@@ -255,12 +255,6 @@ public class MainWindow : Gtk.ApplicationWindow {
     var search_key = new EventControllerKey();
     search_entry.add_controller( search_key );
 
-    search_entry.activate.connect(() => {
-      parser.parse( search_entry.text );
-      parser.populate_smart_notebook( search_nb );
-      _notes.populate_with_notebook( search_nb );
-    });
-
     var sbox = new Box( Orientation.VERTICAL, 5 ) {
       margin_start  = 5,
       margin_end    = 5,
@@ -284,8 +278,17 @@ public class MainWindow : Gtk.ApplicationWindow {
       popover = search_popover
     };
 
+    search_entry.activate.connect(() => {
+      Idle.add(() => {
+        parser.parse( search_entry.text );
+        parser.populate_smart_notebook( search_nb );
+        _notes.populate_with_notebook( search_nb );
+        return( false );
+      });
+      search_popover.popdown();
+    });
+
     search_key.key_pressed.connect((keyval, keycode, state) => {
-      stdout.printf( "HERE!\n" );
       if( keyval == Gdk.Key.Escape ) {
         search_popover.popdown();
         return( true );

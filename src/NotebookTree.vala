@@ -465,8 +465,6 @@ public class NotebookTree {
 	// Saves the current notebook tree in XML format
 	public void save() {
 
-		if( !_modified ) return;
-
 	  Xml.Doc*  doc  = new Xml.Doc( "1.0" );
 	  Xml.Node* root = new Xml.Node( null, "notebooks" );
 

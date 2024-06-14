@@ -23,30 +23,43 @@ public class FilterFavorite : SmartFilter {
 
   private bool _favorite = true;
 
+  //-------------------------------------------------------------
   // Default constructor
   public FilterFavorite( bool favorite ) {
     base();
     _favorite = favorite;
   }
 
-  // Constructo from XML
+  //-------------------------------------------------------------
+  // Constructor from XML
   public FilterFavorite.from_xml( Xml.Node* node ) {
     base.from_xml( node );
     load( node );
   }
 
+  //-------------------------------------------------------------
   // Checks the note to see if it matches or does not match the
   // stored tag value.
   public override bool check_note( Note note ) {
     return( note.favorite == _favorite );
   }
 
+  //-------------------------------------------------------------
+  // Returns the contents of this filter as a string.
+  public override string to_string() {
+    return( (_favorite ? "" : "!") + "favorite" );
+  }
+
+  //-------------------------------------------------------------
+  // Saves the contents of this filter as XML.
   public override Xml.Node* save() {
     Xml.Node* node = new Xml.Node( null, "favorite" );
     node->set_prop( "value", _favorite.to_string() );
     return( node );
   }
 
+  //-------------------------------------------------------------
+  // Loads the contents of this filter from XML.
   public override void load( Xml.Node* node ) {
     var v = node->get_prop( "value" );
     if( v != null ) {

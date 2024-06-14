@@ -32,7 +32,11 @@ public class SmartFilter {
     return( false );
   }
 
-  // protected bool check_date( DateTime a, DateTime b, Time)
+  //-------------------------------------------------------------
+  // Outputs this filter as a string.
+  public virtual string to_string() {
+    return( "" );
+  }
 
   // Saves the filter setup in XML format
   public virtual Xml.Node* save() {

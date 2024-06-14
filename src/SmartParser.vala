@@ -28,7 +28,7 @@ public class SmartParser {
   // Default constructor
   public SmartParser( NotebookTree notebooks ) {
     _notebooks = notebooks;
-    _stack     = new List<SmartLogicFilter>();
+    _stack = new List<SmartLogicFilter>();
   }
 
   //-------------------------------------------------------------
@@ -76,9 +76,16 @@ public class SmartParser {
       }
     }
 
+    stdout.printf( "token: %s\n", token );
+
     if( token != "" ) {
       parse_token( token );
     }
+
+    pop_all();
+
+    stdout.printf( "----------------------------------\n" );
+    stdout.printf( "FILTER: %s\n", and_filter.to_string() );
 
     return( (_stack.length() == 1) && !in_double && !in_single && !skip_char );
 
@@ -88,7 +95,12 @@ public class SmartParser {
   // Populates the given smart notebook with the matching notes
   // within the list of available notebooks.
   public void populate_smart_notebook( SmartNotebook notebook ) {
-    _notebooks.populate_smart_notebook( notebook );
+    unowned var last = _stack.last();
+    if( (last != null) && ((last.data as SmartLogicFilter) != null) ) {
+      notebook.filter = (SmartLogicFilter)last.data;
+      _notebooks.populate_smart_notebook( notebook );
+      _stack.remove( last.data );
+    }
   }
 
   //-------------------------------------------------------------
@@ -112,8 +124,20 @@ public class SmartParser {
       var pop_filter = (last.data as SmartLogicFilter);
       if( pop_filter != null ) {
         _stack.remove( last.data );
-        add_filter_to_stack_top( pop_filter );
+        if( (((pop_filter as FilterAnd) != null) || ((pop_filter as FilterOr) != null)) && (pop_filter.size() == 1) ) {
+          add_filter_to_stack_top( pop_filter.get_filter( 0 ) );
+        } else {
+          add_filter_to_stack_top( pop_filter );
+        }
       }
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Pops all of the stack items until the stack is a length of 1.
+  private void pop_all() {
+    while( _stack.length() > 1 ) {
+      pop_filter();
     }
   }
 
@@ -141,11 +165,12 @@ public class SmartParser {
       // and the top of the stack is not an OR filter, we need to create the OR, place
       // the stack top inside of the OR and make the OR the current top
       unowned var last = _stack.last();
-      if( last != null ) {
+      if( (last != null) && ((last.data as FilterOr) == null) ) {
         var or_filter  = new FilterOr();
         var and_filter = new FilterAnd();
+        var top_filter = last.data;
         _stack.remove( last.data );
-        or_filter.add_filter( (FilterAnd)last.data );
+        or_filter.add_filter( (FilterAnd)top_filter );
         _stack.append( or_filter );
         _stack.append( and_filter );
       }

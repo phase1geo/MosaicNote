@@ -47,6 +47,7 @@ public class FilterTag : SmartFilter {
   private string        _tag;
   private FilterTagType _type;
 
+  //-------------------------------------------------------------
   // Default constructor
   public FilterTag( string tag, FilterTagType type ) {
     base();
@@ -54,15 +55,18 @@ public class FilterTag : SmartFilter {
     _type = type;
   }
 
-  // Constructo from XML
+  //-------------------------------------------------------------
+  // Constructor from XML
   public FilterTag.from_xml( Xml.Node* node ) {
     base.from_xml( node );
     load( node );
   }
 
+  //-------------------------------------------------------------
   // Checks the note to see if it matches or does not match the
   // stored tag value.
   public override bool check_note( Note note ) {
+    stdout.printf( "In FilterTag, tag: %s, type: %s\n", _tag, _type.to_string() );
     switch( _type ) {
       case FilterTagType.MATCHES        :  return( note.tags.contains_tag( _tag ) );
       case FilterTagType.DOES_NOT_MATCH :  return( !note.tags.contains_tag( _tag ) );
@@ -70,6 +74,14 @@ public class FilterTag : SmartFilter {
     }
   }
 
+  //-------------------------------------------------------------
+  // Returns the contents of this filter as a string.
+  public override string to_string() {
+    return( "tag:" + ((_type == FilterTagType.MATCHES) ? "" : "!") + _tag );
+  }
+
+  //-------------------------------------------------------------
+  // Saves the contents of this filter as XML.
   public override Xml.Node* save() {
     Xml.Node* node = new Xml.Node( null, "tag" );
     node->set_prop( "tag", _tag );
@@ -77,6 +89,8 @@ public class FilterTag : SmartFilter {
     return( node );
   }
 
+  //-------------------------------------------------------------
+  // Loads the contents of this filter from XML.
   public override void load( Xml.Node* node ) {
     var t = node->get_prop( "tag" );
     if( t != null ) {

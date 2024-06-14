@@ -47,7 +47,15 @@ public class FilterNot : SmartLogicFilter {
   // Checks the given note to see if it matches all of the smart
   // filters stored in this filter.
   public override bool check_note( Note note ) {
-    return( !filters.index( 0 ).check_note( note ) );
+    var result = !filters.index( 0 ).check_note( note );
+    stdout.printf( "  In FilterNot.check_note, result: %s\n", result.to_string() );
+    return( result );
+  }
+
+  //-------------------------------------------------------------
+  // Returns this filter as a string.
+  public override string to_string() {
+    return( "!" + to_string_with_connector( "" ) );
   }
 
   //-------------------------------------------------------------

@@ -21,21 +21,33 @@
 
 public class FilterTitle : SmartTextFilter {
 
+  //-------------------------------------------------------------
   // Default constructor
   public FilterTitle( TextMatchType match_type, string pattern ) {
     base( match_type, pattern );
   }
 
+  //-------------------------------------------------------------
   // Constructor from XML
   public FilterTitle.from_xml( Xml.Node* node ) {
     base.from_xml( node );
   }
 
+  //-------------------------------------------------------------
   // Checks the note to see if it matches the title text.
   public override bool check_note( Note note ) {
-    return( check_text( note.title ) );
+    var result = check_text( note.title );
+    stdout.printf( "  In FilterTitle.check_note, result: %s\n", result.to_string() );
+    return( result );
   }
 
+  //-------------------------------------------------------------
+  // Returns the contents of this filter as a string
+  public override string to_string() {
+    return( "title:" + base.to_string() );
+  }
+
+  //-------------------------------------------------------------
   // Saves this filter to XML format
   public override Xml.Node* save() {
     Xml.Node* node = new Xml.Node( null, "title" );
@@ -43,6 +55,7 @@ public class FilterTitle : SmartTextFilter {
     return( node );
   }
 
+  //-------------------------------------------------------------
   // Loads this filter from XML format
   public override void load( Xml.Node* node ) {
     load_from_node( node );

@@ -38,11 +38,19 @@ public class FilterAnd : SmartLogicFilter {
   // filters stored in this filter.
   public override bool check_note( Note note ) {
     for( int i=0; i<filters.length; i++ ) {
-      if( !filters.index( i ).check_note( note ) ) {
+      var result = filters.index( i ).check_note( note );
+      stdout.printf( "  In FilterAnd.check_note, i: %d, result: %s\n", i, result.to_string() );
+      if( !result ) {
         return( false );
       }
     }
     return( true );
+  }
+
+  //-------------------------------------------------------------
+  // Returns this filter as a string.
+  public override string to_string() {
+    return( "&" + to_string_with_connector( "&" ) );
   }
 
   //-------------------------------------------------------------

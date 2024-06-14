@@ -21,26 +21,40 @@
 
 public class FilterUpdated : SmartDateFilter {
 
+  //-------------------------------------------------------------
   // Default constructor
   public FilterUpdated() {
     base();
   }
 
-  // Constructo from XML
+  //-------------------------------------------------------------
+  // Constructor from XML
   public FilterUpdated.from_xml( Xml.Node* node ) {
     base.from_xml( node );
   }
 
+  //-------------------------------------------------------------
+  // Returns true if the given note matches our criteria.
   public override bool check_note( Note note ) {
     return( check_date( note.updated ) );
   }
 
+  //-------------------------------------------------------------
+  // Returns the contents of this filter as a string.
+  public override string to_string() {
+    return( "updated:" + base.to_string() );
+  }
+
+  //-------------------------------------------------------------
+  // Saves the contents of this filter in XML
   public override Xml.Node* save() {
     Xml.Node* node = new Xml.Node( null, "updated" );
     save_to_node( node );
     return( node );
   }
 
+  //-------------------------------------------------------------
+  // Loads the contents of this filter from XML
   public override void load( Xml.Node* node ) {
     load_from_node( node );
   }

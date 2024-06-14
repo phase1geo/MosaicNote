@@ -50,23 +50,28 @@ public enum TextMatchType {
 
 }
 
+//-------------------------------------------------------------
+// SmartFilter that specifically has options for matching text.
 public class SmartTextFilter : SmartFilter {
 
   public TextMatchType match_type { get; set; default = TextMatchType.CONTAINS; }
   public string        pattern    { get; set; default = ""; }
 
+  //-------------------------------------------------------------
   // Default constructor
   public SmartTextFilter( TextMatchType match_type, string pattern ) {
     this.match_type = match_type;
     this.pattern    = pattern;
   }
 
+  //-------------------------------------------------------------
   // Constructor from XML format
   public SmartTextFilter.from_xml( Xml.Node* node ) {
     base.from_xml( node );
     load_from_node( node );
   }
 
+  //-------------------------------------------------------------
   // Returns whether the given text matches this text search filter.
   protected bool check_text( string text ) {
     if( match_type == TextMatchType.CONTAINS ) {
@@ -76,12 +81,20 @@ public class SmartTextFilter : SmartFilter {
     }
   }
 
+  //-------------------------------------------------------------
+  // Returns the contents of this text filter as a string.
+  public override string to_string() {
+    return( (match_type == TextMatchType.REGEXP) ? "re[%s]".printf( pattern ) : pattern );
+  }
+
+  //-------------------------------------------------------------
   // Saves the filter setup in XML format
   public void save_to_node( Xml.Node* node ) {
     node->set_prop( "match-type", match_type.to_string() );
     node->set_prop( "pattern",    pattern );
   }
 
+  //-------------------------------------------------------------
   // Loads the filter content from XML format
   public void load_from_node( Xml.Node* node ) {
 

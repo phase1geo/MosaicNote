@@ -46,6 +46,12 @@ public class FilterOr : SmartLogicFilter {
   }
 
   //-------------------------------------------------------------
+  // Returns this filter as a string.
+  public override string to_string() {
+    return( "|" + to_string_with_connector( "|" ) );
+  }
+
+  //-------------------------------------------------------------
   // Saves the contents of this filter in XML format.
   public override Xml.Node* save() {
     Xml.Node* node = new Xml.Node( null, "logic-or" );

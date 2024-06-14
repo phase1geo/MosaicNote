@@ -185,6 +185,8 @@ public enum DateMatchType {
 
 }
 
+//-------------------------------------------------------------
+// Base filter class that is used for date-based filtering.
 public class SmartDateFilter : SmartFilter {
 
   private DateMatchType _match_type = DateMatchType.IS;
@@ -192,14 +194,17 @@ public class SmartDateFilter : SmartFilter {
   private int           _num        = 0;
   private DateTime      _exp        = new DateTime.now_local();
 
+  //-------------------------------------------------------------
   // Default constructor
   public SmartDateFilter() {}
 
+  //-------------------------------------------------------------
   // Constructor from XML format
   public SmartDateFilter.from_xml( Xml.Node* node ) {
     load_from_node( node );
   }
 
+  //-------------------------------------------------------------
   // Returns whether or not the given DateTime matches the
   // current criteria.
   public bool check_date( DateTime date ) {
@@ -214,6 +219,13 @@ public class SmartDateFilter : SmartFilter {
 
   }
 
+  //-------------------------------------------------------------
+  // Returns the contents of this filter as a string.
+  public override string to_string() {
+    return( "" );
+  }
+
+  //-------------------------------------------------------------
   // Saves the filter setup in XML format
   protected void save_to_node( Xml.Node* node ) {
 
@@ -228,6 +240,7 @@ public class SmartDateFilter : SmartFilter {
 
   }
 
+  //-------------------------------------------------------------
   // Loads the filter content from XML format
   public void load_from_node( Xml.Node* node ) {
 

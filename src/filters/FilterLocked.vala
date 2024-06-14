@@ -23,30 +23,43 @@ public class FilterLocked : SmartFilter {
 
   private bool _locked = true;
 
+  //-------------------------------------------------------------
   // Default constructor
   public FilterLocked( bool locked ) {
     base();
     _locked = locked;
   }
 
+  //-------------------------------------------------------------
   // Constructo from XML
   public FilterLocked.from_xml( Xml.Node* node ) {
     base.from_xml( node );
     load( node );
   }
 
+  //-------------------------------------------------------------
   // Checks the note to see if it matches or does not match the
   // stored tag value.
   public override bool check_note( Note note ) {
     return( note.locked == _locked );
   }
 
+  //-------------------------------------------------------------
+  // Returns the contents of this filter as a string.
+  public override string to_string() {
+    return( (_locked ? "" : "!") + "locked" );
+  }
+
+  //-------------------------------------------------------------
+  // Saves the contents of this filter as XML
   public override Xml.Node* save() {
     Xml.Node* node = new Xml.Node( null, "locked" );
     node->set_prop( "value", _locked.to_string() );
     return( node );
   }
 
+  //-------------------------------------------------------------
+  // Loads the contents of this filter from XML
   public override void load( Xml.Node* node ) {
     var v = node->get_prop( "value" );
     if( v != null ) {

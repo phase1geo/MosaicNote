@@ -23,18 +23,21 @@ public class FilterItem : SmartFilter {
 
   public NoteItemType item_type { get; set; default = NoteItemType.MARKDOWN; }
 
+  //-------------------------------------------------------------
   // Default constructor
   public FilterItem( NoteItemType item_type ) {
     base();
     this.item_type = item_type;
   }
 
+  //-------------------------------------------------------------
   // Constructor from XML
   public FilterItem.from_xml( Xml.Node* node ) {
     base.from_xml( node );
     load( node );
   }
 
+  //-------------------------------------------------------------
   // Checks the note to see if it matches the title text.
   public override bool check_note( Note note ) {
     for( int i=0; i<note.size(); i++ ) {
@@ -46,6 +49,13 @@ public class FilterItem : SmartFilter {
     return( false );
   }
 
+  //-------------------------------------------------------------
+  // Outputs the contents of this filter as a string
+  public override string to_string() {
+    return( "item:" + item_type.to_string() );
+  }
+
+  //-------------------------------------------------------------
   // Saves this filter to XML format
   public override Xml.Node* save() {
     Xml.Node* node = new Xml.Node( null, "item" );
@@ -53,6 +63,7 @@ public class FilterItem : SmartFilter {
     return( node );
   }
 
+  //-------------------------------------------------------------
   // Loads this filter from XML format
   public override void load( Xml.Node* node ) {
     var t = node->get_prop( "type" );

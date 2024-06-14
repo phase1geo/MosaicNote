@@ -54,8 +54,12 @@ public class Tags {
 
 	// Returns true if the list of tags contains the given tag
 	public bool contains_tag( string tag ) {
-		uint pos;
-		return( _tags.binary_search( tag, strcmp, out pos ) );
+		for( int i=0; i<_tags.length; i++ ) {
+			if( tag == _tags.index( i ) ) {
+				return( true );
+			}
+		}
+		return( false );
 	}
 
 	// Adds the tag if it is unique to this list
@@ -67,9 +71,11 @@ public class Tags {
 
 	// Removes the tag from the given list if it exists
 	public void delete_tag( string tag ) {
-		uint pos;
-		if( _tags.binary_search( tag, strcmp, out pos ) ) {
-      _tags.remove_index( pos );
+		for( int i=0; i<_tags.length; i++ ) {
+			if( tag == _tags.index( i ) ) {
+				_tags.remove_index( i );
+				return;
+			}
 		}
 	}
 

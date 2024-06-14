@@ -50,7 +50,7 @@ public enum SmartNotebookType {
 
 public class SmartNotebook : BaseNotebook {
 
-  private FilterAnd          _filters;
+  private SmartLogicFilter   _filter;
   private Gee.HashSet<int>   _notes;
   private bool               _modified = false;
   private SmartNotebookType  _type     = SmartNotebookType.USER;
@@ -62,11 +62,20 @@ public class SmartNotebook : BaseNotebook {
     }
   }
 
+  public SmartLogicFilter filter {
+    get {
+      return( _filter );
+    }
+    set {
+      _filter = value;
+    }
+  }
+
   //-------------------------------------------------------------
   // Default constructor
   public SmartNotebook( string name, SmartNotebookType type, NotebookTree notebooks ) {
     base( name );
-    _filters   = new FilterAnd();
+    _filter    = new FilterAnd();
     _notes     = new Gee.HashSet<int>();
     _type      = type;
     _notebooks = notebooks;
@@ -76,7 +85,7 @@ public class SmartNotebook : BaseNotebook {
   // Constructor from XML data
   public SmartNotebook.from_xml( Xml.Node* node, NotebookTree notebooks ) {
     base( "" );
-    _filters   = new FilterAnd();
+    _filter    = new FilterAnd();
     _notes     = new Gee.HashSet<int>();
     _notebooks = notebooks;
 
@@ -107,25 +116,25 @@ public class SmartNotebook : BaseNotebook {
   //-------------------------------------------------------------
   // Returns the number of stored filters
   public int filter_size() {
-    return( _filters.size() );
+    return( _filter.size() );
   }
 
   //-------------------------------------------------------------
   // Returns the filter at the given index location
-  public SmartFilter get_filter( int index ) {
-    return( _filters.get_filter( index ) );
+  public SmartFilter filter_get( int index ) {
+    return( _filter.get_filter( index ) );
   }
 
   //-------------------------------------------------------------
   // Adds the given smart filter to the list of filters
   public void add_filter( SmartFilter filter ) {
-    _filters.add_filter( filter );
+    _filter.add_filter( filter );
   }
 
   //-------------------------------------------------------------
   // Removes the filter at the given index
   public void remove_filter( int index ) {
-    _filters.remove_filter( index );
+    _filter.remove_filter( index );
   }
 
   //-------------------------------------------------------------
@@ -133,14 +142,20 @@ public class SmartNotebook : BaseNotebook {
   // add support for this note
   public bool handle_note( Note note ) {
 
+    stdout.printf( "CHECKING NOTE: %s\n", note.title );
+
     // Check to see if the note passes all of the stored filters
-    if( _filters.check_note( note ) ) {
+    if( _filter.check_note( note ) ) {
+
+      stdout.printf( "  ADDING NOTE\n" );
 
       var modified = _notes.add( note.id );
       _modified |= modified;
       return( modified );
 
     } else {
+
+      stdout.printf( "  REMOVING NOTE\n" );
 
       var modified = _notes.remove( note.id );
       _modified |= modified;
@@ -167,7 +182,7 @@ public class SmartNotebook : BaseNotebook {
     node->set_prop( "type", _type.to_string() );
     node->set_prop( "ids", string.joinv( ",", ids ) );
 
-    node->add_child( _filters.save() );
+    node->add_child( _filter.save() );
 
     _modified = false;
 
@@ -199,7 +214,7 @@ public class SmartNotebook : BaseNotebook {
 
     for( Xml.Node* it = node->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "filter-and") ) {
-        _filters.load( it );
+        _filter.load( it );
       }
     }
 

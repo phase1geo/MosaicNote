@@ -116,6 +116,7 @@ public class Notebook : BaseNotebook {
   // the smart criteria.
   public void populate_smart_notebook( SmartNotebook notebook ) {
     for( int i=0; i<_notes.length; i++ ) {
+      stdout.printf( "Note: %s\n", _notes.index( i ).title );
       notebook.handle_note( _notes.index( i ) );
     }
   }

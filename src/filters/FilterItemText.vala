@@ -23,18 +23,21 @@ public class FilterItemText : SmartTextFilter {
 
   public NoteItemType item_type { get; set; default = NoteItemType.MARKDOWN; }
 
+  //-------------------------------------------------------------
   // Default constructor
   public FilterItemText( NoteItemType item_type, TextMatchType match_type, string pattern ) {
     base( match_type, pattern );
     this.item_type = item_type;
   }
 
+  //-------------------------------------------------------------
   // Constructor from XML
   public FilterItemText.from_xml( Xml.Node* node ) {
     base.from_xml( node );
     load( node );
   }
 
+  //-------------------------------------------------------------
   // Checks the note to see if it matches the title text.
   public override bool check_note( Note note ) {
     for( int i=0; i<note.size(); i++ ) {
@@ -46,6 +49,13 @@ public class FilterItemText : SmartTextFilter {
     return( false );
   }
 
+  //-------------------------------------------------------------
+  // Returns the contents of this filter as a string
+  public override string to_string() {
+    return( "content[%s]:%s".printf( item_type.to_string(), base.to_string() ) );
+  }
+
+  //-------------------------------------------------------------
   // Saves this filter to XML format
   public override Xml.Node* save() {
     Xml.Node* node = new Xml.Node( null, "item-text" );
@@ -54,6 +64,7 @@ public class FilterItemText : SmartTextFilter {
     return( node );
   }
 
+  //-------------------------------------------------------------
   // Loads this filter from XML format
   public override void load( Xml.Node* node ) {
     var t = node->get_prop( "type" );

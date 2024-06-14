@@ -21,26 +21,40 @@
 
 public class FilterViewed : SmartDateFilter {
 
+  //-------------------------------------------------------------
   // Default constructor
   public FilterViewed() {
     base();
   }
 
-  // Constructo from XML
+  //-------------------------------------------------------------
+  // Constructor from XML
   public FilterViewed.from_xml( Xml.Node* node ) {
     base.from_xml( node );
   }
 
+  //-------------------------------------------------------------
+  // Returns true if this note matches this filter's criteria.
   public override bool check_note( Note note ) {
     return( check_date( note.viewed ) );
   }
 
+  //-------------------------------------------------------------
+  // Returns the contents of this filter as a string.
+  public override string to_string() {
+    return( "viewed:" + base.to_string() );
+  }
+
+  //-------------------------------------------------------------
+  // Saves the contents of this filter as XML
   public override Xml.Node* save() {
     Xml.Node* node = new Xml.Node( null, "viewed" );
     save_to_node( node );
     return( node );
   }
 
+  //-------------------------------------------------------------
+  // Loads the contents of this filter from XML
   public override void load( Xml.Node* node ) {
     load_from_node( node );
   }

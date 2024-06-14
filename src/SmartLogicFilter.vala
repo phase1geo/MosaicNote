@@ -65,6 +65,16 @@ public class SmartLogicFilter : SmartFilter {
   }
 
   //-------------------------------------------------------------
+  // Helper utility for derived logic filters.
+  protected string to_string_with_connector( string connector ) {
+    string[] parts = {};
+    for( int i=0; i<filters.length; i++ ) {
+      parts += filters.index( i ).to_string();
+    }
+    return( "(" + string.joinv( (" " + connector + " "), parts ) + ")" );
+  }
+
+  //-------------------------------------------------------------
   // Saves the filter setup in XML format
   protected virtual void save_to_node( Xml.Node* node ) {
     for( int i=0; i<filters.length; i++ ) {
