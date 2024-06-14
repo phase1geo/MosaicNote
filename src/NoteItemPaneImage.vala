@@ -93,10 +93,6 @@ public class NoteItemPaneImage : NoteItemPane {
 
     image_focus.enter.connect(() => {
       set_as_current();
-      box.add_css_class( "active-item" );
-    });
-    image_focus.leave.connect(() => {
-      box.remove_css_class( "active-item" );
     });
 
     handle_key_events( _image );

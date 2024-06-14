@@ -146,11 +146,6 @@ public class NoteItemPaneUML : NoteItemPane {
 
     image_focus.enter.connect(() => {
       set_as_current();
-      add_css_class( "active-item" );
-    });
-
-    image_focus.leave.connect(() => {
-      remove_css_class( "active-item" );
     });
 
     // Load the image and make it visible (if it exists); otherwise, display the input field.

@@ -178,6 +178,10 @@ public class NoteItemPanes : Box {
     });
 
     pane.set_as_current.connect(() => {
+      if( _current_item != -1 ) {
+        var other_pane = (NoteItemPane)Utils.get_child_at_index( this, _current_item );
+        other_pane.clear_current();
+      }
       _current_item = Utils.get_child_index( this, pane );
       item_selected( pane );
     });
@@ -214,6 +218,16 @@ public class NoteItemPanes : Box {
     // Make sure that the new pane has the focus
     pane.grab_item_focus( TextCursorPlacement.START );
 
+  }
+
+  //-------------------------------------------------------------
+  // Clears the current item.
+  public void clear_current_item() {
+    if( _current_item != -1 ) {
+      var pane = (NoteItemPane)Utils.get_child_at_index( this, _current_item );
+      pane.clear_current();
+      _current_item = -1;
+    }
   }
 
   //-------------------------------------------------------------

@@ -177,6 +177,8 @@ public class NotePanel : Box {
     tbox.append( export );
     tbox.append( _favorite );
 
+    handle_nonitem_focus( tbox );
+
     string[] item_types = {};
     for( int i=0; i<NoteItemType.NUM; i++ ) {
       var type = (NoteItemType)i;
@@ -203,10 +205,13 @@ public class NotePanel : Box {
       halign = Align.FILL,
       hexpand = true
     };
+
     _toolbar_stack.add_named( new ToolbarItem(), "none" );
+
     for( int i=0; i<NoteItemType.NUM; i++ ) {
       var type = (NoteItemType)i;
-      _toolbar_stack.add_named( type.create_toolbar(), type.to_string() );
+      var toolbar = type.create_toolbar();
+      _toolbar_stack.add_named( toolbar, type.to_string() );
     }
     _toolbar_stack.visible_child_name = "none";
 
@@ -234,6 +239,8 @@ public class NotePanel : Box {
     };
     _title.add_css_class( "note-title" );
     _title.add_css_class( "themed" );
+
+    handle_nonitem_focus( _title );
 
     _title.activate.connect(() => {
       if( _note != null ) {
@@ -283,6 +290,22 @@ public class NotePanel : Box {
 
 	}
 
+  //-------------------------------------------------------------
+  // Should be called for widgets that are not associated with
+  // note item panes.
+  private void handle_nonitem_focus( Widget w ) {
+
+    var focus = new EventControllerFocus();
+    w.add_controller( focus );
+
+    focus.enter.connect(() => {
+      _item_selector.sensitive = false;
+      _content.clear_current_item();
+      _toolbar_stack.visible_child_name = "none";
+    });
+
+  }
+
   // Populates the note panel UI with the contents of the provided note.  If note is
   // null, clears the UI.
   public void populate_with_note( Note? note ) {
@@ -313,14 +336,18 @@ public class NotePanel : Box {
 
   }
 
-  private void set_toolbar_for_pane( NoteItemPane pane ) {
-    if( pane.item.item_type.is_text() ) {
+  private void set_toolbar_for_pane( NoteItemPane? pane ) {
+    if( pane != null ) {
       var toolbar = (ToolbarItem)_toolbar_stack.get_child_by_name( pane.item.item_type.to_string() );
+      _item_selector.sensitive = true;
       toolbar.text = pane.get_text();
       toolbar.item = pane.item;
       _ignore = (_item_selector.selected != pane.item.item_type);
       _item_selector.selected = pane.item.item_type;
       _toolbar_stack.visible_child_name = pane.item.item_type.to_string();
+    } else {
+      _item_selector.sensitive = false;
+      _toolbar_stack.visible_child_name = "none";
     }
   }
 

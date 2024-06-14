@@ -79,6 +79,16 @@ public class NoteItemPane : Box {
     // Create the UI
     create_pane();
 
+    set_as_current.connect(() => {
+      add_css_class( "active-item" );
+    });
+
+  }
+
+  //-------------------------------------------------------------
+  // Clears the current indicator
+  public void clear_current() {
+    remove_css_class( "active-item" );
   }
 
   //-------------------------------------------------------------
@@ -391,12 +401,10 @@ public class NoteItemPane : Box {
         set_spellchecker();
       }
       set_as_current();
-      add_css_class( "active-item" );
     });
 
     focus.leave.connect(() => {
       item.content = buffer.text;
-      remove_css_class( "active-item" );
     });
 
     MosaicNote.settings.changed["editor-line-spacing"].connect(() => {
