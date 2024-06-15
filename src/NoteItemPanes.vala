@@ -42,7 +42,7 @@ public class NoteItemPanes : Box {
 
     Object(
       orientation: Orientation.VERTICAL,
-      spacing: 10
+      spacing: 5
     );
 
     _win = win;
@@ -137,6 +137,7 @@ public class NoteItemPanes : Box {
     pane.add_item.connect((above, type) => {
       var index = Utils.get_child_index( this, pane );
       add_new_item( ((type == null) ? NoteItemType.MARKDOWN : type), (above ? index : (index + 1)) );
+      pane.set_as_current();
     });
 
     pane.remove_item.connect((forward) => {

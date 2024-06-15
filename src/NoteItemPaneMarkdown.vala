@@ -93,7 +93,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
   //-------------------------------------------------------------
   // Adds a new Markdown item at the given position in the content area
-  protected override void create_pane() {
+  protected override Widget create_pane() {
 
     _text = create_text( "mosaic-markdown" );
     _text.add_css_class( "markdown-text" );
@@ -139,7 +139,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
     handle_key_events( _text );
 
-    append( _text );
+    return( _text );
 
   }
 

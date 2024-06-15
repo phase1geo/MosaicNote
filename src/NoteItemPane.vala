@@ -39,6 +39,12 @@ public class NoteItemPane : Box {
   private NoteItem     _item;
   private SpellChecker _spell;
 
+  private const GLib.ActionEntry[] action_entries = {
+    { "action_add_item_above", action_add_item_above },
+    { "action_add_item_below", action_add_item_below },
+    { "action_delete_item",    action_delete_item },
+  };
+
   protected MainWindow win {
     get {
       return( _win );
@@ -64,9 +70,9 @@ public class NoteItemPane : Box {
 
     Object(
       orientation: Orientation.VERTICAL,
-      spacing: 10,
-      margin_top: 5,
-      margin_bottom: 5,
+      spacing: 0,
+      // margin_top: 5,
+      // margin_bottom: 5,
       margin_start: 5,
       margin_end: 5,
       halign: Align.FILL
@@ -77,12 +83,29 @@ public class NoteItemPane : Box {
     _spell = spell;
 
     // Create the UI
-    create_pane();
+    create_bar();
 
+    // If we are being set as the current item, make sure that we are drawn as the current item
     set_as_current.connect(() => {
       add_css_class( "active-item" );
     });
 
+    // Set the stage for menu actions
+    var actions = new SimpleActionGroup ();
+    actions.add_action_entries( action_entries, this );
+    insert_action_group( "item", actions );
+
+    // Add keyboard shortcuts
+    add_keyboard_shortcuts();
+
+  }
+
+  //-------------------------------------------------------------
+  // Adds keyboard shortcuts for the menu actions
+  private void add_keyboard_shortcuts() {
+    _win.application.set_accels_for_action( "item.action_add_item_above", { "<Control><Shift>Return" } );
+    _win.application.set_accels_for_action( "item.action_add_item_below", { "<Shift>Return" } );
+    _win.application.set_accels_for_action( "item.action_delete_item",    { "<Control>Delete" } );
   }
 
   //-------------------------------------------------------------
@@ -449,7 +472,81 @@ public class NoteItemPane : Box {
 
   }
 
+  //-------------------------------------------------------------
+  // Adds a bar to the top of each section that will allow us to 
+  // add UI elements to control the panel and provide an area for
+  // panel data (if needed).
+  private void create_bar() {
+
+    var pane = create_pane();
+
+    var expand = new Button.with_label( item.expanded ? "\u23f7" : "\u23f5" ) {
+      has_frame = false,
+      halign = Align.START
+    };
+
+    expand.clicked.connect(() => {
+      item.expanded = !item.expanded;
+      pane.visible  = item.expanded;
+      expand.label  = item.expanded ? "\u23f7" : "\u23f5";
+    });
+
+    var add_menu = new GLib.Menu();
+    add_menu.append( _( "Add Block Above" ), "item.action_add_item_above" );
+    add_menu.append( _( "Add Block Below" ), "item.action_add_item_below" );
+
+    var del_menu = new GLib.Menu();
+    del_menu.append( _( "Delete Block" ), "item.action_delete_item" );
+
+    var menu = new GLib.Menu();
+    menu.append_section( null, add_menu );
+    menu.append_section( null, del_menu );
+
+    var more = new MenuButton() {
+      halign = Align.END,
+      hexpand = true,
+      icon_name = "view-more-horizontal-symbolic",
+      menu_model = menu
+    };
+
+    var box = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign        = Align.FILL,
+      margin_start  = 5,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 5
+    };
+
+    box.append( expand );
+    box.append( more );
+
+    append( box );
+    append( pane );
+
+  }
+
+  //-------------------------------------------------------------
   // Adds a new UML item at the given position in the content area
-  protected virtual void create_pane() {}
+  protected virtual Widget create_pane() {
+    return( null );
+  }
+
+  //-------------------------------------------------------------
+  // Adds an item above this item
+  private void action_add_item_above() {
+    add_item( true, item.item_type );
+  }
+
+  //-------------------------------------------------------------
+  // Adds an item below this item
+  private void action_add_item_below() {
+    add_item( false, item.item_type );
+  }
+
+  //-------------------------------------------------------------
+  // Removes the current item
+  private void action_delete_item() {
+    remove_item( true );
+  }
 
 }

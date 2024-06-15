@@ -50,7 +50,7 @@ public class NoteItemPaneUML : NoteItemPane {
   }
 
   // Adds a new UML item at the given position in the content area
-  protected override void create_pane() {
+  protected override Widget create_pane() {
 
     var uml_item = (NoteItemUML)item;
 
@@ -159,7 +159,7 @@ public class NoteItemPaneUML : NoteItemPane {
     handle_key_events( _text );
     handle_key_events( _image );
 
-    append( _stack );
+    return( _stack );
 
   }
 

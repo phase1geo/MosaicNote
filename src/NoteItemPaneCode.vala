@@ -53,7 +53,7 @@ public class NoteItemPaneCode : NoteItemPane {
     return( css_data );
   }
 
-  protected override void create_pane() {
+  protected override Widget create_pane() {
 
     var code_item = (NoteItemCode)item;
 
@@ -73,7 +73,7 @@ public class NoteItemPaneCode : NoteItemPane {
     // Add the handle events
     handle_key_events( _text );
 
-    append( _text );
+    return( _text );
 
   }
 

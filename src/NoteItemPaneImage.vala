@@ -55,7 +55,7 @@ public class NoteItemPaneImage : NoteItemPane {
 
   }
 
-  protected override void create_pane() {
+  protected override Widget create_pane() {
 
     var image_item  = (NoteItemImage)item;
     var image_click = new GestureClick();
@@ -97,7 +97,7 @@ public class NoteItemPaneImage : NoteItemPane {
 
     handle_key_events( _image );
 
-    append( box );
+    return( box );
 
   }
 

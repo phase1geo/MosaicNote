@@ -131,6 +131,7 @@ public class NoteItem {
 	public Note         note      { get; private set; }
 	public int          id        { get; private set; }
   public NoteItemType item_type { get; private set; default = NoteItemType.MARKDOWN; }
+  public bool         expanded  { get; set; default = true; }
 	public bool         modified  { get; protected set; default = false; }
 
 	public signal void changed();
@@ -243,6 +244,7 @@ public class NoteItem {
 	public virtual Xml.Node* save() {
 		Xml.Node* node = new Xml.Node( null, item_type.to_string() );
 		node->set_prop( "id", id.to_string() );
+    node->set_prop( "expanded", expanded.to_string() );
     node->add_content( content );
 		modified = false;
 		return( node );
@@ -256,6 +258,10 @@ public class NoteItem {
   	} else {
   		id = current_id++;
   	}
+    var e = node->get_prop( "expanded" );
+    if( e != null ) {
+      expanded = bool.parse( e );
+    }
     _content = node->get_content();
   }
 
