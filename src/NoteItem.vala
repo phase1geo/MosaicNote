@@ -126,12 +126,12 @@ public class NoteItem {
   public static int current_id = 0;
   private const int max_image_width = 800;
 
-  private string _content = "";
+  private string _content  = "";
+  private bool   _expanded = true;
 
 	public Note         note      { get; private set; }
 	public int          id        { get; private set; }
   public NoteItemType item_type { get; private set; default = NoteItemType.MARKDOWN; }
-  public bool         expanded  { get; set; default = true; }
 	public bool         modified  { get; protected set; default = false; }
 
 	public signal void changed();
@@ -149,6 +149,19 @@ public class NoteItem {
     }
   }
 
+  public bool expanded {
+    get {
+      return( _expanded );
+    }
+    set {
+      if( _expanded != value ) {
+        _expanded = value;
+        modified = true;
+      }
+    }
+  }
+
+  //-------------------------------------------------------------
 	// Default constructor
 	public NoteItem( Note note, NoteItemType type ) {
 		this.id        = current_id++;
@@ -156,11 +169,13 @@ public class NoteItem {
     this.item_type = type;
 	}
 
+  //-------------------------------------------------------------
 	// Constructor from XML input
 	public NoteItem.from_xml( Xml.Node* node ) {
 		load( node );
 	}
 
+  //-------------------------------------------------------------
   // Copy method (can be used to convert one item to another as well)
   public virtual void copy( NoteItem item ) {
   	this.note     = item.note;
@@ -168,16 +183,19 @@ public class NoteItem {
     this.modified = item.modified;
   }
 
+  //-------------------------------------------------------------
 	// Used for string searching
 	public virtual bool search( string str ) {
     return( content.contains( str ) );
 	}
 
+  //-------------------------------------------------------------
 	// Returns the markdown text for this item
 	public virtual string to_markdown( bool pandoc ) {
 		return( "" );
 	}
 
+  //-------------------------------------------------------------
 	// If we are generating for pandoc, adjusts the given markdown image text
 	// if the given image width exceeds the maximum allowed width.
 	protected string format_for_width( string md, string image_file, bool pandoc ) {
@@ -190,21 +208,25 @@ public class NoteItem {
 		return( md );
 	}
 
+  //-------------------------------------------------------------
   // Returns the directory that contains the resource in the notebook associated with this note item's note.
   protected string get_resource_dir() {
     return( Path.build_filename( note.notebook.notebook_directory( note.notebook.id ), "resources" ) );
   }
 
+  //-------------------------------------------------------------
 	// Returns the filename of the resource file associated with this note item
   protected string get_resource_path( string extension ) {
   	return( Path.build_filename( get_resource_dir(), "resource-%d.%s".printf( id, extension ) ) );
   }
 
+  //-------------------------------------------------------------
   // Returns the resource filename
   public virtual string get_resource_filename() {
     return( "" );
   }
 
+  //-------------------------------------------------------------
   // Saves the given resource into the resource directory
   protected bool save_as_resource( File from_file, bool link ) {
     Utils.create_dir( get_resource_dir() );
@@ -221,6 +243,7 @@ public class NoteItem {
     return( false );
   }
 
+  //-------------------------------------------------------------
   // Deletes the resource associated with this note item
   public bool delete_resource() {
     var resource = get_resource_filename();
@@ -240,6 +263,7 @@ public class NoteItem {
     return( false );
   }
 
+  //-------------------------------------------------------------
 	// Saves this note item
 	public virtual Xml.Node* save() {
 		Xml.Node* node = new Xml.Node( null, item_type.to_string() );
@@ -250,6 +274,7 @@ public class NoteItem {
 		return( node );
 	}
 
+  //-------------------------------------------------------------
   // Loads the content from XML format
   protected virtual void load( Xml.Node* node ) {
   	var i = node->get_prop( "id" );

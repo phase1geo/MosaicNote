@@ -26,6 +26,7 @@ public class NoteItemPaneUML : NoteItemPane {
   private GtkSource.View _text;
   private Picture        _image;
   private Stack          _stack;
+  private Box            _hbbox;
 
 	// Default constructor
 	public NoteItemPaneUML( MainWindow win, NoteItem item, SpellChecker spell ) {
@@ -49,6 +50,55 @@ public class NoteItemPaneUML : NoteItemPane {
     }
   }
 
+  protected override Widget create_header() {
+
+    var entry = new Entry() {
+      halign = Align.FILL,
+      hexpand = true,
+      placeholder_text = _( "Description (Optional)" ),
+      has_frame = false
+    };
+
+    var help = new Button.from_icon_name( "dialog-information-symbolic" ) {
+      halign = Align.END,
+      tooltip_text = _( "Open UML documentation in browser" )
+    };
+
+    help.clicked.connect(() => {
+      Utils.open_url( "https://plantuml.com/" );
+    });
+
+    var show = new Button.from_icon_name( _( "preferences-color-symbolic" ) ) {
+      halign = Align.END,
+      tooltip_text = _( "Generate diagram" )
+    };
+
+    show.clicked.connect(() => {
+      _hbbox.visible = false;
+      if( item.content == _text.buffer.text ) {
+        _stack.visible_child_name = "image";
+      } else {
+        _stack.visible_child_name = "loading";
+        item.content = _text.buffer.text;
+      }
+    });
+
+    _hbbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign = Align.END
+    };
+    _hbbox.append( help );
+    _hbbox.append( show );
+
+    var hbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign = Align.FILL
+    };
+    hbox.append( entry );
+    hbox.append( _hbbox );
+
+    return( hbox );
+
+  }
+
   // Adds a new UML item at the given position in the content area
   protected override Widget create_pane() {
 
@@ -68,41 +118,10 @@ public class NoteItemPaneUML : NoteItemPane {
     _image.add_controller( image_click );
     _image.add_controller( image_focus );
 
-    var label = new Label( _( "UML Diagram Input" ) ) {
-      halign  = Align.START,
-      hexpand = true
-    };
-    var help = new Button.from_icon_name( "help-about-symbolic" ) {
-      halign = Align.END,
-      tooltip_text = _( "Open UML Documentation in Browser" )
-    };
-    help.clicked.connect(() => {
-      Utils.open_url( "https://plantuml.com/" );
-    });
-    var show = new Button.with_label( _( "Show Diagram" ) ) {
-      halign = Align.END
-    };
-
-    var hbox = new Box( Orientation.HORIZONTAL, 5 ) {
-      margin_start  = 5,
-      margin_end    = 5,
-      margin_top    = 5,
-      margin_bottom = 5
-    };
-    hbox.append( label );
-    hbox.append( help );
-    hbox.append( show );
-
     _text = create_text( "plantuml" );
-    var buffer = (GtkSource.Buffer)_text.buffer;
-
     _text.add_css_class( "code-text" );
 
-    var sep = new Separator( Orientation.HORIZONTAL );
-
     var tbox = new Box( Orientation.VERTICAL, 5 );
-    tbox.append( hbox );
-    tbox.append( sep );
     tbox.append( _text );
 
     var loading = new Label( _( "Generating Diagram..." ) ) {
@@ -116,21 +135,14 @@ public class NoteItemPaneUML : NoteItemPane {
     _stack.add_named( loading, "loading" );
     _stack.add_named( _image,  "image" );
 
-    show.clicked.connect(() => {
-      if( item.content == buffer.text ) {
-        _stack.visible_child_name = "image";
-      } else {
-        _stack.visible_child_name = "loading";
-        uml_item.content = buffer.text;
-      }
-    });
-
     uml_item.diagram_updated.connect((filename) => {
       if( filename != null ) {
         _image.file = File.new_for_path( filename );
         _stack.visible_child_name = "image";
+        _hbbox.visible = false;
       } else {
         _stack.visible_child_name = "input";
+        _hbbox.visible = true;
       }
     });
 
@@ -140,6 +152,7 @@ public class NoteItemPaneUML : NoteItemPane {
       } else if( n_press == 2 ) {
         set_as_current();
         _stack.visible_child_name = "input";
+        _hbbox.visible = true;
         _text.grab_focus();
       }
     });
@@ -152,8 +165,10 @@ public class NoteItemPaneUML : NoteItemPane {
     if( FileUtils.test( uml_item.get_resource_filename(), FileTest.EXISTS ) ) {
       _image.file = File.new_for_path( uml_item.get_resource_filename() );
       _stack.visible_child_name = "image";
+      _hbbox.visible = false;
     } else {
       _stack.visible_child_name = "input";
+      _hbbox.visible = true;
     }
 
     handle_key_events( _text );

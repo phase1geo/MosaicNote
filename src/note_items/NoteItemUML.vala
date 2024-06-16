@@ -21,6 +21,21 @@
 
 public class NoteItemUML : NoteItem {
 
+	private string _description = "";
+
+	public string description {
+		get {
+			return( _description );
+		}
+		set {
+			if( _description != value ) {
+				_description = value;
+				modified = true;
+				changed();
+			}
+		}
+	}
+
 	public signal void diagram_updated( string? filename );
 
 	// Default constructor
@@ -103,5 +118,22 @@ public class NoteItemUML : NoteItem {
     diagram_updated( null );
 
 	}
+
+  //-------------------------------------------------------------
+  // Saves the content in XML format
+  public override Xml.Node* save() {
+    Xml.Node* node = base.save();
+    node->set_prop( "description", description );
+    return( node );
+  }
+
+  //-------------------------------------------------------------
+  // Loads the content from XML format
+  protected override void load( Xml.Node* node ) {
+    var d = node->get_prop( "description" );
+    if( d != null ) {
+      _description = d;
+    }
+  }
 
 }

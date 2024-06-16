@@ -38,6 +38,7 @@ public class NoteItemPane : Box {
   private MainWindow   _win;
   private NoteItem     _item;
   private SpellChecker _spell;
+  private Box          _header;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_add_item_above", action_add_item_above },
@@ -65,6 +66,12 @@ public class NoteItemPane : Box {
   public signal void note_link_clicked( string link );
 
   //-------------------------------------------------------------
+  // Saves all of the item data to the store item in preparation
+  // for saving to the XML file.  Derived item panes should connect to
+  // this signal.
+  public signal void save();
+
+  //-------------------------------------------------------------
 	// Default constructor
 	public NoteItemPane( MainWindow win, NoteItem item, SpellChecker spell ) {
 
@@ -87,7 +94,9 @@ public class NoteItemPane : Box {
 
     // If we are being set as the current item, make sure that we are drawn as the current item
     set_as_current.connect(() => {
+      stdout.printf( "Setting as current\n" );
       add_css_class( "active-item" );
+      _header.visible = true;
     });
 
     // Set the stage for menu actions
@@ -112,6 +121,9 @@ public class NoteItemPane : Box {
   // Clears the current indicator
   public void clear_current() {
     remove_css_class( "active-item" );
+    if( item.expanded ) {
+      _header.visible = false;
+    }
   }
 
   //-------------------------------------------------------------
@@ -426,7 +438,7 @@ public class NoteItemPane : Box {
       set_as_current();
     });
 
-    focus.leave.connect(() => {
+    save.connect(() => {
       item.content = buffer.text;
     });
 
@@ -478,18 +490,10 @@ public class NoteItemPane : Box {
   // panel data (if needed).
   private void create_bar() {
 
-    var pane = create_pane();
-
     var expand = new Button.with_label( item.expanded ? "\u23f7" : "\u23f5" ) {
       has_frame = false,
       halign = Align.START
     };
-
-    expand.clicked.connect(() => {
-      item.expanded = !item.expanded;
-      pane.visible  = item.expanded;
-      expand.label  = item.expanded ? "\u23f7" : "\u23f5";
-    });
 
     var add_menu = new GLib.Menu();
     add_menu.append( _( "Add Block Above" ), "item.action_add_item_above" );
@@ -504,7 +508,6 @@ public class NoteItemPane : Box {
 
     var more = new MenuButton() {
       halign = Align.END,
-      hexpand = true,
       icon_name = "view-more-horizontal-symbolic",
       menu_model = menu
     };
@@ -518,11 +521,41 @@ public class NoteItemPane : Box {
     };
 
     box.append( expand );
+    box.append( create_header() );
     box.append( more );
 
-    append( box );
+    var sep = new Separator( Orientation.HORIZONTAL );
+
+    _header = new Box( Orientation.VERTICAL, 0 ) {
+      halign = Align.FILL
+    };
+
+    _header.append( sep );
+    _header.append( box );
+
+    var pane = create_pane();
+    pane.visible = item.expanded;
+
+    expand.clicked.connect(() => {
+      item.expanded = !item.expanded;
+      pane.visible  = item.expanded;
+      expand.label  = item.expanded ? "\u23f7" : "\u23f5";
+    });
+
+    append( _header );
     append( pane );
 
+  }
+
+  //-------------------------------------------------------------
+  // Optional area above pane where a single row of horizontal
+  // UI elements can be placed.
+  protected virtual Widget create_header() {
+    var box = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign = Align.FILL,
+      hexpand = true
+    };
+    return( box );
   }
 
   //-------------------------------------------------------------

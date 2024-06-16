@@ -68,7 +68,7 @@ public class NotesPanel : Box {
 			var note = new Note( nb );
 			nb.add_note( note );
       stdout.printf( "Populating with notebook %s\n", _node.name );
-      populate_with_notebook( _node );
+      populate_with_notebook( _node, false );
       _list.select_row( _list.get_row_at_index( nb.count() - 1 ) );
 		});
 
@@ -85,11 +85,11 @@ public class NotesPanel : Box {
 
   // Update UI from the current notebook
   public void update_notes() {
-    populate_with_notebook( _node );
+    populate_with_notebook( _node, false );
   }
 
 	// Populates the notes list from the given notebook
-  public void populate_with_notebook( BaseNotebook? nb ) {
+  public void populate_with_notebook( BaseNotebook? nb, bool show_first ) {
     _node = (nb as NotebookTree.Node);
     if( nb != null ) {
       _model = nb.get_model();
@@ -99,6 +99,9 @@ public class NotesPanel : Box {
       _list.bind_model( null, create_note );
     }
     _add.sensitive = (_node != null);
+    if( show_first ) {
+      _list.select_row( _list.get_row_at_index( 0 ) );
+    }
   }
 
   // Adds the given note

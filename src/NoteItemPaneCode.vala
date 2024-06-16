@@ -53,6 +53,30 @@ public class NoteItemPaneCode : NoteItemPane {
     return( css_data );
   }
 
+  //-------------------------------------------------------------
+  // Adds an optional description entry field for the code.
+  protected override Widget create_header() {
+
+    var entry = new Entry() {
+      has_frame = false,
+      placeholder_text = _( "Description (Optional)" ),
+      halign = Align.FILL,
+      hexpand = true
+    };
+
+    save.connect(() => {
+      ((NoteItemCode)item).description = entry.text;
+    });
+
+    var box = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign = Align.FILL
+    };
+    box.append( entry );
+
+    return( box );
+
+  }
+
   protected override Widget create_pane() {
 
     var code_item = (NoteItemCode)item;

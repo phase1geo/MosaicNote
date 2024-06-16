@@ -251,7 +251,6 @@ public class NotePanel : Box {
     });
 
     var separator1 = new Separator( Orientation.HORIZONTAL );
-    var separator2 = new Separator( Orientation.HORIZONTAL );
 
     _content = new NoteItemPanes( _win ) {
       halign = Align.FILL,
@@ -269,7 +268,6 @@ public class NotePanel : Box {
     var cbox = new Box( Orientation.VERTICAL, 5 );
     cbox.add_css_class( "themed" );
     cbox.append( _title );
-    cbox.append( separator2 );
     cbox.append( _content );
 
     var sw = new ScrolledWindow() {

@@ -55,6 +55,25 @@ public class NoteItemPaneImage : NoteItemPane {
 
   }
 
+  //-------------------------------------------------------------
+  // Create custom header which contains image description.
+  protected override Widget create_header() {
+
+    var entry = new Entry() {
+      has_frame = false,
+      placeholder_text = _( "Description (optional)" ),
+      halign = Align.FILL,
+      hexpand = true
+    };
+
+    save.connect(() => {
+      ((NoteItemImage)item).description = entry.text;
+    });
+
+    return( entry );
+
+  }
+
   protected override Widget create_pane() {
 
     var image_item  = (NoteItemImage)item;

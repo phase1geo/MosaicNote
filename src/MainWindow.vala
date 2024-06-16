@@ -141,7 +141,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _sidebar.notebook_selected.connect((nb) => {
       var notebook = (nb as Notebook);
-      _notes.populate_with_notebook( nb );
+      _notes.populate_with_notebook( nb, true );
       if( notebook != null ) {
         MosaicNote.settings.set_int( "last-notebook", notebook.id );
       }
@@ -282,7 +282,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       Idle.add(() => {
         parser.parse( search_entry.text );
         parser.populate_smart_notebook( search_nb );
-        _notes.populate_with_notebook( search_nb );
+        _notes.populate_with_notebook( search_nb, false );
         return( false );
       });
       search_popover.popdown();

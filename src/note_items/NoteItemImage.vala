@@ -22,6 +22,7 @@
 public class NoteItemImage : NoteItem {
 
 	private string _uri = "";
+	private string _description = "";
 
 	public string uri {
 	  get {
@@ -36,6 +37,19 @@ public class NoteItemImage : NoteItem {
 	  		changed();
 	  	}
 	  }
+	}
+
+	public string description {
+		get {
+			return( _description );
+		}
+		set {
+			if( _description != value ) {
+				_description = value;
+				modified = true;
+				changed();
+			}
+		}
 	}
 
 	// Default constructor
@@ -64,7 +78,8 @@ public class NoteItemImage : NoteItem {
   // Returns the Markdown code for this item
   public override string to_markdown( bool pandoc ) {
   	var file = File.new_for_uri( uri );
-	  return( format_for_width( "![image](%s)".printf( uri ), file.get_path(), pandoc ) );
+  	var desc = (description != "") ? " %s".printf( description ) : "";
+	  return( format_for_width( "![image](%s%s)".printf( uri, desc ), file.get_path(), pandoc ) );
   }
 
   // Returns the resource filename
@@ -76,6 +91,7 @@ public class NoteItemImage : NoteItem {
 	public override Xml.Node* save() {
     Xml.Node* node = base.save();
     node->set_prop( "uri", uri );
+    node->set_prop( "description", description );
     return( node );
 	}
 
@@ -85,6 +101,10 @@ public class NoteItemImage : NoteItem {
 		var u = node->get_prop( "uri" );
 		if( u != null ) {
 			_uri = u;
+		}
+		var d = node->get_prop( "description" );
+		if( d != null ) {
+			_description = d;
 		}
 	}
 
