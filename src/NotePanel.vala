@@ -43,6 +43,8 @@ public class NotePanel : Box {
   public signal void save_note( Note note );
   public signal void note_link_clicked( string link, int note_id );
 
+  public signal void save();
+
 	// Default constructor
 	public NotePanel( MainWindow win ) {
 
@@ -283,6 +285,12 @@ public class NotePanel : Box {
     box.append( hbox );
     box.append( separator1 );
     box.append( sw );
+
+    save.connect(() => {
+      _note.tags.copy( _tags.tags );
+      _note.title = _title.text;
+      _content.save();
+    });
 
     return( box );
 

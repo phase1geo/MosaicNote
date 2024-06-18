@@ -39,6 +39,7 @@ public class NoteItemPane : Box {
   private NoteItem     _item;
   private SpellChecker _spell;
   private Box          _header;
+  private Stack        _stack;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_add_item_above", action_add_item_above },
@@ -94,9 +95,9 @@ public class NoteItemPane : Box {
 
     // If we are being set as the current item, make sure that we are drawn as the current item
     set_as_current.connect(() => {
-      stdout.printf( "Setting as current\n" );
       add_css_class( "active-item" );
-      _header.visible = true;
+      _stack.visible_child_name = "selected";
+      _stack.visible = true;
     });
 
     // Set the stage for menu actions
@@ -122,7 +123,11 @@ public class NoteItemPane : Box {
   public void clear_current() {
     remove_css_class( "active-item" );
     if( item.expanded ) {
-      _header.visible = false;
+      if( (_stack.get_child_by_name( "unselected" ) != null) && show_header2() ) {
+        _stack.visible_child_name = "unselected";
+      } else {
+        _stack.visible = false;
+      }
     }
   }
 
@@ -521,17 +526,25 @@ public class NoteItemPane : Box {
     };
 
     box.append( expand );
-    box.append( create_header() );
+    box.append( create_header1() );
     box.append( more );
 
     var sep = new Separator( Orientation.HORIZONTAL );
 
-    _header = new Box( Orientation.VERTICAL, 0 ) {
+    var header = new Box( Orientation.VERTICAL, 0 ) {
       halign = Align.FILL
     };
 
-    _header.append( sep );
-    _header.append( box );
+    header.append( sep );
+    header.append( box );
+
+    var header2 = create_header2();
+
+    _stack = new Stack();
+    _stack.add_named( header, "selected" );
+    if( header2 != null ) {
+      _stack.add_named( header2, "unselected" );
+    }
 
     var pane = create_pane();
     pane.visible = item.expanded;
@@ -542,7 +555,7 @@ public class NoteItemPane : Box {
       expand.label  = item.expanded ? "\u23f7" : "\u23f5";
     });
 
-    append( _header );
+    append( _stack );
     append( pane );
 
   }
@@ -550,12 +563,26 @@ public class NoteItemPane : Box {
   //-------------------------------------------------------------
   // Optional area above pane where a single row of horizontal
   // UI elements can be placed.
-  protected virtual Widget create_header() {
+  protected virtual Widget create_header1() {
     var box = new Box( Orientation.HORIZONTAL, 5 ) {
       halign = Align.FILL,
       hexpand = true
     };
     return( box );
+  }
+
+  //-------------------------------------------------------------
+  // Creates the header that will be displayed when the pane is
+  // expanded and not selected.
+  protected virtual Widget? create_header2() {
+    return( null );
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if the header2 should be displayed when the pane
+  // is not the current pane.
+  protected virtual bool show_header2() {
+    return( false );
   }
 
   //-------------------------------------------------------------

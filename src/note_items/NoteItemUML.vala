@@ -130,6 +130,7 @@ public class NoteItemUML : NoteItem {
   //-------------------------------------------------------------
   // Loads the content from XML format
   protected override void load( Xml.Node* node ) {
+    base.load( node );
     var d = node->get_prop( "description" );
     if( d != null ) {
       _description = d;

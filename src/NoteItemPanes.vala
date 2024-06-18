@@ -36,6 +36,8 @@ public class NoteItemPanes : Box {
   public signal void item_selected( NoteItemPane pane );
   public signal void note_link_clicked( string link );
 
+  public signal void save();
+
   //-------------------------------------------------------------
   // Default constructor
   public NoteItemPanes( MainWindow win ) {
@@ -179,7 +181,7 @@ public class NoteItemPanes : Box {
     });
 
     pane.set_as_current.connect(() => {
-      if( _current_item != -1 ) {
+      if( (_current_item != -1) && (_current_item != Utils.get_child_index( this, pane )) ) {
         var other_pane = (NoteItemPane)Utils.get_child_at_index( this, _current_item );
         other_pane.clear_current();
       }
@@ -189,6 +191,10 @@ public class NoteItemPanes : Box {
 
     pane.note_link_clicked.connect((link) => {
       note_link_clicked( link );
+    });
+
+    save.connect(() => {
+      pane.save();
     });
 
     // Add the pane at the given position

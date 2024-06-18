@@ -55,28 +55,49 @@ public class NoteItemPaneCode : NoteItemPane {
 
   //-------------------------------------------------------------
   // Adds an optional description entry field for the code.
-  protected override Widget create_header() {
+  protected override Widget create_header1() {
 
     var entry = new Entry() {
       has_frame = false,
       placeholder_text = _( "Description (Optional)" ),
       halign = Align.FILL,
-      hexpand = true
+      hexpand = true,
+      text = ((NoteItemCode)item).description
     };
+
+    entry.activate.connect(() => {
+      ((NoteItemImage)item).description = entry.text;
+    });
 
     save.connect(() => {
       ((NoteItemCode)item).description = entry.text;
     });
 
-    var box = new Box( Orientation.HORIZONTAL, 5 ) {
-      halign = Align.FILL
-    };
-    box.append( entry );
-
-    return( box );
+    return( entry );
 
   }
 
+  //-------------------------------------------------------------
+  // Creates header bar shown when the pane is not selected
+  protected override Widget? create_header2() {
+
+    var label = new Label( ((NoteItemCode)item).description ) {
+      halign = Align.FILL,
+      justify = Justification.CENTER
+    };
+
+    return( label );
+
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if their is a description associated with this pane.
+  protected override bool show_header2() {
+    return( ((NoteItemCode)item).description != "" );
+  }
+
+  //-------------------------------------------------------------
+  // Creates the pane for this code item.
   protected override Widget create_pane() {
 
     var code_item = (NoteItemCode)item;

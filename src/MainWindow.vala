@@ -322,6 +322,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Save everything */
   public void action_save() {
     // _favorites.save();
+    _note.save();
     _notebooks.save();
     _notebooks.save_notebooks();
     _full_tags.save();

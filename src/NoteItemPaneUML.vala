@@ -50,14 +50,25 @@ public class NoteItemPaneUML : NoteItemPane {
     }
   }
 
-  protected override Widget create_header() {
+  //-------------------------------------------------------------
+  // Displays the header bar when the pane is selected
+  protected override Widget create_header1() {
 
     var entry = new Entry() {
       halign = Align.FILL,
       hexpand = true,
       placeholder_text = _( "Description (Optional)" ),
-      has_frame = false
+      has_frame = false,
+      text = ((NoteItemUML)item).description
     };
+
+    entry.activate.connect(() => {
+      ((NoteItemUML)item).description = entry.text;
+    });
+
+    save.connect(() => {
+      ((NoteItemUML)item).description = entry.text;
+    });
 
     var help = new Button.from_icon_name( "dialog-information-symbolic" ) {
       halign = Align.END,
@@ -99,6 +110,26 @@ public class NoteItemPaneUML : NoteItemPane {
 
   }
 
+  //-------------------------------------------------------------
+  // Creates the header bar shown when the pane is not selected.
+  protected override Widget? create_header2() {
+
+    var label = new Label( ((NoteItemUML)item).description ) {
+      halign = Align.FILL,
+      justify = Justification.CENTER
+    };
+
+    return( label );
+
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if there is a description associated with this pane
+  protected override bool show_header2() {
+    return( ((NoteItemUML)item).description != "" );
+  }
+
+  //-------------------------------------------------------------
   // Adds a new UML item at the given position in the content area
   protected override Widget create_pane() {
 
@@ -134,6 +165,7 @@ public class NoteItemPaneUML : NoteItemPane {
     _stack.add_named( tbox,    "input" );
     _stack.add_named( loading, "loading" );
     _stack.add_named( _image,  "image" );
+    _stack.set_size_request( -1, 500 );
 
     uml_item.diagram_updated.connect((filename) => {
       if( filename != null ) {

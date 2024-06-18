@@ -56,15 +56,20 @@ public class NoteItemPaneImage : NoteItemPane {
   }
 
   //-------------------------------------------------------------
-  // Create custom header which contains image description.
-  protected override Widget create_header() {
+  // Create custom header when the pane is selected.
+  protected override Widget create_header1() {
 
     var entry = new Entry() {
       has_frame = false,
       placeholder_text = _( "Description (optional)" ),
       halign = Align.FILL,
-      hexpand = true
+      hexpand = true,
+      text = ((NoteItemImage)item).description
     };
+
+    entry.activate.connect(() => {
+      ((NoteItemImage)item).description = entry.text;
+    });
 
     save.connect(() => {
       ((NoteItemImage)item).description = entry.text;
@@ -74,6 +79,27 @@ public class NoteItemPaneImage : NoteItemPane {
 
   }
 
+  //-------------------------------------------------------------
+  // Create custom header when the pane is not selected.
+  protected override Widget? create_header2() {
+
+    var label = new Label( ((NoteItemImage)item).description ) {
+      halign = Align.FILL,
+      justify = Justification.CENTER
+    };
+
+    return( label );
+
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if there is a description associated with this pane.
+  protected override bool show_header2() {
+    return( ((NoteItemImage)item).description != "" );
+  }
+
+  //-------------------------------------------------------------
+  // Adds the UI for the image panel.
   protected override Widget create_pane() {
 
     var image_item  = (NoteItemImage)item;
