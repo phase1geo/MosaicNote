@@ -78,8 +78,7 @@ public class NoteItemImage : NoteItem {
   // Returns the Markdown code for this item
   public override string to_markdown( bool pandoc ) {
   	var file = File.new_for_uri( uri );
-  	var desc = (description != "") ? " %s".printf( description ) : "";
-	  return( format_for_width( "![image](%s%s)".printf( uri, desc ), file.get_path(), pandoc ) );
+	  return( format_for_width( "![%s](%s)".printf( description, uri ), file.get_path(), pandoc ) );
   }
 
   // Returns the resource filename

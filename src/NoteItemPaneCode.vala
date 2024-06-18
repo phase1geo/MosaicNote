@@ -66,7 +66,7 @@ public class NoteItemPaneCode : NoteItemPane {
     };
 
     entry.activate.connect(() => {
-      ((NoteItemImage)item).description = entry.text;
+      ((NoteItemCode)item).description = entry.text;
     });
 
     save.connect(() => {
