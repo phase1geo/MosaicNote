@@ -161,7 +161,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       _notes.update_notes();
     });
 
-    _note.save_note.connect((note) => {
+    _note.note_saved.connect((note) => {
       _smart_notebooks.handle_note( note );
     });
 

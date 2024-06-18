@@ -40,7 +40,7 @@ public class NotePanel : Box {
 
   public signal void tag_added( string name, int note_id );
   public signal void tag_removed( string name, int note_id );
-  public signal void save_note( Note note );
+  public signal void note_saved( Note note );
   public signal void note_link_clicked( string link, int note_id );
 
   public signal void save();
@@ -247,7 +247,7 @@ public class NotePanel : Box {
     _title.activate.connect(() => {
       if( _note != null ) {
         _note.title = _title.text;
-        save_note( _note );
+        note_saved( _note );
       }
       _content.get_pane( 0 ).grab_item_focus( TextCursorPlacement.START );
     });
@@ -290,6 +290,7 @@ public class NotePanel : Box {
       _note.tags.copy( _tags.tags );
       _note.title = _title.text;
       _content.save();
+      note_saved( _note );
     });
 
     return( box );
@@ -317,7 +318,7 @@ public class NotePanel : Box {
   public void populate_with_note( Note? note ) {
 
     if( _note != null ) {
-      save_note( _note );
+      save();
     }
 
     _note = note;
@@ -337,7 +338,9 @@ public class NotePanel : Box {
       _content.populate( _note );
 
     } else {
+
       _stack.visible_child_name = "blank";
+
     }
 
   }
