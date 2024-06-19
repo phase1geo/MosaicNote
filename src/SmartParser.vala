@@ -56,19 +56,47 @@ public class SmartParser {
               if( !in_double && !in_single ) {
                 parse_token( token );
                 token = "";
+              } else {
+                token += " ";
               }
               break;
-            case '"'  :  if( !in_single ) in_double = !in_double;  break;
-            case '\'' :  if( !in_double ) in_single = !in_single;  break;
-            case '('  :  if( !in_single && !in_double ) push_filter( false );  break;
+            case '"'  :
+              if( !in_single ) {
+                in_double = !in_double;
+              } else {
+                token += "\"";
+              }
+              break;
+            case '\'' :
+              if( !in_double ) {
+                in_single = !in_single;
+              } else {
+                token += "'";
+              }
+              break;
+            case '('  :
+              if( !in_single && !in_double ) {
+                push_filter( false );
+              } else {
+                token += "(";
+              }
+              break;
             case ')'  :
               if( !in_single && !in_double ) {
                 parse_token( token );
                 token = "";
                 pop_filter();
+              } else {
+                token += ")";
               }
               break;
-            case '!'  :  if( !in_single && !in_double && (token == "") ) push_filter( true );  break;
+            case '!'  :
+              if( !in_single && !in_double && (token == "") ) {
+                push_filter( true );
+              } else {
+                token += "!";
+              }
+              break;
             case '\\' :  skip_char = true;  token += ch.to_string();  break;
             default   :  token += ch.to_string();  break;
           }
@@ -235,8 +263,132 @@ public class SmartParser {
   // Parses the date value.
   //
   // Examples:
-  //   created:FOOBAR
+  //   created:is[YYYY/MM/DD]
+  //   created:!YYYY/MM/DD  (same as is)
+  //   created:between[YYYY/MM/DD-YYYY/MM/DD]
+  //   created:YYYY/MM/DD-YYYY/MM/DD
+  //   created:before[YYYY/MM/DD]
+  //   created:<YYYY/MM/DD  (same as before)
+  //   created:after[YYYY/MM/DD]
+  //   created:>YYYY/MM/DD  (same as after)
+  //   created:last[3days]
+  //   created:!last[1y]
   private bool parse_date( string filter_type, string date ) {
+    var str = date;
+    var not = false;
+    if( str.get_char( 0 ) == '!' ) {
+      not = true;
+      str = str.substring( str.index_of_nth_char( 1 ) );
+    }
+    if( str.has_suffix( "]" ) ) {
+      str = str.slice( 0, str.index_of_nth_char( str.char_count() - 1 ) );
+      if( str.has_prefix( "is[" ) ) {
+        str = str.substring( str.index_of_nth_char( 3 ) );
+        return( parse_absolute_date( filter_type, (not ? DateMatchType.IS_NOT : DateMatchType.IS), str ) );
+      } else if( str.has_prefix( "between[" ) ) {
+        str = str.substring( str.index_of_nth_char( 8 ) );
+        var dates = str.split( "-" );
+        if( dates.length == 2 ) {
+          return( parse_absolute_date( filter_type, DateMatchType.BETWEEN, dates[0], dates[1] ) );
+        }
+      } else if( date.has_prefix( "before[" ) ) {
+        str = str.substring( str.index_of_nth_char( 7 ) );
+        return( parse_absolute_date( filter_type, DateMatchType.BEFORE, str ) );
+      } else if( date.has_prefix( "after[" ) ) {
+        str = str.substring( str.index_of_nth_char( 6 ) );
+        return( parse_absolute_date( filter_type, DateMatchType.AFTER, str ) );
+      } else if( date.has_prefix( "last[" ) ) {
+        str = str.substring( str.index_of_nth_char( 5 ) );
+        return( parse_relative_date( filter_type, (not ? DateMatchType.LAST_NOT : DateMatchType.LAST), str ) );
+      }
+    } else if( date.has_prefix( "<" ) ) {
+      str = str.substring( str.index_of_nth_char( 1 ) );
+      return( parse_absolute_date( filter_type, DateMatchType.BEFORE, str ) );
+    } else if( date.has_prefix( ">" ) ) {
+      return( parse_absolute_date( filter_type, DateMatchType.AFTER, str ) );
+    } else {
+      var dates = str.split( "-" );
+      if( dates.length == 2 ) {
+        return( parse_absolute_date( filter_type, DateMatchType.BETWEEN, dates[0], dates[1] ) );
+      } else {
+        stdout.printf( "not: %s\n", not.to_string() );
+        return( parse_absolute_date( filter_type, (not ? DateMatchType.IS_NOT : DateMatchType.IS), str ) );
+      }
+    }
+    return( false );
+  }
+
+  //-------------------------------------------------------------
+  // Parses a string in the form of YYYY/MM/DD.  Returns the
+  // associated DateTime structure if the string can be parsed;
+  // otherwise, returns null to indicate that the date string
+  // is invalid.
+  private DateTime? parse_absolute_date_format( string? date ) {
+    if( date != null ) {
+      var parts = date.split( "/" );
+      if( (parts.length == 3) && (parts[0].length == 4) && (parts[1].length == 2) && (parts[2].length == 2) ) {
+        var year  = int.parse( parts[0] );
+        var month = int.parse( parts[1] );
+        var day   = int.parse( parts[2] );
+        if( (year != 0) && (month != 0) && (day != 0) ) {
+          var dt = new DateTime.local( year, month, day, 0, 0, 0.0 );
+          return( dt );
+        }
+      }
+    }
+    return( null );
+  }
+
+  //-------------------------------------------------------------
+  // Handle a date that should be treated as an absolute date.  We
+  // will create and add up the filter(s) to the stack.
+  private bool parse_absolute_date( string filter_type, DateMatchType match_type, string first, string? second = null ) {
+    SmartDateFilter? filter = null;
+    var first_date  = parse_absolute_date_format( first );
+    var second_date = parse_absolute_date_format( second );
+    if( (match_type == DateMatchType.BETWEEN) && (second_date == null) ) {
+      return( false );
+    }
+    if( first_date != null ) {
+      switch( filter_type ) {
+        case "created" :  filter = new FilterCreated.absolute( match_type, first_date, second_date );  break;
+        case "updated" :  filter = new FilterUpdated.absolute( match_type, first_date, second_date );  break;
+        case "viewed"  :  filter = new FilterViewed.absolute( match_type, first_date, second_date );   break;
+      }
+    }
+    if( filter != null ) {
+      add_filter_to_stack_top( filter );
+      return( true );
+    }
+    return( false );
+  }
+
+  //-------------------------------------------------------------
+  // Handle a date that should be treated as a relative date to
+  // the current date.  We will create and add up the filter(s)
+  // to the stack.
+  private bool parse_relative_date( string filter_type, DateMatchType match_type, string period ) {
+    SmartDateFilter? filter    = null;
+    TimeType?        time_type = null;
+    var num = -1;
+    var str = "";
+    period.down().scanf( "%d%s", &num, str );
+    stdout.printf( "period: %s, num: %d, str: %s\n", period.down(), num, str );
+    if( str != "" ) {
+      time_type = TimeType.parse_full( str );
+      stdout.printf( "filter_type: %s, time_type: %s\n", filter_type, time_type.to_string() );
+    }
+    if( (num > 0) && (time_type != null) ) {
+      switch( filter_type ) {
+        case "created" :  filter = new FilterCreated.relative( match_type, num, time_type );  break;
+        case "updated" :  filter = new FilterUpdated.relative( match_type, num, time_type );  break;
+        case "viewed"  :  filter = new FilterViewed.relative( match_type, num, time_type );   break;
+      }
+    }
+    if( filter != null ) {
+      add_filter_to_stack_top( filter );
+      return( true );
+    }
     return( false );
   }
 

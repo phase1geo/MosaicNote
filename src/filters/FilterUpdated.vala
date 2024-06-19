@@ -28,6 +28,18 @@ public class FilterUpdated : SmartDateFilter {
   }
 
   //-------------------------------------------------------------
+  // Constructor for absolute dates
+  public FilterUpdated.absolute( DateMatchType match_type, DateTime first, DateTime? second = null ) {
+    base.absolute( match_type, first, second );
+  }
+
+  //-------------------------------------------------------------
+  // Constructor for relative dates
+  public FilterUpdated.relative( DateMatchType match_type, int num, TimeType time_type ) {
+    base.relative( match_type, num, time_type );
+  }
+
+  //-------------------------------------------------------------
   // Constructor from XML
   public FilterUpdated.from_xml( Xml.Node* node ) {
     base.from_xml( node );

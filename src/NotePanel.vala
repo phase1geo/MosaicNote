@@ -287,10 +287,12 @@ public class NotePanel : Box {
     box.append( sw );
 
     save.connect(() => {
-      _note.tags.copy( _tags.tags );
-      _note.title = _title.text;
-      _content.save();
-      note_saved( _note );
+      if( _note != null ) {
+        _note.tags.copy( _tags.tags );
+        _note.title = _title.text;
+        _content.save();
+        note_saved( _note );
+      }
     });
 
     return( box );

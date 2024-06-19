@@ -1,14 +1,9 @@
 TODO:
 
- ☐ Complete work on code restructuring for note item panes.
-   ☐ Base class
-   ☐ Markdown
-   ☐ Code
-   ☐ Image
-   ☐ UML
  ☐ Complete work on inlined notebook adding/renaming.
  ☐ Add support for table note item
    ☐ Use table grid widget with embedded textboxes
+ ☐ Add support for math note item
  ☐ Add support for search
    ☐ Define search "language" for advanced search features and write parser
    ☐ Add way to save searches as smart notebooks
@@ -19,6 +14,12 @@ TODO:
 
 ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
 Archive:
+ ✔ UML @done (24-06-18 13:26) @project(TODO)
+ ✔ Markdown @done (24-06-18 13:26) @project(TODO)
+ ✔ Image @done (24-06-18 13:26) @project(TODO)
+ ✔ Complete work on code restructuring for note item panes. @done (24-06-18 13:26) @project(TODO)
+ ✔ Code @done (24-06-18 13:26) @project(TODO)
+ ✔ Base class @done (24-06-18 13:26) @project(TODO)
  ✔ Sidebar @done (24-06-10 19:35) @project(TODO)
  ✔ Notes @done (24-06-10 19:35) @project(TODO)
  ✔ Note @done (24-06-10 19:35) @project(TODO)
