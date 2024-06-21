@@ -45,6 +45,7 @@ public class NotePanel : Box {
 
   public signal void save();
 
+  //-------------------------------------------------------------
 	// Default constructor
 	public NotePanel( MainWindow win ) {
 
@@ -92,8 +93,10 @@ public class NotePanel : Box {
 
   }
 
-  // Initialize the language manager to include the specialty languages that MosaicNote
-  // provides (includes PlantUML and Mosaic-Markdown).
+  //-------------------------------------------------------------
+  // Initialize the language manager to include the specialty
+  // languages that MosaicNote provides (includes PlantUML and
+  // Mosaic-Markdown).
   private void initialize_languages() {
 
     foreach( var data_dir in Environment.get_system_data_dirs() ) {
@@ -108,6 +111,9 @@ public class NotePanel : Box {
 
   }
 
+  //-------------------------------------------------------------
+  // Updates the CSS controlling the display of the note items
+  // and updates the style context for the specified theme name.
   private void update_theme( string theme ) {
 
     var style_mgr = GtkSource.StyleSchemeManager.get_default();
@@ -126,6 +132,7 @@ public class NotePanel : Box {
 
   }
 
+  //-------------------------------------------------------------
   // Creates the blank UI
   private Widget create_blank_ui() {
 
@@ -136,6 +143,7 @@ public class NotePanel : Box {
 
   }
 
+  //-------------------------------------------------------------
   // Creates the note UI
   private Widget create_note_ui() {
 
@@ -315,6 +323,7 @@ public class NotePanel : Box {
 
   }
 
+  //-------------------------------------------------------------
   // Populates the note panel UI with the contents of the provided note.  If note is
   // null, clears the UI.
   public void populate_with_note( Note? note ) {
@@ -347,6 +356,9 @@ public class NotePanel : Box {
 
   }
 
+  //-------------------------------------------------------------
+  // Displays the associated toolbar for the specified pane.  If pane
+  // is null, displays the default (blank) toolbar.
   private void set_toolbar_for_pane( NoteItemPane? pane ) {
     if( pane != null ) {
       var toolbar = (ToolbarItem)_toolbar_stack.get_child_by_name( pane.item.item_type.to_string() );
@@ -362,6 +374,7 @@ public class NotePanel : Box {
     }
   }
 
+  //-------------------------------------------------------------
   // Exports the given note
   private void export_note() {
 
