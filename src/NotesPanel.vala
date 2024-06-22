@@ -68,12 +68,10 @@ public class NotesPanel : Box {
 		};
 
 		_add.clicked.connect(() => {
-      stdout.printf( "Adding note\n" );
       var nb   = _node.get_notebook();
 			var note = new Note( nb );
 			nb.add_note( note );
-      stdout.printf( "Populating with notebook %s\n", _node.name );
-      populate_with_notebook( _node, false );
+      populate_with_notebook( _node );
       _list.select_row( _list.get_row_at_index( nb.count() - 1 ) );
 		});
 
@@ -88,23 +86,22 @@ public class NotesPanel : Box {
 
 	}
 
+  //-------------------------------------------------------------
   // Update UI from the current notebook
   public void update_notes() {
     var row = _list.get_selected_row();
     if( row != null ) {
       var pos = row.get_index();
-      stdout.printf( "Calling items_changed\n" );
       _ignore = true;
       _model.items_changed( pos, 1, 1 );
       _ignore = true;
       _list.select_row( _list.get_row_at_index( pos ) );
-    } else {
-      stdout.printf( "There is no currently selected row\n" );
     }
   }
 
+  //-------------------------------------------------------------
 	// Populates the notes list from the given notebook
-  public void populate_with_notebook( BaseNotebook? nb, bool show_first ) {
+  public void populate_with_notebook( BaseNotebook? nb ) {
     _node = (nb as NotebookTree.Node);
     if( nb != null ) {
       _model = nb.get_model();
@@ -114,8 +111,27 @@ public class NotesPanel : Box {
       _list.bind_model( null, create_note );
     }
     _add.sensitive = (_node != null);
-    if( show_first ) {
-      _list.select_row( _list.get_row_at_index( 0 ) );
+  }
+
+  //-------------------------------------------------------------
+  // Selects the row at the given index.
+  public void select_row( int index ) {
+    var row = _list.get_row_at_index( index );
+    if( row != null ) {
+      _list.select_row( row );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Selects the row with the given note ID.
+  public void select_note( int note_id, bool show_note ) {
+    for( int i=0; i<_model.get_n_items(); i++ ) {
+      var note = (Note)_model.get_object( i );
+      if( note.id == note_id ) {
+        _ignore = !show_note;
+        _list.select_row( _list.get_row_at_index( i ) );
+        return;
+      }
     }
   }
 

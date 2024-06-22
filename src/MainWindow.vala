@@ -139,14 +139,15 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _sidebar.notebook_selected.connect((nb) => {
       var notebook = (nb as Notebook);
-      _notes.populate_with_notebook( nb, true );
+      _notes.populate_with_notebook( nb );
+      _notes.select_row( 0 );
       if( notebook != null ) {
         MosaicNote.settings.set_int( "last-notebook", notebook.id );
       }
     });
 
     _notes.note_selected.connect((note) => {
-      _note.populate_with_note( note );
+      _note.populate_with_note( note, true );
       MosaicNote.settings.set_int( "last-note", ((note == null) ? -1 : note.id) );
     });
 
@@ -160,11 +161,8 @@ public class MainWindow : Gtk.ApplicationWindow {
     });
 
     _note.note_saved.connect((note) => {
-      stdout.printf( "1 Calling update_notes\n" );
       _notes.update_notes();
-      stdout.printf( "2 Notes are updated\n" );
       _smart_notebooks.handle_note( note );
-      stdout.printf( "3 Handled note by smart notebooks\n" );
     });
 
     _note.note_link_clicked.connect((link, note_id) => {
@@ -173,8 +171,9 @@ public class MainWindow : Gtk.ApplicationWindow {
     });
 
     _history.goto_note.connect((note) => {
-      _notes.populate_with_notebook( note.notebook, false );
-      _note.populate_with_note( note );
+      _notes.populate_with_notebook( note.notebook );
+      _notes.select_note( note.id, false );
+      _note.populate_with_note( note, false );
     });
 
     _notes_pw = new Paned( Orientation.HORIZONTAL ) {
@@ -289,7 +288,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       Idle.add(() => {
         parser.parse( search_entry.text );
         parser.populate_smart_notebook( search_nb );
-        _notes.populate_with_notebook( search_nb, false );
+        _notes.populate_with_notebook( search_nb );
         return( false );
       });
       search_popover.popdown();
@@ -328,7 +327,6 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   /* Save everything */
   public void action_save() {
-    stdout.printf( "In action_save\n" );
     _note.save();
     _notebooks.save();
     _notebooks.save_notebooks();

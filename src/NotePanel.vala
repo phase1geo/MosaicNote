@@ -151,7 +151,8 @@ public class NotePanel : Box {
 
     _hist_prev = new Button.from_icon_name( "go-previous-symbolic" ) {
       sensitive = false,
-      has_frame = false
+      has_frame = false,
+      tooltip_text = _( "Show Last Viewed Note" )
     };
     _hist_prev.clicked.connect(() => {
       _win.history.go_backward();
@@ -159,7 +160,8 @@ public class NotePanel : Box {
 
     _hist_next = new Button.from_icon_name( "go-next-symbolic" ) {
       sensitive = false,
-      has_frame = false
+      has_frame = false,
+      tooltip_text = _( "Show Next Viewed Note" )
     };
     _hist_next.clicked.connect(() => {
       _win.history.go_forward();
@@ -198,12 +200,19 @@ public class NotePanel : Box {
       }
     });
 
+    var vsep1 = new Separator( Orientation.VERTICAL );
+    var vsep2 = new Separator( Orientation.VERTICAL ) {
+      halign = Align.END
+    };
+
     var tbox = new Box( Orientation.HORIZONTAL, 5 ) {
       halign = Align.FILL
     };
     tbox.append( _hist_prev );
     tbox.append( _hist_next );
+    tbox.append( vsep1 );
     tbox.append( _tags );
+    tbox.append( vsep2 );
     tbox.append( export );
     tbox.append( _favorite );
 
@@ -347,8 +356,9 @@ public class NotePanel : Box {
 
   //-------------------------------------------------------------
   // Populates the note panel UI with the contents of the provided note.  If note is
-  // null, clears the UI.
-  public void populate_with_note( Note? note ) {
+  // null, clears the UI.  If add_to_history is set, we will add this note
+  // to the note history.
+  public void populate_with_note( Note? note, bool add_to_history ) {
 
     if( _note != null ) {
       save();
@@ -371,7 +381,9 @@ public class NotePanel : Box {
       _content.populate( _note );
 
       // Update the note history
-      _win.history.push_note( _note );
+      if( add_to_history ) {
+        _win.history.push_note( _note );
+      }
       _hist_prev.sensitive = _win.history.can_go_backward();
       _hist_next.sensitive = _win.history.can_go_forward();
 
