@@ -28,6 +28,7 @@ public class NotesPanel : Box {
 	private ListBox            _list;
   private ListModel          _model;
   private Button             _add;
+  private bool               _ignore = false;
 
 	public signal void note_selected( Note? note );
 
@@ -46,10 +47,14 @@ public class NotesPanel : Box {
 		};
 
 		_list.row_selected.connect((row) => {
-			if( row == null ) {
-        note_selected( null );
+      if( _ignore ) {
+        _ignore = false;
       } else {
-  			note_selected( (Note)_model.get_item( row.get_index() ) );
+  			if( row == null ) {
+          note_selected( null );
+        } else {
+    			note_selected( (Note)_model.get_item( row.get_index() ) );
+        }
       }
   	});
 
@@ -85,7 +90,17 @@ public class NotesPanel : Box {
 
   // Update UI from the current notebook
   public void update_notes() {
-    populate_with_notebook( _node, false );
+    var row = _list.get_selected_row();
+    if( row != null ) {
+      var pos = row.get_index();
+      stdout.printf( "Calling items_changed\n" );
+      _ignore = true;
+      _model.items_changed( pos, 1, 1 );
+      _ignore = true;
+      _list.select_row( _list.get_row_at_index( pos ) );
+    } else {
+      stdout.printf( "There is no currently selected row\n" );
+    }
   }
 
 	// Populates the notes list from the given notebook

@@ -92,7 +92,8 @@ public class Preferences : Gtk.Dialog {
     var grid = new Grid() {
       row_spacing = 5,
       column_spacing = 5,
-      halign = Align.CENTER
+      halign = Align.CENTER,
+      row_homogeneous = true
     };
 
     var row = 0;
@@ -169,7 +170,8 @@ public class Preferences : Gtk.Dialog {
     var grid = new Grid() {
       row_spacing = 5,
       column_spacing = 5,
-      halign = Align.CENTER
+      halign = Align.CENTER,
+      row_homogeneous = true
     };
 
     var row = 0;

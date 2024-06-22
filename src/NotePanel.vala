@@ -36,6 +36,8 @@ public class NotePanel : Box {
   private Box           _created_box;
   private Label         _created;
   private NoteItemPanes _content;
+  private Button        _hist_prev;
+  private Button        _hist_next;
   private bool          _ignore = false;
 
   public signal void tag_added( string name, int note_id );
@@ -147,6 +149,22 @@ public class NotePanel : Box {
   // Creates the note UI
   private Widget create_note_ui() {
 
+    _hist_prev = new Button.from_icon_name( "go-previous-symbolic" ) {
+      sensitive = false,
+      has_frame = false
+    };
+    _hist_prev.clicked.connect(() => {
+      _win.history.go_backward();
+    });
+
+    _hist_next = new Button.from_icon_name( "go-next-symbolic" ) {
+      sensitive = false,
+      has_frame = false
+    };
+    _hist_next.clicked.connect(() => {
+      _win.history.go_forward();
+    });
+
     _tags = new TagBox( _win );
     _tags.added.connect((tag) => {
       tag_added( tag, _note.id );
@@ -183,6 +201,8 @@ public class NotePanel : Box {
     var tbox = new Box( Orientation.HORIZONTAL, 5 ) {
       halign = Align.FILL
     };
+    tbox.append( _hist_prev );
+    tbox.append( _hist_next );
     tbox.append( _tags );
     tbox.append( export );
     tbox.append( _favorite );
@@ -255,6 +275,7 @@ public class NotePanel : Box {
     _title.activate.connect(() => {
       if( _note != null ) {
         _note.title = _title.text;
+        stdout.printf( "Title activated\n" );
         note_saved( _note );
       }
       _content.get_pane( 0 ).grab_item_focus( TextCursorPlacement.START );
@@ -299,6 +320,7 @@ public class NotePanel : Box {
         _note.tags.copy( _tags.tags );
         _note.title = _title.text;
         _content.save();
+        stdout.printf( "Save called\n" );
         note_saved( _note );
       }
     });
@@ -347,6 +369,11 @@ public class NotePanel : Box {
       _note.reviewed();
 
       _content.populate( _note );
+
+      // Update the note history
+      _win.history.push_note( _note );
+      _hist_prev.sensitive = _win.history.can_go_backward();
+      _hist_next.sensitive = _win.history.can_go_forward();
 
     } else {
 

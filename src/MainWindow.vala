@@ -25,12 +25,12 @@ using Gdk;
 public class MainWindow : Gtk.ApplicationWindow {
 
   private GLib.Settings   _settings;
-  // private Favorites       _favorites;
   private NotebookTree    _notebooks;
   private SmartNotebooks  _smart_notebooks;
   private FullTags        _full_tags;
   private Themes          _themes;
   private SmartParser     _parser;
+  private NoteHistory     _history;
 
   private ShortcutsWindow _shortcuts = null;
   private SidebarNew      _sidebar;
@@ -62,14 +62,6 @@ public class MainWindow : Gtk.ApplicationWindow {
     }
   }
 
-  /*
-  public Favorites favorites {
-    get {
-      return( _favorites );
-    }
-  }
-  */
-
   public NotebookTree notebooks {
     get {
       return( _notebooks );
@@ -91,6 +83,12 @@ public class MainWindow : Gtk.ApplicationWindow {
   public SmartParser parser {
     get {
       return( _parser );
+    }
+  }
+
+  public NoteHistory history {
+    get {
+      return( _history );
     }
   }
 
@@ -123,12 +121,12 @@ public class MainWindow : Gtk.ApplicationWindow {
     add_keyboard_shortcuts( app );
 
     /* Load application data */
-    // _favorites       = new Favorites();
     _notebooks       = new NotebookTree();
     _full_tags       = new FullTags( _notebooks );
     _smart_notebooks = new SmartNotebooks( _notebooks );
     _themes          = new Themes();
     _parser          = new SmartParser( _notebooks );
+    _history         = new NoteHistory();
 
     /* Create title toolbar */
     header.pack_end( create_miscellaneous() );
@@ -162,12 +160,21 @@ public class MainWindow : Gtk.ApplicationWindow {
     });
 
     _note.note_saved.connect((note) => {
+      stdout.printf( "1 Calling update_notes\n" );
+      _notes.update_notes();
+      stdout.printf( "2 Notes are updated\n" );
       _smart_notebooks.handle_note( note );
+      stdout.printf( "3 Handled note by smart notebooks\n" );
     });
 
     _note.note_link_clicked.connect((link, note_id) => {
       stdout.printf( "Note link clicked, link: %s, note_id: %d\n", link, note_id );
       // TODO
+    });
+
+    _history.goto_note.connect((note) => {
+      _notes.populate_with_notebook( note.notebook, false );
+      _note.populate_with_note( note );
     });
 
     _notes_pw = new Paned( Orientation.HORIZONTAL ) {
@@ -321,7 +328,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   /* Save everything */
   public void action_save() {
-    // _favorites.save();
+    stdout.printf( "In action_save\n" );
     _note.save();
     _notebooks.save();
     _notebooks.save_notebooks();
