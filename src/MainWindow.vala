@@ -286,7 +286,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     search_entry.activate.connect(() => {
       Idle.add(() => {
-        parser.parse( search_entry.text );
+        parser.parse( search_entry.text, false );
         parser.populate_smart_notebook( search_nb );
         _notes.populate_with_notebook( search_nb );
         return( false );

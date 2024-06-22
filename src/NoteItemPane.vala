@@ -588,7 +588,7 @@ public class NoteItemPane : Box {
   //-------------------------------------------------------------
   // Adds a new UML item at the given position in the content area
   protected virtual Widget create_pane() {
-    return( null );
+    return( new Box( Orientation.VERTICAL, 5 ) );
   }
 
   //-------------------------------------------------------------

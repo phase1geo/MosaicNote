@@ -25,7 +25,7 @@ public class SmartParser {
   private List<SmartLogicFilter> _stack;
 
   public string error_message { get; private set; default = ""; }
-  public string error_index   { get; private set; default = -1; }
+  public int    error_index   { get; private set; default = -1; }
 
   //-------------------------------------------------------------
   // Default constructor
@@ -231,21 +231,30 @@ public class SmartParser {
     if( parts.length == 2 ) {
       var type_len  = parts[0].char_count();
       var new_start = (start_char + type_len + 1);
-      switch( parts[0].down() ) {
-        case _( "favorite" ) :  return( parse_bool( "favorite", parts[1], new_start, check_syntax_only ) );
-        case _( "locked" )   :  return( parse_bool( "locked", parts[1], new_start, check_syntax_only ) );
-        case _( "created" )  :  return( parse_date( "created", parts[1], new_start, check_syntax_only ) );
-        case _( "updated" )  :  return( parse_date( "updated", parts[1], new_start, check_syntax_only ) );
-        case _( "viewed" )   :  return( parse_date( "viewed", parts[1], new_start, check_syntax_only ) );
-        case _( "notebook" ) :  return( parse_notebook( parts[1], new_start, check_syntax_only ) );
-        case _( "tag" )      :  return( parse_tag( parts[1], new_start, check_syntax_only ) );
-        case _( "title" )    :  return( parse_text( "title", parts[1], new_start, check_syntax_only ) );
-        case _( "block" )    :  return( parse_block( parts[1], new_start, check_syntax_only ) );
-        case _( "content" )  :  return( parse_text( "content", parts[1], new_start, check_syntax_only ) );
-        default         :
-          error_message = "Unknown token type (%s)".printf( parts[0].down() );
-          error_index   = start_char;
-          break;
+      var type_down = parts[0].down();
+      if( type_down == _( "favorite" ) ) {
+        return( parse_bool( "favorite", parts[1], new_start, check_syntax_only ) );
+      } else if( type_down == _( "locked" ) ) {
+        return( parse_bool( "locked", parts[1], new_start, check_syntax_only ) );
+      } else if( type_down == _( "created" ) ) {
+        return( parse_date( "created", parts[1], new_start, check_syntax_only ) );
+      } else if( type_down == _( "updated" ) ) {
+        return( parse_date( "updated", parts[1], new_start, check_syntax_only ) );
+      } else if( type_down == _( "viewed" ) ) {
+        return( parse_date( "viewed", parts[1], new_start, check_syntax_only ) );
+      } else if( type_down == _( "notebook" ) ) {
+        return( parse_notebook( parts[1], new_start, check_syntax_only ) );
+      } else if( type_down == _( "tag" ) ) {
+        return( parse_tag( parts[1], new_start, check_syntax_only ) );
+      } else if( type_down == _( "title" ) ) {
+        return( parse_text( "title", parts[1], new_start, check_syntax_only ) );
+      } else if( type_down == _( "block" ) ) {
+        return( parse_block( parts[1], new_start, check_syntax_only ) );
+      } else if( type_down == _( "content" ) ) {
+        return( parse_text( "content", parts[1], new_start, check_syntax_only ) );
+      } else {
+        error_message = "Unknown token type (%s)".printf( parts[0].down() );
+        error_index   = start_char;
       }
     }
 
@@ -318,7 +327,7 @@ public class SmartParser {
         var len = _( "is[" ).char_count();
         var new_start = start_char + (not ? 1 : 0) + len;
         str = str.substring( str.index_of_nth_char( len ) );
-        return( parse_absolute_date( filter_type, (not ? DateMatchType.IS_NOT : DateMatchType.IS), str, new_start, check_syntax_only ) );
+        return( parse_absolute_date( filter_type, (not ? DateMatchType.IS_NOT : DateMatchType.IS), str, null, new_start, check_syntax_only ) );
       } else if( str.has_prefix( _( "between[" ) ) ) {
         var len = _( "between[" ).char_count();
         var new_start = start_char + (not ? 1 : 0) + len;
@@ -331,17 +340,17 @@ public class SmartParser {
           error_index   = new_start;
         }
       } else if( date.has_prefix( _( "before[" ) ) ) {
-        var len = _( "before[" );
+        var len = _( "before[" ).char_count();
         var new_start = start_char + (not ? 1 : 0) + len;
         str = str.substring( str.index_of_nth_char( len ) );
-        return( parse_absolute_date( filter_type, DateMatchType.BEFORE, str, new_start, check_syntax_only ) );
+        return( parse_absolute_date( filter_type, DateMatchType.BEFORE, str, null, new_start, check_syntax_only ) );
       } else if( date.has_prefix( _( "after[" ) ) ) {
         var len = _( "after[" ).char_count();
         var new_start = start_char + (not ? 1 : 0) + len; 
         str = str.substring( str.index_of_nth_char( len ) );
-        return( parse_absolute_date( filter_type, DateMatchType.AFTER, str, new_start, check_syntax_only ) );
+        return( parse_absolute_date( filter_type, DateMatchType.AFTER, str, null, new_start, check_syntax_only ) );
       } else if( date.has_prefix( _( "last[" ) ) ) {
-        var len = _( "last[" );
+        var len = _( "last[" ).char_count();
         var new_start = start_char + (not ? 1 : 0) + len;
         str = str.substring( str.index_of_nth_char( len ) );
         return( parse_relative_date( filter_type, (not ? DateMatchType.LAST_NOT : DateMatchType.LAST), str, new_start, check_syntax_only ) );
@@ -352,16 +361,16 @@ public class SmartParser {
     } else if( date.has_prefix( "<" ) ) {
       var new_start = start_char + (not ? 1 : 0) + 1;
       str = str.substring( str.index_of_nth_char( 1 ) );
-      return( parse_absolute_date( filter_type, DateMatchType.BEFORE, str, new_start, check_syntax_only ) );
+      return( parse_absolute_date( filter_type, DateMatchType.BEFORE, str, null, new_start, check_syntax_only ) );
     } else if( date.has_prefix( ">" ) ) {
       var new_start = start_char + (not ? 1 : 0) + 1;
-      return( parse_absolute_date( filter_type, DateMatchType.AFTER, str, new_start, check_syntax_only ) );
+      return( parse_absolute_date( filter_type, DateMatchType.AFTER, str, null, new_start, check_syntax_only ) );
     } else {
       var dates = str.split( "-" );
       var new_start = start_char + (not ? 1 : 0);
       switch( dates.length ) {
         case 1 :
-          return( parse_absolute_date( filter_type, (not ? DateMatchType.IS_NOT : DateMatchType.IS), str, new_start, check_syntax_only ) );
+          return( parse_absolute_date( filter_type, (not ? DateMatchType.IS_NOT : DateMatchType.IS), str, null, new_start, check_syntax_only ) );
         case 2 :
           return( parse_absolute_date( filter_type, DateMatchType.BETWEEN, dates[0], dates[1], new_start, check_syntax_only ) );
         default :
