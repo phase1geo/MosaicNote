@@ -19,13 +19,50 @@
 * Authored by: Trevor Williams <phase1geo@gmail.com>
 */
 
+public enum SmartParserSuggestion {
+  CATEGORY,   // Suggest: "title", "block", "created", etc.
+  TAG,        // Suggest: !<tag> or <tag>, perhaps even show matching tags
+  TAG_ONLY,   // Suggest: <tag>
+  DATE,       // Suggest: calendar, "is[", "before[", "after[", "last[", "between[", etc.
+  DATE_ABS,   // Suggest: absolute dates
+  DATE_REL,   // Suggest: relative dates
+  BOOLEAN,    // Suggest: "true", "false", "0" or "1"
+  NOTEBOOK,   // Suggest: available matching notebooks by name or by path
+  TEXT,       // Suggest: "re[" or other text
+  BLOCK,      // Suggest: ! and names of available blocks
+  BLOCK_ONLY, // Suggest: names of available blocks
+  NONE,       // Disable suggestions (used when a token is good)
+  NUM;
+
+  public string to_string() {
+    switch( this ) {
+      case CATEGORY   :  return( "category" );
+      case TAG        :  return( "tag" );
+      case TAG_ONLY   :  return( "tag-only" );
+      case DATE       :  return( "date" );
+      case DATE_ABS   :  return( "date-abs" );
+      case DATE_REL   :  return( "date-rel" );
+      case BOOLEAN    :  return( "boolean" );
+      case NOTEBOOK   :  return( "notebook" );
+      case TEXT       :  return( "text" );
+      case BLOCK      :  return( "block" );
+      case BLOCK_ONLY :  return( "block-only" );
+      default         :  assert_not_reached();
+    }
+  }
+}
+
 public class SmartParser {
 
   private NotebookTree           _notebooks;
   private List<SmartLogicFilter> _stack;
 
-  public string error_message { get; private set; default = ""; }
-  public int    error_index   { get; private set; default = -1; }
+  private string _error_message    = "";
+  private int    _error_start      = -1;
+  private int    _prev_error_start = -1;
+
+  public signal void suggest( SmartParserSuggestion suggestion, int start_char, string pattern );
+  public signal void parse_result( string message, int start_char );
 
   //-------------------------------------------------------------
   // Default constructor
@@ -39,7 +76,6 @@ public class SmartParser {
   // 
   public bool parse( string search_str, bool check_syntax_only ) {
 
-    var and_filter  = new FilterAnd();
     var in_double   = false;
     var in_single   = false;
     var skip_char   = false;
@@ -47,11 +83,16 @@ public class SmartParser {
     var index       = 0;
     var token_start = 0;
 
-    error_message = "";
-    error_index   = -1;
-
     if( !check_syntax_only ) {
+      var and_filter = new FilterAnd();
       _stack.append( and_filter );
+    } else {
+      _prev_error_start = _error_start;
+      _error_message    = "";
+      _error_start      = -1;
+      if( search_str == "" ) {
+        suggest( SmartParserSuggestion.CATEGORY, 0, "" );
+      }
     }
 
     for( int i=0; i<search_str.length; i++ ) {
@@ -63,9 +104,12 @@ public class SmartParser {
         } else {
           switch( ch ) {
             case ' ' :
-              if( !in_double && !in_single ) {
+              if( !in_double && !in_single && (token != "") ) {
                 parse_token( token, token_start, check_syntax_only );
                 token = "";
+                if( check_syntax_only ) {
+                  suggest( SmartParserSuggestion.CATEGORY, (index + 1), "" );
+                }
               } else {
                 token += " ";
               }
@@ -130,10 +174,13 @@ public class SmartParser {
       parse_token( token, token_start, check_syntax_only );
     }
 
-    pop_all();
-
-    stdout.printf( "----------------------------------\n" );
-    stdout.printf( "FILTER: %s\n", and_filter.to_string() );
+    if( !check_syntax_only ) {
+      pop_all();
+      stdout.printf( "----------------------------------\n" );
+      stdout.printf( "FILTER: %s\n", _stack.nth_data( 0 ).to_string() );
+    } else if( (_error_start != -1) || (_prev_error_start != -1) ) {
+      parse_result( _error_message, _error_start );
+    }
 
     return( ((_stack.length() == 1) || check_syntax_only) && !in_double && !in_single && !skip_char );
 
@@ -253,8 +300,8 @@ public class SmartParser {
       } else if( type_down == _( "content" ) ) {
         return( parse_text( "content", parts[1], new_start, check_syntax_only ) );
       } else {
-        error_message = "Unknown token type (%s)".printf( parts[0].down() );
-        error_index   = start_char;
+        _error_message = _( "Unknown token type (%s)" ).printf( parts[0].down() );
+        _error_start   = start_char;
       }
     }
 
@@ -286,15 +333,27 @@ public class SmartParser {
   //   tag:!foobar
   //   tag:barfoo
   private bool parse_tag( string tag, int start_char, bool check_syntax_only ) {
-    if( tag.get_char( 0 ) == '!' ) {
-      var filter = new FilterTag( tag.substring( tag.index_of_nth_char( 1 ) ), FilterTagType.DOES_NOT_MATCH );
+    stdout.printf( "parse_tag, tag: %s\n", tag );
+    if( tag == "" ) {
+      if( check_syntax_only ) {
+        suggest( SmartParserSuggestion.TAG, start_char, "" );
+      }
+    } else if( tag.get_char( 0 ) == '!' ) {
+      var rest = tag.substring( tag.index_of_nth_char( 1 ) );
       if( !check_syntax_only ) {
+        var filter = new FilterTag( rest, FilterTagType.DOES_NOT_MATCH );
         add_filter_to_stack_top( filter );
+      } else {
+        suggest( SmartParserSuggestion.TAG_ONLY, (start_char + 1), rest );
       }
     } else {
-      var filter = new FilterTag( tag, FilterTagType.MATCHES );
+      stdout.printf( "HERE!\n" );
       if( !check_syntax_only ) {
+        var filter = new FilterTag( tag, FilterTagType.MATCHES );
         add_filter_to_stack_top( filter );
+      } else {
+        stdout.printf( "HERE!!!\n" );
+        suggest( SmartParserSuggestion.TAG_ONLY, start_char, tag );
       }
     }
     return( false );
@@ -317,7 +376,9 @@ public class SmartParser {
   private bool parse_date( string filter_type, string date, int start_char, bool check_syntax_only ) {
     var str = date;
     var not = false;
-    if( str.get_char( 0 ) == '!' ) {
+    if( str == "" ) {
+      suggest( SmartParserSuggestion.DATE, start_char, "" );
+    } else if( str.get_char( 0 ) == '!' ) {
       not = true;
       str = str.substring( str.index_of_nth_char( 1 ) );
     }
@@ -336,8 +397,8 @@ public class SmartParser {
         if( dates.length == 2 ) {
           return( parse_absolute_date( filter_type, DateMatchType.BETWEEN, dates[0], dates[1], new_start, check_syntax_only ) );
         } else {
-          error_message = _( "Two dates must be specified" );
-          error_index   = new_start;
+          _error_message = _( "Two dates must be specified" );
+          _error_start   = new_start;
         }
       } else if( date.has_prefix( _( "before[" ) ) ) {
         var len = _( "before[" ).char_count();
@@ -355,8 +416,8 @@ public class SmartParser {
         str = str.substring( str.index_of_nth_char( len ) );
         return( parse_relative_date( filter_type, (not ? DateMatchType.LAST_NOT : DateMatchType.LAST), str, new_start, check_syntax_only ) );
       } else {
-        error_message = _( "Unknown date comparator" );
-        error_index   = start_char + (not ? 1 : 0);
+        _error_message = _( "Unknown date comparator" );
+        _error_start   = (start_char + (not ? 1 : 0));
       }
     } else if( date.has_prefix( "<" ) ) {
       var new_start = start_char + (not ? 1 : 0) + 1;
@@ -374,8 +435,8 @@ public class SmartParser {
         case 2 :
           return( parse_absolute_date( filter_type, DateMatchType.BETWEEN, dates[0], dates[1], new_start, check_syntax_only ) );
         default :
-          error_message = _( "Only one or two dates are allowed" );
-          error_index   = new_start;
+          _error_message = _( "Only one or two dates are allowed" );
+          _error_start   = new_start;
           break;
       }
     }
@@ -399,8 +460,8 @@ public class SmartParser {
           return( dt );
         }
       }
-      error_message = _( "Illegal date specified.  Must be YYYY/MM/DD" );
-      error_index   = start_char;
+      _error_message = _( "Illegal date specified.  Must be YYYY/MM/DD" );
+      _error_start   = start_char;
     }
     return( null );
   }
@@ -409,6 +470,15 @@ public class SmartParser {
   // Handle a date that should be treated as an absolute date.  We
   // will create and add up the filter(s) to the stack.
   private bool parse_absolute_date( string filter_type, DateMatchType match_type, string first, string? second, int start_char, bool check_syntax_only ) {
+    if( first == "" ) {
+      if( check_syntax_only ) {
+        suggest( SmartParserSuggestion.DATE_ABS, start_char, "" );
+      }
+    } else if( (second != null) && (second == "") ) {
+      if( check_syntax_only ) {
+        suggest( SmartParserSuggestion.DATE_ABS, (start_char + first.char_count() + 1), "" );
+      }
+    }
     SmartDateFilter? filter = null;
     var first_date  = parse_absolute_date_format( first, start_char );
     var second_date = parse_absolute_date_format( second, (start_char + first.char_count() + 1) );
@@ -436,6 +506,11 @@ public class SmartParser {
   // the current date.  We will create and add up the filter(s)
   // to the stack.
   private bool parse_relative_date( string filter_type, DateMatchType match_type, string period, int start_char, bool check_syntax_only ) {
+    if( period == "" ) {
+      if( check_syntax_only ) {
+        suggest( SmartParserSuggestion.DATE_REL, start_char, "" );
+      }
+    }
     SmartDateFilter? filter    = null;
     TimeType?        time_type = null;
     var num = -1;
@@ -457,8 +532,8 @@ public class SmartParser {
         return( true );
       }
     } else {
-      error_message = _( "Unknown relative date specified.  Must be <num><time_period>." );
-      error_index   = start_char;
+      _error_message = _( "Unknown relative date specified.  Must be <num><time_period>." );
+      _error_start   = start_char;
     }
     return( false );
   }
@@ -470,13 +545,20 @@ public class SmartParser {
   //   favorite:(true|false|0|1)
   private bool parse_bool( string filter_type, string rest, int start_char, bool check_syntax_only ) {
     var val = true;
-    if( (rest.down() == _( "true" )) || (rest == "1") ) {
+    if( rest == "" ) {
+      if( check_syntax_only ) {
+        suggest( SmartParserSuggestion.BOOLEAN, start_char, "" );
+      }
+    } else if( (rest.down() == _( "true" )) || (rest == "1") ) {
       val = true;
     } else if( (rest.down() == _( "false" )) || (rest == "0") ) {
       val = false;
     } else {
-      error_message = _( "Unknown boolean value specified (%s)" ).printf( rest );
-      error_index   = start_char;
+      if( check_syntax_only ) {
+        suggest( SmartParserSuggestion.BOOLEAN, start_char, rest );
+      }
+      _error_message = _( "Unknown boolean value specified (%s)" ).printf( rest );
+      _error_start   = start_char;
       return( false );
     }
     if( !check_syntax_only ) {
@@ -500,21 +582,21 @@ public class SmartParser {
   //   notebook:<name>
   //   notebook:<path>/<of>/<notebook>
   private bool parse_notebook( string name, int start_char, bool check_syntax_only ) {
-    Notebook? nb = null;
-    if( name.contains( "/" ) ) {
-      nb = _notebooks.find_notebook_by_path( name );
+    if( check_syntax_only ) {
+      suggest( SmartParserSuggestion.NOTEBOOK, start_char, name );
     } else {
-      nb = _notebooks.find_notebook_by_name( name );
-    }
-    if( nb != null ) {
-      if( !check_syntax_only ) {
+      Notebook? nb = null;
+      if( name == "" ) {
+      } else if( name.contains( "/" ) ) {
+        nb = _notebooks.find_notebook_by_path( name );
+      } else {
+        nb = _notebooks.find_notebook_by_name( name );
+      }
+      if( nb != null ) {
         var filter = new FilterNotebook( nb.id );
         add_filter_to_stack_top( filter );
         return( true );
       }
-    } else {
-      error_message = _( "Unknown notebook name/path specified" );
-      error_index   = start_char;
     }
     return( false );
   }
@@ -529,7 +611,11 @@ public class SmartParser {
     SmartFilter? filter = null;
     var pattern    = text;
     var match_type = TextMatchType.CONTAINS;
-    if( text.has_prefix( "re[" ) && text.has_suffix( "]" ) ) {
+    if( text == "" ) {
+      if( check_syntax_only ) {
+        suggest( SmartParserSuggestion.TEXT, start_char, "" );
+      }
+    } else if( text.has_prefix( "re[" ) && text.has_suffix( "]" ) ) {
       pattern    = text.slice( text.index_of_nth_char( 3 ), text.index_of_nth_char( text.char_count() - 1 ) );
       match_type = TextMatchType.REGEXP;
     }
@@ -563,8 +649,13 @@ public class SmartParser {
   //   block:(markdown|code|image|uml)
   //   block:!code
   private bool parse_block( string block, int start_char, bool check_syntax_only ) {
-    if( block.has_prefix( "!" ) ) {
-      var item_type = NoteItemType.parse( block.substring( block.index_of_nth_char( 1 ) ) );
+    if( block == "" ) {
+      if( check_syntax_only ) {
+        suggest( SmartParserSuggestion.BLOCK, start_char, "" );
+      }
+    } else if( block.has_prefix( "!" ) ) {
+      var name = block.substring( block.index_of_nth_char( 1 ) );
+      var item_type = NoteItemType.parse( name );
       if( item_type != NoteItemType.NUM ) {
         if( !check_syntax_only ) {
           var item_filter = new FilterItem( item_type );
@@ -573,6 +664,8 @@ public class SmartParser {
           add_filter_to_stack_top( not_filter );
         }
         return( true );
+      } else if( check_syntax_only ) {
+        suggest( SmartParserSuggestion.BLOCK_ONLY, (start_char + 1), name );
       }
     } else {
       var item_type = NoteItemType.parse( block );
@@ -582,10 +675,12 @@ public class SmartParser {
           add_filter_to_stack_top( filter );
         }
         return( true );
+      } else {
+        suggest( SmartParserSuggestion.BLOCK_ONLY, start_char, block );
       }
     }
-    error_message = _( "Unknown note block type specified" );
-    error_index   = start_char + (block.has_prefix( "!" ) ? 1 : 0);
+    _error_message = _( "Unknown note block type specified" );
+    _error_start   = (start_char + (block.has_prefix( "!" ) ? 1 : 0));
     return( false );
   }
 

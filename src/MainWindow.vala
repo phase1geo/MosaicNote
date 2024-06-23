@@ -74,6 +74,12 @@ public class MainWindow : Gtk.ApplicationWindow {
     }
   }
 
+  public NotesPanel notes {
+    get {
+      return( _notes );
+    }
+  }
+
   public FullTags full_tags {
     get {
       return( _full_tags );
@@ -251,29 +257,17 @@ public class MainWindow : Gtk.ApplicationWindow {
   // into the header bar to invoke this interface.
   private Widget create_search() {
 
-    var search_nb = new SmartNotebook( "search", SmartNotebookType.USER, notebooks );
-
-    var search_entry = new SearchEntry() {
-      placeholder_text = _( "Enter Search Query" ),
-      width_chars = 50
-    };
-
-    var search_key = new EventControllerKey();
-    search_entry.add_controller( search_key );
-
-    var sbox = new Box( Orientation.VERTICAL, 5 ) {
-      margin_start  = 5,
-      margin_end    = 5,
-      margin_top    = 5,
-      margin_bottom = 5
-    };
-    sbox.append( search_entry );
+    var search_box = new SearchBox( this );
 
     var search_popover = new Popover() {
       autohide = true,
       has_arrow = true,
-      child = sbox
+      child = search_box
     };
+
+    search_box.hide_search.connect(() => {
+      search_popover.popdown();
+    });
 
     var img = new Image.from_icon_name( get_header_icon_name( "system-search" ) );
 
@@ -284,22 +278,9 @@ public class MainWindow : Gtk.ApplicationWindow {
       popover = search_popover
     };
 
-    search_entry.activate.connect(() => {
-      Idle.add(() => {
-        parser.parse( search_entry.text, false );
-        parser.populate_smart_notebook( search_nb );
-        _notes.populate_with_notebook( search_nb );
-        return( false );
-      });
-      search_popover.popdown();
-    });
-
-    search_key.key_pressed.connect((keyval, keycode, state) => {
-      if( keyval == Gdk.Key.Escape ) {
-        search_popover.popdown();
-        return( true );
-      }
-      return( false );
+    _search_mb.set_create_popup_func((mb) => {
+      stdout.printf( "In popup_func\n" );
+      search_box.initialize();
     });
 
     return( _search_mb );

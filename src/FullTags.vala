@@ -53,7 +53,7 @@ public class FullTags {
   public bool get_matches( Array<string> matches, string match_str ) {
     matches.remove_range( 0, matches.length );
     _tags.foreach((tag) => {
-      if( tag.name.contains( match_str ) ) {
+      if( (match_str == "") || tag.name.contains( match_str ) ) {
         matches.append_val( tag.name );
       }
     });
