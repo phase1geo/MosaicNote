@@ -278,8 +278,6 @@ public class SearchBox : Box {
   // Displays available tags
   private void show_tags( bool include_not, int start_char, string pattern ) {
 
-    _suggest.label = "show_tags, include_not: %s, start_char: %d, pattern: (%s)".printf( include_not.to_string(), start_char, pattern );
-
     if( include_not ) {
       make_list_item( _( "Search for notes that do not contain a tag" ) );
       _list_values.append_val( "!" );
@@ -298,14 +296,16 @@ public class SearchBox : Box {
   //-------------------------------------------------------------
   // Displays date options
   private void show_date( SmartParserSuggestion date_type, int start_char, string pattern ) {
+
     _suggest.label = "show_date, date_type: %s, start_char: %d, pattern: (%s)".printf( date_type.to_string(), start_char, pattern );
+
+    // TODO
+
   }
 
   //-------------------------------------------------------------
   // Displays boolean options
   private void show_boolean( int start_char, string pattern ) {
-
-    _suggest.label = "show_boolean, start_char: %d, pattern: (%s)".printf( start_char, pattern );
 
     for( int i=0; i<SearchBoolean.NUM; i++ ) {
       var boolean = (SearchBoolean)i;
@@ -320,14 +320,27 @@ public class SearchBox : Box {
   //-------------------------------------------------------------
   // Displays notebook options
   private void show_notebook( int start_char, string pattern ) {
-    _suggest.label = "show_notebook, start_char: %d, pattern: (%s)".printf( start_char, pattern );
+
+    var paths = new Array<string>();
+    _win.notebooks.get_notebook_paths( paths );
+
+    for( int i=0; i<paths.length; i++ ) {
+      var path = paths.index( i );
+      if( path.contains( pattern ) ) {
+        make_list_item( _( "Insert Notebook:" ), path );
+        if( path.contains( " " ) ) {
+          _list_values.append_val( "\"" + path + "\"" + " " );
+        } else {
+          _list_values.append_val( path + " " );
+        }
+      }
+    }
+
   }
 
   //-------------------------------------------------------------
   // Displays text options
   private void show_text( int start_char, string pattern ) {
-    _suggest.label = "show_text, start_char: %d, pattern: (%s)".printf( start_char, pattern );
-
 
     if( pattern == "" ) {
       make_list_item( _( "Insert Regular Expression" ) );
@@ -339,8 +352,6 @@ public class SearchBox : Box {
   //-------------------------------------------------------------
   // Displays block options
   private void show_block( bool include_not, int start_char, string pattern ) {
-
-    _suggest.label = "show_block, include_not: %s, start_char: %d, pattern: (%s)".printf( include_not.to_string(), start_char, pattern );
 
     if( include_not ) {
       make_list_item( _( "Search for notes that do not contain a block type" ) );

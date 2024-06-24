@@ -246,6 +246,17 @@ public class NotebookTree {
 		}
 
 		//-------------------------------------------------------------
+		// Populates the matches array with all notebooks that match
+		// the given path pattern.
+    public void get_notebook_paths( Array<string> paths, string parent_path ) {
+		  var path = (parent_path == "") ? get_notebook().name : (parent_path + "/" + get_notebook().name);
+		  paths.append_val( path );
+			for( int i=0; i<_children.length; i++ ) {
+				_children.index( i ).get_notebook_paths( paths, path );
+			}
+		}
+
+		//-------------------------------------------------------------
 		// Searches for a note with the given ID.  If it is found, return it; otherwise, returns null.
 		public Note? find_note( int id ) {
 			var note = get_notebook().find_note( id );
@@ -425,6 +436,15 @@ public class NotebookTree {
     }
     return( null );
 	}
+
+	//-------------------------------------------------------------
+	// Populates the given matches array when any notebooks that match
+	// the given path_pattern.
+  public void get_notebook_paths( Array<string> paths ) {
+  	for( int i=0; i<_nodes.length; i++ ) {
+  		_nodes.index( i ).get_notebook_paths( paths, "" );
+  	}
+  }
 
 	//-------------------------------------------------------------
 	// Searches the notebooks for a note that matches the given ID
