@@ -23,7 +23,8 @@ public enum SmartParserSuggestion {
   CATEGORY,   // Suggest: "title", "block", "created", etc.
   TAG,        // Suggest: !<tag> or <tag>, perhaps even show matching tags
   TAG_ONLY,   // Suggest: <tag>
-  DATE,       // Suggest: calendar, "is[", "before[", "after[", "last[", "between[", etc.
+  DATE,       // Suggest: !, calendar, "is[", "before[", "after[", "last[", "between[", etc.
+  DATE_ONLY,  // Suggest: Same as DATE but without !
   DATE_ABS,   // Suggest: absolute dates
   DATE_REL,   // Suggest: relative dates
   BOOLEAN,    // Suggest: "true", "false", "0" or "1"
@@ -40,6 +41,7 @@ public enum SmartParserSuggestion {
       case TAG        :  return( "tag" );
       case TAG_ONLY   :  return( "tag-only" );
       case DATE       :  return( "date" );
+      case DATE_ONLY  :  return( "date-only" );
       case DATE_ABS   :  return( "date-abs" );
       case DATE_REL   :  return( "date-rel" );
       case BOOLEAN    :  return( "boolean" );
@@ -336,7 +338,6 @@ public class SmartParser {
   //   tag:!foobar
   //   tag:barfoo
   private bool parse_tag( string tag, int start_char, bool check_syntax_only ) {
-    stdout.printf( "parse_tag, tag: %s, start_char: %d\n", tag, start_char );
     if( tag == "" ) {
       if( check_syntax_only ) {
         suggest( SmartParserSuggestion.TAG, start_char, "" );
@@ -350,12 +351,10 @@ public class SmartParser {
         suggest( SmartParserSuggestion.TAG_ONLY, (start_char + 1), rest );
       }
     } else {
-      stdout.printf( "HERE!\n" );
       if( !check_syntax_only ) {
         var filter = new FilterTag( tag, FilterTagType.MATCHES );
         add_filter_to_stack_top( filter );
       } else {
-        stdout.printf( "HERE!!!\n" );
         suggest( SmartParserSuggestion.TAG_ONLY, start_char, tag );
       }
     }
@@ -380,13 +379,20 @@ public class SmartParser {
     var str = date;
     var not = false;
     if( str == "" ) {
-      suggest( SmartParserSuggestion.DATE, start_char, "" );
+      if( check_syntax_only ) {
+        suggest( SmartParserSuggestion.DATE, start_char, "" );
+      }
     } else if( str.get_char( 0 ) == '!' ) {
       not = true;
       str = str.substring( str.index_of_nth_char( 1 ) );
+      if( check_syntax_only ) {
+        suggest( SmartParserSuggestion.DATE_ONLY, start_char, str );
+      }
     }
-    if( str.has_suffix( "]" ) ) {
-      str = str.slice( 0, str.index_of_nth_char( str.char_count() - 1 ) );
+    if( str.has_suffix( "]" ) || check_syntax_only ) {
+      if( str.has_suffix( "]" ) ) {
+        str = str.slice( 0, str.index_of_nth_char( str.char_count() - 1 ) );
+      }
       if( str.has_prefix( _( "is[" ) ) ) {
         var len = _( "is[" ).char_count();
         var new_start = start_char + (not ? 1 : 0) + len;
@@ -398,22 +404,22 @@ public class SmartParser {
         str = str.substring( str.index_of_nth_char( len ) );
         var dates = str.split( "-" );
         if( dates.length == 2 ) {
-          return( parse_absolute_date( filter_type, DateMatchType.BETWEEN, dates[0], dates[1], new_start, check_syntax_only ) );
+          return( parse_absolute_date( filter_type, (not ? DateMatchType.BETWEEN_NOT : DateMatchType.BETWEEN), dates[0], dates[1], new_start, check_syntax_only ) );
         } else {
           _error_message = _( "Two dates must be specified" );
           _error_start   = new_start;
         }
-      } else if( date.has_prefix( _( "before[" ) ) ) {
+      } else if( str.has_prefix( _( "before[" ) ) ) {
         var len = _( "before[" ).char_count();
         var new_start = start_char + (not ? 1 : 0) + len;
         str = str.substring( str.index_of_nth_char( len ) );
-        return( parse_absolute_date( filter_type, DateMatchType.BEFORE, str, null, new_start, check_syntax_only ) );
-      } else if( date.has_prefix( _( "after[" ) ) ) {
+        return( parse_absolute_date( filter_type, (not ? DateMatchType.BEFORE_NOT : DateMatchType.BEFORE), str, null, new_start, check_syntax_only ) );
+      } else if( str.has_prefix( _( "after[" ) ) ) {
         var len = _( "after[" ).char_count();
         var new_start = start_char + (not ? 1 : 0) + len; 
         str = str.substring( str.index_of_nth_char( len ) );
-        return( parse_absolute_date( filter_type, DateMatchType.AFTER, str, null, new_start, check_syntax_only ) );
-      } else if( date.has_prefix( _( "last[" ) ) ) {
+        return( parse_absolute_date( filter_type, (not ? DateMatchType.AFTER_NOT : DateMatchType.AFTER), str, null, new_start, check_syntax_only ) );
+      } else if( str.has_prefix( _( "last[" ) ) ) {
         var len = _( "last[" ).char_count();
         var new_start = start_char + (not ? 1 : 0) + len;
         str = str.substring( str.index_of_nth_char( len ) );
@@ -422,13 +428,13 @@ public class SmartParser {
         _error_message = _( "Unknown date comparator" );
         _error_start   = (start_char + (not ? 1 : 0));
       }
-    } else if( date.has_prefix( "<" ) ) {
+    } else if( str.has_prefix( "<" ) ) {
       var new_start = start_char + (not ? 1 : 0) + 1;
       str = str.substring( str.index_of_nth_char( 1 ) );
-      return( parse_absolute_date( filter_type, DateMatchType.BEFORE, str, null, new_start, check_syntax_only ) );
-    } else if( date.has_prefix( ">" ) ) {
+      return( parse_absolute_date( filter_type, (not ? DateMatchType.BEFORE_NOT : DateMatchType.BEFORE), str, null, new_start, check_syntax_only ) );
+    } else if( str.has_prefix( ">" ) ) {
       var new_start = start_char + (not ? 1 : 0) + 1;
-      return( parse_absolute_date( filter_type, DateMatchType.AFTER, str, null, new_start, check_syntax_only ) );
+      return( parse_absolute_date( filter_type, (not ? DateMatchType.AFTER_NOT : DateMatchType.AFTER), str, null, new_start, check_syntax_only ) );
     } else {
       var dates = str.split( "-" );
       var new_start = start_char + (not ? 1 : 0);
@@ -436,7 +442,7 @@ public class SmartParser {
         case 1 :
           return( parse_absolute_date( filter_type, (not ? DateMatchType.IS_NOT : DateMatchType.IS), str, null, new_start, check_syntax_only ) );
         case 2 :
-          return( parse_absolute_date( filter_type, DateMatchType.BETWEEN, dates[0], dates[1], new_start, check_syntax_only ) );
+          return( parse_absolute_date( filter_type, (not ? DateMatchType.BETWEEN_NOT : DateMatchType.BETWEEN), dates[0], dates[1], new_start, check_syntax_only ) );
         default :
           _error_message = _( "Only one or two dates are allowed" );
           _error_start   = new_start;

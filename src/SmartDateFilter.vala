@@ -40,14 +40,34 @@ public enum TimeType {
     }
   }
 
+  public string? search_string() {
+    switch( this ) {
+      case DAY    :  return( _( "day" ) );
+      case WEEK   :  return( _( "week" ) );
+      case MONTH  :  return( _( "month" ) );
+      case YEAR   :  return( _( "year" ) );
+      default     :  return( null );
+    }
+  }
+
+  public string? search_detail() {
+    switch( this ) {
+      case DAY   :  return( _( "Include notes with a date in the past N days" ) );
+      case WEEK  :  return( _( "Include notes with a date in the past N weeks" ) );
+      case MONTH :  return( _( "Include notes with a date in the past N months" ) );
+      case YEAR  :  return( _( "Include notes with a date in the past N years" ) );
+      default    :  return( null );
+    }
+  }
+
   public string label() {
     switch( this ) {
-      case MINUTE :  return( "minute(s)" );
-      case HOUR   :  return( "hour(s)" );
-      case DAY    :  return( "day(s)" );
-      case WEEK   :  return( "week(s)" );
-      case MONTH  :  return( "month(s)" );
-      case YEAR   :  return( "year(s)" );
+      case MINUTE :  return( _( "minute(s)" ) );
+      case HOUR   :  return( _( "hour(s)" ) );
+      case DAY    :  return( _( "day(s)" ) );
+      case WEEK   :  return( _( "week(s)" ) );
+      case MONTH  :  return( _( "month(s)" ) );
+      case YEAR   :  return( _( "year(s)" ) );
       default     :  assert_not_reached();
     }
   }
@@ -65,30 +85,17 @@ public enum TimeType {
   }
 
   public static TimeType? parse_full( string val ) {
-    switch( val ) {
-      case "d"      :
-      case "ds"     :
-      case "day"    :
-      case "days"   :  return( DAY );
-      case "w"      :
-      case "ws"     :
-      case "wk"     :
-      case "wks"    :
-      case "week"   :
-      case "weeks"  :  return( WEEK );
-      case "m"      :
-      case "ms"     :
-      case "mon"    :
-      case "mons"   :
-      case "month"  :
-      case "months" :  return( MONTH );
-      case "y"      :
-      case "ys"     :
-      case "yr"     :
-      case "yrs"    :
-      case "year"   :
-      case "years"  :  return( YEAR );
-      default       :  return( null );
+    var down = val.down();
+    if( _( "days" ).has_prefix( down ) ) {
+      return( DAY );
+    } else if( _( "weeks" ).has_prefix( down ) ) {
+      return( WEEK );
+    } else if( _( "months" ).has_prefix( down ) ) {
+      return( MONTH );
+    } else if( _( "years" ).has_prefix( down ) ) {
+      return( YEAR );
+    } else {
+      return( null );
     }
   }
 
@@ -110,65 +117,94 @@ public enum DateMatchType {
   IS,
   IS_NOT,
   BEFORE,
+  BEFORE_NOT,
   AFTER,
+  AFTER_NOT,
   BETWEEN,
+  BETWEEN_NOT,
   LAST,
   LAST_NOT,
-  NEXT,
-  NEXT_NOT,
   NUM;
 
   public string to_string() {
     switch( this ) {
-      case IS       :  return( "is" );
-      case IS_NOT   :  return( "is-not" );
-      case BEFORE   :  return( "before" );
-      case AFTER    :  return( "after" );
-      case BETWEEN  :  return( "between" );
-      case LAST     :  return( "last" );
-      case LAST_NOT :  return( "last-not" );
-      case NEXT     :  return( "next" );
-      case NEXT_NOT :  return( "next-not" );
-      default       :  assert_not_reached();
+      case IS          :  return( "is" );
+      case IS_NOT      :  return( "is-not" );
+      case BEFORE      :  return( "before" );
+      case BEFORE_NOT  :  return( "before-not" );
+      case AFTER       :  return( "after" );
+      case AFTER_NOT   :  return( "after-not" );
+      case BETWEEN     :  return( "between" );
+      case BETWEEN_NOT :  return( "between-not" );
+      case LAST        :  return( "last" );
+      case LAST_NOT    :  return( "last-not" );
+      default          :  assert_not_reached();
+    }
+  }
+
+  public string? search_string() {
+    switch( this ) {
+      case IS      :  return( "is" );
+      case BEFORE  :  return( "before" );
+      case AFTER   :  return( "after" );
+      case BETWEEN :  return( "between" );
+      case LAST    :  return( "last" );
+      default      :  return( null );
+    }
+  }
+
+  public string? search_detail() {
+    switch( this ) {
+      case IS      :  return( _( "Include notes that are on a specified date." ) );
+      case BEFORE  :  return( _( "Include notes before a specified date." ) );
+      case AFTER   :  return( _( "Include notes after a specified date." ) );
+      case BETWEEN :  return( _( "Include notes between two specified dates." ) );
+      case LAST    :  return( _( "Include notes with a date in the last specified time period." ) );
+      default      :  return( null );
     }
   }
 
   public string label() {
     switch( this ) {
-      case IS       :  return( "is" );
-      case IS_NOT   :  return( "is not" );
-      case BEFORE   :  return( "before" );
-      case AFTER    :  return( "after" );
-      case BETWEEN  :  return( "between" );
-      case LAST     :  return( "in the last" );
-      case LAST_NOT :  return( "not in the last" );
-      case NEXT     :  return( "in the next" );
-      case NEXT_NOT :  return( "not in the next" );
-      default       :  assert_not_reached();
+      case IS          :  return( _( "is" ) );
+      case IS_NOT      :  return( _( "is not" ) );
+      case BEFORE      :  return( _( "before" ) );
+      case BEFORE_NOT  :  return( _( "not before" ) );
+      case AFTER       :  return( _( "after" ) );
+      case AFTER_NOT   :  return( _( "not after" ) );
+      case BETWEEN     :  return( _( "between" ) );
+      case BETWEEN_NOT :  return( _( "not between" ) );
+      case LAST        :  return( _( "in the last" ) );
+      case LAST_NOT    :  return( _( "not in the last" ) );
+      default          :  assert_not_reached();
     }
   }
 
   public static DateMatchType parse( string val ) {
     switch( val ) {
-      case "is"       :  return( IS );
-      case "is-not"   :  return( IS_NOT );
-      case "before"   :  return( BEFORE );
-      case "after"    :  return( AFTER );
-      case "between"  :  return( BETWEEN );
-      case "last"     :  return( LAST );
-      case "last-not" :  return( LAST_NOT );
-      case "next"     :  return( NEXT );
-      case "next-not" :  return( NEXT_NOT );
-      default         :  assert_not_reached();
+      case "is"          :  return( IS );
+      case "is-not"      :  return( IS_NOT );
+      case "before"      :  return( BEFORE );
+      case "before-not"  :  return( BEFORE_NOT );
+      case "after"       :  return( AFTER );
+      case "after-not"   :  return( AFTER_NOT );
+      case "between"     :  return( BETWEEN );
+      case "between-not" :  return( BETWEEN_NOT );
+      case "last"        :  return( LAST );
+      case "last-not"    :  return( LAST_NOT );
+      default            :  assert_not_reached();
     }
   }
 
   public bool is_absolute() {
-    return( (this == IS) || (this == IS_NOT) || (this == BEFORE) || (this == AFTER) || (this == BETWEEN) );
+    return( (this == IS)      || (this == IS_NOT)     ||
+            (this == BEFORE)  || (this == BEFORE_NOT) ||
+            (this == AFTER)   || (this == AFTER_NOT)  ||
+            (this == BETWEEN) || (this == BETWEEN_NOT) );
   }
 
   public bool is_relative() {
-    return( (this == LAST) || (this == LAST_NOT) || (this == NEXT) || (this == NEXT_NOT) );
+    return( (this == LAST) || (this == LAST_NOT) );
   }
 
   private bool is_matches( DateTime act, DateTime exp ) {
@@ -193,20 +229,17 @@ public enum DateMatchType {
     return( (act.compare( now ) != 1) && (act.compare( then ) != -1) );
   }
 
-  private bool next_matches( DateTime act, int num, TimeType amount ) {
-    var now  = new DateTime.now();
-    var then = amount.from_date( now, num );
-    return( (act.compare( now ) != -1) && (act.compare( then ) != 1) );
-  }
-
   public bool absolute_matches( DateTime act, DateTime first, DateTime second ) {
     switch( this ) {
-      case IS      :  return( is_matches( act, first ) );
-      case IS_NOT  :  return( !is_matches( act, first ) );
-      case BEFORE  :  return( before_matches( act, first ) );
-      case AFTER   :  return( after_matches( act, first ) );
-      case BETWEEN :  return( between_matches( act, first, second ) );
-      default      :  return( false );
+      case IS          :  return( is_matches( act, first ) );
+      case IS_NOT      :  return( !is_matches( act, first ) );
+      case BEFORE      :  return( before_matches( act, first ) );
+      case BEFORE_NOT  :  return( !before_matches( act, first ) );
+      case AFTER       :  return( after_matches( act, first ) );
+      case AFTER_NOT   :  return( !after_matches( act, first ) );
+      case BETWEEN     :  return( between_matches( act, first, second ) );
+      case BETWEEN_NOT :  return( !between_matches( act, first, second ) );
+      default          :  return( false );
     }
   }
 
@@ -214,8 +247,6 @@ public enum DateMatchType {
     switch( this ) {
       case LAST     :  return( last_matches( act, num, amount ) );
       case LAST_NOT :  return( !last_matches( act, num, amount ) );
-      case NEXT     :  return( next_matches( act, num, amount ) );
-      case NEXT_NOT :  return( !next_matches( act, num, amount ) );
       default       :  return( false );
     }
   }
@@ -286,16 +317,17 @@ public class SmartDateFilter : SmartFilter {
     var second_str = _second.format( "%Y/%m/%d" );
 
     switch( _match_type ) {
-      case IS       :  return( "is[%s]".printf( first_str ) );
-      case IS_NOT   :  return( "!is[%s]".printf( first_str ) );
-      case BEFORE   :  return( "before[%s]".printf( first_str ) );
-      case AFTER    :  return( "after[%s]".printf( first_str ) );
-      case BETWEEN  :  return( "between[%s-%s]".printf( first_str, second_str ) );
-      case LAST     :  return( "last[%d%s]".printf( _num, _time_type.to_string() ) );
-      case LAST_NOT :  return( "!last[%d%s]".printf( _num, _time_type.to_string() ) );
-      case NEXT     :  return( "next[%d%s]".printf( _num, _time_type.to_string() ) );
-      case NEXT_NOT :  return( "!next[%d%s]".printf( _num, _time_type.to_string() ) );
-      default       :  return( "" );
+      case IS          :  return( "is[%s]".printf( first_str ) );
+      case IS_NOT      :  return( "!is[%s]".printf( first_str ) );
+      case BEFORE      :  return( "before[%s]".printf( first_str ) );
+      case BEFORE_NOT  :  return( "!before[%s]".printf( first_str ) );
+      case AFTER       :  return( "after[%s]".printf( first_str ) );
+      case AFTER_NOT   :  return( "!after[%s]".printf( first_str ) );
+      case BETWEEN     :  return( "between[%s-%s]".printf( first_str, second_str ) );
+      case BETWEEN_NOT :  return( "!between[%s-%s]".printf( first_str, second_str ) );
+      case LAST        :  return( "last[%d%s]".printf( _num, _time_type.to_string() ) );
+      case LAST_NOT    :  return( "!last[%d%s]".printf( _num, _time_type.to_string() ) );
+      default          :  return( "" );
     }
 
   }

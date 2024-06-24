@@ -131,6 +131,21 @@ public class SearchBox : Box {
 
     _calendar = new Calendar();
 
+    _calendar.day_selected.connect(() => {
+      var dt    = _calendar.get_date();
+      var str   = dt.format( "%Y/%m/%d" );
+      var text  = _search_entry.text;
+      var start = text.index_of_nth_char( _start_char );
+      var end   = text.index_of_nth_char( _start_char + _pattern.char_count() );
+      var cursor = _start_char + str.char_count();
+      if( text.get_char( end ) == ']' ) {
+        cursor++;
+      }
+      _search_entry.text = text.splice( start, end, str );
+      _search_entry.set_position( cursor );
+      _search_entry.grab_focus();
+    });
+
     _list = new ListBox() {
       selection_mode = SelectionMode.SINGLE,
       halign = Align.FILL,
@@ -180,6 +195,7 @@ public class SearchBox : Box {
       case SmartParserSuggestion.TAG        :  show_tags( true, start_char, pattern );  break;
       case SmartParserSuggestion.TAG_ONLY   :  show_tags( false, start_char, pattern );  break;
       case SmartParserSuggestion.DATE       :
+      case SmartParserSuggestion.DATE_ONLY  :
       case SmartParserSuggestion.DATE_ABS   :
       case SmartParserSuggestion.DATE_REL   :  show_date( suggestion, start_char, pattern );  break;
       case SmartParserSuggestion.BOOLEAN    :  show_boolean( start_char, pattern );  break;
@@ -249,7 +265,7 @@ public class SearchBox : Box {
 
     var label = new Label( text ) {
       halign = Align.START,
-      justify = Justification.RIGHT,
+      justify = Justification.LEFT,
       use_markup = true
     };
 
@@ -299,7 +315,40 @@ public class SearchBox : Box {
 
     _suggest.label = "show_date, date_type: %s, start_char: %d, pattern: (%s)".printf( date_type.to_string(), start_char, pattern );
 
-    // TODO
+    if( (date_type == SmartParserSuggestion.DATE) || (date_type == SmartParserSuggestion.DATE_ONLY) ) {
+
+      _calendar.visible = true;
+
+      if( date_type == SmartParserSuggestion.DATE ) {
+        make_list_item( "Search for notes that are not in the date range" );
+        _list_values.append_val( "!" );
+      }
+
+      for( int i=0; i<DateMatchType.NUM; i++ ) {
+        var match_type = (DateMatchType)i;
+        var type_value = match_type.search_string();
+        if( type_value != null ) {
+          make_list_item( _( "Insert Date Range:" ), type_value, match_type.search_detail() );
+          _list_values.append_val( "%s[]".printf( type_value ) );
+        }
+      }
+
+    } else if( date_type == SmartParserSuggestion.DATE_ABS ) {
+
+      _calendar.visible = true;
+
+    } else if( date_type == SmartParserSuggestion.DATE_REL ) {
+
+      for( int i=0; i<TimeType.NUM; i++ ) {
+        var time_type = (TimeType)i;
+        var time_value = time_type.search_string();
+        if( time_value != null ) {
+          make_list_item( _( "Insert Relative Time Period:" ), time_value, time_type.search_detail() );
+          _list_values.append_val( time_value );
+        }
+      }
+
+    }
 
   }
 
