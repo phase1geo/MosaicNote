@@ -26,6 +26,9 @@ public enum NoteItemType {
   UML,
 	NUM;
 
+  //-------------------------------------------------------------
+  // Displays the NoteItemType as a string that is used for saving
+  // this value to a file.
 	public string to_string() {
 		switch( this ) {
 			case MARKDOWN :  return( "markdown" );
@@ -36,6 +39,22 @@ public enum NoteItemType {
 		}
 	}
 
+  //-------------------------------------------------------------
+  // Displays the NoteItemType as a translated string that is used
+  // for matching user input values for search.
+  public string search_string() {
+    switch( this ) {
+      case MARKDOWN :  return( _( "markdown" ) );
+      case CODE     :  return( _( "code" ) );
+      case IMAGE    :  return( _( "image" ) );
+      case UML      :  return( _( "uml" ) );
+      default       :  assert_not_reached();
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Displays the NoteItemType as a translated string that is
+  // used for display within the application.
 	public string label() {
 		switch( this ) {
 			case MARKDOWN :  return( _( "Markdown" ) );
@@ -46,6 +65,9 @@ public enum NoteItemType {
 		}
 	}
 
+  //-------------------------------------------------------------
+  // Parses the string value (created from to_string()) and returns
+  // the enumerated value.
 	public static NoteItemType parse( string str ) {
 		switch( str ) {
 			case "markdown" :  return( MARKDOWN );
@@ -56,14 +78,37 @@ public enum NoteItemType {
 		}
 	}
 
+  //-------------------------------------------------------------
+  // Parses the string value (created from search_string()) and
+  // returns the enumerated value.
+  public static NoteItemType parse_search( string str ) {
+    var down = str.down();
+    if( down == _( "markdown" ) ) {
+      return( MARKDOWN );
+    } else if( down == _( "code" ) ) {
+      return( CODE );
+    } else if( down == _( "image" ) ) {
+      return( IMAGE );
+    } else if( down == _( "uml" ) ) {
+      return( UML );
+    } else {
+      return( NUM );
+    }
+  }
+
   public bool is_text() {
     return( (this == MARKDOWN) || (this == CODE) );
   }
 
+  //-------------------------------------------------------------
+  // Returns true if this note item should have spellchecking enabled
+  // for it.
   public bool spell_checkable() {
     return( this == MARKDOWN );
   }
 
+  //-------------------------------------------------------------
+  // Creates a note item object for the given note.
 	public NoteItem create( Note note ) {
 		switch( this ) {
 			case MARKDOWN :  return( new NoteItemMarkdown( note ) );
@@ -74,6 +119,8 @@ public enum NoteItemType {
 		}
 	}
 
+  //-------------------------------------------------------------
+  // Returns the toolbar object to use for the note item.
   public ToolbarItem create_toolbar() {
     switch( this ) {
       case MARKDOWN :  return( new ToolbarMarkdown() );
@@ -84,6 +131,9 @@ public enum NoteItemType {
     }
   }
 
+  //-------------------------------------------------------------
+  // Initializes the given text widget options based on the
+  // note type.
 	public void initialize_text( GtkSource.View text ) {
 		switch( this ) {
 			case MARKDOWN :  initialize_markdown_text( text );  break;
@@ -93,10 +143,14 @@ public enum NoteItemType {
 		}
 	}
 
+  //-------------------------------------------------------------
+  // Initializes a text widget to be used for Markdown editing.
 	private void initialize_markdown_text( GtkSource.View text ) {
 		text.wrap_mode = Gtk.WrapMode.WORD;
 	}
 
+  //-------------------------------------------------------------
+  // Initializes a text widget to be used for coding.
 	private void initialize_code_text( GtkSource.View text ) {
 		text.wrap_mode = Gtk.WrapMode.NONE;
     text.show_line_numbers = true;
@@ -109,6 +163,8 @@ public enum NoteItemType {
     text.monospace = true;
 	}
 
+  //-------------------------------------------------------------
+  // Initializes a text widget to be used for UML scripting.
 	private void initialize_uml_text( GtkSource.View text ) {
 		text.wrap_mode = Gtk.WrapMode.NONE;
     text.auto_indent = true;

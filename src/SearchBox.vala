@@ -21,6 +21,50 @@
 
 using Gtk;
 
+public enum SearchCategories {
+  NOTEBOOK,
+  CONTENT,
+  TITLE,
+  TAG,
+  CREATED,
+  FAVORITE,
+  LOCKED,
+  BLOCK,
+  UPDATED,
+  VIEWED,
+  NUM;
+
+  public string to_string() {
+    switch( this ) {
+      case NOTEBOOK :  return( _( "notebook" ) );
+      case CONTENT  :  return( _( "content" ) );
+      case TITLE    :  return( _( "title" ) );
+      case TAG      :  return( _( "tag" ) );
+      case CREATED  :  return( _( "created" ) );
+      case FAVORITE :  return( _( "favorite" ) );
+      case LOCKED   :  return( _( "locked" ) );
+      case BLOCK    :  return( _( "block" ) );
+      case UPDATED  :  return( _( "updated" ) );
+      case VIEWED   :  return( _( "viewed" ) );
+      default       :  assert_not_reached();
+    }
+  }
+}
+
+public enum SearchBoolean {
+  TRUE,
+  FALSE,
+  NUM;
+
+  public string to_string() {
+    switch( this ) {
+      case TRUE  :  return( _( "true" ) );
+      case FALSE :  return( _( "false" ) );
+      default    :  assert_not_reached();
+    }
+  }
+}
+
 //-------------------------------------------------------------
 // Provides the search UI.
 public class SearchBox : Box {
@@ -29,9 +73,14 @@ public class SearchBox : Box {
   private SearchEntry _search_entry;
   private Label       _suggest;
   private Label       _error;
+  private Calendar    _calendar;
+  private ListBox     _list;
 
   private SmartParserSuggestion _suggestion;
+  private int                   _start_char;
+  private string                _pattern;
   private Array<string>         _tag_matches;
+  private Array<string>         _list_values;
 
   public signal void hide_search();
 
@@ -44,6 +93,7 @@ public class SearchBox : Box {
     _win = win;
 
     _tag_matches = new Array<string>();
+    _list_values = new Array<string>();
 
     var search_nb = new SmartNotebook( "search", SmartNotebookType.USER, _win.notebooks );
 
@@ -66,7 +116,9 @@ public class SearchBox : Box {
     });
 
     _search_entry.search_changed.connect(() => {
-      win.parser.parse( _search_entry.text, true );
+      var text = _search_entry.text;
+      var end  = text.index_of_nth_char( _search_entry.cursor_position );
+      win.parser.parse( text.slice( 0, end ), true );
     });
 
     search_key.key_pressed.connect((keyval, keycode, state) => {
@@ -77,10 +129,25 @@ public class SearchBox : Box {
       return( false );
     });
 
+    _calendar = new Calendar();
+
+    _list = new ListBox() {
+      selection_mode = SelectionMode.SINGLE,
+      halign = Align.FILL,
+      valign = Align.FILL
+    };
+
+    _list.row_activated.connect( list_activated );
+
+    var suggest_box = new Box( Orientation.VERTICAL, 0 );
+    suggest_box.append( _calendar );
+    suggest_box.append( _list );
+
     _suggest = new Label( "" );
     _error   = new Label( "" );
 
     append( _search_entry );
+    append( suggest_box );
     append( _suggest );
     append( _error );
 
@@ -101,7 +168,13 @@ public class SearchBox : Box {
   //-------------------------------------------------------------
   // Handles parser suggestions and updates our UI accordingly.
   private void handle_suggestion( SmartParserSuggestion suggestion, int start_char, string pattern ) {
+
     _suggestion = suggestion;
+    _start_char = start_char;
+    _pattern    = pattern;
+
+    reset_results();
+
     switch( suggestion ) {
       case SmartParserSuggestion.CATEGORY   :  show_categories( start_char, pattern );  break;
       case SmartParserSuggestion.TAG        :  show_tags( true, start_char, pattern );  break;
@@ -116,6 +189,24 @@ public class SearchBox : Box {
       case SmartParserSuggestion.BLOCK_ONLY :  show_block( false, start_char, pattern );  break;
       case SmartParserSuggestion.NONE       :  show_none();  break;
     }
+
+  }
+
+  //-------------------------------------------------------------
+  // Called whenever a list item is activated.  Inserts the string
+  // value at the selected index into the search entry.
+  private void list_activated( ListBoxRow row ) {
+    var str    = _list_values.index( row.get_index() );
+    var text   = _search_entry.text;
+    var start  = text.index_of_nth_char( _start_char );
+    var end    = text.index_of_nth_char( _start_char + _pattern.char_count() );
+    var cursor = _start_char + str.char_count();
+    _search_entry.text = text.splice( start, end, str );
+    if( str.has_suffix( "]" ) ) {
+      cursor--;
+    }
+    _search_entry.set_position( cursor );
+    _search_entry.grab_focus();
   }
 
   //-------------------------------------------------------------
@@ -128,20 +219,78 @@ public class SearchBox : Box {
   }
 
   //-------------------------------------------------------------
+  // Clears the search results area
+  private void reset_results() {
+
+    _calendar.visible = false;
+    _list.visible     = false;
+
+    Utils.clear_listbox( _list );
+
+    if( _list_values.length > 0 ) {
+      _list_values.remove_range( 0, _list_values.length );
+    }
+
+  }
+
+  //-------------------------------------------------------------
+  // Constructs an item to add to the list and adds it.
+  private void make_list_item( string action, string? val = null, string? detail = null ) {
+
+    var text = Utils.make_title( action );
+
+    if( val != null ) {
+      text += " %s".printf( val );
+    }
+
+    if( detail != null ) {
+      text += "\n%s".printf( detail );
+    }
+
+    var label = new Label( text ) {
+      halign = Align.START,
+      justify = Justification.RIGHT,
+      use_markup = true
+    };
+
+    _list.append( label );
+    _list.visible = true;
+
+  }
+
+  //-------------------------------------------------------------
   // Displays available categories.
   private void show_categories( int start_char, string pattern ) {
+
     _suggest.label = "show_categories, start_char: %d, pattern: (%s)".printf( start_char, pattern );
+
+    for( int i=0; i<SearchCategories.NUM; i++ ) {
+      var category = (SearchCategories)i;
+      if( category.to_string().contains( pattern ) ) {
+        make_list_item( _( "Insert Category:" ), category.to_string() );
+        _list_values.append_val( category.to_string() + ":" );
+      }
+    }
+
   }
 
   //-------------------------------------------------------------
   // Displays available tags
   private void show_tags( bool include_not, int start_char, string pattern ) {
+
     _suggest.label = "show_tags, include_not: %s, start_char: %d, pattern: (%s)".printf( include_not.to_string(), start_char, pattern );
+
+    if( include_not ) {
+      make_list_item( _( "Search for notes that do not contain a tag" ) );
+      _list_values.append_val( "!" );
+    }
+
     _win.full_tags.get_matches( _tag_matches, pattern );
     for( int i=0; i<_tag_matches.length; i++ ) {
-      if( _tag_matches.index( i ) == pattern ) {
-        show_none();
-        break;
+      if( _tag_matches.index( i ).contains( pattern ) ) {
+        var tag   = _tag_matches.index( i );
+        make_list_item( _( "Insert tag:" ), tag );
+        _list_values.append_val( tag + " " );
       }
     }
   }
@@ -155,7 +304,17 @@ public class SearchBox : Box {
   //-------------------------------------------------------------
   // Displays boolean options
   private void show_boolean( int start_char, string pattern ) {
+
     _suggest.label = "show_boolean, start_char: %d, pattern: (%s)".printf( start_char, pattern );
+
+    for( int i=0; i<SearchBoolean.NUM; i++ ) {
+      var boolean = (SearchBoolean)i;
+      if( boolean.to_string().contains( pattern ) ) {
+        make_list_item( _( "Insert Boolean:" ), boolean.to_string() );
+        _list_values.append_val( boolean.to_string() + " " );
+      }
+    }
+
   }
 
   //-------------------------------------------------------------
@@ -168,12 +327,34 @@ public class SearchBox : Box {
   // Displays text options
   private void show_text( int start_char, string pattern ) {
     _suggest.label = "show_text, start_char: %d, pattern: (%s)".printf( start_char, pattern );
+
+
+    if( pattern == "" ) {
+      make_list_item( _( "Insert Regular Expression" ) );
+      _list_values.append_val( "re[]" );
+    }
+
   }
 
   //-------------------------------------------------------------
   // Displays block options
   private void show_block( bool include_not, int start_char, string pattern ) {
+
     _suggest.label = "show_block, include_not: %s, start_char: %d, pattern: (%s)".printf( include_not.to_string(), start_char, pattern );
+
+    if( include_not ) {
+      make_list_item( _( "Search for notes that do not contain a block type" ) );
+      _list_values.append_val( "!" );
+    }
+
+    for( int i=0; i<NoteItemType.NUM; i++ ) {
+      var item_type = (NoteItemType)i;
+      if( item_type.search_string().contains( pattern ) ) {
+        make_list_item( _( "Insert Block:" ), item_type.to_string() );
+        _list_values.append_val( item_type.to_string() + " " );
+      }
+    }
+
   }
 
   //-------------------------------------------------------------

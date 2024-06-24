@@ -306,6 +306,9 @@ public class SmartParser {
     }
 
     if( parts.length == 1 ) {
+      if( check_syntax_only ) {
+        suggest( SmartParserSuggestion.CATEGORY, start_char, token );
+      }
       return( parse_text( "any", token, start_char, check_syntax_only ) );
     }
 
@@ -333,7 +336,7 @@ public class SmartParser {
   //   tag:!foobar
   //   tag:barfoo
   private bool parse_tag( string tag, int start_char, bool check_syntax_only ) {
-    stdout.printf( "parse_tag, tag: %s\n", tag );
+    stdout.printf( "parse_tag, tag: %s, start_char: %d\n", tag, start_char );
     if( tag == "" ) {
       if( check_syntax_only ) {
         suggest( SmartParserSuggestion.TAG, start_char, "" );
@@ -615,9 +618,12 @@ public class SmartParser {
       if( check_syntax_only ) {
         suggest( SmartParserSuggestion.TEXT, start_char, "" );
       }
-    } else if( text.has_prefix( "re[" ) && text.has_suffix( "]" ) ) {
+    } else if( text.has_prefix( "re[" ) && (text.has_suffix( "]" ) || check_syntax_only) ) {
       pattern    = text.slice( text.index_of_nth_char( 3 ), text.index_of_nth_char( text.char_count() - 1 ) );
       match_type = TextMatchType.REGEXP;
+      if( check_syntax_only ) {
+        suggest( SmartParserSuggestion.NONE, (start_char + "re[".char_count()), "" );
+      }
     }
     if( !check_syntax_only ) {
       switch( filter_type ) {
@@ -655,7 +661,7 @@ public class SmartParser {
       }
     } else if( block.has_prefix( "!" ) ) {
       var name = block.substring( block.index_of_nth_char( 1 ) );
-      var item_type = NoteItemType.parse( name );
+      var item_type = NoteItemType.parse_search( name );
       if( item_type != NoteItemType.NUM ) {
         if( !check_syntax_only ) {
           var item_filter = new FilterItem( item_type );

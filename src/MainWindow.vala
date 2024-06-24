@@ -257,7 +257,12 @@ public class MainWindow : Gtk.ApplicationWindow {
   // into the header bar to invoke this interface.
   private Widget create_search() {
 
-    var search_box = new SearchBox( this );
+    var search_box = new SearchBox( this ) {
+      margin_start  = 5,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 5
+    };
 
     var search_popover = new Popover() {
       autohide = true,
