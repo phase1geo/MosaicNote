@@ -122,9 +122,16 @@ public class SearchBox : Box {
     });
 
     search_key.key_pressed.connect((keyval, keycode, state) => {
-      if( keyval == Gdk.Key.Escape ) {
-        hide_search();
-        return( true );
+      switch( keyval ) {
+        case Gdk.Key.Escape :
+          hide_search();
+          return( true );
+        case Gdk.Key.Tab :
+          if( _list.visible ) {
+            _list.row_activated( _list.get_selected_row() );
+            return( true );
+          }
+          break;
       }
       return( false );
     });
@@ -250,27 +257,76 @@ public class SearchBox : Box {
   }
 
   //-------------------------------------------------------------
-  // Constructs an item to add to the list and adds it.
-  private void make_list_item( string action, string? val = null, string? detail = null ) {
+  // Constructs an item to add to the list which is a header and
+  // adds it, making it unselectable and unactivatable.
+  private void make_list_header( string name ) {
 
-    var text = Utils.make_title( action );
-
-    if( val != null ) {
-      text += " %s".printf( val );
-    }
-
-    if( detail != null ) {
-      text += "\n%s".printf( detail );
-    }
-
-    var label = new Label( text ) {
+    var label = new Label( Utils.make_title( name ) ) {
       halign = Align.START,
-      justify = Justification.LEFT,
       use_markup = true
     };
 
     _list.append( label );
     _list.visible = true;
+
+    var row = _list.get_row_at_index( (int)_list_values.length );
+    row.activatable = false;
+    row.selectable  = false;
+
+    _list_values.append_val( "" );
+
+  }
+
+  //-------------------------------------------------------------
+  // Constructs an item to add to the list and adds it.
+  private void make_list_item( string action, string insert_str = "", string? detail = null ) {
+
+    var text = action;
+    var row  = _list.get_row_at_index( (int)_list_values.length - 1 );
+
+    if( detail != null ) {
+      text += "\n%s".printf( Utils.make_italicized( detail ) );
+    }
+
+    var label = new Label( text ) {
+      halign = Align.START,
+      justify = Justification.LEFT,
+      margin_start = 20,
+      use_markup = true
+    };
+
+    _list.append( label );
+
+    if( !row.selectable ) {
+      var new_row = _list.get_row_at_index( (int)_list_values.length );
+      _list.select_row( new_row );
+    }
+
+    _list_values.append_val( insert_str );
+
+  }
+
+  private void make_list_none_found() {
+
+    var row = _list.get_row_at_index( (int)_list_values.length - 1 );
+
+    if( !row.selectable ) {
+
+      var label = new Label( Utils.make_italicized( _( "No matches found" ) ) ) {
+        halign = Align.START,
+        margin_start = 20,
+        use_markup = true
+      };
+
+      _list.append( label );
+
+      var none_row = _list.get_row_at_index( (int)_list_values.length );
+      none_row.activatable = false;
+      none_row.selectable  = false;
+
+      _list_values.append_val( "" );
+
+    }
 
   }
 
@@ -280,13 +336,16 @@ public class SearchBox : Box {
 
     _suggest.label = "show_categories, start_char: %d, pattern: (%s)".printf( start_char, pattern );
 
+    make_list_header( _( "Insert Category" ) );
+
     for( int i=0; i<SearchCategories.NUM; i++ ) {
       var category = (SearchCategories)i;
       if( category.to_string().contains( pattern ) ) {
-        make_list_item( _( "Insert Category:" ), category.to_string() );
-        _list_values.append_val( category.to_string() + ":" );
+        make_list_item( category.to_string(), (category.to_string() + ":") );
       }
     }
+
+    make_list_none_found();
 
   }
 
@@ -295,18 +354,22 @@ public class SearchBox : Box {
   private void show_tags( bool include_not, int start_char, string pattern ) {
 
     if( include_not ) {
-      make_list_item( _( "Search for notes that do not contain a tag" ) );
-      _list_values.append_val( "!" );
+      make_list_header( _( "Operations" ) );
+      make_list_item( _( "Search for notes that do not contain a tag" ), "!" );
     }
+
+    make_list_header( _( "Insert Tag" ) );
 
     _win.full_tags.get_matches( _tag_matches, pattern );
     for( int i=0; i<_tag_matches.length; i++ ) {
       if( _tag_matches.index( i ).contains( pattern ) ) {
         var tag   = _tag_matches.index( i );
-        make_list_item( _( "Insert tag:" ), tag );
-        _list_values.append_val( tag + " " );
+        make_list_item( tag, (tag + " ") );
       }
     }
+
+    make_list_none_found();
+
   }
 
   //-------------------------------------------------------------
@@ -320,18 +383,21 @@ public class SearchBox : Box {
       _calendar.visible = true;
 
       if( date_type == SmartParserSuggestion.DATE ) {
-        make_list_item( "Search for notes that are not in the date range" );
-        _list_values.append_val( "!" );
+        make_list_header( _( "Operations" ) );
+        make_list_item( _( "Search for notes that are not in the date range" ), "!" );
       }
+
+      make_list_header( _( "Insert Date Range" ) );
 
       for( int i=0; i<DateMatchType.NUM; i++ ) {
         var match_type = (DateMatchType)i;
         var type_value = match_type.search_string();
         if( type_value != null ) {
-          make_list_item( _( "Insert Date Range:" ), type_value, match_type.search_detail() );
-          _list_values.append_val( "%s[]".printf( type_value ) );
+          make_list_item( type_value, "%s[]".printf( type_value ), match_type.search_detail() );
         }
       }
+
+      make_list_none_found();
 
     } else if( date_type == SmartParserSuggestion.DATE_ABS ) {
 
@@ -339,14 +405,17 @@ public class SearchBox : Box {
 
     } else if( date_type == SmartParserSuggestion.DATE_REL ) {
 
+      make_list_header( _( "Insert Relative Time Period" ) );
+
       for( int i=0; i<TimeType.NUM; i++ ) {
         var time_type = (TimeType)i;
         var time_value = time_type.search_string();
         if( time_value != null ) {
-          make_list_item( _( "Insert Relative Time Period:" ), time_value, time_type.search_detail() );
-          _list_values.append_val( time_value );
+          make_list_item( time_value, time_value, time_type.search_detail() );
         }
       }
+
+      make_list_none_found();
 
     }
 
@@ -356,13 +425,16 @@ public class SearchBox : Box {
   // Displays boolean options
   private void show_boolean( int start_char, string pattern ) {
 
+    make_list_header( _( "Insert Boolean" ) );
+
     for( int i=0; i<SearchBoolean.NUM; i++ ) {
       var boolean = (SearchBoolean)i;
       if( boolean.to_string().contains( pattern ) ) {
-        make_list_item( _( "Insert Boolean:" ), boolean.to_string() );
-        _list_values.append_val( boolean.to_string() + " " );
+        make_list_item( boolean.to_string(), (boolean.to_string() + " ") );
       }
     }
+
+    make_list_none_found();
 
   }
 
@@ -373,17 +445,21 @@ public class SearchBox : Box {
     var paths = new Array<string>();
     _win.notebooks.get_notebook_paths( paths );
 
+    make_list_header( _( "Insert Notebook" ) );
+
     for( int i=0; i<paths.length; i++ ) {
       var path = paths.index( i );
       if( path.contains( pattern ) ) {
-        make_list_item( _( "Insert Notebook:" ), path );
         if( path.contains( " " ) ) {
           _list_values.append_val( "\"" + path + "\"" + " " );
         } else {
           _list_values.append_val( path + " " );
         }
+        make_list_item( path, (path.contains( " " ) ? ("\"" + path + "\"" + " ") : (path + " ")) );
       }
     }
+
+    make_list_none_found();
 
   }
 
@@ -392,8 +468,8 @@ public class SearchBox : Box {
   private void show_text( int start_char, string pattern ) {
 
     if( pattern == "" ) {
-      make_list_item( _( "Insert Regular Expression" ) );
-      _list_values.append_val( "re[]" );
+      make_list_header( _( "Modifiers" ) );
+      make_list_item( _( "Insert regular expression" ), "re[]" );
     }
 
   }
@@ -403,17 +479,20 @@ public class SearchBox : Box {
   private void show_block( bool include_not, int start_char, string pattern ) {
 
     if( include_not ) {
-      make_list_item( _( "Search for notes that do not contain a block type" ) );
-      _list_values.append_val( "!" );
+      make_list_header( _( "Modifiers" ) );
+      make_list_item( _( "Search for notes that do not contain a block type" ), "!" );
     }
+
+    make_list_header( _( "Insert Block" ) );
 
     for( int i=0; i<NoteItemType.NUM; i++ ) {
       var item_type = (NoteItemType)i;
       if( item_type.search_string().contains( pattern ) ) {
-        make_list_item( _( "Insert Block:" ), item_type.to_string() );
-        _list_values.append_val( item_type.to_string() + " " );
+        make_list_item( item_type.to_string(), (item_type.to_string() + " ") );
       }
     }
+
+    make_list_none_found();
 
   }
 

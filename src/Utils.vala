@@ -94,6 +94,12 @@ public class Utils {
     return( "<b>" + str + "</b>" );
   }
 
+  //-------------------------------------------------------------
+  // Returns an italicized version of this text.
+  public static string make_italicized( string str ) {
+    return( "<i>" + str + "</i>" );
+  }
+
   /* Returns a string that is used to display a tooltip with displayed accelerator */
   public static string tooltip_with_accel( string tooltip, string accel ) {
     string[] accels = {accel};
