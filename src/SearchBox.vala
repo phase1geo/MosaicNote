@@ -127,16 +127,20 @@ public class SearchBox : Box {
           hide_search();
           return( true );
         case Gdk.Key.Tab :
-          if( _list.visible ) {
-            _list.row_activated( _list.get_selected_row() );
-            return( true );
-          }
-          break;
+          return( _list.visible && activate_selected_row() );
+        case Gdk.Key.Down :
+          return( _list.visible && select_list_row( 1 ) );
+        case Gdk.Key.Up : 
+          return( _list.visible && select_list_row( -1 ) );
       }
       return( false );
     });
 
-    _calendar = new Calendar();
+    _calendar = new Calendar() {
+      halign = Align.START,
+      hexpand = true,
+      margin_start = 20
+    };
 
     _calendar.day_selected.connect(() => {
       var dt    = _calendar.get_date();
@@ -185,6 +189,34 @@ public class SearchBox : Box {
     _error.label = "";
     handle_suggestion( SmartParserSuggestion.CATEGORY, 0, "" );
     _search_entry.text = with_string;
+    _search_entry.grab_focus();
+  }
+
+  //-------------------------------------------------------------
+  // Activates the currently selected row
+  private bool activate_selected_row() {
+    var row = _list.get_selected_row();
+    if( row != null ) {
+      _list.row_activated( row );
+      return( true );
+    }
+    return( false );
+  }
+
+  //-------------------------------------------------------------
+  // Changes the selection to move in the given direction.
+  private bool select_list_row( int dir ) {
+    var row = _list.get_selected_row();
+    if( row != null ) {
+      do {
+        row = _list.get_row_at_index( row.get_index() + dir );
+      } while( (row != null) && !row.selectable );
+      if( row != null ) {
+        _list.select_row( row );
+        return( true );
+      }
+    }
+    return( false );
   }
 
   //-------------------------------------------------------------
@@ -263,7 +295,9 @@ public class SearchBox : Box {
 
     var label = new Label( Utils.make_title( name ) ) {
       halign = Align.START,
-      use_markup = true
+      use_markup = true,
+      margin_top = 10,
+      margin_bottom = 5
     };
 
     _list.append( label );
@@ -281,23 +315,26 @@ public class SearchBox : Box {
   // Constructs an item to add to the list and adds it.
   private void make_list_item( string action, string insert_str = "", string? detail = null ) {
 
-    var text = action;
-    var row  = _list.get_row_at_index( (int)_list_values.length - 1 );
+    var text  = action;
+    var row   = _list.get_row_at_index( (int)_list_values.length - 1 );
+    var first = (row == null) || !row.selectable;
 
     if( detail != null ) {
-      text += "\n%s".printf( Utils.make_italicized( detail ) );
+      text += "\n   %s".printf( Utils.make_italicized( detail ) );
     }
 
     var label = new Label( text ) {
-      halign = Align.START,
-      justify = Justification.LEFT,
-      margin_start = 20,
-      use_markup = true
+      halign        = Align.START,
+      justify       = Justification.LEFT,
+      margin_top    = 3,
+      margin_bottom = 3,
+      margin_start  = 20,
+      use_markup    = true
     };
 
     _list.append( label );
 
-    if( !row.selectable ) {
+    if( first ) {
       var new_row = _list.get_row_at_index( (int)_list_values.length );
       _list.select_row( new_row );
     }
@@ -306,15 +343,20 @@ public class SearchBox : Box {
 
   }
 
+  //-------------------------------------------------------------
+  // If there are no results displayed, add an item stating that
+  // there are no matching results and make it invalid from use.
   private void make_list_none_found() {
 
     var row = _list.get_row_at_index( (int)_list_values.length - 1 );
 
-    if( !row.selectable ) {
+    if( (row == null) || !row.selectable ) {
 
       var label = new Label( Utils.make_italicized( _( "No matches found" ) ) ) {
         halign = Align.START,
-        margin_start = 20,
+        margin_top    = 3,
+        margin_bottom = 3,
+        margin_start  = 20,
         use_markup = true
       };
 
@@ -450,11 +492,6 @@ public class SearchBox : Box {
     for( int i=0; i<paths.length; i++ ) {
       var path = paths.index( i );
       if( path.contains( pattern ) ) {
-        if( path.contains( " " ) ) {
-          _list_values.append_val( "\"" + path + "\"" + " " );
-        } else {
-          _list_values.append_val( path + " " );
-        }
         make_list_item( path, (path.contains( " " ) ? ("\"" + path + "\"" + " ") : (path + " ")) );
       }
     }

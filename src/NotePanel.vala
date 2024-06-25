@@ -27,6 +27,7 @@ public class NotePanel : Box {
 
   private MainWindow _win;
   private Stack      _stack;
+  private SearchBox  _search;
 
   private TagBox        _tags;
   private DropDown      _item_selector;
@@ -72,8 +73,9 @@ public class NotePanel : Box {
       valign       = Align.FILL
     };
 
-    _stack.add_named( create_blank_ui(), "blank" );
-    _stack.add_named( create_note_ui(), "note" );
+    _stack.add_named( create_blank_ui(),  "blank" );
+    _stack.add_named( create_note_ui(),   "note" );
+    _stack.add_named( create_search_ui(), "search" );
     _stack.visible_child_name = "blank";
 
     append( _stack );
@@ -337,6 +339,38 @@ public class NotePanel : Box {
     return( box );
 
 	}
+
+  //-------------------------------------------------------------
+  // Displays the search UI within the note panel area.
+  private SearchBox create_search_ui() {
+
+    _search = new SearchBox( _win ) {
+      margin_start  = 5,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 5
+    };
+
+    _search.hide_search.connect(() => {
+      toggle_search();
+    });
+
+    return( _search );
+
+  }
+
+  //-------------------------------------------------------------
+  // Toggles the search UI.
+  public void toggle_search() {
+
+    if( _stack.visible_child_name == "search" ) {
+      _stack.visible_child_name = "blank";
+    } else {
+      _search.initialize();
+      _stack.visible_child_name = "search";
+    }
+
+  }
 
   //-------------------------------------------------------------
   // Should be called for widgets that are not associated with

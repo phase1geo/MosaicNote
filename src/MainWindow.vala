@@ -38,7 +38,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private NotePanel       _note;
   private Paned           _notes_pw;
   private Paned           _sidebar_pw;
-  private MenuButton      _search_mb;
+  private ToggleButton    _search_mb;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_save",        action_save },
@@ -257,35 +257,14 @@ public class MainWindow : Gtk.ApplicationWindow {
   // into the header bar to invoke this interface.
   private Widget create_search() {
 
-    var search_box = new SearchBox( this ) {
-      margin_start  = 5,
-      margin_end    = 5,
-      margin_top    = 5,
-      margin_bottom = 5
-    };
-
-    var search_popover = new Popover() {
-      autohide = true,
-      has_arrow = true,
-      child = search_box
-    };
-
-    search_box.hide_search.connect(() => {
-      search_popover.popdown();
-    });
-
-    var img = new Image.from_icon_name( get_header_icon_name( "system-search" ) );
-
-    _search_mb = new MenuButton() {
+    _search_mb = new ToggleButton() {
       has_frame = !on_elementary,
-      child = img,
-      tooltip_markup = Utils.tooltip_with_accel( _( "Search notes" ), "<control>f" ),
-      popover = search_popover
+      icon_name = get_header_icon_name( "system-search" ),
+      tooltip_markup = Utils.tooltip_with_accel( _( "Search notes" ), "<control>f" )
     };
 
-    _search_mb.set_create_popup_func((mb) => {
-      stdout.printf( "In popup_func\n" );
-      search_box.initialize();
+    _search_mb.toggled.connect(() => {
+      _note.toggle_search();
     });
 
     return( _search_mb );
@@ -352,7 +331,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   //-------------------------------------------------------------
   // Activates the note search UI.
   private void action_search() {
-    _search_mb.activate();
+    _search_mb.active = true;
   }
 
   /* Generate a notification */
