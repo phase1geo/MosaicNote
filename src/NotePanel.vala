@@ -45,6 +45,7 @@ public class NotePanel : Box {
   public signal void tag_removed( string name, int note_id );
   public signal void note_saved( Note note );
   public signal void note_link_clicked( string link, int note_id );
+  public signal void hide_search();
 
   public signal void save();
 
@@ -352,7 +353,7 @@ public class NotePanel : Box {
     };
 
     _search.hide_search.connect(() => {
-      toggle_search();
+      hide_search();
     });
 
     return( _search );

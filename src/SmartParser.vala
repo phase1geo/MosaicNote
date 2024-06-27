@@ -389,7 +389,7 @@ public class SmartParser {
         suggest( SmartParserSuggestion.DATE_ONLY, start_char, str );
       }
     }
-    if( str.has_suffix( "]" ) || check_syntax_only ) {
+    if( str.has_suffix( "]" ) ) {
       if( str.has_suffix( "]" ) ) {
         str = str.slice( 0, str.index_of_nth_char( str.char_count() - 1 ) );
       }
@@ -406,6 +406,11 @@ public class SmartParser {
         if( dates.length == 2 ) {
           return( parse_absolute_date( filter_type, (not ? DateMatchType.BETWEEN_NOT : DateMatchType.BETWEEN), dates[0], dates[1], new_start, check_syntax_only ) );
         } else {
+          if( check_syntax_only ) {
+            if( dates[0] == "" ) {
+              suggest( SmartParserSuggestion.DATE, new_start, "" );
+            }
+          }
           _error_message = _( "Two dates must be specified" );
           _error_start   = new_start;
         }

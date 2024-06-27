@@ -176,6 +176,10 @@ public class MainWindow : Gtk.ApplicationWindow {
       // TODO
     });
 
+    _note.hide_search.connect(() => {
+      _search_mb.active = false;
+    });
+
     _history.goto_note.connect((note) => {
       _notes.populate_with_notebook( note.notebook );
       _notes.select_note( note.id, false );

@@ -334,7 +334,7 @@ public class SearchBox : Box {
 
     _list.append( label );
 
-    if( first ) {
+    if( first && (_list_values.length <= 1) ) {
       var new_row = _list.get_row_at_index( (int)_list_values.length );
       _list.select_row( new_row );
     }
