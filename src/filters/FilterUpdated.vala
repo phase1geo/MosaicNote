@@ -40,6 +40,14 @@ public class FilterUpdated : SmartDateFilter {
   }
 
   //-------------------------------------------------------------
+  // Creates and returns a copy of this filter.
+  public override SmartFilter copy() {
+    var filter = new FilterUpdated();
+    copy_to( filter );
+    return( filter );
+  }
+
+  //-------------------------------------------------------------
   // Constructor from XML
   public FilterUpdated.from_xml( Xml.Node* node ) {
     base.from_xml( node );

@@ -34,6 +34,15 @@ public class FilterNot : SmartLogicFilter {
   }
 
   //-------------------------------------------------------------
+  // Creates a FilterOr filter and populates it with a copy
+  // of this filter.
+  public override SmartFilter copy() {
+    var filter = new FilterNot();
+    copy_to( filter );
+    return( filter );
+  }
+
+  //-------------------------------------------------------------
   // Adds the given smart filter to the list of filters, but
   // guarantees that only one filter can be added.
   public override void add_filter( SmartFilter filter ) {

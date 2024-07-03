@@ -63,6 +63,13 @@ public class FilterTag : SmartFilter {
   }
 
   //-------------------------------------------------------------
+  // Creates and returns a copy of this filter.
+  public override SmartFilter copy() {
+    var filter = new FilterTag( _tag, _type );
+    return( filter );
+  }
+
+  //-------------------------------------------------------------
   // Checks the note to see if it matches or does not match the
   // stored tag value.
   public override bool check_note( Note note ) {

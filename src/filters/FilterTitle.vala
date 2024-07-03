@@ -34,6 +34,13 @@ public class FilterTitle : SmartTextFilter {
   }
 
   //-------------------------------------------------------------
+  // Creates and returns a copy of this filter.
+  public override SmartFilter copy() {
+    var filter = new FilterTitle( match_type, pattern );
+    return( filter );
+  }
+
+  //-------------------------------------------------------------
   // Checks the note to see if it matches the title text.
   public override bool check_note( Note note ) {
     var result = check_text( note.title );

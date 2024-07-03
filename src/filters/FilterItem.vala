@@ -38,6 +38,13 @@ public class FilterItem : SmartFilter {
   }
 
   //-------------------------------------------------------------
+  // Creates and returns a copy of this filter.
+  public override SmartFilter copy() {
+    var filter = new FilterItem( item_type );
+    return( filter );
+  }
+
+  //-------------------------------------------------------------
   // Checks the note to see if it matches the title text.
   public override bool check_note( Note note ) {
     for( int i=0; i<note.size(); i++ ) {

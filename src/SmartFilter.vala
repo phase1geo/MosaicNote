@@ -21,12 +21,22 @@
 
 public class SmartFilter {
 
+  //-------------------------------------------------------------
   // Default constructor
   public SmartFilter() {}
 
+  //-------------------------------------------------------------
   // Constructor from XML format
   public SmartFilter.from_xml( Xml.Node* node ) {}
 
+  //-------------------------------------------------------------
+  // Creates a copy of ourselves
+  public virtual SmartFilter copy() {
+    var filter = new SmartFilter();
+    return( filter );
+  }
+
+  //-------------------------------------------------------------
   // Returns true if the note matches the filter.
   public virtual bool check_note( Note note ) {
     return( false );
@@ -38,12 +48,14 @@ public class SmartFilter {
     return( "" );
   }
 
+  //-------------------------------------------------------------
   // Saves the filter setup in XML format
   public virtual Xml.Node* save() {
     Xml.Node* node = new Xml.Node( null, "smart-filter" );
     return( node );
   }
 
+  //-------------------------------------------------------------
   // Loads the filter content from XML format
   public virtual void load( Xml.Node* node ) {}
 

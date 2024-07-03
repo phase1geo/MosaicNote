@@ -292,6 +292,16 @@ public class SmartDateFilter : SmartFilter {
   }
 
   //-------------------------------------------------------------
+  // Copies the contents of this filter to the given filter.
+  protected void copy_to( SmartDateFilter filter ) {
+    filter._match_type = _match_type;
+    filter._time_type  = _time_type;
+    filter._num        = _num;
+    filter._first      = _first.to_local();
+    filter._second     = _second.to_local();
+  }
+
+  //-------------------------------------------------------------
   // Returns whether or not the given DateTime matches the
   // current criteria.
   public bool check_date( DateTime date ) {
@@ -299,7 +309,6 @@ public class SmartDateFilter : SmartFilter {
     var date_only = new DateTime.local( date.get_year(), date.get_month(), date.get_day_of_month(), 0, 0, 0.0 );
 
     if( _match_type.is_absolute() ) {
-      stdout.printf( "Checking absolute date\n" );
       return( _match_type.absolute_matches( date_only, _first, _second ) );
     } else if( _match_type.is_relative() ) {
       return( _match_type.relative_matches( date_only, _num, _time_type ) );

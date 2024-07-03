@@ -36,7 +36,6 @@ public class HiddenNotebook : BaseNotebook {
 public class SidebarNew : Box {
 
 	private MainWindow     _win;
-	private BaseNotebook?  _selected_node = null;
 	private GLib.ListStore _store;
   private TreeListModel  _model;
 	private ListView       _list_view;
@@ -47,12 +46,16 @@ public class SidebarNew : Box {
     { "action_add_notebook",    action_add_notebook, "i" },
     { "action_rename_notebook", action_rename_notebook, "i" },
     { "action_delete_notebook", action_delete_notebook, "i" },
+    { "action_save_search",     action_save_search, "i" },
+    { "action_empty_trash",     action_empty_trash }
   };
 
   private signal void add_requested( int pos );
   private signal void rename_requested( int pos );
+  private signal void save_search_requested( int pos );
 
-  public signal void notebook_selected( BaseNotebook nb );
+  public signal void notebook_selected( BaseNotebook? nb );
+  public signal void save_search();
 
 	// Default constructor
 	public SidebarNew( MainWindow win ) {
@@ -61,6 +64,7 @@ public class SidebarNew : Box {
 
 		_win = win;
 		_win.notebooks.changed.connect( populate_tree );
+    _win.smart_notebooks.changed.connect( populate_tree );
 
     var factory = new SignalListItemFactory();
     factory.setup.connect( setup_tree );
@@ -69,13 +73,18 @@ public class SidebarNew : Box {
     _store        = new GLib.ListStore( typeof( BaseNotebook ) );
     _model        = new TreeListModel( _store, false, false, add_tree_node );
     var selection = new SingleSelection( _model ) {
-      autoselect = false
+      autoselect = false,
+      can_unselect = true
     };
 
     selection.selection_changed.connect((pos, num) => {
       var row = _model.get_row( selection.selected );
-      var nb  = (BaseNotebook)row.get_item();
-      notebook_selected( nb );
+      if( row != null ) {
+        var nb  = (BaseNotebook)row.get_item();
+        notebook_selected( nb );
+      } else {
+        notebook_selected( null );
+      }
     });
 
 		_list_view = new ListView( selection, factory ) {
@@ -137,7 +146,7 @@ public class SidebarNew : Box {
 
 		for( int i=0; i<_win.smart_notebooks.size(); i++ ) {
       var notebook = _win.smart_notebooks.get_notebook( i );
-      if( notebook.notebook_type == SmartNotebookType.BUILTIN ) {
+      if( notebook.notebook_type.in_library( notebook ) ) {
       	_store.append( notebook );
       }
 		}
@@ -153,6 +162,16 @@ public class SidebarNew : Box {
     var new_notebook = new HiddenNotebook();
     _store.append( new_notebook );
 
+    var smart = new LabelNotebook( _( "Smart Notebooks" ) );
+    _store.append( smart );
+
+    for( int i=0; i<_win.smart_notebooks.size(); i++ ) {
+      var notebook = _win.smart_notebooks.get_notebook( i );
+      if( notebook.notebook_type == SmartNotebookType.USER ) {
+        _store.append( notebook );
+      }
+    }
+
   	var tags = new LabelNotebook( _( "Tags" ) );
   	_store.append( tags );
 
@@ -161,6 +180,21 @@ public class SidebarNew : Box {
 		}
 
 	}
+
+  //-------------------------------------------------------------
+  // Returns true if the given base notebook is a child standard user
+  // notebook.
+  private bool nb_is_node( BaseNotebook nb ) {
+    return( (nb as NotebookTree.Node) != null );
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if the given base notebook is a smart notebook
+  // with the given type.
+  private bool nb_is_smart( BaseNotebook nb, SmartNotebookType nb_type ) {
+    var smart = (nb as SmartNotebook);
+    return( (smart != null) && (smart.notebook_type == nb_type) );
+  }
 
 	private void setup_tree( Object obj ) {
 
@@ -198,12 +232,32 @@ public class SidebarNew : Box {
     click.pressed.connect((n_press, x, y) => {
       var row = (TreeListRow)item.get_item();
       var nb  = (BaseNotebook)row.get_item();
-      if( (nb as NotebookTree.Node) != null ) {
+      if( nb_is_node( nb ) ) {
         var top_menu = new GLib.Menu();
         top_menu.append( _( "New Sub-Notebook" ), "sidebar.action_add_notebook(%u)".printf( item.position ) );
         top_menu.append( _( "Rename Notebook" ), "sidebar.action_rename_notebook(%u)".printf( item.position ) );
         var bot_menu = new GLib.Menu();
         bot_menu.append( _( "Delete Notebook" ), "sidebar.action_delete_notebook(%u)".printf( item.position ) );
+        var menu = new GLib.Menu();
+        menu.append_section( null, top_menu );
+        menu.append_section( null, bot_menu );
+        popover.menu_model = menu;
+        popover.popup();
+      } else if( nb_is_smart( nb, SmartNotebookType.TRASH ) ) {
+        var menu = new GLib.Menu();
+        menu.append( _( "Empty Trash" ), "sidebar.action_empty_trash" );
+        popover.menu_model = menu;
+        popover.popup();
+      } else if( nb_is_smart( nb, SmartNotebookType.SEARCH ) ) {
+        var menu = new GLib.Menu();
+        menu.append( _( "Save Search as Smart Notebook" ), "sidebar.action_save_search(%u)".printf( item.position ) );
+        popover.menu_model = menu;
+        popover.popup();
+      } else if( nb_is_smart( nb, SmartNotebookType.USER ) ) {
+        var top_menu = new GLib.Menu();
+        top_menu.append( _( "Rename Smart Notebook" ), "sidebar.action_rename_notebook(%u)".printf( item.position ) );
+        var bot_menu = new GLib.Menu();
+        bot_menu.append( _( "Delete Smart Notebook" ), "sidebar.action_delete_notebook(%u)".printf( item.position ) );
         var menu = new GLib.Menu();
         menu.append_section( null, top_menu );
         menu.append_section( null, bot_menu );
@@ -226,11 +280,16 @@ public class SidebarNew : Box {
     entry.activate.connect(() => {
       var row = (TreeListRow)item.get_item();
       var nb  = (BaseNotebook)row.get_item();
-      if( (nb as NotebookTree.Node) != null ) {
+      if( nb_is_node( nb ) || nb_is_smart( nb, SmartNotebookType.USER ) ) {
         if( entry.text.chomp() != "" ) {
           nb.name = entry.text;
         }
         stack.visible_child_name = "display";
+      } else if( nb_is_smart( nb, SmartNotebookType.SEARCH ) ) {
+        if( entry.text.chomp() != "" ) {
+          var new_nb = new SmartNotebook.copy( entry.text, (nb as SmartNotebook) );
+          _win.smart_notebooks.add_notebook( new_nb );
+        }
       } else {
         if( entry.text.chomp() != "" ) {
           var new_nb = new Notebook( entry.text );
@@ -267,7 +326,6 @@ public class SidebarNew : Box {
     // Handle any add requests to an add notebook
     add_requested.connect((pos) => {
       if( pos == item.position ) {
-        var row = (TreeListRow)item.get_item();
         stack.visible = true;
         entry.text = "";
         entry.grab_focus();
@@ -280,6 +338,13 @@ public class SidebarNew : Box {
         var row = (TreeListRow)item.get_item();
         var nb  = (BaseNotebook)row.get_item();
         entry.text = nb.name;
+        stack.visible_child_name = "rename";
+      }
+    });
+
+    save_search_requested.connect((pos) => {
+      if( pos == item.position ) {
+        entry.text = "";
         stack.visible_child_name = "rename";
       }
     });
@@ -356,6 +421,8 @@ public class SidebarNew : Box {
     }
   }
 
+  //-------------------------------------------------------------
+  // Renames the selected notebook.
   private void action_rename_notebook( SimpleAction action, Variant? variant ) {
     if( variant != null ) {
       var pos = variant.get_int32();
@@ -363,11 +430,55 @@ public class SidebarNew : Box {
     }
   }
 
+  //-------------------------------------------------------------
+  // Deletes the notebook with at the given row.
+  private void delete_notebook( Object? obj ) {
+    var row = (TreeListRow)obj;
+    var nb  = (BaseNotebook)row.get_item();
+    if( nb_is_node( nb ) ) {
+      row = row.get_parent();
+      if( row == null ) {
+        _win.notebooks.remove_notebook( ((NotebookTree.Node)nb).get_notebook() );
+      } else {
+        var parent = (NotebookTree.Node)row.get_item();
+        parent.remove_notebook( ((NotebookTree.Node)nb).get_notebook() );
+      }
+    } else if( nb_is_smart( nb, SmartNotebookType.USER ) ) {
+      _win.smart_notebooks.remove_notebook( (SmartNotebook)nb );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Action to delete the notebook at the given listbox position.
   private void action_delete_notebook( SimpleAction action, Variant? variant ) {
     if( variant != null ) {
       var pos = variant.get_int32();
-      _store.remove( pos );
+      var row = _model.get_row( pos );
+      var nb  = (BaseNotebook)row.get_item();
+      if( nb_is_node( nb ) ) {
+        Utils.show_confirmation( _win, _( "Delete Notebook?" ), _( "This action cannot be reversed" ), row, delete_notebook );
+      } else if( nb_is_smart( nb, SmartNotebookType.USER ) ) {
+        Utils.show_confirmation( _win, _( "Delete Smart Notebook?" ), _( "This action cannot be reversed" ), row, delete_notebook );
+      }
     }
+  }
+
+  private void action_save_search( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      var pos = variant.get_int32();
+      save_search_requested( pos );
+    }
+  }
+
+  private void action_empty_trash() {
+    // TODO
+  }
+
+  //-------------------------------------------------------------
+  // Clears the current selection.
+  public void clear_selection() {
+    var selection = (SingleSelection)_list_view.model;
+    selection.unselect_item( selection.selected );
   }
 
 }

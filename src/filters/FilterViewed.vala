@@ -46,6 +46,14 @@ public class FilterViewed : SmartDateFilter {
   }
 
   //-------------------------------------------------------------
+  // Creates and returns a copy of this filter.
+  public override SmartFilter copy() {
+    var filter = new FilterViewed();
+    copy_to( filter );
+    return( filter );
+  }
+
+  //-------------------------------------------------------------
   // Returns true if this note matches this filter's criteria.
   public override bool check_note( Note note ) {
     return( check_date( note.viewed ) );

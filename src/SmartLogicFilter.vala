@@ -34,6 +34,14 @@ public class SmartLogicFilter : SmartFilter {
   public SmartLogicFilter.from_xml( Xml.Node* node ) {}
 
   //-------------------------------------------------------------
+  // Copies the current filter to the specified one.
+  protected void copy_to( SmartLogicFilter filter ) {
+    for( int i=0; i<filters.length; i++ ) {
+      filter.add_filter( filters.index( i ).copy() );
+    }
+  }
+
+  //-------------------------------------------------------------
   // Returns the number of stored smart filters.
   public int size() {
     return( (int)filters.length );

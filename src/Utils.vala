@@ -25,6 +25,8 @@ using Cairo;
 
 public class Utils {
 
+  public delegate void ConfirmationCallback( Object? obj );
+
   /* Returns the location of the given subdirectory path within the user storage directory */
   public static string user_location( string path ) {
     return( GLib.Path.build_filename( Environment.get_user_data_dir(), "mosaic-note", path ) );
@@ -355,6 +357,23 @@ public class Utils {
 
     return( dialog );
 
+  }
+
+  //-------------------------------------------------------------
+  // Displays a confirmation dialog.  Calls the passed callback function
+  // with the given object if the user confirms the question.
+  public static void show_confirmation( MainWindow win, string question, string detail, Object? obj, ConfirmationCallback callback ) {
+    var flags  = DialogFlags.MODAL | DialogFlags.DESTROY_WITH_PARENT;
+    var dialog = new MessageDialog( win, flags, MessageType.WARNING, ButtonsType.YES_NO, question ) {
+      secondary_text = detail
+    };
+    dialog.response.connect((response_id) => {
+      if( response_id == ResponseType.YES ) {
+        callback( obj );
+      }
+      dialog.close();
+    });
+    dialog.show();
   }
 
   // Clears the given box widget

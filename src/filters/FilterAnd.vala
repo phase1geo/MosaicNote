@@ -34,6 +34,15 @@ public class FilterAnd : SmartLogicFilter {
   }
 
   //-------------------------------------------------------------
+  // Creates a FilterAnd filter and populates it with a copy
+  // of this filter.
+  public override SmartFilter copy() {
+    var filter = new FilterAnd();
+    copy_to( filter );
+    return( filter );
+  }
+
+  //-------------------------------------------------------------
   // Checks the given note to see if it matches all of the smart
   // filters stored in this filter.
   public override bool check_note( Note note ) {

@@ -24,25 +24,45 @@ public enum SmartNotebookType {
   BUILTIN,
   TAG,
   TRASH,
+  SEARCH,
   NUM;
 
+  //-------------------------------------------------------------
+  // Returns the string version of this smart notebook type
   public string to_string() {
     switch( this ) {
       case USER    :  return( "user" );
       case BUILTIN :  return( "builtin" );
       case TAG     :  return( "tag" );
       case TRASH   :  return( "trash" );
+      case SEARCH  :  return( "search" );
       default      :  assert_not_reached();
     }
   }
 
+  //-------------------------------------------------------------
+  // Parses the given string to determine the smart notebook
+  // type specified and returns that value.
   public static SmartNotebookType parse( string val ) {
     switch( val ) {
       case "user"    :  return( USER );
       case "builtin" :  return( BUILTIN );
       case "tag"     :  return( TAG );
       case "trash"   :  return( TRASH );
+      case "search"  :  return( SEARCH );
       default        :  assert_not_reached();
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if this type should be displayed in the library
+  // section of the sidebar.
+  public bool in_library( SmartNotebook nb ) {
+    switch( this ) {
+      case BUILTIN :
+      case TRASH   :  return( true );
+      case SEARCH  :  return( true );
+      default      :  return( false );
     }
   }
 
@@ -79,6 +99,22 @@ public class SmartNotebook : BaseNotebook {
     _notes     = new Gee.HashSet<int>();
     _type      = type;
     _notebooks = notebooks;
+  }
+
+  //-------------------------------------------------------------
+  // Creates a new smart notebook and creates a copy of the given
+  // smartnotebook to ourself.
+  public SmartNotebook.copy( string name, SmartNotebook other ) {
+    base( name );
+    _filter    = (SmartLogicFilter)other._filter.copy();
+    _type      = (other._type == SmartNotebookType.SEARCH) ? SmartNotebookType.USER : other._type;
+    _notebooks = other._notebooks;
+
+    _notes = new Gee.HashSet<int>();
+    other._notes.foreach((note_id) => {
+      _notes.add( note_id );
+      return( true );
+    });
   }
 
   //-------------------------------------------------------------
@@ -142,20 +178,14 @@ public class SmartNotebook : BaseNotebook {
   // add support for this note
   public bool handle_note( Note note ) {
 
-    stdout.printf( "CHECKING NOTE: %s\n", note.title );
-
     // Check to see if the note passes all of the stored filters
     if( _filter.check_note( note ) ) {
-
-      stdout.printf( "  ADDING NOTE\n" );
 
       var modified = _notes.add( note.id );
       _modified |= modified;
       return( modified );
 
     } else {
-
-      stdout.printf( "  REMOVING NOTE\n" );
 
       var modified = _notes.remove( note.id );
       _modified |= modified;

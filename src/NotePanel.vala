@@ -40,6 +40,7 @@ public class NotePanel : Box {
   private Button        _hist_prev;
   private Button        _hist_next;
   private bool          _ignore = false;
+  private string        _last_child_name = "blank";
 
   public signal void tag_added( string name, int note_id );
   public signal void tag_removed( string name, int note_id );
@@ -78,6 +79,14 @@ public class NotePanel : Box {
     _stack.add_named( create_note_ui(),   "note" );
     _stack.add_named( create_search_ui(), "search" );
     _stack.visible_child_name = "blank";
+
+    _stack.notify["visible-child-name"].connect(() => {
+      stdout.printf( "visible_child_name: %s\n", _stack.visible_child_name );
+      if( (_last_child_name == "search") && (_stack.visible_child_name != "search") ) {
+        _last_child_name = _stack.visible_child_name;
+        hide_search();
+      }
+    });
 
     append( _stack );
 
@@ -364,6 +373,7 @@ public class NotePanel : Box {
   // Toggles the search UI.
   public void toggle_search() {
 
+    stdout.printf( "In toggle_search, visible_child_name: %s\n", _stack.visible_child_name );
     if( _stack.visible_child_name == "search" ) {
       _stack.visible_child_name = "blank";
     } else {

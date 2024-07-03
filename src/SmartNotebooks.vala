@@ -25,6 +25,9 @@ public class SmartNotebooks {
   private NotebookTree         _notebook_tree;
   private bool                 _modified = false;
 
+  public signal void changed();
+
+  //-------------------------------------------------------------
   // Default constructor
   public SmartNotebooks( NotebookTree notebook_tree ) {
     _notebooks = new Array<SmartNotebook>();
@@ -32,41 +35,81 @@ public class SmartNotebooks {
     load();
   }
 
+  //-------------------------------------------------------------
+  // Sets the modified indicator and calls changed.
+  private void set_modified() {
+    changed();
+    _modified = true;
+  }
+
+  //-------------------------------------------------------------
   // Returns the number of stored smart notebooks
   public int size() {
     return( (int)_notebooks.length );
   }
 
+  //-------------------------------------------------------------
   // Returns the notebook at the given index
   public SmartNotebook get_notebook( int index ) {
     return( _notebooks.index( index ) );
   }
 
+  //-------------------------------------------------------------
   // Adds a new smart notebook to the list of smart notebooks
   public void add_notebook( SmartNotebook notebook ) {
     _notebooks.append_val( notebook );
+    changed();
     _modified = true;
   }
 
+  //-------------------------------------------------------------
   // Removes the notebook at the given index
-  public void remove_notebook( int index ) {
-    _notebooks.remove_index( index );
-    _modified = true;
-  }
-
-  // Handles any changes to the given note, updating all stored
-  // smart notebooks.
-  public void handle_note( Note note ) {
+  public void remove_notebook( SmartNotebook notebook ) {
     for( int i=0; i<_notebooks.length; i++ ) {
-      _modified |= _notebooks.index( i ).handle_note( note );
+      if( _notebooks.index( i ) == notebook ) {
+        _notebooks.index( i ).changed.disconnect( set_modified );
+        _notebooks.remove_index( i );
+        changed();
+        _modified = true;
+        break;
+      }
     }
   }
 
+  //-------------------------------------------------------------
+  // Returns the last search notebook from this list.  If one does
+  // not exist, one is created and automatically added.
+  public SmartNotebook get_search_notebook() {
+    if( _notebooks.index( 3 ).notebook_type == SmartNotebookType.SEARCH ) {
+      return( _notebooks.index( 3 ) );
+    }
+    var search = new SmartNotebook( _( "Last Search" ), SmartNotebookType.SEARCH, _notebook_tree );
+    _notebooks.insert_val( 3, search );
+    changed();
+    return( search );
+  }
+
+  //-------------------------------------------------------------
+  // Handles any changes to the given note, updating all stored
+  // smart notebooks.
+  public void handle_note( Note note ) {
+    var local_modified = false;
+    for( int i=0; i<_notebooks.length; i++ ) {
+      local_modified |= _notebooks.index( i ).handle_note( note );
+    }
+    if( local_modified ) {
+      changed();
+    }
+    _modified |= local_modified;
+  }
+
+  //-------------------------------------------------------------
   // Returns the path of the smart notebooks XML file
   private string xml_file() {
     return( Utils.user_location( "smart-notebooks.xml" ) );
   }
 
+  //-------------------------------------------------------------
   // Creates the required default notebooks if we were unable to load any smart notebooks.
   private void create_default_notebooks() {
 
@@ -89,6 +132,7 @@ public class SmartNotebooks {
 
   }
 
+  //-------------------------------------------------------------
   // Saves the contents of the notebook array in XML format
   public void save() {
 
@@ -100,7 +144,9 @@ public class SmartNotebooks {
     root->set_prop( "version", MosaicNote.current_version );
 
     for( int i=0; i<_notebooks.length; i++ ) {
-      root->add_child( _notebooks.index( i ).save() );
+      if( _notebooks.index( i ).notebook_type != SmartNotebookType.SEARCH ) {
+        root->add_child( _notebooks.index( i ).save() );
+      }
     }
   
     doc->set_root_element( root );
@@ -112,6 +158,7 @@ public class SmartNotebooks {
 
   }
 
+  //-------------------------------------------------------------
   // Loads the XML data and recreates the list of smart notebooks.
   private void load() {
 
@@ -132,6 +179,7 @@ public class SmartNotebooks {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "smart-notebook") ) {
         var notebook = new SmartNotebook.from_xml( it, _notebook_tree );
         _notebooks.append_val( notebook );
+        notebook.changed.connect( set_modified );
       }
     }
     
@@ -139,6 +187,7 @@ public class SmartNotebooks {
     
   }
 
+  //-------------------------------------------------------------
   // The method can be used to make any changes/updates if the read version
   // is not compatible with the current application.
   private void check_version( string version ) {

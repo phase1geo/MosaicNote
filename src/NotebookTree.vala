@@ -369,11 +369,16 @@ public class NotebookTree {
 
 	//-------------------------------------------------------------
 	// Removes the notebook at the specified position
-	public void remove_notebook( int pos ) {
-		_nodes.index( pos ).changed.disconnect( set_modified );
-		_nodes.remove_index( pos );
-		_modified = true;
-		changed();
+	public void remove_notebook( Notebook nb ) {
+		for( int i=0; i<_nodes.length; i++ ) {
+			if( _nodes.index( i ).get_notebook() == nb ) {
+		    _nodes.index( i ).changed.disconnect( set_modified );
+				_nodes.remove_index( i );
+		    _modified = true;
+    		changed();
+				break;
+			}
+		}
 	}
 
 	//-------------------------------------------------------------

@@ -95,8 +95,6 @@ public class SearchBox : Box {
     _tag_matches = new Array<string>();
     _list_values = new Array<string>();
 
-    var search_nb = new SmartNotebook( "search", SmartNotebookType.USER, _win.notebooks );
-
     _search_entry = new SearchEntry() {
       placeholder_text = _( "Enter Search Query" ),
       width_chars = 50
@@ -107,6 +105,7 @@ public class SearchBox : Box {
 
     _search_entry.activate.connect(() => {
       Idle.add(() => {
+        var search_nb = win.smart_notebooks.get_search_notebook();
         win.parser.parse( _search_entry.text, false );
         win.parser.populate_smart_notebook( search_nb );
         win.notes.populate_with_notebook( search_nb );
@@ -243,6 +242,7 @@ public class SearchBox : Box {
       case SmartParserSuggestion.BLOCK      :  show_block( true, start_char, pattern );  break;
       case SmartParserSuggestion.BLOCK_ONLY :  show_block( false, start_char, pattern );  break;
       case SmartParserSuggestion.NONE       :  show_none();  break;
+      default                               :  break;
     }
 
   }
