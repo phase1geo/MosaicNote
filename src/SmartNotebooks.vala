@@ -101,7 +101,6 @@ public class SmartNotebooks {
       changed();
     }
     _modified |= local_modified;
-    stdout.printf( "IN SMARTBOOKS, modified: %s\n", _modified.to_string() );
   }
 
   //-------------------------------------------------------------
