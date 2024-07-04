@@ -33,7 +33,7 @@ public class HiddenNotebook : BaseNotebook {
   }
 }
 
-public class SidebarNew : Box {
+public class Sidebar : Box {
 
 	private MainWindow     _win;
 	private GLib.ListStore _store;
@@ -60,7 +60,7 @@ public class SidebarNew : Box {
   public signal void save_search();
 
 	// Default constructor
-	public SidebarNew( MainWindow win ) {
+	public Sidebar( MainWindow win ) {
 
 		Object( orientation: Orientation.VERTICAL, spacing: 5 );
 

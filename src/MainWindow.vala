@@ -33,7 +33,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private NoteHistory     _history;
 
   private ShortcutsWindow _shortcuts = null;
-  private SidebarNew      _sidebar;
+  private Sidebar         _sidebar;
   private NotesPanel      _notes;
   private NotePanel       _note;
   private Paned           _notes_pw;
@@ -145,7 +145,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     header.pack_end( create_search() );
 
     /* Create content area */
-    _sidebar = new SidebarNew( this );
+    _sidebar = new Sidebar( this );
     _notes   = new NotesPanel( this );
     _note    = new NotePanel( this );
 

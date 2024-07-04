@@ -23,7 +23,7 @@ sources += files(
     'NotesPanel.vala',
     'Preferences.vala',
     'SearchBox.vala',
-    'SidebarNew.vala',
+    'Sidebar.vala',
     'SmartDateFilter.vala',
     'SmartFilter.vala',
     'SmartLogicFilter.vala',
