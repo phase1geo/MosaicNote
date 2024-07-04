@@ -40,13 +40,18 @@ public class NotePanel : Box {
   private Button        _hist_prev;
   private Button        _hist_next;
   private bool          _ignore = false;
-  private string        _last_child_name = "blank";
+
+  public SearchBox search {
+    get {
+      return( _search );
+    }
+  }
 
   public signal void tag_added( string name, int note_id );
   public signal void tag_removed( string name, int note_id );
   public signal void note_saved( Note note );
   public signal void note_link_clicked( string link, int note_id );
-  public signal void hide_search();
+  public signal void search_hidden();
 
   public signal void save();
 
@@ -79,14 +84,6 @@ public class NotePanel : Box {
     _stack.add_named( create_note_ui(),   "note" );
     _stack.add_named( create_search_ui(), "search" );
     _stack.visible_child_name = "blank";
-
-    _stack.notify["visible-child-name"].connect(() => {
-      stdout.printf( "visible_child_name: %s\n", _stack.visible_child_name );
-      if( (_last_child_name == "search") && (_stack.visible_child_name != "search") ) {
-        _last_child_name = _stack.visible_child_name;
-        hide_search();
-      }
-    });
 
     append( _stack );
 
@@ -341,7 +338,6 @@ public class NotePanel : Box {
         _note.tags.copy( _tags.tags );
         _note.title = _title.text;
         _content.save();
-        stdout.printf( "Save called\n" );
         note_saved( _note );
       }
     });
@@ -370,17 +366,21 @@ public class NotePanel : Box {
   }
 
   //-------------------------------------------------------------
-  // Toggles the search UI.
-  public void toggle_search() {
-
-    stdout.printf( "In toggle_search, visible_child_name: %s\n", _stack.visible_child_name );
-    if( _stack.visible_child_name == "search" ) {
-      _stack.visible_child_name = "blank";
-    } else {
-      _search.initialize();
+  // Shows the search UI.
+  public void show_search( string search_str = "" ) {
+    if( _stack.visible_child_name != "search" ) {
+      _search.initialize( search_str );
       _stack.visible_child_name = "search";
     }
+  }
 
+  //-------------------------------------------------------------
+  // Hides the search UI.
+  public void hide_search() {
+    if( _stack.visible_child_name == "search" ) {
+      _stack.visible_child_name = "blank";
+      search_hidden();
+    }
   }
 
   //-------------------------------------------------------------

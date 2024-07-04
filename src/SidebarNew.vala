@@ -47,12 +47,14 @@ public class SidebarNew : Box {
     { "action_rename_notebook", action_rename_notebook, "i" },
     { "action_delete_notebook", action_delete_notebook, "i" },
     { "action_save_search",     action_save_search, "i" },
+    { "action_edit_search",     action_edit_search, "i" },
     { "action_empty_trash",     action_empty_trash }
   };
 
   private signal void add_requested( int pos );
   private signal void rename_requested( int pos );
   private signal void save_search_requested( int pos );
+  private signal void edit_search_requested( int pos );
 
   public signal void notebook_selected( BaseNotebook? nb );
   public signal void save_search();
@@ -250,11 +252,13 @@ public class SidebarNew : Box {
         popover.popup();
       } else if( nb_is_smart( nb, SmartNotebookType.SEARCH ) ) {
         var menu = new GLib.Menu();
+        menu.append( _( "Edit Search Criteria" ), "sidebar.action_edit_search(%u)".printf( item.position ) );
         menu.append( _( "Save Search as Smart Notebook" ), "sidebar.action_save_search(%u)".printf( item.position ) );
         popover.menu_model = menu;
         popover.popup();
       } else if( nb_is_smart( nb, SmartNotebookType.USER ) ) {
         var top_menu = new GLib.Menu();
+        top_menu.append( _( "Edit Match Criteria" ), "sidebar.action_edit_search(%u)".printf( item.position ) );
         top_menu.append( _( "Rename Smart Notebook" ), "sidebar.action_rename_notebook(%u)".printf( item.position ) );
         var bot_menu = new GLib.Menu();
         bot_menu.append( _( "Delete Smart Notebook" ), "sidebar.action_delete_notebook(%u)".printf( item.position ) );
@@ -467,6 +471,19 @@ public class SidebarNew : Box {
     if( variant != null ) {
       var pos = variant.get_int32();
       save_search_requested( pos );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Causes the smartnotebook search criteria to be re-editable
+  // by the user, displaying the search UI after setup is complete.
+  private void action_edit_search( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      var pos = variant.get_int32();
+      var row = _model.get_row( pos );
+      var nb  = (SmartNotebook)row.get_item();
+      _win.note.search.notebook = nb;
+      _win.note.show_search( nb.extra );
     }
   }
 

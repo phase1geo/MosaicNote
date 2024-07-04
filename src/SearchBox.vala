@@ -81,8 +81,15 @@ public class SearchBox : Box {
   private string                _pattern;
   private Array<string>         _tag_matches;
   private Array<string>         _list_values;
+  private SmartNotebook?        _notebook = null;
 
   public signal void hide_search();
+
+  public SmartNotebook? notebook {
+    set {
+      _notebook = value;
+    }
+  }
 
   //-------------------------------------------------------------
   // Default constructor
@@ -105,10 +112,11 @@ public class SearchBox : Box {
 
     _search_entry.activate.connect(() => {
       Idle.add(() => {
-        var search_nb = win.smart_notebooks.get_search_notebook();
+        var nb = _notebook ?? win.smart_notebooks.get_search_notebook();
         win.parser.parse( _search_entry.text, false );
-        win.parser.populate_smart_notebook( search_nb );
-        win.notes.populate_with_notebook( search_nb );
+        win.parser.populate_smart_notebook( nb );
+        win.notes.populate_with_notebook( nb );
+        _notebook = null;
         return( false );
       });
       hide_search();

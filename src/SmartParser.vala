@@ -59,6 +59,7 @@ public class SmartParser {
   private NotebookTree           _notebooks;
   private List<SmartLogicFilter> _stack;
 
+  private string _search_str       = "";
   private string _error_message    = "";
   private int    _error_start      = -1;
   private int    _prev_error_start = -1;
@@ -88,6 +89,8 @@ public class SmartParser {
     if( !check_syntax_only ) {
       var and_filter = new FilterAnd();
       _stack.append( and_filter );
+      stdout.printf( "Saving search string: %s\n", search_str );
+      _search_str = search_str;
     } else {
       _prev_error_start = _error_start;
       _error_message    = "";
@@ -195,6 +198,8 @@ public class SmartParser {
     unowned var last = _stack.last();
     if( (last != null) && ((last.data as SmartLogicFilter) != null) ) {
       notebook.filter = (SmartLogicFilter)last.data;
+      stdout.printf( "Setting notebook to search_str: %s\n", _search_str );
+      notebook.extra  = _search_str;
       _notebooks.populate_smart_notebook( notebook );
       _stack.remove( last.data );
     }

@@ -80,6 +80,12 @@ public class MainWindow : Gtk.ApplicationWindow {
     }
   }
 
+  public NotePanel note {
+    get {
+      return( _note );
+    }
+  }
+
   public FullTags full_tags {
     get {
       return( _full_tags );
@@ -144,9 +150,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     _note    = new NotePanel( this );
 
     _sidebar.notebook_selected.connect((nb) => {
-      stdout.printf( "In notebook_selected\n" );
       if( nb != null ) {
-        stdout.printf( "HERE!!!\n" );
         var notebook = (nb as Notebook);
         _notes.populate_with_notebook( nb );
         _notes.select_row( 0 );
@@ -154,7 +158,6 @@ public class MainWindow : Gtk.ApplicationWindow {
           MosaicNote.settings.set_int( "last-notebook", notebook.id );
         }
       } else {
-        stdout.printf( "Clearing notes\n" );
         _notes.populate_with_notebook( nb );
       }
     });
@@ -183,8 +186,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       // TODO
     });
 
-    _note.hide_search.connect(() => {
-      stdout.printf( "In note.hide_search, setting active to false\n" );
+    _note.search_hidden.connect(() => {
       _search_mb.active = false;
     });
 
@@ -278,8 +280,10 @@ public class MainWindow : Gtk.ApplicationWindow {
     _search_mb.toggled.connect(() => {
       if( _search_mb.active ) {
         _sidebar.clear_selection();
+        _note.show_search();
+      } else {
+        _note.hide_search();
       }
-      _note.toggle_search();
     });
 
     return( _search_mb );
@@ -346,7 +350,6 @@ public class MainWindow : Gtk.ApplicationWindow {
   //-------------------------------------------------------------
   // Activates the note search UI.
   private void action_search() {
-    stdout.printf( "In action_search, setting search_mb to active\n" );
     _search_mb.active = true;
   }
 

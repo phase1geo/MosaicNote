@@ -66,6 +66,16 @@ public enum SmartNotebookType {
     }
   }
 
+  //-------------------------------------------------------------
+  // Returns true if the extra field is used by this smart filter.
+  public bool is_extra_valid() {
+    switch( this ) {
+      case SEARCH :
+      case USER   :  return( true );
+      default     :  return( false );
+    }
+  }
+
 }
 
 public class SmartNotebook : BaseNotebook {
@@ -75,6 +85,7 @@ public class SmartNotebook : BaseNotebook {
   private bool               _modified = false;
   private SmartNotebookType  _type     = SmartNotebookType.USER;
   private NotebookTree       _notebooks;
+  private string             _extra    = "";
 
   public SmartNotebookType notebook_type {
     get {
@@ -88,6 +99,15 @@ public class SmartNotebook : BaseNotebook {
     }
     set {
       _filter = value;
+    }
+  }
+
+  public string extra {
+    get {
+      return( _extra );
+    }
+    set {
+      _extra = value;
     }
   }
 
@@ -109,6 +129,7 @@ public class SmartNotebook : BaseNotebook {
     _filter    = (SmartLogicFilter)other._filter.copy();
     _type      = (other._type == SmartNotebookType.SEARCH) ? SmartNotebookType.USER : other._type;
     _notebooks = other._notebooks;
+    _extra     = other._extra;
 
     _notes = new Gee.HashSet<int>();
     other._notes.foreach((note_id) => {
@@ -178,17 +199,21 @@ public class SmartNotebook : BaseNotebook {
   // add support for this note
   public bool handle_note( Note note ) {
 
+    stdout.printf( "In smartnote %s, note: %s\n", name, note.title );
+
     // Check to see if the note passes all of the stored filters
     if( _filter.check_note( note ) ) {
 
       var modified = _notes.add( note.id );
       _modified |= modified;
+      stdout.printf( "  modified add: %s\n", modified.to_string() );
       return( modified );
 
     } else {
 
       var modified = _notes.remove( note.id );
       _modified |= modified;
+      stdout.printf( "  modified del: %s\n", modified.to_string() );
       return( modified );
 
     }
@@ -202,6 +227,8 @@ public class SmartNotebook : BaseNotebook {
     Xml.Node* node = new Xml.Node( null, "smart-notebook" );
     string[]  ids  = {};
 
+    stdout.printf( "SAVING SMARTNOTEBOOK\n" );
+
     // Convert the stored note IDs as a comma-separated string
     _notes.foreach((id) => {
       ids += id.to_string();
@@ -211,6 +238,10 @@ public class SmartNotebook : BaseNotebook {
     node->set_prop( "name", name );
     node->set_prop( "type", _type.to_string() );
     node->set_prop( "ids", string.joinv( ",", ids ) );
+
+    if( _type.is_extra_valid() ) {
+      node->set_prop( "extra", _extra );
+    }
 
     node->add_child( _filter.save() );
 
@@ -240,6 +271,11 @@ public class SmartNotebook : BaseNotebook {
       foreach( var id in ids ) {
         _notes.add( int.parse( id ) );
       }
+    }
+
+    var e = node->get_prop( "extra" );
+    if( e != null ) {
+      _extra = e;
     }
 
     for( Xml.Node* it = node->children; it != null; it = it->next ) {
