@@ -161,7 +161,8 @@ public class NotePanel : Box {
     _hist_prev = new Button.from_icon_name( "go-previous-symbolic" ) {
       sensitive = false,
       has_frame = false,
-      tooltip_text = _( "Show Last Viewed Note" )
+      tooltip_text = _( "Show Last Viewed Note" ),
+      margin_start = 5
     };
     _hist_prev.clicked.connect(() => {
       _win.history.go_backward();
@@ -170,7 +171,8 @@ public class NotePanel : Box {
     _hist_next = new Button.from_icon_name( "go-next-symbolic" ) {
       sensitive = false,
       has_frame = false,
-      tooltip_text = _( "Show Next Viewed Note" )
+      tooltip_text = _( "Show Next Viewed Note" ),
+      margin_end = 5
     };
     _hist_next.clicked.connect(() => {
       _win.history.go_forward();
@@ -190,14 +192,16 @@ public class NotePanel : Box {
     var export = new Button.from_icon_name( "document-export-symbolic" ) {
       has_frame = false,
       halign = Align.END,
-      tooltip_text = _( "Export note" )
+      tooltip_text = _( "Export note" ),
+      margin_start = 5
     };
     export.clicked.connect( export_note );
 
     _favorite = new Button.from_icon_name( "non-starred-symbolic" ) {
       has_frame = false,
       halign = Align.END,
-      tooltip_text = _( "Add to Favorites" )
+      tooltip_text = _( "Add to Favorites" ),
+      margin_end = 5
     };
     _favorite.clicked.connect(() => {
       if( _favorite.icon_name == "non-starred-symbolic" ) {
@@ -209,21 +213,25 @@ public class NotePanel : Box {
       }
     });
 
-    var vsep1 = new Separator( Orientation.VERTICAL );
+    var vsep1 = new Separator( Orientation.VERTICAL ) {
+      margin_start = 10,
+      margin_end   = 10
+    };
     var vsep2 = new Separator( Orientation.VERTICAL ) {
-      halign = Align.END
+      margin_start = 10,
+      margin_end   = 10
     };
 
     var tbox = new Box( Orientation.HORIZONTAL, 5 ) {
       halign = Align.FILL
     };
-    tbox.append( _hist_prev );
-    tbox.append( _hist_next );
-    tbox.append( vsep1 );
     tbox.append( _tags );
-    tbox.append( vsep2 );
+    // tbox.append( vsep1 );
     tbox.append( export );
     tbox.append( _favorite );
+    // tbox.append( vsep2 );
+    tbox.append( _hist_prev );
+    tbox.append( _hist_next );
 
     handle_nonitem_focus( tbox );
 
