@@ -196,6 +196,9 @@ public class SearchBox : Box {
     _error.label = "";
     handle_suggestion( SmartParserSuggestion.CATEGORY, 0, "" );
     _search_entry.text = with_string;
+    if( with_string != "" ) {
+      _search_entry.select_region( 0, with_string.char_count() );
+    }
     _search_entry.grab_focus();
   }
 

@@ -89,7 +89,6 @@ public class SmartParser {
     if( !check_syntax_only ) {
       var and_filter = new FilterAnd();
       _stack.append( and_filter );
-      stdout.printf( "Saving search string: %s\n", search_str );
       _search_str = search_str;
     } else {
       _prev_error_start = _error_start;
@@ -198,7 +197,6 @@ public class SmartParser {
     unowned var last = _stack.last();
     if( (last != null) && ((last.data as SmartLogicFilter) != null) ) {
       notebook.filter = (SmartLogicFilter)last.data;
-      stdout.printf( "Setting notebook to search_str: %s\n", _search_str );
       notebook.extra  = _search_str;
       _notebooks.populate_smart_notebook( notebook );
       _stack.remove( last.data );

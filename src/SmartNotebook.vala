@@ -199,21 +199,17 @@ public class SmartNotebook : BaseNotebook {
   // add support for this note
   public bool handle_note( Note note ) {
 
-    stdout.printf( "In smartnote %s, note: %s\n", name, note.title );
-
     // Check to see if the note passes all of the stored filters
     if( _filter.check_note( note ) ) {
 
       var modified = _notes.add( note.id );
       _modified |= modified;
-      stdout.printf( "  modified add: %s\n", modified.to_string() );
       return( modified );
 
     } else {
 
       var modified = _notes.remove( note.id );
       _modified |= modified;
-      stdout.printf( "  modified del: %s\n", modified.to_string() );
       return( modified );
 
     }
@@ -226,8 +222,6 @@ public class SmartNotebook : BaseNotebook {
 
     Xml.Node* node = new Xml.Node( null, "smart-notebook" );
     string[]  ids  = {};
-
-    stdout.printf( "SAVING SMARTNOTEBOOK\n" );
 
     // Convert the stored note IDs as a comma-separated string
     _notes.foreach((id) => {
