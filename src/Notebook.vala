@@ -33,6 +33,7 @@ public class Notebook : BaseNotebook {
 		}
 	}
 
+  //-------------------------------------------------------------
 	// Default constructor
 	public Notebook( string name ) {
     base( name );
@@ -40,6 +41,7 @@ public class Notebook : BaseNotebook {
 	  _notes = new Array<Note>();	
 	}
 
+  //-------------------------------------------------------------
 	// Construct from XML file
 	public Notebook.from_xml( int id ) {
     base( "" );
@@ -47,16 +49,19 @@ public class Notebook : BaseNotebook {
 		load( id );
 	}
 
+  //-------------------------------------------------------------
 	// Number of stores notes
 	public override int count() {
 		return( (int)_notes.length );
 	}
 
+  //-------------------------------------------------------------
 	// Returns the note at the given position
 	public Note get_note( int pos ) {
 		return( _notes.index( pos ) );
 	}
 
+  //-------------------------------------------------------------
   // Returns the model containing the list of stored notes
   public override ListModel? get_model() {
 
@@ -70,11 +75,13 @@ public class Notebook : BaseNotebook {
 
   }
 
+  //-------------------------------------------------------------
 	// Returns true if the given ID matches our own
 	public bool matches( int id ) {
 		return( _id == id );
 	}
 
+  //-------------------------------------------------------------
 	// Adds the given note to the notebook
   public void add_note( Note note ) {
   	_notes.append_val( note );
@@ -82,6 +89,7 @@ public class Notebook : BaseNotebook {
   	changed();
   }	
 
+  //-------------------------------------------------------------
   // Searches for and deletes the note (if found) in the notebook
   public void delete_note( Note note ) {
   	uint pos;
@@ -92,8 +100,10 @@ public class Notebook : BaseNotebook {
     }
   }
 
-  // Searches the list of notes for one that matches the given ID.  If it is found, return it; otherwise, return null.
-  public Note? find_note( int id ) {
+  //-------------------------------------------------------------
+  // Searches the list of notes for one that matches the given ID.
+  // If it is found, return it; otherwise, return null.
+  public Note? find_note_by_id( int id ) {
   	for( int i=0; i<_notes.length; i++ ) {
   		if( _notes.index( i ).id == id ) {
   			return( _notes.index( i ) );
@@ -102,6 +112,19 @@ public class Notebook : BaseNotebook {
   	return( null );
   }
 
+  //-------------------------------------------------------------
+  // Searches the list of notes for one that matches the given title.
+  // If it is found, return it; otherwise, return null.
+  public Note? find_note_by_title( string title ) {
+    for( int i=0; i<_notes.length; i++ ) {
+      if( _notes.index( i ).title == title ) {
+        return( _notes.index( i ) );
+      }
+    }
+    return( null );
+  }
+
+  //-------------------------------------------------------------
   // Searches for notes that contain the given tag and appends them to the given notes list.
   public void get_notes_with_tag( string tag, Array<Note> notes ) {
   	for( int i=0; i<_notes.length; i++ ) {
@@ -121,6 +144,7 @@ public class Notebook : BaseNotebook {
     }
   }
 
+  //-------------------------------------------------------------
   // Returns true if anything has been modified by the user in this notebook
   public bool is_modified() {
   	if( !_modified ) {
@@ -134,15 +158,19 @@ public class Notebook : BaseNotebook {
   	return( true );
   }
 
+  //-------------------------------------------------------------
+  // Returns the directory where this notebook will be saved on disk.
   public string notebook_directory( int id ) {
   	return( Utils.user_location( GLib.Path.build_filename( "notebooks", "notebook-%d".printf( id ) ) ) );
   }
 
+  //-------------------------------------------------------------
   // Name of Notebook XML file
   private string xml_file( int id ) {
     return( GLib.Path.build_filename( notebook_directory( id ), "notebook.xml" ) );
   }
 
+  //-------------------------------------------------------------
   // Saves the contents of the notebook to XML formatted file
 	public void save() {
 
@@ -171,6 +199,7 @@ public class Notebook : BaseNotebook {
 
   }
 
+  //-------------------------------------------------------------
   // Loads the contents of this notebook from XML format
   private void load( int id ) {
 
@@ -204,6 +233,9 @@ public class Notebook : BaseNotebook {
 
   }
 
+  //-------------------------------------------------------------
+  // Checks the current version and if it requires some sort of
+  // update, this function will make the change.
   private void check_version( string version ) {
 
   	// Nothing to do here yet

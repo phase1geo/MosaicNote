@@ -181,9 +181,17 @@ public class MainWindow : Gtk.ApplicationWindow {
       _smart_notebooks.handle_note( note );
     });
 
-    _note.note_link_clicked.connect((link, note_id) => {
-      stdout.printf( "Note link clicked, link: %s, note_id: %d\n", link, note_id );
-      // TODO
+    _note.note_link_clicked.connect((link, start_note) => {
+      stdout.printf( "Note link clicked, link: %s\n", link );
+      var note = _notebooks.find_note_by_title( link );
+      var nb   = start_note.notebook;
+      if( note == null ) {
+        note = new Note( nb );
+        note.title = link;
+        nb.add_note( note );
+      }
+      _sidebar.select_notebook( nb );
+      _notes.select_note( note.id, true );
     });
 
     _note.search_hidden.connect(() => {

@@ -467,6 +467,8 @@ public class Sidebar : Box {
     }
   }
 
+  //-------------------------------------------------------------
+  // Saves the search as a user-created smart notebook.
   private void action_save_search( SimpleAction action, Variant? variant ) {
     if( variant != null ) {
       var pos = variant.get_int32();
@@ -487,8 +489,16 @@ public class Sidebar : Box {
     }
   }
 
+  //-------------------------------------------------------------
+  // Empties the trash notebook.
+  private void empty_trash( Object? obj ) {
+    stdout.printf( "In empty_trash\n" );
+  }
+
+  //-------------------------------------------------------------
+  // Empties the note within the trash.
   private void action_empty_trash() {
-    // TODO
+    Utils.show_confirmation( _win, _( "Empty Trash?" ), _( "This action is not reversable" ), null, empty_trash );
   }
 
   //-------------------------------------------------------------
@@ -496,6 +506,23 @@ public class Sidebar : Box {
   public void clear_selection() {
     var selection = (SingleSelection)_list_view.model;
     selection.unselect_item( selection.selected );
+  }
+
+  //-------------------------------------------------------------
+  // Selects the given notebook.
+  public void select_notebook( BaseNotebook nb ) {
+    var selection = (SingleSelection)_list_view.model;
+    uint pos;
+    var found = _store.find_with_equal_func( nb, (a, b) => {
+      if( (b as Notebook) != null ) {
+        return( ((a as NotebookTree.Node) != null) && (((NotebookTree.Node)a).get_notebook() == b) );
+      } else {
+        return( a == b );
+      }
+    }, out pos );
+    if( found ) {
+      selection.select_item( pos, true );
+    }
   }
 
 }

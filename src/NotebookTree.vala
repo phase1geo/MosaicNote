@@ -258,13 +258,30 @@ public class NotebookTree {
 
 		//-------------------------------------------------------------
 		// Searches for a note with the given ID.  If it is found, return it; otherwise, returns null.
-		public Note? find_note( int id ) {
-			var note = get_notebook().find_note( id );
+		public Note? find_note_by_id( int id ) {
+			var note = get_notebook().find_note_by_id( id );
 			if( note != null ) {
 				return( note );
 			}
 			for( int i=0; i<_children.length; i++ ) {
-				note = _children.index( i ).find_note( id );
+				note = _children.index( i ).find_note_by_id( id );
+				if( note != null ) {
+					return( note );
+				}
+			}
+			return( null );
+		}
+
+		//-------------------------------------------------------------
+		// Finds a note with the given title.  Returns the note if one is
+		// found; otherwise, returns null.
+		public Note? find_note_by_title( string title ) {
+			var note = get_notebook().find_note_by_title( title );
+			if( note != null ) {
+				return( note );
+			}
+			for( int i=0; i<_children.length; i++ ) {
+				note = _children.index( i ).find_note_by_title( title );
 				if( note != null ) {
 					return( note );
 				}
@@ -453,15 +470,28 @@ public class NotebookTree {
 
 	//-------------------------------------------------------------
 	// Searches the notebooks for a note that matches the given ID
-	public Note? find_note( int id ) {
+	public Note? find_note_by_id( int id ) {
 		for( int i=0; i<_nodes.length; i++ ) {
-			var note = _nodes.index( i ).find_note( id );
+			var note = _nodes.index( i ).find_note_by_id( id );
 			if( note != null ) {
 				return( note );
 			}
 		}
 		return( null );
 	}
+
+	//-------------------------------------------------------------
+	// Searches the notebooks for a note that matches the given ID
+	public Note? find_note_by_title( string title ) {
+		for( int i=0; i<_nodes.length; i++ ) {
+			var note = _nodes.index( i ).find_note_by_title( title );
+			if( note != null ) {
+				return( note );
+			}
+		}
+		return( null );
+	}
+
 
 	//-------------------------------------------------------------
 	// Searches the tree of notebooks for notes that contain the given tag

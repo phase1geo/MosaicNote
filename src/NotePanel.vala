@@ -50,7 +50,7 @@ public class NotePanel : Box {
   public signal void tag_added( string name, int note_id );
   public signal void tag_removed( string name, int note_id );
   public signal void note_saved( Note note );
-  public signal void note_link_clicked( string link, int note_id );
+  public signal void note_link_clicked( string link, Note note );
   public signal void search_hidden();
 
   public signal void save();
@@ -319,7 +319,7 @@ public class NotePanel : Box {
       set_toolbar_for_pane( pane );
     });
     _content.note_link_clicked.connect((link) => {
-      note_link_clicked( link, _note.id );
+      note_link_clicked( link, _note );
     });
 
     var cbox = new Box( Orientation.VERTICAL, 5 );

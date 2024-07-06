@@ -27,30 +27,38 @@ public class Utils {
 
   public delegate void ConfirmationCallback( Object? obj );
 
-  /* Returns the location of the given subdirectory path within the user storage directory */
+  //-------------------------------------------------------------
+  // Returns the location of the given subdirectory path within
+  // the user storage directory
   public static string user_location( string path ) {
     return( GLib.Path.build_filename( Environment.get_user_data_dir(), "mosaic-note", path ) );
   }
 
-  /* Creates the given directory (and all parent directories) with appropriate permissions */
+  //-------------------------------------------------------------
+  // Creates the given directory (and all parent directories) with
+  // appropriate permissions
   public static bool create_dir( string path ) {
     return( DirUtils.create_with_parents( path, 0755 ) == 0 );
   }
 
-  /* Displays the given message to standard output if we are development mode */
+  //-------------------------------------------------------------
+  // Displays the given message to standard output if we are
+  // development mode
   public static void debug_output( string msg ) {
     if( MosaicNote.settings.get_boolean( "developer-mode" ) ) {
       stdout.printf( "%s\n", msg );
     }
   }
 
+  //-------------------------------------------------------------
   // Returns the extension for the given filename
   public static string get_extension( string filename ) {
     var parts = filename.split( "." );
     return( parts[parts.length - 1] );
   }
 
-  /* Checks to see if the given URI image extension is supported */
+  //-------------------------------------------------------------
+  // Checks to see if the given URI image extension is supported
   public static bool is_uri_supported_image( string uri ) {
     var uri_ext = get_extension( uri ).down();
     foreach( var format in Pixbuf.get_formats() ) {
@@ -63,9 +71,8 @@ public class Utils {
     return( false );
   }
 
-  /*
-   Returns a regular expression useful for parsing clickable URLs.
-  */
+  //-------------------------------------------------------------
+  // Returns a regular expression useful for parsing clickable URLs.
   public static string url_re() {
     string[] res = {
       "mailto:.+@[a-z0-9-]+\\.[a-z0-9.-]+",
@@ -75,7 +82,8 @@ public class Utils {
     return( "(" + string.joinv( "|",res ) + ")" );
   }
 
-  /* Returns the rootname of the given filename */
+  //-------------------------------------------------------------
+  // Returns the rootname of the given filename
   public static string rootname( string filename ) {
     var basename = GLib.Path.get_basename( filename );
     var parts    = basename.split( "." );
@@ -86,12 +94,15 @@ public class Utils {
     }
   }
 
-  /* Returns true if the given coordinates are within the specified bounds */
+  //-------------------------------------------------------------
+  // Returns true if the given coordinates are within the specified
+  // bounds.
   public static bool is_within_bounds( double x, double y, double bx, double by, double bw, double bh ) {
     return( (bx < x) && (x < (bx + bw)) && (by < y) && (y < (by + bh)) );
   }
 
-  /* Returns a string that is suitable to use as an inspector title */
+  //-------------------------------------------------------------
+  // Returns a string that is suitable to use as an inspector title
   public static string make_title( string str ) {
     return( "<b>" + str + "</b>" );
   }
@@ -102,13 +113,15 @@ public class Utils {
     return( "<i>" + str + "</i>" );
   }
 
-  /* Returns a string that is used to display a tooltip with displayed accelerator */
+  //-------------------------------------------------------------
+  // Returns a string that is used to display a tooltip with displayed accelerator
   public static string tooltip_with_accel( string tooltip, string accel ) {
     string[] accels = {accel};
     return( Granite.markup_accel_tooltip( accels, tooltip ) );
   }
 
-  /* Opens the given URL in the proper external default application */
+  //-------------------------------------------------------------
+  // Opens the given URL in the proper external default application
   public static void open_url( string url ) {
     if( (url.substring( 0, 7 ) == "file://") || (url.get_char( 0 ) == '/') ) {
       var app = AppInfo.get_default_for_type( "inode/directory", true );
@@ -128,7 +141,8 @@ public class Utils {
     }
   }
 
-  /* Prepares the given note string for use in a markup tooltip */
+  //-------------------------------------------------------------
+  // Prepares the given note string for use in a markup tooltip
   public static string prepare_note_markup( string note ) {
     var str = markdown_to_html( note );  // .replace( "<", "&lt;" ).replace( ">", "&gt;" ) );
     // stdout.printf( "---------------\n%s--------------\n", str );
@@ -193,7 +207,8 @@ public class Utils {
     return( str.replace( "\n\n\n", "\n\n" ) );
   }
 
-  /* Converts the given Markdown into HTML */
+  //-------------------------------------------------------------
+  // Converts the given Markdown into HTML
   public static string markdown_to_html( string md, string? tag = null ) {
     string html;
     // var    flags = 0x57607000;
@@ -208,7 +223,8 @@ public class Utils {
     }
   }
 
-  /* Returns the line height of the first line of the given pango layout */
+  //-------------------------------------------------------------
+  // Returns the line height of the first line of the given pango layout
   public static double get_line_height( Pango.Layout layout ) {
     int height;
     var line = layout.get_line_readonly( 0 );
@@ -223,7 +239,8 @@ public class Utils {
     return( height / Pango.SCALE );
   }
 
-  /* Searches for the beginning or ending word */
+  //-------------------------------------------------------------
+  // Searches for the beginning or ending word
   public static int find_word( string str, int cursor, bool wordstart ) {
     try {
       MatchInfo match_info;
@@ -237,8 +254,9 @@ public class Utils {
     } catch( RegexError e ) {}
     return( -1 );
   }
-
-  /* Returns true if the given string is a valid URL */
+ 
+  //-------------------------------------------------------------
+  // Returns true if the given string is a valid URL
   public static bool is_url( string str ) {
     return( Regex.match_simple( url_re(), str ) );
   }
@@ -254,7 +272,8 @@ public class Utils {
   }
   */
 
-  /* Show the specified popover */
+  //-------------------------------------------------------------
+  // Show the specified popover
   public static void show_popover( Popover popover ) {
 #if GTK322
     popover.popup();
@@ -263,7 +282,8 @@ public class Utils {
 #endif
   }
 
-  /* Hide the specified popover */
+  //-------------------------------------------------------------
+  // Hide the specified popover
   public static void hide_popover( Popover popover ) {
 #if GTK322
     popover.popdown();
@@ -344,7 +364,8 @@ public class Utils {
   }
   */
 
-  /* Creates a file chooser dialog and returns it to the code */
+  //-------------------------------------------------------------
+  // Creates a file chooser dialog and returns it to the code
   public static Gtk.FileChooserNative make_file_chooser( string title, Gtk.Window win, Gtk.FileChooserAction action, string accept_label ) {
 
     var gtk_settings = Gtk.Settings.get_default();
@@ -376,6 +397,7 @@ public class Utils {
     dialog.show();
   }
 
+  //-------------------------------------------------------------
   // Clears the given box widget
   public static void clear_box( Box box ) {
     while( box.get_first_child() != null ) {
@@ -383,6 +405,7 @@ public class Utils {
     } 
   }
 
+  //-------------------------------------------------------------
   // Clears the given listbox widget
   public static void clear_listbox( ListBox box ) {
     while( box.get_row_at_index( 0 ) != null ) {
@@ -390,6 +413,7 @@ public class Utils {
     }
   }
 
+  //-------------------------------------------------------------
   // Returns the child widget at the given index of the parent widget (or null if one does not exist)
   public static Widget? get_child_at_index( Widget parent, int index ) {
     var child = (index < 0) ? null : parent.get_first_child();
@@ -399,6 +423,7 @@ public class Utils {
     return( child );
   } 
 
+  //-------------------------------------------------------------
   // Returns the index of the given child within the parent
   public static int get_child_index( Widget parent, Widget child ) {
     var index = 0;
@@ -410,6 +435,7 @@ public class Utils {
     return( (current_child == null) ? -1 : index );
   }
 
+  //-------------------------------------------------------------
   // Returns the pixel width of the given image
   public static int image_width( string pathname ) {
     int width, height;

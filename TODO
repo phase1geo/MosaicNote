@@ -1,15 +1,15 @@
 TODO:
 
- ☐ Complete work on inlined notebook adding/renaming.
+ ✔ Complete work on inlined notebook adding/renaming. @done (24-07-04 19:25)
  ☐ Add support for table note item
    ☐ Use table grid widget with embedded textboxes
  ☐ Add support for math note item
- ☐ Add support for search
-   ☐ Define search "language" for advanced search features and write parser
-   ☐ Add way to save searches as smart notebooks
+ ✔ Add support for search @done (24-07-04 19:26)
+   ✔ Define search "language" for advanced search features and write parser @done (24-07-04 19:26)
+   ✔ Add way to save searches as smart notebooks @done (24-07-04 19:26)
      Under the hood, I want searches to essentially be smart notebooks anyways
  ☐ Add support for note linking
- ☐ Add support for note traversal history
+ ✔ Add support for note traversal history @done (24-07-04 19:26)
  ☐ Add support for undo/redo
 
 ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿

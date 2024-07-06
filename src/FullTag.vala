@@ -68,7 +68,7 @@ public class FullTag : BaseNotebook {
     var list = new ListStore( typeof(Note) );
 
     notes.foreach((id) => {
-      list.append( _notebooks.find_note( id ) );
+      list.append( _notebooks.find_note_by_id( id ) );
       return( true );
     });
 

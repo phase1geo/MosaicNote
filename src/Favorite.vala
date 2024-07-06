@@ -55,7 +55,7 @@ public class Favorite : Object {
         return( nb.name );
 			}
 		} else {
-			var note = notebooks.find_note( _id );
+			var note = notebooks.find_note_by_id( _id );
 			if( note != null ) {
 				return( note.title );
 			}
