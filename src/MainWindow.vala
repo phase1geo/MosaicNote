@@ -150,12 +150,13 @@ public class MainWindow : Gtk.ApplicationWindow {
     _note    = new NotePanel( this );
 
     _sidebar.notebook_selected.connect((nb) => {
+      stdout.printf( "In sidebar.notebook_selected.connect\n" );
       if( nb != null ) {
-        var notebook = (nb as Notebook);
+        var node = (nb as NotebookTree.Node);
         _notes.populate_with_notebook( nb );
         _notes.select_row( 0 );
-        if( notebook != null ) {
-          MosaicNote.settings.set_int( "last-notebook", notebook.id );
+        if( node != null ) {
+          MosaicNote.settings.set_int( "last-notebook", node.get_notebook().id );
         }
       } else {
         _notes.populate_with_notebook( nb );
@@ -199,9 +200,8 @@ public class MainWindow : Gtk.ApplicationWindow {
     });
 
     _history.goto_note.connect((note) => {
-      _notes.populate_with_notebook( note.notebook );
-      _notes.select_note( note.id, false );
-      _note.populate_with_note( note, false );
+      _sidebar.select_notebook( note.notebook );
+      _notes.select_note( note.id, true );
     });
 
     _notes_pw = new Paned( Orientation.HORIZONTAL ) {
@@ -223,10 +223,16 @@ public class MainWindow : Gtk.ApplicationWindow {
     // Make the sidebar paned window the child of the window
     child = _sidebar_pw;
 
-    // Select the notebook and note that was last saved (if valid)
-    // TBD - _sidebar.select_notebook_and_note( settings.get_int( "last-notebook" ), settings.get_int( "last-note" ) );
-
     show();
+
+    // Select the notebook and note that was last saved (if valid)
+    var last_notebook_id = settings.get_int( "last-notebook" );
+    var last_notebook    = _notebooks.find_notebook( last_notebook_id );
+    if( last_notebook != null ) {
+      var last_note_id = settings.get_int( "last-note" );
+      _sidebar.select_notebook( last_notebook );
+      _notes.select_note( last_note_id, true );
+    }
 
     /* Handle any request to close the window */
     close_request.connect(() => {

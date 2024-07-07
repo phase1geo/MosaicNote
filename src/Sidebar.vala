@@ -33,22 +33,32 @@ public class HiddenNotebook : BaseNotebook {
   }
 }
 
+public class HiddenSmartNotebook : BaseNotebook {
+  public HiddenSmartNotebook() {
+    base( "" );
+  }
+}
+
 public class Sidebar : Box {
 
 	private MainWindow     _win;
 	private GLib.ListStore _store;
   private TreeListModel  _model;
 	private ListView       _list_view;
-  private Button         _add_nb_btn;
+  private MenuButton     _add_nb_btn;
   private bool           _adding = false;
+  private int            _notebook_add_pos = -1;
+  private int            _smart_add_pos = -1;
 
   private const GLib.ActionEntry[] action_entries = {
-    { "action_add_notebook",    action_add_notebook, "i" },
-    { "action_rename_notebook", action_rename_notebook, "i" },
-    { "action_delete_notebook", action_delete_notebook, "i" },
-    { "action_save_search",     action_save_search, "i" },
-    { "action_edit_search",     action_edit_search, "i" },
-    { "action_empty_trash",     action_empty_trash }
+    { "action_add_sub_notebook",       action_add_sub_notebook, "i" },
+    { "action_rename_notebook",        action_rename_notebook, "i" },
+    { "action_delete_notebook",        action_delete_notebook, "i" },
+    { "action_save_search",            action_save_search, "i" },
+    { "action_edit_search",            action_edit_search, "i" },
+    { "action_empty_trash",            action_empty_trash },
+    { "action_add_new_notebook",       action_add_new_notebook },
+    { "action_add_new_smart_notebook", action_add_new_smart_notebook },
   };
 
   private signal void add_requested( int pos );
@@ -65,8 +75,13 @@ public class Sidebar : Box {
 		Object( orientation: Orientation.VERTICAL, spacing: 5 );
 
 		_win = win;
+
 		_win.notebooks.changed.connect( populate_tree );
     _win.smart_notebooks.changed.connect( populate_tree );
+
+    MosaicNote.settings.changed["sidebar-show-tags"].connect(() => {
+      populate_tree();
+    });
 
     var factory = new SignalListItemFactory();
     factory.setup.connect( setup_tree );
@@ -80,6 +95,7 @@ public class Sidebar : Box {
     };
 
     selection.selection_changed.connect((pos, num) => {
+      stdout.printf( "In selection_changed\n" );
       var row = _model.get_row( selection.selected );
       if( row != null ) {
         var nb  = (BaseNotebook)row.get_item();
@@ -109,17 +125,20 @@ public class Sidebar : Box {
 
     append( sw );
 
-    _add_nb_btn = new Button.from_icon_name( "list-add-symbolic" ) {
+    var add_menu = new GLib.Menu();
+    add_menu.append( _( "New Notebook" ),       "sidebar.action_add_new_notebook" );
+    add_menu.append( _( "New Smart Notebook" ), "sidebar.action_add_new_smart_notebook" );
+
+    _add_nb_btn = new MenuButton() {
+      icon_name = "list-add-symbolic",
   		halign = Align.START,
   		margin_start = 5,
   		margin_top = 5,
   		margin_bottom = 5,
-  		has_frame = false
+  		has_frame = false,
+      direction = ArrowType.UP,
+      menu_model = add_menu
   	};
-
-  	_add_nb_btn.clicked.connect(() => {
-  		add_requested( 4 + _win.notebooks.size() + 1 );
-		});
 
   	var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
   		valign = Align.END,
@@ -140,6 +159,8 @@ public class Sidebar : Box {
 
 	// Populates the notebook tree with the updated version of win.notebooks
 	private void populate_tree() {
+
+    stdout.printf( "In populate_tree\n" );
 
 		_store.remove_all();
 
@@ -162,6 +183,7 @@ public class Sidebar : Box {
   	}
 
     var new_notebook = new HiddenNotebook();
+    _notebook_add_pos = (int)_store.get_n_items();
     _store.append( new_notebook );
 
     var smart = new LabelNotebook( _( "Smart Notebooks" ) );
@@ -174,12 +196,20 @@ public class Sidebar : Box {
       }
     }
 
-  	var tags = new LabelNotebook( _( "Tags" ) );
-  	_store.append( tags );
+    var new_smart = new HiddenSmartNotebook();
+    _smart_add_pos = (int)_store.get_n_items();
+    _store.append( new_smart );
 
-		for( int i=0; i<_win.full_tags.size(); i++ ) {
-			_store.append( _win.full_tags.get_tag( i ) );
-		}
+    if( MosaicNote.settings.get_boolean( "sidebar-show-tags" ) ) {
+
+    	var tags = new LabelNotebook( _( "Tags" ) );
+    	_store.append( tags );
+
+  		for( int i=0; i<_win.full_tags.size(); i++ ) {
+  			_store.append( _win.full_tags.get_tag( i ) );
+  		}
+
+    }
 
 	}
 
@@ -196,6 +226,12 @@ public class Sidebar : Box {
   private bool nb_is_smart( BaseNotebook nb, SmartNotebookType nb_type ) {
     var smart = (nb as SmartNotebook);
     return( (smart != null) && (smart.notebook_type == nb_type) );
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if the given base notebook is a hidden notebook.
+  private bool nb_is_hidden( BaseNotebook nb ) {
+    return( (nb as HiddenNotebook) != null );
   }
 
 	private void setup_tree( Object obj ) {
@@ -236,7 +272,7 @@ public class Sidebar : Box {
       var nb  = (BaseNotebook)row.get_item();
       if( nb_is_node( nb ) ) {
         var top_menu = new GLib.Menu();
-        top_menu.append( _( "New Sub-Notebook" ), "sidebar.action_add_notebook(%u)".printf( item.position ) );
+        top_menu.append( _( "New Sub-Notebook" ), "sidebar.action_add_sub_notebook(%u)".printf( item.position ) );
         top_menu.append( _( "Rename Notebook" ), "sidebar.action_rename_notebook(%u)".printf( item.position ) );
         var bot_menu = new GLib.Menu();
         bot_menu.append( _( "Delete Notebook" ), "sidebar.action_delete_notebook(%u)".printf( item.position ) );
@@ -294,10 +330,9 @@ public class Sidebar : Box {
           var new_nb = new SmartNotebook.copy( entry.text, (nb as SmartNotebook) );
           _win.smart_notebooks.add_notebook( new_nb );
         }
-      } else {
+      } else if( nb_is_hidden( nb ) ) {
         if( entry.text.chomp() != "" ) {
           var new_nb = new Notebook( entry.text );
-          stack.visible = false;
           row = row.get_parent();
           if( row == null ) {
             _win.notebooks.add_notebook( new_nb );
@@ -306,12 +341,25 @@ public class Sidebar : Box {
             parent.add_notebook( new_nb );
           }
         }
+        stack.visible = false;
+      } else {
+        if( entry.text.chomp() != "" ) {
+          var new_nb = new SmartNotebook( entry.text, SmartNotebookType.USER, _win.notebooks );
+          _win.smart_notebooks.add_notebook( new_nb );
+          _win.note.search.notebook = new_nb;
+          _win.note.show_search( new_nb.extra );
+        }
       }
     });
 
     key.key_released.connect((keyval, keycode, state) => {
+      var row = (TreeListRow)item.get_item();
+      var nb  = (BaseNotebook)row.get_item();
       if( keyval == Gdk.Key.Escape ) {
         stack.visible_child_name = "display";
+        if( nb.name == "" ) {
+          stack.visible = false;
+        }
       }
     });
 
@@ -377,12 +425,13 @@ public class Sidebar : Box {
 			count.visible     = false;
 			box.margin_top    = 10;
 			box.margin_bottom = 10;
-    } else if( (nb as HiddenNotebook) != null ) {
+    } else if( ((nb as HiddenNotebook) != null) || ((nb as HiddenSmartNotebook) != null) ) {
       stack.visible_child_name = "rename";
       stack.visible = false;
 		} else {
 		  expander.set_list_row( row );
 		  label.label = nb.name;
+      stdout.printf( "Count: %d\n", nb.count() );
 		  count.label = nb.count().to_string();
 		  if( nb.count() == 0 ) {
 		  	expander.margin_top = 6;
@@ -413,7 +462,21 @@ public class Sidebar : Box {
   	return( null );
 	}
 
-  private void action_add_notebook( SimpleAction action, Variant? variant ) {
+  //-------------------------------------------------------------
+  // Adjusts the UI to allow the user to create a new notebook.
+  private void action_add_new_notebook() {
+    add_requested( _notebook_add_pos );
+  }
+
+  //-------------------------------------------------------------
+  // Adjusts the UI to allow the user to create a new smart notebook.
+  private void action_add_new_smart_notebook() {
+    add_requested( _smart_add_pos );
+  }
+
+  //-------------------------------------------------------------
+  // Adds a new sub-notebook to the currently selected notebook.
+  private void action_add_sub_notebook( SimpleAction action, Variant? variant ) {
     if( variant != null ) {
       _adding = true;
       var pos = variant.get_int32();
@@ -520,6 +583,7 @@ public class Sidebar : Box {
         return( a == b );
       }
     }, out pos );
+    stdout.printf( "In select_notebook, found: %s, pos: %u\n", found.to_string(), pos );
     if( found ) {
       selection.select_item( pos, true );
     }

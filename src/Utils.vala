@@ -388,6 +388,7 @@ public class Utils {
     var dialog = new MessageDialog( win, flags, MessageType.WARNING, ButtonsType.YES_NO, question ) {
       secondary_text = detail
     };
+    dialog.set_default_response( ResponseType.NO );
     dialog.response.connect((response_id) => {
       if( response_id == ResponseType.YES ) {
         callback( obj );

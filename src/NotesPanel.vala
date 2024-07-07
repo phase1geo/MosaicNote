@@ -102,6 +102,7 @@ public class NotesPanel : Box {
   //-------------------------------------------------------------
 	// Populates the notes list from the given notebook
   public void populate_with_notebook( BaseNotebook? nb ) {
+    stdout.printf( "In populate_with_notebook\n" );
     _node = (nb as NotebookTree.Node);
     if( nb != null ) {
       _model = nb.get_model();
