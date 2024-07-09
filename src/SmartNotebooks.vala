@@ -57,6 +57,7 @@ public class SmartNotebooks {
   //-------------------------------------------------------------
   // Adds a new smart notebook to the list of smart notebooks
   public void add_notebook( SmartNotebook notebook ) {
+    _notebook_tree.populate_smart_notebook( notebook );
     _notebooks.append_val( notebook );
     changed();
     _modified = true;
@@ -123,9 +124,6 @@ public class SmartNotebooks {
 
     var all = new SmartNotebook( _( "All Notes" ), SmartNotebookType.BUILTIN, _notebook_tree );
     add_notebook( all );
-
-    var trash = new SmartNotebook( _( "Trash" ), SmartNotebookType.TRASH, _notebook_tree );
-    add_notebook( trash );
 
     // Save the notebooks
     save();

@@ -48,7 +48,6 @@ public class FilterAnd : SmartLogicFilter {
   public override bool check_note( Note note ) {
     for( int i=0; i<filters.length; i++ ) {
       var result = filters.index( i ).check_note( note );
-      stdout.printf( "  In FilterAnd.check_note, i: %d, result: %s\n", i, result.to_string() );
       if( !result ) {
         return( false );
       }
@@ -74,6 +73,7 @@ public class FilterAnd : SmartLogicFilter {
   // Loads the contents of this filter from XML mode.
   public override void load( Xml.Node* node ) {
     load_from_node( node );
+    stdout.printf( "%s\n", to_string() );
   }
 
 }

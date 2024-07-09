@@ -355,8 +355,22 @@ public class NotebookTree {
 	// START OF NotebookTree CLASS
 	//-------------------------------------------------------------
 
+	private Notebook    _inbox;
+	private Notebook    _trash;
 	private Array<Node> _nodes;
 	private bool        _modified = false;
+
+	public Notebook inbox {
+		get {
+			return( _inbox );
+		}
+	}
+
+	public Notebook trash {
+		get {
+			return( _trash );
+		}
+	}
 
 	public signal void changed();
 
@@ -389,6 +403,7 @@ public class NotebookTree {
 	public void remove_notebook( Notebook nb ) {
 		for( int i=0; i<_nodes.length; i++ ) {
 			if( _nodes.index( i ).get_notebook() == nb ) {
+				nb.remove_notebook();
 		    _nodes.index( i ).changed.disconnect( set_modified );
 				_nodes.remove_index( i );
 		    _modified = true;
@@ -527,6 +542,8 @@ public class NotebookTree {
 	  root->set_prop( "notebook-id", Notebook.current_id.to_string() );
 	  root->set_prop( "note-id", Note.current_id.to_string() );
 	  root->set_prop( "note-item-id", NoteItem.current_id.to_string() );
+	  root->set_prop( "inbox-id", _inbox.id.to_string() );
+	  root->set_prop( "trash-id", _trash.id.to_string() );
 
 	  for( int i=0; i<_nodes.length; i++ ) {
 	  	root->add_child( _nodes.index( i ).save() );
@@ -536,6 +553,10 @@ public class NotebookTree {
 	  doc->save_format_file( xml_file(), 1 );
 	
 	  delete doc;
+
+	  // Save the inbox and trash
+		_inbox.save();
+		_trash.save();
 
 	  _modified = false;
 
@@ -550,11 +571,19 @@ public class NotebookTree {
   }
 
   //-------------------------------------------------------------
+  // Create the first two notebooks
+  private void create_default_notebooks() {
+  	_inbox = new Notebook( _( "Inbox" ) );
+  	_trash = new Notebook( _( "Trash" ) );
+  }
+
+  //-------------------------------------------------------------
   // Loads the contents of this notebook from XML format
   private void load() {
 
     var doc = Xml.Parser.read_file( xml_file(), null, (Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING) );
     if( doc == null ) {
+    	create_default_notebooks();
       return;
     }
 
@@ -579,6 +608,12 @@ public class NotebookTree {
     if( ni_id != null ) {
     	NoteItem.current_id = int.parse( ni_id );
     }
+
+    var ib_id = root->get_prop( "inbox-id" );
+   	_inbox = new Notebook.from_xml( ((ib_id != null) ? int.parse( ib_id ) : -1), _( "Inbox" ) );
+
+    var tr_id = root->get_prop( "trash-id" );
+    _trash = new Notebook.from_xml( ((tr_id != null) ? int.parse( tr_id ) : -1), _( "Trash" ) );
 
     for( Xml.Node* it = root->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "node") ) {

@@ -43,10 +43,10 @@ public class Notebook : BaseNotebook {
 
   //-------------------------------------------------------------
 	// Construct from XML file
-	public Notebook.from_xml( int id ) {
+	public Notebook.from_xml( int id, string? build_name = null ) {
     base( "" );
 		_notes = new Array<Note>();
-		load( id );
+		load( id, build_name );
 	}
 
   //-------------------------------------------------------------
@@ -98,6 +98,28 @@ public class Notebook : BaseNotebook {
     	_modified = true;
     	changed();
     }
+  }
+
+  //-------------------------------------------------------------
+  // Deletes all notes in the notebook.  This is only used for the
+  // special trash notebook.
+  public void delete_all_notes() {
+    if( _notes.length > 0 ) {
+      _notes.remove_range( 0, _notes.length );
+      _modified = true;
+      changed();
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Moves the specified note to this notebook from its previous
+  // notebook.
+  public void move_note( Note note ) {
+    _notes.append_val( note );
+    note.notebook.delete_note( note );
+    note.notebook = this;
+    _modified = true;
+    changed();
   }
 
   //-------------------------------------------------------------
@@ -158,6 +180,12 @@ public class Notebook : BaseNotebook {
   }
 
   //-------------------------------------------------------------
+  // Removes the current notebook from the filesystem.
+  public void remove_notebook() {
+    DirUtils.remove( notebook_directory( _id ) );
+  }
+
+  //-------------------------------------------------------------
   // Returns the directory where this notebook will be saved on disk.
   public string notebook_directory( int id ) {
   	return( Utils.user_location( GLib.Path.build_filename( "notebooks", "notebook-%d".printf( id ) ) ) );
@@ -200,10 +228,14 @@ public class Notebook : BaseNotebook {
 
   //-------------------------------------------------------------
   // Loads the contents of this notebook from XML format
-  private void load( int id ) {
+  private void load( int id, string? build_name ) {
 
     var doc = Xml.Parser.read_file( xml_file( id ), null, (Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING) );
     if( doc == null ) {
+      if( build_name != null ) {
+        _id = current_id++;
+        name = build_name;
+      }
       return;
     }
 

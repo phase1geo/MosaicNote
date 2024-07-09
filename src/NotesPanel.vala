@@ -30,6 +30,10 @@ public class NotesPanel : Box {
   private Button             _add;
   private bool               _ignore = false;
 
+  private const GLib.ActionEntry[] action_entries = {
+    { "action_delete", action_delete },
+  };
+
 	public signal void note_selected( Note? note );
 
 	// Default constructor
@@ -84,7 +88,22 @@ public class NotesPanel : Box {
 		append( _list );
 		append( bbox );
 
+    // Set the stage for menu actions
+    var actions = new SimpleActionGroup ();
+    actions.add_action_entries( action_entries, this );
+    insert_action_group( "notes", actions );
+
+    // Add keyboard shortcuts
+    add_keyboard_shortcuts();
+
 	}
+
+  //-------------------------------------------------------------
+  // Adds keyboard shortcuts when this widget is active
+  private void add_keyboard_shortcuts() {
+    var app = _win.application;
+    app.set_accels_for_action( "notes.action_delete", { "Delete" } );
+  }
 
   //-------------------------------------------------------------
   // Update UI from the current notebook
@@ -102,7 +121,6 @@ public class NotesPanel : Box {
   //-------------------------------------------------------------
 	// Populates the notes list from the given notebook
   public void populate_with_notebook( BaseNotebook? nb ) {
-    stdout.printf( "In populate_with_notebook\n" );
     _node = (nb as NotebookTree.Node);
     if( nb != null ) {
       _model = nb.get_model();
@@ -136,6 +154,7 @@ public class NotesPanel : Box {
     }
   }
 
+  //-------------------------------------------------------------
   // Adds the given note
   private Box create_note( Object obj ) {
 
@@ -162,6 +181,22 @@ public class NotesPanel : Box {
 
     return( box );
 
+  }
+
+  //-------------------------------------------------------------
+  // Deletes the currently selected note and moves it to the trash
+  // (unless the currently displayed notebook is the trash).
+  private void action_delete() {
+    stdout.printf( "In action_delete\n" );
+    var row = _list.get_selected_row();
+    if( row != null ) {
+      var note = (Note)_model.get_item( row.get_index() );
+      if( note.notebook == _win.notebooks.trash ) {
+        note.notebook.delete_note( note );
+      } else {
+        _win.notebooks.trash.move_note( note );
+      }
+    }
   }
 
 }

@@ -40,6 +40,9 @@ public class Note : Object {
 		get {
 			return( _nb );
 		}
+		set {
+			_nb = value;
+		}
 	}
 
 	public int id {

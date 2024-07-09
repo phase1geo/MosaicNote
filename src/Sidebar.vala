@@ -95,7 +95,6 @@ public class Sidebar : Box {
     };
 
     selection.selection_changed.connect((pos, num) => {
-      stdout.printf( "In selection_changed\n" );
       var row = _model.get_row( selection.selected );
       if( row != null ) {
         var nb  = (BaseNotebook)row.get_item();
@@ -160,12 +159,12 @@ public class Sidebar : Box {
 	// Populates the notebook tree with the updated version of win.notebooks
 	private void populate_tree() {
 
-    stdout.printf( "In populate_tree\n" );
-
 		_store.remove_all();
 
 		var library = new LabelNotebook( _( "Library" ) );
 		_store.append( library );
+
+    _store.append( _win.notebooks.inbox );
 
 		for( int i=0; i<_win.smart_notebooks.size(); i++ ) {
       var notebook = _win.smart_notebooks.get_notebook( i );
@@ -173,6 +172,8 @@ public class Sidebar : Box {
       	_store.append( notebook );
       }
 		}
+
+    _store.append( _win.notebooks.trash );
 
 		var notebooks = new LabelNotebook( _( "Notebooks" ) );
 		_store.append( notebooks );
@@ -218,6 +219,13 @@ public class Sidebar : Box {
   // notebook.
   private bool nb_is_node( BaseNotebook nb ) {
     return( (nb as NotebookTree.Node) != null );
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if the given base notebook is a trash notebook.
+  private bool nb_is_trash( BaseNotebook nb ) {
+    var notebook = (nb as Notebook);
+    return( (notebook != null) && (notebook == _win.notebooks.trash) );
   }
 
   //-------------------------------------------------------------
@@ -281,7 +289,7 @@ public class Sidebar : Box {
         menu.append_section( null, bot_menu );
         popover.menu_model = menu;
         popover.popup();
-      } else if( nb_is_smart( nb, SmartNotebookType.TRASH ) ) {
+      } else if( nb_is_trash( nb ) ) {
         var menu = new GLib.Menu();
         menu.append( _( "Empty Trash" ), "sidebar.action_empty_trash" );
         popover.menu_model = menu;
@@ -431,7 +439,6 @@ public class Sidebar : Box {
 		} else {
 		  expander.set_list_row( row );
 		  label.label = nb.name;
-      stdout.printf( "Count: %d\n", nb.count() );
 		  count.label = nb.count().to_string();
 		  if( nb.count() == 0 ) {
 		  	expander.margin_top = 6;
@@ -555,7 +562,7 @@ public class Sidebar : Box {
   //-------------------------------------------------------------
   // Empties the trash notebook.
   private void empty_trash( Object? obj ) {
-    stdout.printf( "In empty_trash\n" );
+    _win.notebooks.trash.delete_all_notes();
   }
 
   //-------------------------------------------------------------
@@ -583,7 +590,6 @@ public class Sidebar : Box {
         return( a == b );
       }
     }, out pos );
-    stdout.printf( "In select_notebook, found: %s, pos: %u\n", found.to_string(), pos );
     if( found ) {
       selection.select_item( pos, true );
     }

@@ -23,7 +23,6 @@ public enum SmartNotebookType {
   USER,
   BUILTIN,
   TAG,
-  TRASH,
   SEARCH,
   NUM;
 
@@ -34,7 +33,6 @@ public enum SmartNotebookType {
       case USER    :  return( "user" );
       case BUILTIN :  return( "builtin" );
       case TAG     :  return( "tag" );
-      case TRASH   :  return( "trash" );
       case SEARCH  :  return( "search" );
       default      :  assert_not_reached();
     }
@@ -48,7 +46,6 @@ public enum SmartNotebookType {
       case "user"    :  return( USER );
       case "builtin" :  return( BUILTIN );
       case "tag"     :  return( TAG );
-      case "trash"   :  return( TRASH );
       case "search"  :  return( SEARCH );
       default        :  assert_not_reached();
     }
@@ -60,7 +57,6 @@ public enum SmartNotebookType {
   public bool in_library( SmartNotebook nb ) {
     switch( this ) {
       case BUILTIN :
-      case TRASH   :  return( true );
       case SEARCH  :  return( true );
       default      :  return( false );
     }
@@ -273,8 +269,20 @@ public class SmartNotebook : BaseNotebook {
     }
 
     for( Xml.Node* it = node->children; it != null; it = it->next ) {
-      if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "filter-and") ) {
-        _filter.load( it );
+      if( it->type == Xml.ElementType.ELEMENT_NODE ) {
+        switch( it->name ) {
+          case "logic-and" :
+            _filter = new FilterAnd();
+            _filter.load( it );
+            break;
+          case "logic-or" :
+            _filter = new FilterOr();
+            _filter.load( it );
+            break;
+          default :
+            stdout.printf( "ERROR: found %s\n", it->name );
+            assert_not_reached();
+        }
       }
     }
 

@@ -213,23 +213,12 @@ public class NotePanel : Box {
       }
     });
 
-    var vsep1 = new Separator( Orientation.VERTICAL ) {
-      margin_start = 10,
-      margin_end   = 10
-    };
-    var vsep2 = new Separator( Orientation.VERTICAL ) {
-      margin_start = 10,
-      margin_end   = 10
-    };
-
     var tbox = new Box( Orientation.HORIZONTAL, 5 ) {
       halign = Align.FILL
     };
     tbox.append( _tags );
-    // tbox.append( vsep1 );
     tbox.append( export );
     tbox.append( _favorite );
-    // tbox.append( vsep2 );
     tbox.append( _hist_prev );
     tbox.append( _hist_next );
 
