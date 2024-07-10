@@ -23,16 +23,12 @@ using Gtk;
 
 public class NotesPanel : Box {
 
-  private MainWindow         _win;
-	private NotebookTree.Node? _node = null;
-	private ListBox            _list;
-  private ListModel          _model;
-  private Button             _add;
-  private bool               _ignore = false;
-
-  private const GLib.ActionEntry[] action_entries = {
-    { "action_delete", action_delete },
-  };
+  private MainWindow    _win;
+	private BaseNotebook? _bn = null;
+	private ListBox       _list;
+  private ListModel     _model;
+  private Button        _add;
+  private bool          _ignore = false;
 
 	public signal void note_selected( Note? note );
 
@@ -50,6 +46,17 @@ public class NotesPanel : Box {
       show_separators = true
 		};
 
+    var list_key = new EventControllerKey();
+    _list.add_controller( list_key );
+
+    list_key.key_pressed.connect((keyval, keycode, state) => {
+      if( (keyval == Gdk.Key.Delete) || (keyval == Gdk.Key.BackSpace) ) {
+        action_delete();
+        return( true );
+      }
+      return( false );
+    });
+
 		_list.row_selected.connect((row) => {
       if( _ignore ) {
         _ignore = false;
@@ -59,6 +66,7 @@ public class NotesPanel : Box {
         } else {
     			note_selected( (Note)_model.get_item( row.get_index() ) );
         }
+        _list.grab_focus();
       }
   	});
 
@@ -72,10 +80,10 @@ public class NotesPanel : Box {
 		};
 
 		_add.clicked.connect(() => {
-      var nb   = _node.get_notebook();
+      var nb = bn_is_node() ? ((NotebookTree.Node)_bn).get_notebook() : (Notebook)_bn;
 			var note = new Note( nb );
 			nb.add_note( note );
-      populate_with_notebook( _node );
+      populate_with_notebook( _bn );
       _list.select_row( _list.get_row_at_index( nb.count() - 1 ) );
 		});
 
@@ -88,21 +96,25 @@ public class NotesPanel : Box {
 		append( _list );
 		append( bbox );
 
-    // Set the stage for menu actions
-    var actions = new SimpleActionGroup ();
-    actions.add_action_entries( action_entries, this );
-    insert_action_group( "notes", actions );
-
-    // Add keyboard shortcuts
-    add_keyboard_shortcuts();
-
 	}
 
   //-------------------------------------------------------------
-  // Adds keyboard shortcuts when this widget is active
-  private void add_keyboard_shortcuts() {
-    var app = _win.application;
-    app.set_accels_for_action( "notes.action_delete", { "Delete" } );
+  // Returns true if the stored base notebook is from the notebook tree.
+  private bool bn_is_node() {
+    return( (_bn != null) && ((_bn as NotebookTree.Node) != null) );
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if the stored based notebook is a smart notebook.
+  private bool bn_is_smart() {
+    return( (_bn != null) && ((_bn as SmartNotebook) != null) );
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if the stored base notebook is a notebook (i.e., inbox
+  // or trash).
+  private bool bn_is_notebook() {
+    return( (_bn != null) && ((_bn as Notebook) != null) );
   }
 
   //-------------------------------------------------------------
@@ -120,16 +132,17 @@ public class NotesPanel : Box {
 
   //-------------------------------------------------------------
 	// Populates the notes list from the given notebook
-  public void populate_with_notebook( BaseNotebook? nb ) {
-    _node = (nb as NotebookTree.Node);
-    if( nb != null ) {
-      _model = nb.get_model();
+  public void populate_with_notebook( BaseNotebook? bn ) {
+    _bn = bn;
+    if( bn_is_node() || bn_is_notebook() ) {
+      _model = bn.get_model();
       _list.bind_model( _model, create_note );
+      _add.sensitive = bn_is_node() || (bn_is_notebook() && (_win.notebooks.inbox == (Notebook)_bn));
     } else {
       _model = null;
       _list.bind_model( null, create_note );
+      _add.sensitive = false;
     }
-    _add.sensitive = (_node != null);
   }
 
   //-------------------------------------------------------------
@@ -187,7 +200,6 @@ public class NotesPanel : Box {
   // Deletes the currently selected note and moves it to the trash
   // (unless the currently displayed notebook is the trash).
   private void action_delete() {
-    stdout.printf( "In action_delete\n" );
     var row = _list.get_selected_row();
     if( row != null ) {
       var note = (Note)_model.get_item( row.get_index() );
@@ -196,6 +208,7 @@ public class NotesPanel : Box {
       } else {
         _win.notebooks.trash.move_note( note );
       }
+      populate_with_notebook( _bn );
     }
   }
 

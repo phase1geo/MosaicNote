@@ -611,9 +611,15 @@ public class NotebookTree {
 
     var ib_id = root->get_prop( "inbox-id" );
    	_inbox = new Notebook.from_xml( ((ib_id != null) ? int.parse( ib_id ) : -1), _( "Inbox" ) );
+   	_inbox.changed.connect(() => {
+   		set_modified();
+ 		});
 
     var tr_id = root->get_prop( "trash-id" );
     _trash = new Notebook.from_xml( ((tr_id != null) ? int.parse( tr_id ) : -1), _( "Trash" ) );
+    _trash.changed.connect(() => {
+    	set_modified();
+  	});
 
     for( Xml.Node* it = root->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "node") ) {

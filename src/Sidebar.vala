@@ -76,9 +76,6 @@ public class Sidebar : Box {
 
 		_win = win;
 
-		_win.notebooks.changed.connect( populate_tree );
-    _win.smart_notebooks.changed.connect( populate_tree );
-
     MosaicNote.settings.changed["sidebar-show-tags"].connect(() => {
       populate_tree();
     });
@@ -97,11 +94,20 @@ public class Sidebar : Box {
     selection.selection_changed.connect((pos, num) => {
       var row = _model.get_row( selection.selected );
       if( row != null ) {
-        var nb  = (BaseNotebook)row.get_item();
+        var nb = (BaseNotebook)row.get_item();
         notebook_selected( nb );
       } else {
         notebook_selected( null );
       }
+    });
+
+    _win.notebooks.changed.connect(() => {
+      update_notes_panel( selection.selected );
+      populate_tree();
+    });
+    _win.smart_notebooks.changed.connect(() => {
+      update_notes_panel( selection.selected );
+      populate_tree();
     });
 
 		_list_view = new ListView( selection, factory ) {
@@ -156,6 +162,18 @@ public class Sidebar : Box {
 
 	}
 
+  //-------------------------------------------------------------
+  // Update the notes panel for the currently selected row (if a
+  // row is currently selected).
+  private void update_notes_panel( uint selected ) {
+    var row = _model.get_row( selected );
+    if( row != null ) {
+      var nb = (BaseNotebook)row.get_item();
+      notebook_selected( nb );
+    }
+  }
+
+  //-------------------------------------------------------------
 	// Populates the notebook tree with the updated version of win.notebooks
 	private void populate_tree() {
 
@@ -219,6 +237,13 @@ public class Sidebar : Box {
   // notebook.
   private bool nb_is_node( BaseNotebook nb ) {
     return( (nb as NotebookTree.Node) != null );
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if the given base notebook is a built-in notebook
+  // (i.e., inbox or trash).
+  private bool nb_is_notebook( BaseNotebook nb ) {
+    return( (nb as Notebook) != null );
   }
 
   //-------------------------------------------------------------

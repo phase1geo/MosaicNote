@@ -92,11 +92,13 @@ public class Notebook : BaseNotebook {
   //-------------------------------------------------------------
   // Searches for and deletes the note (if found) in the notebook
   public void delete_note( Note note ) {
-  	uint pos;
-  	if( _notes.binary_search( note, Note.compare, out pos ) ) {
-    	_notes.remove_index( pos );
-    	_modified = true;
-    	changed();
+    for( int i=0; i<_notes.length; i++ ) {
+      if( _notes.index( i ) == note ) {
+        _notes.remove_index( i );
+        _modified = true;
+        changed();
+        break;
+      }
     }
   }
 
