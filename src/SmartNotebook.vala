@@ -191,6 +191,14 @@ public class SmartNotebook : BaseNotebook {
   }
 
   //-------------------------------------------------------------
+  // Removes the note from the list if it exists
+  public bool remove_note( Note note ) {
+    var modified = _notes.remove( note.id );
+    _modified |= modified;
+    return( modified );
+  }
+
+  //-------------------------------------------------------------
   // Checks the given note to see if this notebook should
   // add support for this note
   public bool handle_note( Note note ) {

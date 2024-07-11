@@ -150,7 +150,6 @@ public class MainWindow : Gtk.ApplicationWindow {
     _note    = new NotePanel( this );
 
     _sidebar.notebook_selected.connect((nb) => {
-      stdout.printf( "In sidebar.notebook_selected.connect\n" );
       if( nb != null ) {
         var node = (nb as NotebookTree.Node);
         _notes.populate_with_notebook( nb );
@@ -183,7 +182,6 @@ public class MainWindow : Gtk.ApplicationWindow {
     });
 
     _note.note_link_clicked.connect((link, start_note) => {
-      stdout.printf( "Note link clicked, link: %s\n", link );
       var note = _notebooks.find_note_by_title( link );
       var nb   = start_note.notebook;
       if( note == null ) {

@@ -290,7 +290,6 @@ public class NotePanel : Box {
     _title.activate.connect(() => {
       if( _note != null ) {
         _note.title = _title.text;
-        stdout.printf( "Title activated\n" );
         note_saved( _note );
       }
       _content.get_pane( 0 ).grab_item_focus( TextCursorPlacement.START );

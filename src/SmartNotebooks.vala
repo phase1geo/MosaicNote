@@ -78,6 +78,20 @@ public class SmartNotebooks {
   }
 
   //-------------------------------------------------------------
+  // Removes the given note from the smart notebooks if they are
+  // stored there.
+  public void remove_note( Note note ) {
+    var local_modified = false;
+    for( int i=0; i<_notebooks.length; i++ ) {
+      local_modified |= _notebooks.index( i ).remove_note( note );
+    }
+    if( local_modified ) {
+      changed();
+      _modified = true;
+    }
+  }
+
+  //-------------------------------------------------------------
   // Returns the last search notebook from this list.  If one does
   // not exist, one is created and automatically added.
   public SmartNotebook get_search_notebook() {

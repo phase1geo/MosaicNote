@@ -44,7 +44,6 @@ public class FilterTitle : SmartTextFilter {
   // Checks the note to see if it matches the title text.
   public override bool check_note( Note note ) {
     var result = check_text( note.title );
-    stdout.printf( "  In FilterTitle.check_note, result: %s\n", result.to_string() );
     return( result );
   }
 

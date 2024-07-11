@@ -73,7 +73,6 @@ public class FilterAnd : SmartLogicFilter {
   // Loads the contents of this filter from XML mode.
   public override void load( Xml.Node* node ) {
     load_from_node( node );
-    stdout.printf( "%s\n", to_string() );
   }
 
 }

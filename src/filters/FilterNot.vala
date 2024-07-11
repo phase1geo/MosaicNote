@@ -57,7 +57,6 @@ public class FilterNot : SmartLogicFilter {
   // filters stored in this filter.
   public override bool check_note( Note note ) {
     var result = !filters.index( 0 ).check_note( note );
-    stdout.printf( "  In FilterNot.check_note, result: %s\n", result.to_string() );
     return( result );
   }
 

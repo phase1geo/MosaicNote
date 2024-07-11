@@ -73,7 +73,6 @@ public class FilterTag : SmartFilter {
   // Checks the note to see if it matches or does not match the
   // stored tag value.
   public override bool check_note( Note note ) {
-    stdout.printf( "In FilterTag, tag: %s, type: %s\n", _tag, _type.to_string() );
     switch( _type ) {
       case FilterTagType.MATCHES        :  return( note.tags.contains_tag( _tag ) );
       case FilterTagType.DOES_NOT_MATCH :  return( !note.tags.contains_tag( _tag ) );

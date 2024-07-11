@@ -134,7 +134,7 @@ public class NotesPanel : Box {
 	// Populates the notes list from the given notebook
   public void populate_with_notebook( BaseNotebook? bn ) {
     _bn = bn;
-    if( bn_is_node() || bn_is_notebook() ) {
+    if( bn != null ) {
       _model = bn.get_model();
       _list.bind_model( _model, create_note );
       _add.sensitive = bn_is_node() || (bn_is_notebook() && (_win.notebooks.inbox == (Notebook)_bn));
@@ -203,6 +203,7 @@ public class NotesPanel : Box {
     var row = _list.get_selected_row();
     if( row != null ) {
       var note = (Note)_model.get_item( row.get_index() );
+      _win.smart_notebooks.remove_note( note );
       if( note.notebook == _win.notebooks.trash ) {
         note.notebook.delete_note( note );
       } else {
