@@ -49,6 +49,7 @@ public class Sidebar : Box {
   private bool           _adding = false;
   private int            _notebook_add_pos = -1;
   private int            _smart_add_pos = -1;
+  private BaseNotebook?  _selected_notebook = null;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_add_sub_notebook",       action_add_sub_notebook, "i" },
@@ -94,11 +95,11 @@ public class Sidebar : Box {
     selection.selection_changed.connect((pos, num) => {
       var row = _model.get_row( selection.selected );
       if( row != null ) {
-        var nb = (BaseNotebook)row.get_item();
-        notebook_selected( nb );
+        _selected_notebook = (BaseNotebook)row.get_item();
       } else {
-        notebook_selected( null );
+        _selected_notebook = null;
       }
+      notebook_selected( _selected_notebook );
     });
 
     _win.notebooks.changed.connect(() => {
@@ -116,8 +117,8 @@ public class Sidebar : Box {
 
 		_list_view.activate.connect((pos) => {
 			var row = _model.get_row( pos );
-			var nb  = (BaseNotebook)row.get_item();
-			notebook_selected( nb );
+			_selected_notebook = (BaseNotebook)row.get_item();
+			notebook_selected( _selected_notebook );
 		});
 
     var sw = new ScrolledWindow() {
@@ -168,8 +169,8 @@ public class Sidebar : Box {
   private void update_notes_panel( uint selected ) {
     var row = _model.get_row( selected );
     if( row != null ) {
-      var nb = (BaseNotebook)row.get_item();
-      notebook_selected( nb );
+      _selected_notebook = (BaseNotebook)row.get_item();
+      notebook_selected( _selected_notebook );
     }
   }
 
@@ -446,6 +447,10 @@ public class Sidebar : Box {
 		var count    = (Label)Utils.get_child_at_index( box, 1 );
 		var row      = (TreeListRow)item.get_item();
 		var nb       = (BaseNotebook)row.get_item();
+
+    if( nb == _selected_notebook ) {
+      _list_view.model.select_item( row.get_position(), true );
+    }
 
 		if( (nb as LabelNotebook) != null ) {
 			item.selectable   = false;
