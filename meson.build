@@ -30,6 +30,11 @@ subdir('data')
 subdir('po')
 subdir('src')
 
+gtk4_dep = dependency('gtk4')
+if gtk4_dep.version().version_compare('>=4.10.0')
+  add_project_arguments(['--define=GTK410'], language: 'vala')
+endif
+
 core_deps = [
     dependency('gobject-2.0'),
     dependency('glib-2.0'),
@@ -41,7 +46,6 @@ core_deps = [
     dependency('gtk4'),
     dependency('libxml-2.0'),
     dependency('gtksourceview-5'),
-    dependency('sqlite3'),
     dependency('json-glib-1.0'),
     dependency('enchant-2'),
     #    dependency('webkitgtk-6.0')

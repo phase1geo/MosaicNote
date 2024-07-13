@@ -463,8 +463,9 @@ public class Sidebar : Box {
 		if( (nb as LabelNotebook) != null ) {
 			item.selectable   = false;
 			item.activatable  = false;
-      // TODO - This option is not available in pre 4.10 versions of Gtk
-			// item.focusable    = false;
+#if GTK410
+			item.focusable    = false;
+#endif
 			label.label       = Utils.make_title( nb.name );
 			label.use_markup  = true;
 			label.margin_start = 5;
@@ -472,6 +473,11 @@ public class Sidebar : Box {
 			box.margin_top    = 10;
 			box.margin_bottom = 10;
     } else if( ((nb as HiddenNotebook) != null) || ((nb as HiddenSmartNotebook) != null) ) {
+      item.selectable  = false;
+      item.activatable = false;
+#if GTK410
+      item.focusable = false;
+#endif
       stack.visible_child_name = "rename";
       stack.visible = false;
 		} else {
