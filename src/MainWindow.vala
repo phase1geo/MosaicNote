@@ -22,6 +22,57 @@
 using Gtk;
 using Gdk;
 
+public enum PanelMode {
+  ALL,
+  NO_SIDEBAR,
+  NOTE_ONLY;
+
+  public string to_string() {
+    switch( this ) {
+      case ALL        :  return( "all" );
+      case NO_SIDEBAR :  return( "no-sidebar" );
+      case NOTE_ONLY  :  return( "note-only" );
+      default         :  assert_not_reached();
+    }
+  }
+
+  public static PanelMode parse( string val ) {
+    switch( val ) {
+      case "all"        :  return( ALL );
+      case "no-sidebar" :  return( NO_SIDEBAR );
+      case "note-only"  :  return( NOTE_ONLY );
+      default           :  return( ALL );
+    }
+  }
+
+  public PanelMode next_mode() {
+    switch( this ) {
+      case ALL          :  return( NO_SIDEBAR );
+      case NO_SIDEBAR   :  return( NOTE_ONLY );
+      case NOTE_ONLY    :  return( ALL );
+      default           :  assert_not_reached();
+    }
+  }
+
+  public PanelMode previous_mode() {
+    switch( this ) {
+      case ALL          :  return( NOTE_ONLY );
+      case NO_SIDEBAR   :  return( ALL );
+      case NOTE_ONLY    :  return( NO_SIDEBAR );
+      default           :  assert_not_reached();
+    }
+  }
+
+  public bool show_sidebar() {
+    return( this == ALL );
+  }
+
+  public bool show_notes() {
+    return( (this == ALL) || (this == NO_SIDEBAR) );
+  }
+
+}
+
 public class MainWindow : Gtk.ApplicationWindow {
 
   private GLib.Settings   _settings;
@@ -31,6 +82,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private Themes          _themes;
   private SmartParser     _parser;
   private NoteHistory     _history;
+  private PanelMode       _panel_mode;
 
   private ShortcutsWindow _shortcuts = null;
   private Sidebar         _sidebar;
@@ -41,11 +93,14 @@ public class MainWindow : Gtk.ApplicationWindow {
   private ToggleButton    _search_mb;
 
   private const GLib.ActionEntry[] action_entries = {
-    { "action_save",        action_save },
-    { "action_quit",        action_quit },
-    { "action_shortcuts",   action_shortcuts },
-    { "action_preferences", action_preferences },
-    { "action_search",      action_search },
+    { "action_save",           action_save },
+    { "action_quit",           action_quit },
+    { "action_shortcuts",      action_shortcuts },
+    { "action_preferences",    action_preferences },
+    { "action_search",         action_search },
+    { "action_next_panels",    action_next_panels },
+    { "action_prev_panels",    action_prev_panels },
+    { "action_set_panel_mode", action_set_panel_mode, "i" },
   };
 
   private bool on_elementary = Gtk.Settings.get_default().gtk_icon_theme_name == "elementary";
@@ -109,7 +164,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     Object( application: app );
 
-    _settings = settings;
+    _settings   = settings;
+    _panel_mode = PanelMode.parse( settings.get_string( "panel-mode" ) );
 
     var window_w = settings.get_int( "window-w" );
     var window_h = settings.get_int( "window-h" );
@@ -141,6 +197,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     _history         = new NoteHistory();
 
     /* Create title toolbar */
+    header.pack_start( create_panel_layout() );
     header.pack_end( create_miscellaneous() );
     header.pack_end( create_search() );
 
@@ -223,6 +280,9 @@ public class MainWindow : Gtk.ApplicationWindow {
     // Make the sidebar paned window the child of the window
     child = _sidebar_pw;
 
+    // Array the panel layout
+    arrange_panels();
+
     show();
 
     // Select the notebook and note that was last saved (if valid)
@@ -277,6 +337,8 @@ public class MainWindow : Gtk.ApplicationWindow {
     app.set_accels_for_action( "win.action_shortcuts",   { "<Control>question" } );
     app.set_accels_for_action( "win.action_preferences", { "<Control>comma" } );
     app.set_accels_for_action( "win.action_search",      { "<Control>f" } );
+    app.set_accels_for_action( "win.action_next_panels", { "<Control>b" } );
+    app.set_accels_for_action( "win.action_prev_panels", { "<Control><Shift>b" } );
 
   }
 
@@ -304,7 +366,33 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Creates the miscellaneous menu and menu button for the header bar */
+  //-------------------------------------------------------------
+  // Creates the panel layout UI menubutton.
+  private Widget create_panel_layout() {
+
+    var menu = new GLib.Menu();
+    menu.append( _( "Show all panels" ),      "win.action_set_panel_mode(%d)".printf( PanelMode.ALL ) );
+    menu.append( _( "Show note panel only" ), "win.action_set_panel_mode(%d)".printf( PanelMode.NOTE_ONLY ) );
+    menu.append( _( "Do not show sidebar" ),  "win.action_set_panel_mode(%d)".printf( PanelMode.NO_SIDEBAR ) );
+
+    var mb = new MenuButton() {
+      has_frame = !on_elementary,
+      icon_name  = themes.dark_mode ? "panel-layout-dark-symbolic" : "panel-layout-light-symbolic",
+      tooltip_markup = Utils.tooltip_with_accel( _( "Change Panel Layout" ), "<control>b" ),
+      menu_model = menu
+    };
+
+    themes.theme_changed.connect((theme) => {
+      mb.icon_name = themes.dark_mode ? "panel-layout-dark-symbolic" : "panel-layout-light-symbolic";
+    });
+
+    return( mb );
+
+  }
+
+  //-------------------------------------------------------------
+  // Creates the miscellaneous menu and menu button for the header
+  // bar
   private Widget create_miscellaneous() {
 
     var menu = new GLib.Menu();
@@ -323,7 +411,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Save everything */
+  //-------------------------------------------------------------
+  // Save everything
   public void action_save() {
     _note.save();
     _notebooks.save();
@@ -332,7 +421,8 @@ public class MainWindow : Gtk.ApplicationWindow {
     _smart_notebooks.save();
   }
 
-  /* Called when the user uses the Control-q keyboard shortcut */
+  //-------------------------------------------------------------
+  // Called when the user uses the Control-q keyboard shortcut
   private void action_quit() {
     GtkSource.finalize();
     destroy();
@@ -367,7 +457,41 @@ public class MainWindow : Gtk.ApplicationWindow {
     _search_mb.active = true;
   }
 
-  /* Generate a notification */
+  //-------------------------------------------------------------
+  // Arrange the panels according to the current panel mode.
+  private void arrange_panels() {
+    _sidebar.visible = _panel_mode.show_sidebar();
+    _notes.visible   = _panel_mode.show_notes();
+  }
+
+  //-------------------------------------------------------------
+  // Sets the panel mode to a specific value.
+  private void action_set_panel_mode( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      _panel_mode = (PanelMode)variant.get_int32();
+      _settings.set_string( "panel-mode", _panel_mode.to_string() );
+      arrange_panels();
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Show the next panel arrangement.
+  private void action_next_panels() {
+    _panel_mode = _panel_mode.next_mode();
+    _settings.set_string( "panel-mode", _panel_mode.to_string() );
+    arrange_panels();
+  }
+
+  //-------------------------------------------------------------
+  // sow the previous panel arrangement.
+  private void action_prev_panels() {
+    _panel_mode = _panel_mode.previous_mode();
+    _settings.set_string( "panel-mode", _panel_mode.to_string() );
+    arrange_panels();
+  }
+
+  //-------------------------------------------------------------
+  // Generate a notification.
   public void notification( string title, string msg, NotificationPriority priority = NotificationPriority.NORMAL ) {
     GLib.Application? app = null;
     @get( "application", ref app );

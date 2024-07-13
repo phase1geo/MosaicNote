@@ -11,6 +11,11 @@
       <summary>Most recent height of minder window</summary>
       <description>Most recent height of minder window</description>
     </key>
+    <key name="panel-mode" type="s">
+      <default>"all"</default>
+      <summary>Specifies which set of panels are displayed in the UI on startup</summary>
+      <description>Specifies which set of panels are displayed in the UI on starup.  Valid values are all, no-sidebar, note-only.</description>
+    </key>
     <key name="sidebar-width" type="i">
       <default>200</default>
       <summary>Specifies the default width of the sidebar panel.</summary>
