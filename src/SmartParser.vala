@@ -56,8 +56,9 @@ public enum SmartParserSuggestion {
 
 public class SmartParser {
 
-  private NotebookTree           _notebooks;
-  private List<SmartLogicFilter> _stack;
+  private NotebookTree         _notebooks;
+  private Queue<SmartFilter>   _filter_stack;
+  private Queue<LogicOperator> _op_stack;
 
   private string _search_str       = "";
   private string _error_message    = "";
@@ -71,7 +72,8 @@ public class SmartParser {
   // Default constructor
   public SmartParser( NotebookTree notebooks ) {
     _notebooks = notebooks;
-    _stack = new List<SmartLogicFilter>();
+    _filter_stack = new Queue<SmartFilter>();
+    _op_stack     = new Queue<LogicOperator>();
   }
 
   //-------------------------------------------------------------
@@ -87,8 +89,7 @@ public class SmartParser {
     var token_start = 0;
 
     if( !check_syntax_only ) {
-      var and_filter = new FilterAnd();
-      _stack.append( and_filter );
+      push_op( LogicOperator.NONE );
       _search_str = search_str;
     } else {
       _prev_error_start = _error_start;
@@ -135,7 +136,7 @@ public class SmartParser {
             case '('  :
               if( !in_single && !in_double ) {
                 if( !check_syntax_only ) {
-                  push_filter( false );
+                  push_op( LogicOperator.PAREN );
                 }
               } else {
                 token += "(";
@@ -146,7 +147,7 @@ public class SmartParser {
                 parse_token( token, token_start, check_syntax_only );
                 token = "";
                 if( !check_syntax_only ) {
-                  pop_filter();
+                  pop_op();
                 }
               } else {
                 token += ")";
@@ -155,7 +156,7 @@ public class SmartParser {
             case '!'  :
               if( !in_single && !in_double && (token == "") ) {
                 if( !check_syntax_only ) {
-                  push_filter( true );
+                  push_op( LogicOperator.NOT );
                 }
               } else {
                 token += "!";
@@ -181,12 +182,12 @@ public class SmartParser {
     if( !check_syntax_only ) {
       pop_all();
       stdout.printf( "----------------------------------\n" );
-      stdout.printf( "FILTER: %s\n", _stack.nth_data( 0 ).to_string() );
+      stdout.printf( "FILTER: %s\n", _filter_stack.peek_head().to_string() );
     } else if( (_error_start != -1) || (_prev_error_start != -1) ) {
       parse_result( _error_message, _error_start );
     }
 
-    return( ((_stack.length() == 1) || check_syntax_only) && !in_double && !in_single && !skip_char );
+    return( (((_filter_stack.length == 1) && (_op_stack.length == 1)) || check_syntax_only) && !in_double && !in_single && !skip_char );
 
   }
 
@@ -194,12 +195,46 @@ public class SmartParser {
   // Populates the given smart notebook with the matching notes
   // within the list of available notebooks.
   public void populate_smart_notebook( SmartNotebook notebook ) {
-    unowned var last = _stack.last();
-    if( (last != null) && ((last.data as SmartLogicFilter) != null) ) {
-      notebook.filter = (SmartLogicFilter)last.data;
+    if( _filter_stack.length == 1 ) {
+      notebook.filter = _filter_stack.pop_head();
       notebook.extra  = _search_str;
       _notebooks.populate_smart_notebook( notebook );
-      _stack.remove( last.data );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Pops the head operator and performs the filter stack update.
+  private bool pop_op() {
+    SmartLogicFilter? filter = null;
+    switch( _op_stack.pop_head() ) {
+      case LogicOperator.AND :  filter = new FilterAnd();  break;
+      case LogicOperator.OR  :  filter = new FilterOr();   break;
+      default                :  filter = null;  break;
+    }
+    if( (filter != null) && (_filter_stack.length > 2) ) {
+      var filter2 = _filter_stack.pop_head();
+      filter.add_filter( _filter_stack.pop_head() );
+      filter.add_filter( filter2 );
+      push_filter( filter );
+      return( true );
+    }
+    return( false );
+  }
+
+  //-------------------------------------------------------------
+  // Pushes the given operator into the operator stack.
+  private void push_op( LogicOperator op ) {
+    while( (op < _op_stack.peek_head()) && (_op_stack.peek_head() != LogicOperator.PAREN) ) {
+      pop_op();
+    }
+    _op_stack.push_head( op );
+  }
+
+  //-------------------------------------------------------------
+  // Pops all logic operators up through the given operator.
+  private void pop_all() {
+    while( _op_stack.peek_head() != LogicOperator.NONE ) {
+      pop_op();
     }
   }
 
@@ -207,37 +242,14 @@ public class SmartParser {
   // Pushes an AND logic filter onto the stack.  If push_not is
   // set, we will add a NOT logic filter to the stack followed
   // by an AND filter
-  private void push_filter( bool push_not ) {
-    var and_filter = new FilterAnd();
-    if( push_not ) {
+  private void push_filter( SmartFilter filter ) {
+    if( _op_stack.peek_head() == LogicOperator.NOT ) {
       var not_filter = new FilterNot();
-      _stack.append( not_filter );
-    }
-    _stack.append( and_filter );
-  }
-
-  //-------------------------------------------------------------
-  // Pops the top of the stack and adds it to the new top of stack.
-  private void pop_filter() {
-    unowned var last = _stack.last();
-    if( last != null ) {
-      var pop_filter = (last.data as SmartLogicFilter);
-      if( pop_filter != null ) {
-        _stack.remove( last.data );
-        if( (((pop_filter as FilterAnd) != null) || ((pop_filter as FilterOr) != null)) && (pop_filter.size() == 1) ) {
-          add_filter_to_stack_top( pop_filter.get_filter( 0 ) );
-        } else {
-          add_filter_to_stack_top( pop_filter );
-        }
-      }
-    }
-  }
-
-  //-------------------------------------------------------------
-  // Pops all of the stack items until the stack is a length of 1.
-  private void pop_all() {
-    while( _stack.length() > 1 ) {
-      pop_filter();
+      not_filter.add_filter( filter );
+      _op_stack.pop_head();
+      _filter_stack.push_head( not_filter );
+    } else {
+      _filter_stack.push_head( filter );
     }
   }
 
@@ -256,25 +268,17 @@ public class SmartParser {
     }
 
     if( (token.down() == "and") || (token == "&") || (token == "&&") ) {
-      // An AND should always be at the top of the stack
+      if( !check_syntax_only ) {
+        stdout.printf( "Pushing AND\n" );
+        push_op( LogicOperator.AND );
+      }
       return( true );
     }
 
     if( (token.down() == "or") || (token == "|") || (token == "||") ) {
-      // AND operations take precedence over OR operations, so if we encounter an OR
-      // and the top of the stack is not an OR filter, we need to create the OR, place
-      // the stack top inside of the OR and make the OR the current top
       if( !check_syntax_only ) {
-        unowned var last = _stack.last();
-        if( (last != null) && ((last.data as FilterOr) == null) ) {
-          var or_filter  = new FilterOr();
-          var and_filter = new FilterAnd();
-          var top_filter = last.data;
-          _stack.remove( last.data );
-          or_filter.add_filter( (FilterAnd)top_filter );
-          _stack.append( or_filter );
-          _stack.append( and_filter );
-        }
+        stdout.printf( "Pushing OR\n" );
+        push_op( LogicOperator.OR );
       }
       return( true );
     }
@@ -322,18 +326,6 @@ public class SmartParser {
   }
 
   //-------------------------------------------------------------
-  // Adds the given filter to the top of the stack
-  private bool add_filter_to_stack_top( SmartFilter filter ) {
-    unowned var last = _stack.last();
-    if( last != null ) {
-      var last_filter = (last.data as SmartLogicFilter);
-      last_filter.add_filter( filter );
-      return( true );
-    }
-    return( false );
-  }
-
-  //-------------------------------------------------------------
   // Parses the tag string, creates the tag filter and adds it
   // to the top of the stack.
   //
@@ -349,14 +341,14 @@ public class SmartParser {
       var rest = tag.substring( tag.index_of_nth_char( 1 ) );
       if( !check_syntax_only ) {
         var filter = new FilterTag( rest, FilterTagType.DOES_NOT_MATCH );
-        add_filter_to_stack_top( filter );
+        push_filter( filter );
       } else {
         suggest( SmartParserSuggestion.TAG_ONLY, (start_char + 1), rest );
       }
     } else {
       if( !check_syntax_only ) {
         var filter = new FilterTag( tag, FilterTagType.MATCHES );
-        add_filter_to_stack_top( filter );
+        push_filter( filter );
       } else {
         suggest( SmartParserSuggestion.TAG_ONLY, start_char, tag );
       }
@@ -511,7 +503,7 @@ public class SmartParser {
         }
       }
       if( filter != null ) {
-        add_filter_to_stack_top( filter );
+        push_filter( filter );
         return( true );
       }
     }
@@ -545,7 +537,7 @@ public class SmartParser {
         }
       }
       if( filter != null ) {
-        add_filter_to_stack_top( filter );
+        push_filter( filter );
         return( true );
       }
     } else {
@@ -585,7 +577,7 @@ public class SmartParser {
         case "locked"   :  filter = new FilterLocked( val );    break;
       }
       if( filter != null ) {
-        add_filter_to_stack_top( filter );
+        push_filter( filter );
         return( true );
       }
     }
@@ -611,7 +603,7 @@ public class SmartParser {
       }
       if( nb != null ) {
         var filter = new FilterNotebook( nb.id );
-        add_filter_to_stack_top( filter );
+        push_filter( filter );
         return( true );
       }
     }
@@ -655,7 +647,7 @@ public class SmartParser {
           break;
       }
       if( filter_type != null ) {
-        add_filter_to_stack_top( filter );
+        push_filter( filter );
         return( true );
       }
     }
@@ -681,7 +673,7 @@ public class SmartParser {
           var item_filter = new FilterItem( item_type );
           var not_filter  = new FilterNot();
           not_filter.add_filter( item_filter );
-          add_filter_to_stack_top( not_filter );
+          push_filter( not_filter );
         }
         return( true );
       } else if( check_syntax_only ) {
@@ -692,7 +684,7 @@ public class SmartParser {
       if( item_type != NoteItemType.NUM ) {
         if( !check_syntax_only ) {
           var filter = new FilterItem( item_type );
-          add_filter_to_stack_top( filter );
+          push_filter( filter );
         }
         return( true );
       } else {

@@ -129,14 +129,15 @@ public class SmartNotebooks {
   private void create_default_notebooks() {
 
     var favorites = new SmartNotebook( _( "Favorites" ), SmartNotebookType.BUILTIN, _notebook_tree );
-    favorites.add_filter( new FilterFavorite( true ) );
+    favorites.filter = new FilterFavorite( true );
     add_notebook( favorites );
 
     var recents = new SmartNotebook( _( "Recents" ), SmartNotebookType.BUILTIN, _notebook_tree );
-    recents.add_filter( new FilterUpdated() );  // TODO
+    recents.filter = new FilterUpdated();
     add_notebook( recents );
 
     var all = new SmartNotebook( _( "All Notes" ), SmartNotebookType.BUILTIN, _notebook_tree );
+    all.filter = new FilterAnd();
     add_notebook( all );
 
     // Save the notebooks

@@ -24,7 +24,7 @@ public class FilterOr : SmartLogicFilter {
   //-------------------------------------------------------------
   // Default constructor
   public FilterOr() {
-    base();
+    base( LogicOperator.OR );
   }
 
   //-------------------------------------------------------------

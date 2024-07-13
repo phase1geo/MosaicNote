@@ -76,7 +76,7 @@ public enum SmartNotebookType {
 
 public class SmartNotebook : BaseNotebook {
 
-  private SmartLogicFilter   _filter;
+  private SmartFilter?       _filter   = null;
   private Gee.HashSet<int>   _notes;
   private bool               _modified = false;
   private SmartNotebookType  _type     = SmartNotebookType.USER;
@@ -89,7 +89,7 @@ public class SmartNotebook : BaseNotebook {
     }
   }
 
-  public SmartLogicFilter filter {
+  public SmartFilter? filter {
     get {
       return( _filter );
     }
@@ -111,7 +111,6 @@ public class SmartNotebook : BaseNotebook {
   // Default constructor
   public SmartNotebook( string name, SmartNotebookType type, NotebookTree notebooks ) {
     base( name );
-    _filter    = new FilterAnd();
     _notes     = new Gee.HashSet<int>();
     _type      = type;
     _notebooks = notebooks;
@@ -122,7 +121,7 @@ public class SmartNotebook : BaseNotebook {
   // smartnotebook to ourself.
   public SmartNotebook.copy( string name, SmartNotebook other ) {
     base( name );
-    _filter    = (SmartLogicFilter)other._filter.copy();
+    _filter    = (SmartFilter)other._filter.copy();
     _type      = (other._type == SmartNotebookType.SEARCH) ? SmartNotebookType.USER : other._type;
     _notebooks = other._notebooks;
     _extra     = other._extra;
@@ -138,7 +137,6 @@ public class SmartNotebook : BaseNotebook {
   // Constructor from XML data
   public SmartNotebook.from_xml( Xml.Node* node, NotebookTree notebooks ) {
     base( "" );
-    _filter    = new FilterAnd();
     _notes     = new Gee.HashSet<int>();
     _notebooks = notebooks;
 
@@ -166,6 +164,7 @@ public class SmartNotebook : BaseNotebook {
 
   }
 
+  /*
   //-------------------------------------------------------------
   // Returns the number of stored filters
   public int filter_size() {
@@ -189,6 +188,7 @@ public class SmartNotebook : BaseNotebook {
   public void remove_filter( int index ) {
     _filter.remove_filter( index );
   }
+  */
 
   //-------------------------------------------------------------
   // Removes the note from the list if it exists

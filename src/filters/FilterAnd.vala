@@ -24,7 +24,7 @@ public class FilterAnd : SmartLogicFilter {
   //-------------------------------------------------------------
   // Default constructor
   public FilterAnd() {
-    base();
+    base( LogicOperator.AND );
   }
 
   //-------------------------------------------------------------

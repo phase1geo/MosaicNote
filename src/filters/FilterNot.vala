@@ -24,7 +24,7 @@ public class FilterNot : SmartLogicFilter {
   //-------------------------------------------------------------
   // Default constructor
   public FilterNot() {
-    base();
+    base( LogicOperator.NOT );
   }
 
   //-------------------------------------------------------------

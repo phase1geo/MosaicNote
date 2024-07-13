@@ -19,14 +19,34 @@
 * Authored by: Trevor Williams <phase1geo@gmail.com>
 */
 
+//-------------------------------------------------------------
+// Logic operators detected by the parser, ordered according to
+// precedence.
+public enum LogicOperator {
+  NONE,
+  OR,
+  AND,
+  NOT,
+  PAREN
+}
+
 public class SmartLogicFilter : SmartFilter {
+
+  private LogicOperator _op = LogicOperator.NONE;
 
   protected Array<SmartFilter> filters;
 
+  public LogicOperator op {
+    get {
+      return( _op );
+    }
+  }
+
   //-------------------------------------------------------------
   // Default constructor
-  public SmartLogicFilter() {
+  public SmartLogicFilter( LogicOperator op ) {
     filters = new Array<SmartFilter>();
+    _op = op;
   }
 
   //-------------------------------------------------------------
