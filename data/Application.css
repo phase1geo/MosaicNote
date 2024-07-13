@@ -24,3 +24,11 @@
 .tag-count-dark {
    background-color: #555;
 }
+
+.sidebar-light {
+   background-color: #eee;
+}
+
+.sidebar-dark {
+   background-color: #303030;
+}

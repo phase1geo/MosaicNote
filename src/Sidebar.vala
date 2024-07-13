@@ -115,6 +115,13 @@ public class Sidebar : Box {
 			single_click_activate = false
 		};
 
+    _list_view.add_css_class( _win.themes.dark_mode ? "sidebar-dark" : "sidebar-light" );
+
+    _win.themes.theme_changed.connect((theme) => {
+      _list_view.remove_css_class( _win.themes.dark_mode ? "sidebar-light" : "sidebar-dark" );
+      _list_view.add_css_class( _win.themes.dark_mode ? "sidebar-dark" : "sidebar-light" );
+    });
+
 		_list_view.activate.connect((pos) => {
 			var row = _model.get_row( pos );
 			_selected_notebook = (BaseNotebook)row.get_item();
@@ -273,7 +280,8 @@ public class Sidebar : Box {
 		var item  = (ListItem)obj;
 
     var label = new Label( null ) {
-    	halign = Align.START
+    	halign = Align.START,
+      ellipsize = Pango.EllipsizeMode.END
     };
 
     var count = new Label( null ) {

@@ -207,6 +207,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       end_child          = _note,
       resize_start_child = false,
       resize_end_child   = true,
+      shrink_start_child = false,
       position           = settings.get_int( "notes-width" )
     };
 
@@ -215,6 +216,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       end_child          = _notes_pw,
       resize_start_child = false,
       resize_end_child   = true,
+      shrink_start_child = false,
       position           = settings.get_int( "sidebar-width" )
     };
 

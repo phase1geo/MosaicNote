@@ -175,12 +175,14 @@ public class NotesPanel : Box {
 
   	var title = new Label( Utils.make_title( note.title ) ) {
       use_markup = true,
-      xalign = 0
+      xalign = 0,
+      ellipsize = Pango.EllipsizeMode.END
     };
 
     var preview = new Label( "<small>" + note.created.format( "%b%e, %Y") + "</small>" ) {
       use_markup = true,
-      xalign = 0
+      xalign = 0,
+      ellipsize = Pango.EllipsizeMode.END
     };
 
     var box = new Box( Orientation.VERTICAL, 5 ) {
