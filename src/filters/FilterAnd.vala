@@ -30,7 +30,7 @@ public class FilterAnd : SmartLogicFilter {
   //-------------------------------------------------------------
   // Constructor from XML
   public FilterAnd.from_xml( Xml.Node* node ) {
-    base.from_xml( node );
+    base.from_xml( node, LogicOperator.AND );
   }
 
   //-------------------------------------------------------------

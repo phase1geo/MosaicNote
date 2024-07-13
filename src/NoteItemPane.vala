@@ -38,7 +38,6 @@ public class NoteItemPane : Box {
   private MainWindow   _win;
   private NoteItem     _item;
   private SpellChecker _spell;
-  private Box          _header;
   private Stack        _stack;
 
   private const GLib.ActionEntry[] action_entries = {

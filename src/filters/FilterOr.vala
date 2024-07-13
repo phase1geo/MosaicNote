@@ -30,7 +30,7 @@ public class FilterOr : SmartLogicFilter {
   //-------------------------------------------------------------
   // Constructor from XML
   public FilterOr.from_xml( Xml.Node* node ) {
-    base.from_xml( node );
+    base.from_xml( node, LogicOperator.OR );
   }
 
   //-------------------------------------------------------------

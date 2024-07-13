@@ -51,7 +51,11 @@ public class SmartLogicFilter : SmartFilter {
 
   //-------------------------------------------------------------
   // Constructor from XML format
-  public SmartLogicFilter.from_xml( Xml.Node* node ) {}
+  public SmartLogicFilter.from_xml( Xml.Node* node, LogicOperator op ) {
+    filters = new Array<SmartFilter>();
+    _op = op;
+    load_from_node( node );
+  }
 
   //-------------------------------------------------------------
   // Copies the current filter to the specified one.

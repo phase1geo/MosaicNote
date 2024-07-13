@@ -7,8 +7,8 @@
    viewBox="0 0 48 48"
    version="1.1"
    id="svg1"
-   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25)"
-   sodipodi:docname="panel-layout.svg"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   sodipodi:docname="panel-layout-light-symbolic.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -24,14 +24,15 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
      inkscape:zoom="17.166667"
-     inkscape:cx="24"
-     inkscape:cy="6.9902913"
-     inkscape:window-width="1920"
-     inkscape:window-height="1019"
+     inkscape:cx="21.757281"
+     inkscape:cy="25.660194"
+     inkscape:window-width="1474"
+     inkscape:window-height="1128"
      inkscape:window-x="0"
-     inkscape:window-y="30"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer1" />
+     inkscape:current-layer="layer1"
+     showgrid="false" />
   <defs
      id="defs1">
     <inkscape:path-effect
@@ -74,27 +75,26 @@
      inkscape:groupmode="layer"
      id="layer1">
     <path
-       style="fill:none;stroke:#000000;stroke-width:2.94682"
+       style="fill:none;stroke:#000000;stroke-width:2.947;stroke-dasharray:none"
        id="rect1"
-       width="44.951649"
-       height="45.00473"
-       x="1.5633323"
-       y="1.4989566"
+       width="45.05138"
+       height="27.979614"
+       x="1.5421379"
+       y="10.913745"
        inkscape:path-effect="#path-effect1"
        sodipodi:type="rect"
-       d="M 1.5633323,1.4989566 H 46.514981 V 46.503687 H 1.5633323 Z"
+       d="M 1.5421379,10.913745 H 46.593518 V 38.893359 H 1.5421379 Z"
        inkscape:label="outside" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:2.94651015;stroke-dasharray:none"
+       style="fill:none;stroke:#000000;stroke-width:2.947;stroke-dasharray:none"
        id="path1"
-       width="44.951649"
-       height="45.00473"
-       x="1.5633323"
-       y="1.4989566"
+       width="11.889449"
+       height="27.817255"
+       x="13.141941"
+       y="10.913745"
        inkscape:path-effect="#path-effect3"
        sodipodi:type="rect"
-       d="M 1.5633323,1.4989566 H 46.514981 V 46.503687 H 1.5633323 Z"
-       inkscape:label="inside"
-       transform="matrix(0.2674467,0,0,0.99895674,14.174084,-0.00387594)" />
+       d="M 13.141941,10.913745 H 25.03139 V 38.731 H 13.141941 Z"
+       inkscape:label="inside" />
   </g>
 </svg>

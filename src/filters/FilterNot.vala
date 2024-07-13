@@ -30,7 +30,7 @@ public class FilterNot : SmartLogicFilter {
   //-------------------------------------------------------------
   // Constructor from XML
   public FilterNot.from_xml( Xml.Node* node ) {
-    base.from_xml( node );
+    base.from_xml( node, LogicOperator.NOT );
   }
 
   //-------------------------------------------------------------
