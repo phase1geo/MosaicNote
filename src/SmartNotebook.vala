@@ -279,14 +279,19 @@ public class SmartNotebook : BaseNotebook {
     for( Xml.Node* it = node->children; it != null; it = it->next ) {
       if( it->type == Xml.ElementType.ELEMENT_NODE ) {
         switch( it->name ) {
-          case "logic-and" :
-            _filter = new FilterAnd();
-            _filter.load( it );
-            break;
-          case "logic-or" :
-            _filter = new FilterOr();
-            _filter.load( it );
-            break;
+          case "logic-and" :  _filter = new FilterAnd.from_xml( it );       break;
+          case "created"   :  _filter = new FilterCreated.from_xml( it );   break;
+          case "favorite"  :  _filter = new FilterFavorite.from_xml( it );  break;
+          case "item"      :  _filter = new FilterItem.from_xml( it );      break;
+          case "item-text" :  _filter = new FilterItemText.from_xml( it );  break;
+          case "locked"    :  _filter = new FilterLocked.from_xml( it );    break;
+          case "logic-not" :  _filter = new FilterNot.from_xml( it );       break;
+          case "notebook"  :  _filter = new FilterNotebook.from_xml( it );  break;
+          case "logic-or"  :  _filter = new FilterOr.from_xml( it );        break;
+          case "tag"       :  _filter = new FilterTag.from_xml( it );       break;
+          case "title"     :  _filter = new FilterTitle.from_xml( it );     break;
+          case "updated"   :  _filter = new FilterUpdated.from_xml( it );   break;
+          case "viewed"    :  _filter = new FilterViewed.from_xml( it );    break;
           default :
             stdout.printf( "ERROR: found %s\n", it->name );
             assert_not_reached();
