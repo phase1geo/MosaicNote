@@ -64,6 +64,7 @@ public class SmartParser {
   private string _error_message    = "";
   private int    _error_start      = -1;
   private int    _prev_error_start = -1;
+  private bool   _debug            = false;  // Set to true to debug parsing issues
 
   public signal void suggest( SmartParserSuggestion suggestion, int start_char, string pattern );
   public signal void parse_result( string message, int start_char );
@@ -81,6 +82,10 @@ public class SmartParser {
   // 
   public bool parse( string search_str, bool check_syntax_only ) {
 
+    if( _debug ) {
+      stdout.printf( "PARSING (%s %s)\n", search_str, check_syntax_only.to_string() );
+    }
+
     var in_double   = false;
     var in_single   = false;
     var skip_char   = false;
@@ -89,6 +94,8 @@ public class SmartParser {
     var token_start = 0;
 
     if( !check_syntax_only ) {
+      _op_stack.clear();
+      _filter_stack.clear();
       push_op( LogicOperator.NONE );
       _search_str = search_str;
     } else {
@@ -109,11 +116,13 @@ public class SmartParser {
         } else {
           switch( ch ) {
             case ' ' :
-              if( !in_double && !in_single && (token != "") ) {
-                parse_token( token, token_start, check_syntax_only );
-                token = "";
-                if( check_syntax_only ) {
-                  suggest( SmartParserSuggestion.CATEGORY, (index + 1), "" );
+              if( !in_double && !in_single ) {
+                if( token != "" ) {
+                  parse_token( token, token_start, check_syntax_only );
+                  token = "";
+                  if( check_syntax_only ) {
+                    suggest( SmartParserSuggestion.CATEGORY, (index + 1), "" );
+                  }
                 }
               } else {
                 token += " ";
@@ -147,7 +156,7 @@ public class SmartParser {
                 parse_token( token, token_start, check_syntax_only );
                 token = "";
                 if( !check_syntax_only ) {
-                  pop_op();
+                  pop_paren();
                 }
               } else {
                 token += ")";
@@ -173,7 +182,9 @@ public class SmartParser {
       }
     }
 
-    stdout.printf( "token: %s, token_start: %d\n", token, token_start );
+    if( _debug ) {
+      stdout.printf( "token: %s, token_start: %d\n", token, token_start );
+    }
 
     if( token != "" ) {
       parse_token( token, token_start, check_syntax_only );
@@ -181,8 +192,10 @@ public class SmartParser {
 
     if( !check_syntax_only ) {
       pop_all();
-      stdout.printf( "----------------------------------\n" );
-      stdout.printf( "FILTER: %s\n", _filter_stack.peek_head().to_string() );
+      if( _debug ) {
+        stdout.printf( "----------------------------------\n" );
+        stdout.printf( "FILTER: %s\n", _filter_stack.peek_head().to_string() );
+      }
     } else if( (_error_start != -1) || (_prev_error_start != -1) ) {
       parse_result( _error_message, _error_start );
     }
@@ -203,6 +216,22 @@ public class SmartParser {
   }
 
   //-------------------------------------------------------------
+  // Debug function which displays the state of the stacks.
+  private void display_stacks( string msg ) {
+    if( _debug ) {
+      stdout.printf( "%s op_stack:", msg );
+      for( int i=0; i<_op_stack.length; i++ ) {
+        stdout.printf( " %s", _op_stack.peek_nth( i ).to_string() );
+      }
+      stdout.printf( ", filter_stack:" );
+      for( int i=0; i<_filter_stack.length; i++ ) {
+        stdout.printf( " %s", _filter_stack.peek_nth( i ).to_string() );
+      }
+      stdout.printf( "\n" );
+    }
+  }
+
+  //-------------------------------------------------------------
   // Pops the head operator and performs the filter stack update.
   private bool pop_op() {
     SmartLogicFilter? filter = null;
@@ -211,14 +240,35 @@ public class SmartParser {
       case LogicOperator.OR  :  filter = new FilterOr();   break;
       default                :  filter = null;  break;
     }
-    if( (filter != null) && (_filter_stack.length > 2) ) {
+    if( (filter != null) && (_filter_stack.length >= 2) ) {
       var filter2 = _filter_stack.pop_head();
       filter.add_filter( _filter_stack.pop_head() );
       filter.add_filter( filter2 );
       push_filter( filter );
       return( true );
     }
+    display_stacks( "pop_op" );
     return( false );
+  }
+
+  //-------------------------------------------------------------
+  // Pops everything until the next PAREN logical operator is seen.
+  private void pop_paren() {
+    while( _op_stack.length > 0 ) {
+      if( _op_stack.peek_head() == LogicOperator.PAREN ) {
+        _op_stack.pop_head();
+        if( (_op_stack.length > 0) && (_op_stack.peek_head() == LogicOperator.NOT) && (_filter_stack.length > 0) ) {
+          var not_filter = new FilterNot();
+          not_filter.add_filter( _filter_stack.pop_head() );
+          _filter_stack.push_head( not_filter );
+          _op_stack.pop_head();
+        }
+        display_stacks( "pop_paren" );
+        return;
+      } else {
+        pop_op();
+      }
+    }
   }
 
   //-------------------------------------------------------------
@@ -228,6 +278,7 @@ public class SmartParser {
       pop_op();
     }
     _op_stack.push_head( op );
+    display_stacks( "push_op" );
   }
 
   //-------------------------------------------------------------
@@ -251,6 +302,7 @@ public class SmartParser {
     } else {
       _filter_stack.push_head( filter );
     }
+    display_stacks( "push_filter" );
   }
 
   //-------------------------------------------------------------
@@ -269,7 +321,6 @@ public class SmartParser {
 
     if( (token.down() == "and") || (token == "&") || (token == "&&") ) {
       if( !check_syntax_only ) {
-        stdout.printf( "Pushing AND\n" );
         push_op( LogicOperator.AND );
       }
       return( true );
@@ -277,7 +328,6 @@ public class SmartParser {
 
     if( (token.down() == "or") || (token == "|") || (token == "||") ) {
       if( !check_syntax_only ) {
-        stdout.printf( "Pushing OR\n" );
         push_op( LogicOperator.OR );
       }
       return( true );

@@ -58,7 +58,7 @@ public class FilterAnd : SmartLogicFilter {
   //-------------------------------------------------------------
   // Returns this filter as a string.
   public override string to_string() {
-    return( "&" + to_string_with_connector( "&" ) );
+    return( to_string_with_connector( "&" ) );
   }
 
   //-------------------------------------------------------------

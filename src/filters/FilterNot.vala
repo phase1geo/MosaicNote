@@ -63,7 +63,7 @@ public class FilterNot : SmartLogicFilter {
   //-------------------------------------------------------------
   // Returns this filter as a string.
   public override string to_string() {
-    return( "!" + to_string_with_connector( "" ) );
+    return( "!" + filters.index( 0 ).to_string() );
   }
 
   //-------------------------------------------------------------

@@ -27,7 +27,18 @@ public enum LogicOperator {
   OR,
   AND,
   NOT,
-  PAREN
+  PAREN;
+
+  public string to_string() {
+    switch( this ) {
+      case NONE  :  return( "none" );
+      case OR    :  return( "or" );
+      case AND   :  return( "and" );
+      case NOT   :  return( "not" );
+      case PAREN :  return( "paren" );
+      default    :  assert_not_reached();
+    }
+  }
 }
 
 public class SmartLogicFilter : SmartFilter {
