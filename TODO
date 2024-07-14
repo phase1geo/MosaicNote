@@ -1,19 +1,29 @@
 TODO:
 
- ✔ Complete work on inlined notebook adding/renaming. @done (24-07-04 19:25)
  ☐ Add support for table note item
-   ☐ Use table grid widget with embedded textboxes
+   ☐ Use ColumnView widget with embedded textboxes
  ☐ Add support for math note item
- ✔ Add support for search @done (24-07-04 19:26)
-   ✔ Define search "language" for advanced search features and write parser @done (24-07-04 19:26)
-   ✔ Add way to save searches as smart notebooks @done (24-07-04 19:26)
-     Under the hood, I want searches to essentially be smart notebooks anyways
+   Still trying to figure out what to do here.
+   I would like to use AsciiMath for the text input and generate a PNG file
  ☐ Add support for note linking
- ✔ Add support for note traversal history @done (24-07-04 19:26)
+   ☐ Add auto-completion when entering note links
+   ☐ Add button to copy a note link to the clipboard
+   ☐ Add ability to past note link into a note
  ☐ Add support for undo/redo
+   Need to figure out what we will be able to undo/redo (it won't be everything)
+ ☐ Add support for note locking
+   When a note is "locked" it cannot be changed without unlocking it first
+ ☐ Add UML "templates"
+   We will probably just use the UML examples from the PlantUML website here
 
 ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
 Archive:
+ ✔ Define search "language" for advanced search features and write parser @done (24-07-04 19:26) @project(TODO)
+ ✔ Add way to save searches as smart notebooks @done (24-07-04 19:26) @project(TODO)
+  Under the hood, I want searches to essentially be smart notebooks anyways
+ ✔ Add support for search @done (24-07-04 19:26) @project(TODO)
+ ✔ Add support for note traversal history @done (24-07-04 19:26) @project(TODO)
+ ✔ Complete work on inlined notebook adding/renaming. @done (24-07-04 19:25) @project(TODO)
  ✔ UML @done (24-06-18 13:26) @project(TODO)
  ✔ Markdown @done (24-06-18 13:26) @project(TODO)
  ✔ Image @done (24-06-18 13:26) @project(TODO)

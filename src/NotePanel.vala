@@ -33,6 +33,7 @@ public class NotePanel : Box {
   private DropDown      _item_selector;
   private Stack         _toolbar_stack;
   private Button        _favorite;
+  private Button        _locked;
   private Entry         _title;
   private Box           _created_box;
   private Label         _created;
@@ -201,7 +202,6 @@ public class NotePanel : Box {
       has_frame = false,
       halign = Align.END,
       tooltip_text = _( "Add to Favorites" ),
-      margin_end = 5
     };
     _favorite.clicked.connect(() => {
       if( _favorite.icon_name == "non-starred-symbolic" ) {
@@ -213,12 +213,29 @@ public class NotePanel : Box {
       }
     });
 
+    _locked = new Button.from_icon_name( "changes-allow-symbolic" ) {
+      has_frame = false,
+      halign = Align.END,
+      tooltip_text = _( "Lock Note" ),
+      margin_end = 5
+    };
+    _locked.clicked.connect(() => {
+      if( _locked.icon_name == "changes-allow-symbolic" ) {
+        _locked.icon_name = "changes-prevent-symbolic";
+        _note.locked = true;
+      } else {
+        _locked.icon_name = "changes-allow-symbolic";
+        _note.locked = false;
+      }
+    });
+
     var tbox = new Box( Orientation.HORIZONTAL, 5 ) {
       halign = Align.FILL
     };
     tbox.append( _tags );
     tbox.append( export );
     tbox.append( _favorite );
+    tbox.append( _locked );
     tbox.append( _hist_prev );
     tbox.append( _hist_next );
 
@@ -416,6 +433,7 @@ public class NotePanel : Box {
       _tags.clear_tags();
       _tags.add_tags( note.tags );
       _favorite.icon_name = _note.favorite ? "starred-symbolic" : "non-starred-symbolic";
+      _locked.icon_name = _note.locked ? "changes-prevent-symbolic" : "changes-allow-symbolic";
       _stack.visible_child_name = "note";
       _note.reviewed();
 
