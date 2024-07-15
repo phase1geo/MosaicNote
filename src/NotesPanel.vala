@@ -172,8 +172,9 @@ public class NotesPanel : Box {
   private Box create_note( Object obj ) {
 
     var note = (Note)obj;
+    var show_title = Utils.make_title( (note.title == "") ? _( "Untitled Note" ) : note.title );
 
-  	var title = new Label( Utils.make_title( note.title ) ) {
+  	var title = new Label( show_title ) {
       use_markup = true,
       xalign = 0,
       ellipsize = Pango.EllipsizeMode.END

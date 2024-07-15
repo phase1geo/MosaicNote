@@ -119,7 +119,7 @@ public class Note : Object {
 	public Note( Notebook nb ) {
 		_nb       = nb;
 		_id       = current_id++;
-		_title    = _( "Untitled Note" );
+		_title    = "";
 		_created  = new DateTime.now_local();
 		_updated  = new DateTime.now_local();
 		_viewed   = new DateTime.now_local();
