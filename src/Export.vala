@@ -59,6 +59,7 @@ public class Export {
 
     } catch( SpawnError e ) {
       stdout.printf( "ERROR:  %s\n", e.message );
+      FileUtils.remove( md_filename );
       return( false );
     }
 

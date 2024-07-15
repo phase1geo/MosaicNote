@@ -181,7 +181,8 @@ public class Note : Object {
 
   // Returns a string containing the content of the note in Markdown format
   public string to_markdown( bool pandoc = false ) {
-  	var str = "---\ntitle: '%s'\ntags: [%s]\n---\n\n".printf( _title, _tags.to_markdown() );
+    var mod_title = _title.replace( "'", "''" );
+  	var str = "---\ntitle: '%s'\ntags: [%s]\n---\n\n".printf( mod_title, _tags.to_markdown() );
   	str += "# %s\n\n".printf( _title );
   	for( int i=0; i<_items.length; i++ ) {
   		var item = _items.index( i );

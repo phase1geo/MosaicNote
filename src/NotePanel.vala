@@ -492,6 +492,18 @@ public class NotePanel : Box {
   // Exports the given note
   private void export_note() {
 
+#if GTK410
+    var dialog = Utils.make_file_chooser( _( "Export" ), _( "Export" ) );
+
+    dialog.save.begin( _win, null, (obj, res) => {
+      try {
+        var file = dialog.save.end( res );
+        if( file != null ) {
+          Export.export( file.get_path(), _note );
+        }
+      } catch( Error e ) {}
+    });
+#else
     var dialog = Utils.make_file_chooser( _( "Export" ), _win, FileChooserAction.SAVE, _( "Export" ) );
 
     dialog.response.connect((id) => {
@@ -505,6 +517,7 @@ public class NotePanel : Box {
     });
 
     dialog.show();
+#endif
 
   }
 

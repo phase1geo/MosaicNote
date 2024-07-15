@@ -344,8 +344,9 @@ public class Utils {
 
   }
 
-  /* Creates a file chooser dialog and returns it to the code */
-  /*
+#if GTK410
+  //-------------------------------------------------------------
+  // Creates a file chooser dialog and returns it to the code
   public static Gtk.FileDialog make_file_chooser( string user_title, string user_accept_label ) {
 
     var gtk_settings = Gtk.Settings.get_default();
@@ -362,8 +363,7 @@ public class Utils {
     return( dialog );
 
   }
-  */
-
+#else
   //-------------------------------------------------------------
   // Creates a file chooser dialog and returns it to the code
   public static Gtk.FileChooserNative make_file_chooser( string title, Gtk.Window win, Gtk.FileChooserAction action, string accept_label ) {
@@ -379,6 +379,7 @@ public class Utils {
     return( dialog );
 
   }
+#endif
 
   //-------------------------------------------------------------
   // Displays a confirmation dialog.  Calls the passed callback function

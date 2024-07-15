@@ -38,6 +38,21 @@ public class NoteItemPaneImage : NoteItemPane {
   // Displays a dialog to request
   private void image_dialog( NoteItemImage item, Picture image ) {
 
+#if GTK410
+    var dialog = Utils.make_file_chooser( _( "Select Image" ), _( "Select" ) );
+
+    try {
+      dialog.open.begin( win, null, (obj, res) => {
+        try {
+          var file = dialog.open.end( res );
+          if( file != null ) {
+            item.uri = file.get_uri();
+            image.file = file;
+          }
+        } catch( Error e ) {}
+      });
+    } catch( Error e ) {}
+#else
     var dialog = Utils.make_file_chooser( _( "Select Image" ), win, FileChooserAction.OPEN, _( "Select" ) );
 
     dialog.response.connect((id) => {
@@ -52,6 +67,7 @@ public class NoteItemPaneImage : NoteItemPane {
     });
 
     dialog.show();
+#endif
 
   }
 
