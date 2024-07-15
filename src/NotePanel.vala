@@ -220,13 +220,7 @@ public class NotePanel : Box {
       margin_end = 5
     };
     _locked.clicked.connect(() => {
-      if( _locked.icon_name == "changes-allow-symbolic" ) {
-        _locked.icon_name = "changes-prevent-symbolic";
-        _note.locked = true;
-      } else {
-        _locked.icon_name = "changes-allow-symbolic";
-        _note.locked = false;
-      }
+      set_locked( !_note.locked );
     });
 
     var tbox = new Box( Orientation.HORIZONTAL, 5 ) {
@@ -360,6 +354,23 @@ public class NotePanel : Box {
 	}
 
   //-------------------------------------------------------------
+  // Sets the lock status to the given value and updates the
+  // sensitivity of the UI to allow/disallow note data changes.
+  private void set_locked( bool lock ) {
+
+    _locked.icon_name = lock ? "changes-prevent-symbolic" : "changes-allow-symbolic";
+    _note.locked      = lock;
+
+    // Lock down UI
+    _tags.sensitive          = !lock;
+    _title.parent.sensitive  = !lock;  // Covers title and content areas
+    _favorite.sensitive      = !lock;
+    _item_selector.sensitive = !lock;
+    _toolbar_stack.sensitive = !lock;
+
+  }
+
+  //-------------------------------------------------------------
   // Displays the search UI within the note panel area.
   private SearchBox create_search_ui() {
 
@@ -429,11 +440,9 @@ public class NotePanel : Box {
       _created_box.visible = true;
       _created.label = note.created.format( "%b%e, %Y" );
       _title.text    = note.title;
-      _title.grab_focus();
       _tags.clear_tags();
       _tags.add_tags( note.tags );
       _favorite.icon_name = _note.favorite ? "starred-symbolic" : "non-starred-symbolic";
-      _locked.icon_name = _note.locked ? "changes-prevent-symbolic" : "changes-allow-symbolic";
       _stack.visible_child_name = "note";
       _note.reviewed();
 
@@ -445,6 +454,13 @@ public class NotePanel : Box {
       }
       _hist_prev.sensitive = _win.history.can_go_backward();
       _hist_next.sensitive = _win.history.can_go_forward();
+
+      // Make sure that the title bar has the keyboard focus if it is empty
+      if( (_title.text == "") && !_note.locked ) {
+        _title.grab_focus();
+      }
+
+      set_locked( _note.locked );
 
     } else {
 

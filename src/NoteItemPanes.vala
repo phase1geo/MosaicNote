@@ -225,7 +225,11 @@ public class NoteItemPanes : Box {
     _size++;
 
     // Make sure that the new pane has the focus
-    pane.grab_item_focus( TextCursorPlacement.START );
+    if( !_note.locked ) {
+      pane.grab_item_focus( TextCursorPlacement.START );
+    } else {
+      pane.clear_current();
+    }
 
   }
 
