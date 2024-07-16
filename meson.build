@@ -30,9 +30,13 @@ subdir('data')
 subdir('po')
 subdir('src')
 
+# Work around deprecated code to avoid warnings
 gtk4_dep = dependency('gtk4')
 if gtk4_dep.version().version_compare('>=4.10.0')
   add_project_arguments(['--define=GTK410'], language: 'vala')
+endif
+if gtk4_dep.version().version_compare('>=4.12.0')
+  add_project_arguments(['--define=GTK412'], language: 'vala')
 endif
 
 core_deps = [
