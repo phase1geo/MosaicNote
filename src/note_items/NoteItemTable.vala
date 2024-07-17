@@ -124,6 +124,7 @@ public class NoteItemTableRow : Object {
 	//-------------------------------------------------------------
 	// Constructor from XML formatted data
 	public NoteItemTableRow.from_xml( Xml.Node* node ) {
+		_values = new Array<string>();
 		load( node );
 	}
 
@@ -387,6 +388,7 @@ public class NoteItemTable : NoteItem {
   private void load_columns( Xml.Node* node ) {
   	for( Xml.Node* it = node->children; it != null; it = it->next ) {
   		if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "column") ) {
+  			stdout.printf( "Loading column\n" );
     		var column = new NoteItemTableColumn.from_xml( it );
     		_columns.append_val( column );
     	}
@@ -398,6 +400,7 @@ public class NoteItemTable : NoteItem {
   private void load_rows( Xml.Node* node ) {
   	for( Xml.Node* it = node->children; it != null; it = it->next ) {
   		if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "row") ) {
+  			stdout.printf( "Loading row\n" );
     		var row = new NoteItemTableRow.from_xml( it );
     		_rows.append( row );
     	}
@@ -407,6 +410,7 @@ public class NoteItemTable : NoteItem {
   //-------------------------------------------------------------
   // Loads the content from XML formatted data
   protected override void load( Xml.Node* node ) {
+  	stdout.printf( "Loading table\n" );
     base.load( node );
     for( Xml.Node* it = node->children; it != null; it = it->next ) {
     	if( it->type == Xml.ElementType.ELEMENT_NODE ) {

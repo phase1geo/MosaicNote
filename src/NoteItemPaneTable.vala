@@ -132,13 +132,41 @@ public class NoteItemPaneTable : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Saves the given text value to the cell associated with the given
+  // list item and column index.
+  private void save_to_cell( ListItem li, int column, string val ) {
+    var table_item = (NoteItemTable)item; 
+    var row = (int)li.position;
+    table_item.set_cell( column, row, val );
+  }
+
+  //-------------------------------------------------------------
   // Row factory setup function
   private void row_setup( int column, Object obj ) {
+
+    var column_index = column;
     var li   = (ListItem)obj;
     var text = new TextView() {
       justification = ((NoteItemTable)item).get_column( column ).justify
     };
+
+    var focus_controller = new EventControllerFocus();
+    focus_controller.leave.connect(() => {
+      save_to_cell( li, column_index, text.buffer.text );
+    });
+
+    // If we need to save, check to see if a table cell has focus and
+    // save its contents to the note item
+    save.connect(() => {
+      if( focus_controller.contains_focus ) {
+        save_to_cell( li, column_index, text.buffer.text );
+      }
+    });
+
+    text.add_controller( focus_controller );
+
     li.child = text;
+
   }
 
   //-------------------------------------------------------------
@@ -149,6 +177,5 @@ public class NoteItemPaneTable : NoteItemPane {
     var text = (li.child as TextView);
     text.buffer.text = row.get_value( column );
   }
-
 
 }

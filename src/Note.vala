@@ -304,38 +304,58 @@ public class Note : Object {
 
 	}
 
+	//-------------------------------------------------------------
+	// Loads all of the stored note items in the provided XML data
 	private void load_items( Xml.Node* node ) {
+		stdout.printf( "Loading note items\n" );
 		for( Xml.Node* it = node->children; it != null; it = it->next ) {
 			if( it->type == Xml.ElementType.ELEMENT_NODE ) {
+				stdout.printf( "  node name: %s\n", it->name );
         var type = NoteItemType.parse( it->name );
         switch( type ) {
         	case NoteItemType.MARKDOWN :  load_markdown_item( it );  break;
         	case NoteItemType.CODE     :  load_code_item( it );      break;
         	case NoteItemType.IMAGE    :  load_image_item( it );     break;
         	case NoteItemType.UML      :  load_uml_item( it );       break;
+        	case NoteItemType.TABLE    :  load_table_item( it );     break;
           default                    :  break;
         }
 			}
 		}
 	}
 
+	//-------------------------------------------------------------
+	// Loads a markdown item from XML data
 	private void load_markdown_item( Xml.Node* node ) {
 		var item = new NoteItemMarkdown.from_xml( this, node );
 		_items.append_val( item );
 	}
 
+	//-------------------------------------------------------------
+	// Loads a code item from XML data
 	private void load_code_item( Xml.Node* node ) {
 		var item = new NoteItemCode.from_xml( this, node );
 		_items.append_val( item );
 	}
 
+	//-------------------------------------------------------------
+	// Loads an image item from XML data
 	private void load_image_item( Xml.Node* node ) {
 		var item = new NoteItemImage.from_xml( this, node );
 		_items.append_val( item );
 	}
 
+	//-------------------------------------------------------------
+	// Loads a UML item from XML data
 	private void load_uml_item( Xml.Node* node ) {
 		var item = new NoteItemUML.from_xml( this, node );
+		_items.append_val( item );
+	}
+
+	//-------------------------------------------------------------
+	// Loads a table item from XML data
+	private void load_table_item( Xml.Node* node ) {
+		var item = new NoteItemTable.from_xml( this, node );
 		_items.append_val( item );
 	}
 
