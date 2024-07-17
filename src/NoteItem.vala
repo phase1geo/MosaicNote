@@ -24,6 +24,7 @@ public enum NoteItemType {
 	CODE,
 	IMAGE,
   UML,
+  TABLE,
 	NUM;
 
   //-------------------------------------------------------------
@@ -35,6 +36,7 @@ public enum NoteItemType {
 			case CODE     :  return( "code" );
 			case IMAGE    :  return( "image" );
       case UML      :  return( "uml" );
+      case TABLE    :  return( "table" );
 			default       :  assert_not_reached();
 		}
 	}
@@ -48,6 +50,7 @@ public enum NoteItemType {
       case CODE     :  return( _( "code" ) );
       case IMAGE    :  return( _( "image" ) );
       case UML      :  return( _( "uml" ) );
+      case TABLE    :  return( _( "table" ) );
       default       :  assert_not_reached();
     }
   }
@@ -61,6 +64,7 @@ public enum NoteItemType {
 			case CODE     :  return( _( "Code" ) );
 			case IMAGE    :  return( _( "Image" ) );
       case UML      :  return( _( "UML Diagram" ) );
+      case TABLE    :  return( _( "Table" ) );
 			default       :  assert_not_reached();
 		}
 	}
@@ -74,6 +78,7 @@ public enum NoteItemType {
 			case "code"     :  return( CODE );
 			case "image"    :  return( IMAGE );
       case "uml"      :  return( UML );
+      case "table"    :  return( TABLE );
 			default         :  return( NUM );
 		}
 	}
@@ -91,6 +96,8 @@ public enum NoteItemType {
       return( IMAGE );
     } else if( down == _( "uml" ) ) {
       return( UML );
+    } else if( down == _( "table" ) ) {
+      return( TABLE );
     } else {
       return( NUM );
     }
@@ -115,6 +122,7 @@ public enum NoteItemType {
 			case CODE     :  return( new NoteItemCode( note ) );
 			case IMAGE    :  return( new NoteItemImage( note ) );
       case UML      :  return( new NoteItemUML( note ) );
+      case TABLE    :  return( new NoteItemTable( note, 2, 3 ) );
 			default       :  assert_not_reached();
 		}
 	}
@@ -127,6 +135,7 @@ public enum NoteItemType {
       case CODE     :  return( new ToolbarCode() );
       case IMAGE    :  return( new ToolbarItem() );
       case UML      :  return( new ToolbarItem() );
+      case TABLE    :  return( new ToolbarItem() );
       default       :  assert_not_reached();
     }
   }
