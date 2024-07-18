@@ -307,10 +307,8 @@ public class Note : Object {
 	//-------------------------------------------------------------
 	// Loads all of the stored note items in the provided XML data
 	private void load_items( Xml.Node* node ) {
-		stdout.printf( "Loading note items\n" );
 		for( Xml.Node* it = node->children; it != null; it = it->next ) {
 			if( it->type == Xml.ElementType.ELEMENT_NODE ) {
-				stdout.printf( "  node name: %s\n", it->name );
         var type = NoteItemType.parse( it->name );
         switch( type ) {
         	case NoteItemType.MARKDOWN :  load_markdown_item( it );  break;

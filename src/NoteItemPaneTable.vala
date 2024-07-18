@@ -81,7 +81,6 @@ public class NoteItemPaneTable : NoteItemPane {
       stdout.printf( "Make table\n" );
       // FOOBAR
     } else {
-      stdout.printf( "Table columns: %d\n", table_item.columns() );
       for( int i=0; i<table_item.columns(); i++ ) {
         var index     = i;
         var table_col = table_item.get_column( i );

@@ -41,17 +41,15 @@ public class NoteItemPaneImage : NoteItemPane {
 #if GTK410
     var dialog = Utils.make_file_chooser( _( "Select Image" ), _( "Select" ) );
 
-    try {
-      dialog.open.begin( win, null, (obj, res) => {
-        try {
-          var file = dialog.open.end( res );
-          if( file != null ) {
-            item.uri = file.get_uri();
-            image.file = file;
-          }
-        } catch( Error e ) {}
-      });
-    } catch( Error e ) {}
+    dialog.open.begin( win, null, (obj, res) => {
+      try {
+        var file = dialog.open.end( res );
+        if( file != null ) {
+          item.uri = file.get_uri();
+          image.file = file;
+        }
+      } catch( Error e ) {}
+    });
 #else
     var dialog = Utils.make_file_chooser( _( "Select Image" ), win, FileChooserAction.OPEN, _( "Select" ) );
 

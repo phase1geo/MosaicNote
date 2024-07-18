@@ -369,17 +369,25 @@ public class NoteItemTable : NoteItem {
   //-------------------------------------------------------------
   // Saves the content in XML format
   public override Xml.Node* save() {
+
     Xml.Node* node  = base.save();
     Xml.Node* cnode = new Xml.Node( null, "columns" );
     Xml.Node* rnode = new Xml.Node( null, "rows" );
+
+    node->set_prop( "description", _description );
+
     for( int i=0; i<_columns.length; i++ ) {
     	cnode->add_child( _columns.index( i ).save() );
     }
+    node->add_child( cnode );
+
     for( int i=0; i<rows(); i++ ) {
     	rnode->add_child( get_row( i ).save() );
     }
-    node->add_child( cnode );
     node->add_child( rnode );
+
+    modified = false;
+
     return( node );
   }
 
@@ -388,7 +396,6 @@ public class NoteItemTable : NoteItem {
   private void load_columns( Xml.Node* node ) {
   	for( Xml.Node* it = node->children; it != null; it = it->next ) {
   		if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "column") ) {
-  			stdout.printf( "Loading column\n" );
     		var column = new NoteItemTableColumn.from_xml( it );
     		_columns.append_val( column );
     	}
@@ -400,7 +407,6 @@ public class NoteItemTable : NoteItem {
   private void load_rows( Xml.Node* node ) {
   	for( Xml.Node* it = node->children; it != null; it = it->next ) {
   		if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "row") ) {
-  			stdout.printf( "Loading row\n" );
     		var row = new NoteItemTableRow.from_xml( it );
     		_rows.append( row );
     	}
@@ -410,8 +416,14 @@ public class NoteItemTable : NoteItem {
   //-------------------------------------------------------------
   // Loads the content from XML formatted data
   protected override void load( Xml.Node* node ) {
-  	stdout.printf( "Loading table\n" );
+
     base.load( node );
+
+    var d = node->get_prop( "description" );
+    if( d != null ) {
+      _description = d;
+    }
+
     for( Xml.Node* it = node->children; it != null; it = it->next ) {
     	if( it->type == Xml.ElementType.ELEMENT_NODE ) {
     		switch( it->name ) {
@@ -420,6 +432,7 @@ public class NoteItemTable : NoteItem {
     		}
     	}
     }
+
   }
 
 }

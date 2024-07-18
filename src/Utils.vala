@@ -329,8 +329,6 @@ public class Utils {
 
     delete doc;
 
-    stdout.printf( "snippet:\n%s\n", snippet_text );
-
     /*
     try {
       var snippet = new GtkSource.Snippet.parsed( snippet_text );
@@ -381,6 +379,25 @@ public class Utils {
   }
 #endif
 
+#if GTK410
+  public static void show_confirmation( MainWindow win, string question, string detail_msg, Object? obj, ConfirmationCallback callback ) {
+    var dialog = new AlertDialog( question ) {
+      buttons = { _( "Yes" ), _( "No" ) },
+      modal = true,
+      default_button = 1,
+      cancel_button = 1,
+      detail = detail_msg
+    };
+    dialog.choose.begin( win, null, (obj, res) => {
+      try {
+        var result = dialog.choose.end( res );
+        if( result == 0 ) {
+          callback( obj );
+        }
+      } catch( Error e ) {}
+    });
+  }
+#else
   //-------------------------------------------------------------
   // Displays a confirmation dialog.  Calls the passed callback function
   // with the given object if the user confirms the question.
@@ -398,6 +415,7 @@ public class Utils {
     });
     dialog.show();
   }
+#endif
 
   //-------------------------------------------------------------
   // Clears the given box widget
