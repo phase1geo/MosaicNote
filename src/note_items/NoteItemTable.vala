@@ -318,6 +318,7 @@ public class NoteItemTable : NoteItem {
 		for( int i=0; i<rows(); i++ ) {
 			var row = get_row( i );
 			row.insert_column( index, "" );
+  	  _rows.items_changed( i, 1, 1 );
 		}
 	}
 
@@ -328,6 +329,7 @@ public class NoteItemTable : NoteItem {
 		for( int i=0; i<rows(); i++ ) {
 			var row = get_row( i );
 			row.delete_column( index );
+  	  _rows.items_changed( i, 1, 1 );
 		}
 	}
 

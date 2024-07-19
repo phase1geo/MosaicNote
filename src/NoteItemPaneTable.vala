@@ -20,14 +20,34 @@
 */
 
 using Gtk;
+#if !GTK412
+using Gee;
+#endif
 
 public class NoteItemPaneTable : NoteItemPane {
 
   private ColumnView _table;
+  private int        _col_id = 0;
+#if !GTK412
+  private HashMap<string,ColumnViewColumn> _col_map;
+#endif
+
+  private const GLib.ActionEntry[] action_entries = {
+    { "action_insert_column_before", action_insert_column_before, "s" },
+    { "action_insert_column_after",  action_insert_column_after,  "s" },
+    { "action_delete_column",        action_delete_column,        "s" },
+  };
 
 	// Default constructor
 	public NoteItemPaneTable( MainWindow win, NoteItem item, SpellChecker spell ) {
+
     base( win, item, spell );
+
+    /* Set the stage for menu actions */
+    var actions = new SimpleActionGroup ();
+    actions.add_action_entries( action_entries, this );
+    insert_action_group( "table", actions );
+
   }
 
   // Grabs the focus of the note item at the specified position.
@@ -59,6 +79,91 @@ public class NoteItemPaneTable : NoteItemPane {
 
   }
 
+#if GTK412
+  //-------------------------------------------------------------
+  // Returns the index of the column with the given ID.
+  private int get_cv_column_index( string col_id ) {
+    var store = (GLib.ListStore)_table.columns;
+    for( int i=0; i<store.get_n_items(); i++ ) {
+      var col = (ColumnViewColumn)store.get_item( i );
+      if( col.id == col_id ) {
+        return( i );
+      }
+    }
+    return( -1 );
+  }
+#else
+  private int get_cv_column_index( string col_id ) {
+    var store    = (GLib.ListStore)_table.columns;
+    var find_col = _col_map.get( col_id );
+    for( int i=0; i<store.get_n_items(); i++ ) {
+      var col = (store.get_item( i ) as ColumnViewColumn);
+      if( col == null ) {
+        stdout.printf( "li.item is not a ColumnViewColumn\n" );
+      }
+      if( col == find_col ) {
+        return( i );
+      }
+    }
+    return( -1 );
+  }
+#endif
+
+  //-------------------------------------------------------------
+  // Adds a new ColumnView column this will need to be called
+  // when the user is adding a new column.
+  private void add_cv_column( int index ) {
+
+    var table_item = (NoteItemTable)item;
+    var col_index  = index;
+    var table_col  = table_item.get_column( index );
+    var factory    = new SignalListItemFactory();
+    var col_id_int = _col_id++;
+    var col_id     = col_id_int.to_string();
+
+    factory.setup.connect((obj) => {
+      row_setup( index, obj );
+    });
+    factory.bind.connect((obj) => {
+      row_bind( index, obj );
+    });
+
+    // Create menu
+    var ins_menu = new GLib.Menu();
+    ins_menu.append( _( "Insert column before" ), "table.action_insert_column_before('%s')".printf( col_id ) );
+    ins_menu.append( _( "Insert column after" ),  "table.action_insert_column_after('%s')".printf( col_id ) );
+    var del_menu = new GLib.Menu();
+    del_menu.append( _( "Remove column" ), "table.action_delete_column('%s')".printf( col_id ) );
+    var head_menu = new GLib.Menu();
+    head_menu.append_section( null, ins_menu );
+    head_menu.append_section( null, del_menu );
+
+    var col = new ColumnViewColumn( table_col.header, factory ) {
+#if GTK412
+      id          = col_id,
+#endif
+      expand      = true,
+      resizable   = true,
+      header_menu = head_menu
+    };
+
+    _table.insert_column( index, col );
+
+#if !GTK412
+    _col_map.set( col_id, col );
+#endif
+
+  }
+
+  //-------------------------------------------------------------
+  // Removes the ColumnView column at the given index.
+  private void remove_cv_column( int index ) {
+
+    var columns = (GLib.ListStore)_table.columns;
+    columns.remove( index );
+
+  }
+
   //-------------------------------------------------------------
   // Adds the UI for the table panel.
   protected override Widget create_pane() {
@@ -66,36 +171,27 @@ public class NoteItemPaneTable : NoteItemPane {
     var table_item = (NoteItemTable)item;
     var selector   = new SingleSelection( table_item.model );
 
+#if !GTK412
+    _col_map = new HashMap<string,ColumnViewColumn>();
+#endif    
+
     _table = new ColumnView( selector ) {
-      show_row_separators = true,
-      halign = Align.FILL,
 #if GTK412
       tab_behavior = ListTabBehavior.CELL,
 #endif
+      halign = Align.FILL,
+      show_row_separators = true,
       show_column_separators = true
     };
 
-    _table.set_size_request( -1, 500 );
+    _table.set_size_request( -1, 300 );
 
     if( table_item.columns() == 0 ) {
       stdout.printf( "Make table\n" );
       // FOOBAR
     } else {
       for( int i=0; i<table_item.columns(); i++ ) {
-        var index     = i;
-        var table_col = table_item.get_column( i );
-        var factory   = new SignalListItemFactory();
-        factory.setup.connect((obj) => {
-          row_setup( index, obj );
-        });
-        factory.bind.connect((obj) => {
-          row_bind( index, obj );
-        });
-        var col = new ColumnViewColumn( table_col.header, factory ) {
-          expand    = true,
-          resizable = true
-        };
-        _table.append_column( col );
+        add_cv_column( i );
       }
     }
 
@@ -175,6 +271,43 @@ public class NoteItemPaneTable : NoteItemPane {
     var row  = (NoteItemTableRow)li.item;
     var text = (li.child as TextView);
     text.buffer.text = row.get_value( column );
+  }
+
+  //-------------------------------------------------------------
+  // Inserts a new column at the specified index.
+  private void action_insert_column_before( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      var col_id     = variant.get_string();
+      var index      = get_cv_column_index( col_id );
+      var table_item = (NoteItemTable)item;
+      table_item.insert_column( index, "", Gtk.Justification.LEFT );
+      add_cv_column( index );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Inserts a new column at the specified index.
+  private void action_insert_column_after( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      var col_id     = variant.get_string();
+      var index      = get_cv_column_index( col_id );
+      var table_item = (NoteItemTable)item;
+      stdout.printf( "In action_insert_column_after, current index: %d\n", index );
+      table_item.insert_column( (index + 1), "", Gtk.Justification.LEFT );
+      add_cv_column( index + 1 );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Removes the column at the specified index.
+  private void action_delete_column( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      var col_id     = variant.get_string();
+      var index      = get_cv_column_index( col_id );
+      var table_item = (NoteItemTable)item;
+      table_item.delete_column( index );
+      remove_cv_column( index );
+    }
   }
 
 }
