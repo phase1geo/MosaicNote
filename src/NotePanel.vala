@@ -139,7 +139,11 @@ public class NotePanel : Box {
         background-color: %s;
       }
     """.printf( NoteItemPaneMarkdown.get_css_data(), NoteItemPaneCode.get_css_data(), style.get_style( "text" ).background );
+#if GTK412
+    provider.load_from_string( css_data );
+#else
     provider.load_from_data( css_data.data );
+#endif
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
 
   }
