@@ -318,8 +318,10 @@ public class NoteItemTable : NoteItem {
 		for( int i=0; i<rows(); i++ ) {
 			var row = get_row( i );
 			row.insert_column( index, "" );
-  	  _rows.items_changed( i, 1, 1 );
 		}
+  	modified = true;
+  	changed();
+ 	  // _rows.items_changed( 0, 1, 1 );
 	}
 
 	//-------------------------------------------------------------
@@ -329,8 +331,10 @@ public class NoteItemTable : NoteItem {
 		for( int i=0; i<rows(); i++ ) {
 			var row = get_row( i );
 			row.delete_column( index );
-  	  _rows.items_changed( i, 1, 1 );
 		}
+  	modified = true;
+  	changed();
+//	  _rows.items_changed( 0, 0, 1 );
 	}
 
 	//-------------------------------------------------------------
@@ -338,12 +342,16 @@ public class NoteItemTable : NoteItem {
 	public void insert_row( int index ) {
 		var row = new NoteItemTableRow( (int)_columns.length );
 		_rows.insert( index, row );
+  	modified = true;
+  	changed();
 	}
 
 	//-------------------------------------------------------------
 	// Deletes the row at the given index.
 	public void delete_row( int index ) {
 		_rows.remove( index );
+  	modified = true;
+  	changed();
 	}
 
 	//-------------------------------------------------------------
