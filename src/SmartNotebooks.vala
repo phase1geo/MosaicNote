@@ -128,7 +128,7 @@ public class SmartNotebooks {
   // Creates the required default notebooks if we were unable to load any smart notebooks.
   private void create_default_notebooks() {
 
-    var favorites = new SmartNotebook( _( "Favorites" ), SmartNotebookType.BUILTIN, _notebook_tree );
+    var favorites = new SmartNotebook( _( "Favorites" ), SmartNotebookType.FAVORITE, _notebook_tree );
     favorites.filter = new FilterFavorite( true );
     add_notebook( favorites );
 

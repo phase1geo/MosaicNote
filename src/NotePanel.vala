@@ -475,6 +475,14 @@ public class NotePanel : Box {
   }
 
   //-------------------------------------------------------------
+  // Updating the tags in the current note.
+  public void update_tags() {
+    stdout.printf( "In update_tags (%s)\n", _note.tags.to_markdown() );
+    _tags.clear_tags();
+    _tags.add_tags( _note.tags );
+  }
+
+  //-------------------------------------------------------------
   // Displays the associated toolbar for the specified pane.  If pane
   // is null, displays the default (blank) toolbar.
   private void set_toolbar_for_pane( NoteItemPane? pane ) {

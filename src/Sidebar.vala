@@ -110,6 +110,10 @@ public class Sidebar : Box {
       update_notes_panel( selection.selected );
       populate_tree();
     });
+    _win.full_tags.changed.connect(() => {
+      update_notes_panel( selection.selected );
+      populate_tree();
+    });
 
 		_list_view = new ListView( selection, factory ) {
 			single_click_activate = false
@@ -255,6 +259,13 @@ public class Sidebar : Box {
   }
 
   //-------------------------------------------------------------
+  // Returns true if the given base notebook is the inbox.
+  private bool nb_is_inbox( BaseNotebook nb ) {
+    var notebook = (nb as Notebook);
+    return( (notebook != null) && (notebook == _win.notebooks.inbox) );
+  }
+
+  //-------------------------------------------------------------
   // Returns true if the given base notebook is a trash notebook.
   private bool nb_is_trash( BaseNotebook nb ) {
     var notebook = (nb as Notebook);
@@ -275,6 +286,14 @@ public class Sidebar : Box {
     return( (nb as HiddenNotebook) != null );
   }
 
+  //-------------------------------------------------------------
+  // Returns true if the given base notebook is a tag.
+  private bool nb_is_tag( BaseNotebook nb ) {
+    return( (nb as FullTag) != null );
+  }
+
+  //-------------------------------------------------------------
+  // Sets up the sidebar widgets.
 	private void setup_tree( Object obj ) {
 
 		var item  = (ListItem)obj;
@@ -305,6 +324,45 @@ public class Sidebar : Box {
     box.add_controller( click );
     box.append( label );
     box.append( count );
+
+    var drop = new DropTarget( Type.OBJECT, Gdk.DragAction.MOVE );
+    box.add_controller( drop );
+
+    drop.accept.connect((d) => {
+      var row = (TreeListRow)item.get_item();
+      var nb  = (BaseNotebook)row.get_item();
+      return( nb_is_node( nb ) || nb_is_inbox( nb ) || nb_is_trash( nb ) ||
+              nb_is_smart( nb, SmartNotebookType.FAVORITE ) || nb_is_tag( nb ) );
+    });
+
+    drop.drop.connect((val, x, y) => {
+      var row  = (TreeListRow)item.get_item();
+      var nb   = (BaseNotebook)row.get_item();
+      var note = (val.get_object() as Note);
+      if( note != null ) {
+        stdout.printf( "dropping, title: %s, x: %g, y: %g\n", note.title, x, y );
+        if( nb_is_node( nb ) ) {
+          var node = (NotebookTree.Node)nb;
+          node.get_notebook().move_note( note );
+          return( true );
+        } else if( nb_is_inbox( nb ) || nb_is_trash( nb ) ) {
+          var notebook = (Notebook)nb;
+          notebook.move_note( note );
+          return( true );
+        } else if( nb_is_smart( nb, SmartNotebookType.FAVORITE ) ) {
+          note.favorite = true;
+          _win.smart_notebooks.handle_note( note );
+          return( false );
+        } else if( nb_is_tag( nb ) ) {
+          var notebook = (FullTag)nb;
+          notebook.add_note_id( note.id );
+          note.tags.add_tag( notebook.name );
+          _win.note.update_tags();
+          return( false );
+        }
+      }
+      return( false );
+    });
 
     var popover = new PopoverMenu.from_model( null );
     popover.set_parent( box );
