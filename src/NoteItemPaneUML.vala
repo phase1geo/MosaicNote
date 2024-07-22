@@ -137,6 +137,9 @@ public class NoteItemPaneUML : NoteItemPane {
 
     var image_click = new GestureClick();
     var image_focus = new EventControllerFocus();
+    var image_drag  = new DragSource() {
+      actions = Gdk.DragAction.COPY
+    };
     _image = new Picture() {
       halign = Align.FILL,
       valign = Align.FILL,
@@ -148,6 +151,7 @@ public class NoteItemPaneUML : NoteItemPane {
     };
     _image.add_controller( image_click );
     _image.add_controller( image_focus );
+    _image.add_controller( image_drag );
 
     _text = create_text( "plantuml" );
     _text.add_css_class( "code-text" );
@@ -191,6 +195,13 @@ public class NoteItemPaneUML : NoteItemPane {
 
     image_focus.enter.connect(() => {
       set_as_current();
+    });
+
+    image_drag.prepare.connect((d) => {
+      var val = Value( typeof(GLib.File) );
+      val = _image.file;
+      var cp = new Gdk.ContentProvider.for_value( val );
+      return( cp );
     });
 
     // Load the image and make it visible (if it exists); otherwise, display the input field.

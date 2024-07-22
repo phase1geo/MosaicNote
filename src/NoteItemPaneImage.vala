@@ -119,6 +119,11 @@ public class NoteItemPaneImage : NoteItemPane {
     var image_item  = (NoteItemImage)item;
     var image_click = new GestureClick();
     var image_focus = new EventControllerFocus();
+    var image_drag  = new DragSource() {
+      actions = Gdk.DragAction.COPY
+    };
+    var image_drop  = new DropTarget( typeof(GLib.File), Gdk.DragAction.COPY );
+
     _image = new Picture() {
       halign = Align.FILL,
       valign = Align.FILL,
@@ -130,6 +135,8 @@ public class NoteItemPaneImage : NoteItemPane {
     };
     _image.add_controller( image_click );
     _image.add_controller( image_focus );
+    _image.add_controller( image_drag );
+    _image.add_controller( image_drop );
 
     if( image_item.uri == "" ) {
       image_dialog( image_item, _image );
@@ -152,6 +159,25 @@ public class NoteItemPaneImage : NoteItemPane {
 
     image_focus.enter.connect(() => {
       set_as_current();
+    });
+
+    image_drag.prepare.connect((d) => {
+      var val = Value( typeof(GLib.File) );
+      val = _image.file;
+      var cp = new Gdk.ContentProvider.for_value( val );
+      return( cp );
+    });
+
+    image_drop.drop.connect((val, x, y) => {
+      var file = (val as GLib.File);
+      if( file != null ) {
+        var filename = file.get_path();
+        if( GLib.ContentType.guess( filename, null, null ).contains( "image" ) ) {
+          _image.file = file;
+          return( true );
+        }
+      }
+      return( false );
     });
 
     handle_key_events( _image );
