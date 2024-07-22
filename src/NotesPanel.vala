@@ -195,6 +195,22 @@ public class NotesPanel : Box {
     box.append( title );
     box.append( preview );
 
+    var drag = new DragSource() {
+      actions = Gdk.DragAction.MOVE
+    };
+    box.add_controller( drag );
+
+    drag.prepare.connect((d) => {
+
+      var val = Value( Type.OBJECT );
+      val.set_object( note );
+
+      var cp = new Gdk.ContentProvider.for_value( val );
+
+      return( cp );
+
+    });
+
     return( box );
 
   }
@@ -207,6 +223,7 @@ public class NotesPanel : Box {
     if( row != null ) {
       var note = (Note)_model.get_item( row.get_index() );
       _win.smart_notebooks.remove_note( note );
+      _win.full_tags.delete_note_tags( note );
       if( note.notebook == _win.notebooks.trash ) {
         note.notebook.delete_note( note );
       } else {

@@ -97,6 +97,15 @@ public class FullTags {
     }
   }
 
+  //-------------------------------------------------------------
+  // Deletes all of the given note's tags from the list.
+  public void delete_note_tags( Note note ) {
+    for( int i=0; i<note.tags.size(); i++ ) {
+      var tag = note.tags.get_tag( i );
+      delete_tag( tag, note.id );
+    }
+  }
+
   // Saves this information in XML format
   public void save() {
 

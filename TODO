@@ -16,6 +16,7 @@ TODO:
 
 ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
 Archive:
+ ✔ Add support for note drag and drop support @done (24-07-21 17:36) @project(TODO)
  ✔ Add support for note locking @done (24-07-15 23:04) @project(TODO)
   When a note is "locked" it cannot be changed without unlocking it first
  ✔ Define search "language" for advanced search features and write parser @done (24-07-04 19:26) @project(TODO)

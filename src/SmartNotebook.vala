@@ -22,6 +22,7 @@
 public enum SmartNotebookType {
   USER,
   BUILTIN,
+  FAVORITE,
   TAG,
   SEARCH,
   NUM;
@@ -30,11 +31,12 @@ public enum SmartNotebookType {
   // Returns the string version of this smart notebook type
   public string to_string() {
     switch( this ) {
-      case USER    :  return( "user" );
-      case BUILTIN :  return( "builtin" );
-      case TAG     :  return( "tag" );
-      case SEARCH  :  return( "search" );
-      default      :  assert_not_reached();
+      case USER     :  return( "user" );
+      case BUILTIN  :  return( "builtin" );
+      case FAVORITE :  return( "favorite" );
+      case TAG      :  return( "tag" );
+      case SEARCH   :  return( "search" );
+      default       :  assert_not_reached();
     }
   }
 
@@ -43,11 +45,12 @@ public enum SmartNotebookType {
   // type specified and returns that value.
   public static SmartNotebookType parse( string val ) {
     switch( val ) {
-      case "user"    :  return( USER );
-      case "builtin" :  return( BUILTIN );
-      case "tag"     :  return( TAG );
-      case "search"  :  return( SEARCH );
-      default        :  assert_not_reached();
+      case "user"     :  return( USER );
+      case "builtin"  :  return( BUILTIN );
+      case "favorite" :  return( FAVORITE );
+      case "tag"      :  return( TAG );
+      case "search"   :  return( SEARCH );
+      default         :  assert_not_reached();
     }
   }
 
@@ -56,9 +59,10 @@ public enum SmartNotebookType {
   // section of the sidebar.
   public bool in_library( SmartNotebook nb ) {
     switch( this ) {
-      case BUILTIN :
-      case SEARCH  :  return( true );
-      default      :  return( false );
+      case BUILTIN  :
+      case FAVORITE :
+      case SEARCH   :  return( true );
+      default       :  return( false );
     }
   }
 
