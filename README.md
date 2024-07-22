@@ -1,9 +1,6 @@
-# MosaicNote
-Developer note-taking application that supports multiple types of information in the same note.
-
 <h1 align="center">MosaicNote</h1>
 <p align="center">
-  <img src="https://raw.githubusercontent.com/phase1geo/MosaicNote/master/data/icons/128/com.github.phase1geo.mosaic-note.png" width="256"/>
+  <img src="https://raw.githubusercontent.com/phase1geo/MosaicNote/master/data/icons/128/com.github.phase1geo.mosaic-note.png" width="128"/>
 </p>
 
 <!--
@@ -14,20 +11,22 @@ Developer note-taking application that supports multiple types of information in
 </p>
 
 ![<center><b>Main Entry Panel</b></center>](https://raw.githubusercontent.com/phase1geo/Journaler/master/data/screenshots/screenshot-entry-solarized.png "Journaling application for elementary OS")
+-->
 
 ## Overview
 
-Make every day a memory.
+Swiss Army knife for more technical note-taking.
 
-Make memories in life and never forget them with Journaler, a journaling application that allows you to easily and
-expressively capture the details and thoughts about your life.  Review past entries in new and interesting ways.
-Stay motivated to keep writing.  Easily export your data when needed.
+Most note-taking apps give you one writing “language” to record your notes, whether it’s Markdown, PlainText, Rich Text, or something else. You may even get to choose which language is used for a given note. But sometimes that’s not enough which is where MosaicNote steps in.
+
+MosaicNote allows you to use several types of note-taking languages all within the same note, using note blocks. A block can allow you to write in Markdown, write code with syntax highlighting, insert images, UML diagrams, tables, Mathematical expressions, and more. You can rearrange note blocks, export a full note or export just a single note block. MosaicNote’s sidebar boasts hierarchical notebook stacking, access to tags, favorites, recently used notes, and support for smart notebooks that dynamically store notes based on a rich search criteria. 
+
+MosaicNote can do what other note apps can do and what they can’t.
 
 **Features:**
 
--
 - Built with GTK-4.
--->
+- More to come…
 
 ## Installation
 
