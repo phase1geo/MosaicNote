@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: com.github.phase1geo.mosaic-note\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-09 16:17-0500\n"
+"POT-Creation-Date: 2024-07-21 22:57-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,69 +17,197 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/Application.vala:112
+#: src/Application.vala:97
 msgid "Display version number"
 msgstr ""
 
-#: src/Application.vala:121
+#: src/Application.vala:106
 #, c-format
 msgid "ERROR: %s\n"
 msgstr ""
 
-#: src/Application.vala:122
+#: src/Application.vala:107
 #, c-format
 msgid "Run '%s --help' to see valid options\n"
 msgstr ""
 
-#: src/MainWindow.vala:86
+#: src/MainWindow.vala:176
 msgid "MosaicNote"
 msgstr ""
 
-#: src/MainWindow.vala:196
+#: src/MainWindow.vala:353
+msgid "Search notes"
+msgstr ""
+
+#: src/MainWindow.vala:374
+msgid "Show all panels"
+msgstr ""
+
+#: src/MainWindow.vala:375
+msgid "Show note panel only"
+msgstr ""
+
+#: src/MainWindow.vala:376
+msgid "Do not show sidebar"
+msgstr ""
+
+#: src/MainWindow.vala:381
+msgid "Change Panel Layout"
+msgstr ""
+
+#: src/MainWindow.vala:401
 msgid "Shorcuts Cheatsheet…"
 msgstr ""
 
-#: src/MainWindow.vala:197
+#: src/MainWindow.vala:402
 msgid "Preferences…"
 msgstr ""
 
-#: src/NoteItem.vala:39
+#: src/NoteItem.vala:49 src/NoteItem.vala:91
+msgid "markdown"
+msgstr ""
+
+#: src/NoteItem.vala:50 src/NoteItem.vala:93
+msgid "code"
+msgstr ""
+
+#: src/NoteItem.vala:51 src/NoteItem.vala:95
+msgid "image"
+msgstr ""
+
+#: src/NoteItem.vala:52 src/NoteItem.vala:97
+msgid "uml"
+msgstr ""
+
+#: src/NoteItem.vala:53 src/NoteItem.vala:99
+msgid "table"
+msgstr ""
+
+#: src/NoteItem.vala:63
 msgid "Markdown"
 msgstr ""
 
-#: src/NoteItem.vala:40
+#: src/NoteItem.vala:64
 msgid "Code"
 msgstr ""
 
-#: src/NoteItem.vala:41 data/com.github.phase1geo.mosaic-note.shortcuts.ui:328
+#: src/NoteItem.vala:65 data/com.github.phase1geo.mosaic-note.shortcuts.ui:328
 msgid "Image"
 msgstr ""
 
-#: src/NotePanel.vala:151
+#: src/NoteItem.vala:66
+msgid "UML Diagram"
+msgstr ""
+
+#: src/NoteItem.vala:67
+msgid "Table"
+msgstr ""
+
+#: src/NoteItemPane.vala:503
+msgid "Add Block Above"
+msgstr ""
+
+#: src/NoteItemPane.vala:504
+msgid "Add Block Below"
+msgstr ""
+
+#: src/NoteItemPane.vala:507
+msgid "Delete Block"
+msgstr ""
+
+#: src/NoteItemPaneCode.vala:62 src/NoteItemPaneUML.vala:60
+msgid "Description (Optional)"
+msgstr ""
+
+#: src/NoteItemPaneImage.vala:42 src/NoteItemPaneImage.vala:54
+msgid "Select Image"
+msgstr ""
+
+#: src/NoteItemPaneImage.vala:42 src/NoteItemPaneImage.vala:54
+msgid "Select"
+msgstr ""
+
+#: src/NoteItemPaneImage.vala:78 src/NoteItemPaneTable.vala:64
+msgid "Description (optional)"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:133
+msgid "Insert column before"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:134
+msgid "Insert column after"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:136
+msgid "Remove column"
+msgstr ""
+
+#: src/NoteItemPaneUML.vala:75
+msgid "Open UML documentation in browser"
+msgstr ""
+
+#: src/NoteItemPaneUML.vala:82
+msgid "preferences-color-symbolic"
+msgstr ""
+
+#: src/NoteItemPaneUML.vala:84
+msgid "Generate diagram"
+msgstr ""
+
+#: src/NoteItemPaneUML.vala:158
+msgid "Generating Diagram..."
+msgstr ""
+
+#: src/NotePanel.vala:155
 msgid "No Note Selected"
 msgstr ""
 
-#: src/NotePanel.vala:205
+#: src/NotePanel.vala:169
+msgid "Show Last Viewed Note"
+msgstr ""
+
+#: src/NotePanel.vala:179
+msgid "Show Next Viewed Note"
+msgstr ""
+
+#: src/NotePanel.vala:200
+msgid "Export note"
+msgstr ""
+
+#: src/NotePanel.vala:208
+msgid "Add to Favorites"
+msgstr ""
+
+#: src/NotePanel.vala:223
+msgid "Lock Note"
+msgstr ""
+
+#: src/NotePanel.vala:278
 msgid "Created:"
 msgstr ""
 
-#: src/NotePanel.vala:224
+#: src/NotePanel.vala:297
 msgid "Title (Optional)"
 msgstr ""
 
-#: src/NotePanel.vala:717
-msgid "Open Image"
+#: src/NotePanel.vala:508 src/NotePanel.vala:519
+msgid "Export"
 msgstr ""
 
-#: src/NotePanel.vala:717
-msgid "Open"
+#: src/NotebookTree.vala:576 src/NotebookTree.vala:613
+msgid "Inbox"
 msgstr ""
 
-#: src/NotesPanel.vala:52
+#: src/NotebookTree.vala:577 src/NotebookTree.vala:619
+msgid "Trash"
+msgstr ""
+
+#: src/NotesPanel.vala:78
 msgid "Add new note"
 msgstr ""
 
-#: src/Note.vala:93
+#: src/NotesPanel.vala:175
 msgid "Untitled Note"
 msgstr ""
 
@@ -98,48 +226,438 @@ msgstr ""
 msgid "Editor"
 msgstr ""
 
-#: src/Preferences.vala:100
+#: src/Preferences.vala:101
 msgid "Enable spell checker"
 msgstr ""
 
-#: src/Preferences.vala:104
+#: src/Preferences.vala:105
 msgid "Spell checker language"
 msgstr ""
 
-#: src/Preferences.vala:122 src/Preferences.vala:143 src/Preferences.vala:155
+#: src/Preferences.vala:109
+msgid "Show Tags section in sidebar"
+msgstr ""
+
+#: src/Preferences.vala:127 src/Preferences.vala:148 src/Preferences.vala:160
 msgid "Use System Language"
 msgstr ""
 
-#: src/Preferences.vala:177
+#: src/Preferences.vala:183
 msgid "Default Theme"
 msgstr ""
 
-#: src/Preferences.vala:181
+#: src/Preferences.vala:187
 msgid "Font Size"
 msgstr ""
 
-#: src/Preferences.vala:185
+#: src/Preferences.vala:191
 msgid "Line Spacing"
 msgstr ""
 
-#: src/Preferences.vala:189
+#: src/Preferences.vala:195
 msgid "Enable Vim Mode"
 msgstr ""
 
-#: src/SidebarFavorites.vala:43
-msgid "Favorites"
+#: src/SearchBox.vala:39 src/SmartParser.vala:351
+msgid "notebook"
 msgstr ""
 
-#: src/SidebarNotebooks.vala:54
+#: src/SearchBox.vala:40 src/SmartParser.vala:359
+msgid "content"
+msgstr ""
+
+#: src/SearchBox.vala:41 src/SmartParser.vala:355
+msgid "title"
+msgstr ""
+
+#: src/SearchBox.vala:42 src/SmartParser.vala:353
+msgid "tag"
+msgstr ""
+
+#: src/SearchBox.vala:43 src/SmartParser.vala:345
+msgid "created"
+msgstr ""
+
+#: src/SearchBox.vala:44 src/SmartParser.vala:341
+msgid "favorite"
+msgstr ""
+
+#: src/SearchBox.vala:45 src/SmartParser.vala:343
+msgid "locked"
+msgstr ""
+
+#: src/SearchBox.vala:46 src/SmartParser.vala:357
+msgid "block"
+msgstr ""
+
+#: src/SearchBox.vala:47 src/SmartParser.vala:347
+msgid "updated"
+msgstr ""
+
+#: src/SearchBox.vala:48 src/SmartParser.vala:349
+msgid "viewed"
+msgstr ""
+
+#: src/SearchBox.vala:61 src/SmartParser.vala:611
+msgid "true"
+msgstr ""
+
+#: src/SearchBox.vala:62 src/SmartParser.vala:613
+msgid "false"
+msgstr ""
+
+#: src/SearchBox.vala:106
+msgid "Enter Search Query"
+msgstr ""
+
+#: src/SearchBox.vala:366
+msgid "No matches found"
+msgstr ""
+
+#: src/SearchBox.vala:392
+msgid "Insert Category"
+msgstr ""
+
+#: src/SearchBox.vala:410 src/SearchBox.vala:439
+msgid "Operations"
+msgstr ""
+
+#: src/SearchBox.vala:411
+msgid "Search for notes that do not contain a tag"
+msgstr ""
+
+#: src/SearchBox.vala:414
+msgid "Insert Tag"
+msgstr ""
+
+#: src/SearchBox.vala:440
+msgid "Search for notes that are not in the date range"
+msgstr ""
+
+#: src/SearchBox.vala:443
+msgid "Insert Date Range"
+msgstr ""
+
+#: src/SearchBox.vala:461
+msgid "Insert Relative Time Period"
+msgstr ""
+
+#: src/SearchBox.vala:481
+msgid "Insert Boolean"
+msgstr ""
+
+#: src/SearchBox.vala:501
+msgid "Insert Notebook"
+msgstr ""
+
+#: src/SearchBox.vala:519 src/SearchBox.vala:530
+msgid "Modifiers"
+msgstr ""
+
+#: src/SearchBox.vala:520
+msgid "Insert regular expression"
+msgstr ""
+
+#: src/SearchBox.vala:531
+msgid "Search for notes that do not contain a block type"
+msgstr ""
+
+#: src/SearchBox.vala:534
+msgid "Insert Block"
+msgstr ""
+
+#: src/Sidebar.vala:146
+msgid "New Notebook"
+msgstr ""
+
+#: src/Sidebar.vala:147
+msgid "New Smart Notebook"
+msgstr ""
+
+#: src/Sidebar.vala:194
+msgid "Library"
+msgstr ""
+
+#: src/Sidebar.vala:208
 msgid "Notebooks"
 msgstr ""
 
-#: src/SidebarNotebooks.vala:73
-msgid "Enter notebook name"
+#: src/Sidebar.vala:220
+msgid "Smart Notebooks"
 msgstr ""
 
-#: src/SidebarTags.vala:42
+#: src/Sidebar.vala:236
 msgid "Tags"
+msgstr ""
+
+#: src/Sidebar.vala:375
+msgid "New Sub-Notebook"
+msgstr ""
+
+#: src/Sidebar.vala:376
+msgid "Rename Notebook"
+msgstr ""
+
+#: src/Sidebar.vala:378
+msgid "Delete Notebook"
+msgstr ""
+
+#: src/Sidebar.vala:386
+msgid "Empty Trash"
+msgstr ""
+
+#: src/Sidebar.vala:391
+msgid "Edit Search Criteria"
+msgstr ""
+
+#: src/Sidebar.vala:392
+msgid "Save Search as Smart Notebook"
+msgstr ""
+
+#: src/Sidebar.vala:397
+msgid "Edit Match Criteria"
+msgstr ""
+
+#: src/Sidebar.vala:398
+msgid "Rename Smart Notebook"
+msgstr ""
+
+#: src/Sidebar.vala:400
+msgid "Delete Smart Notebook"
+msgstr ""
+
+#: src/Sidebar.vala:416
+msgid "Enter Notebook Name"
+msgstr ""
+
+#: src/Sidebar.vala:635
+msgid "Delete Notebook?"
+msgstr ""
+
+#: src/Sidebar.vala:635 src/Sidebar.vala:637
+msgid "This action cannot be reversed"
+msgstr ""
+
+#: src/Sidebar.vala:637
+msgid "Delete Smart Notebook?"
+msgstr ""
+
+#: src/Sidebar.vala:673
+msgid "Empty Trash?"
+msgstr ""
+
+#: src/Sidebar.vala:673
+msgid "This action is not reversable"
+msgstr ""
+
+#: src/SmartDateFilter.vala:45
+msgid "day"
+msgstr ""
+
+#: src/SmartDateFilter.vala:46
+msgid "week"
+msgstr ""
+
+#: src/SmartDateFilter.vala:47
+msgid "month"
+msgstr ""
+
+#: src/SmartDateFilter.vala:48
+msgid "year"
+msgstr ""
+
+#: src/SmartDateFilter.vala:55
+msgid "Include notes with a date in the past N days"
+msgstr ""
+
+#: src/SmartDateFilter.vala:56
+msgid "Include notes with a date in the past N weeks"
+msgstr ""
+
+#: src/SmartDateFilter.vala:57
+msgid "Include notes with a date in the past N months"
+msgstr ""
+
+#: src/SmartDateFilter.vala:58
+msgid "Include notes with a date in the past N years"
+msgstr ""
+
+#: src/SmartDateFilter.vala:65
+msgid "minute(s)"
+msgstr ""
+
+#: src/SmartDateFilter.vala:66
+msgid "hour(s)"
+msgstr ""
+
+#: src/SmartDateFilter.vala:67
+msgid "day(s)"
+msgstr ""
+
+#: src/SmartDateFilter.vala:68
+msgid "week(s)"
+msgstr ""
+
+#: src/SmartDateFilter.vala:69
+msgid "month(s)"
+msgstr ""
+
+#: src/SmartDateFilter.vala:70
+msgid "year(s)"
+msgstr ""
+
+#: src/SmartDateFilter.vala:89
+msgid "days"
+msgstr ""
+
+#: src/SmartDateFilter.vala:91
+msgid "weeks"
+msgstr ""
+
+#: src/SmartDateFilter.vala:93
+msgid "months"
+msgstr ""
+
+#: src/SmartDateFilter.vala:95
+msgid "years"
+msgstr ""
+
+#: src/SmartDateFilter.vala:158
+msgid "Include notes that are on a specified date."
+msgstr ""
+
+#: src/SmartDateFilter.vala:159
+msgid "Include notes before a specified date."
+msgstr ""
+
+#: src/SmartDateFilter.vala:160
+msgid "Include notes after a specified date."
+msgstr ""
+
+#: src/SmartDateFilter.vala:161
+msgid "Include notes between two specified dates."
+msgstr ""
+
+#: src/SmartDateFilter.vala:162
+msgid "Include notes with a date in the last specified time period."
+msgstr ""
+
+#: src/SmartDateFilter.vala:169
+msgid "is"
+msgstr ""
+
+#: src/SmartDateFilter.vala:170
+msgid "is not"
+msgstr ""
+
+#: src/SmartDateFilter.vala:171
+msgid "before"
+msgstr ""
+
+#: src/SmartDateFilter.vala:172
+msgid "not before"
+msgstr ""
+
+#: src/SmartDateFilter.vala:173
+msgid "after"
+msgstr ""
+
+#: src/SmartDateFilter.vala:174
+msgid "not after"
+msgstr ""
+
+#: src/SmartDateFilter.vala:175
+msgid "between"
+msgstr ""
+
+#: src/SmartDateFilter.vala:176
+msgid "not between"
+msgstr ""
+
+#: src/SmartDateFilter.vala:177
+msgid "in the last"
+msgstr ""
+
+#: src/SmartDateFilter.vala:178
+msgid "not in the last"
+msgstr ""
+
+#: src/SmartNotebooks.vala:101
+msgid "Last Search"
+msgstr ""
+
+#: src/SmartNotebooks.vala:131
+msgid "Favorites"
+msgstr ""
+
+#: src/SmartNotebooks.vala:135
+msgid "Recents"
+msgstr ""
+
+#: src/SmartNotebooks.vala:139
+msgid "All Notes"
+msgstr ""
+
+#: src/SmartParser.vala:362
+#, c-format
+msgid "Unknown token type (%s)"
+msgstr ""
+
+#: src/SmartParser.vala:441 src/SmartParser.vala:442
+msgid "is["
+msgstr ""
+
+#: src/SmartParser.vala:446 src/SmartParser.vala:447
+msgid "between["
+msgstr ""
+
+#: src/SmartParser.vala:459
+msgid "Two dates must be specified"
+msgstr ""
+
+#: src/SmartParser.vala:462 src/SmartParser.vala:463
+msgid "before["
+msgstr ""
+
+#: src/SmartParser.vala:467 src/SmartParser.vala:468
+msgid "after["
+msgstr ""
+
+#: src/SmartParser.vala:472 src/SmartParser.vala:473
+msgid "last["
+msgstr ""
+
+#: src/SmartParser.vala:478
+msgid "Unknown date comparator"
+msgstr ""
+
+#: src/SmartParser.vala:497
+msgid "Only one or two dates are allowed"
+msgstr ""
+
+#: src/SmartParser.vala:522
+msgid "Illegal date specified.  Must be YYYY/MM/DD"
+msgstr ""
+
+#: src/SmartParser.vala:594
+msgid "Unknown relative date specified.  Must be <num><time_period>."
+msgstr ""
+
+#: src/SmartParser.vala:619
+#, c-format
+msgid "Unknown boolean value specified (%s)"
+msgstr ""
+
+#: src/SmartParser.vala:744
+msgid "Unknown note block type specified"
+msgstr ""
+
+#: src/SmartTextFilter.vala:37
+msgid "Contains"
+msgstr ""
+
+#: src/SmartTextFilter.vala:38
+msgid "Regular Expression"
 msgstr ""
 
 #: src/SpellChecker.vala:235
@@ -163,35 +681,60 @@ msgstr ""
 msgid "Spell Check"
 msgstr ""
 
-#: src/ToolbarCode.vala:52
+#: src/TagBox.vala:71
+msgid "Click to add tag…"
+msgstr ""
+
+#: src/TagEntry.vala:56
+msgid "Add Tag"
+msgstr ""
+
+#: src/ToolbarCode.vala:38
 msgid "Language:"
 msgstr ""
 
-#: src/ToolbarMarkdown.vala:35
+#: src/ToolbarMarkdown.vala:33
 #: data/com.github.phase1geo.mosaic-note.shortcuts.ui:160
 msgid "Bold"
 msgstr ""
 
-#: src/ToolbarMarkdown.vala:43
+#: src/ToolbarMarkdown.vala:41
 msgid "Italic"
 msgstr ""
 
-#: src/ToolbarMarkdown.vala:51
+#: src/ToolbarMarkdown.vala:49
 #: data/com.github.phase1geo.mosaic-note.shortcuts.ui:174
 msgid "Strikethrough"
 msgstr ""
 
-#: src/ToolbarMarkdown.vala:59
+#: src/ToolbarMarkdown.vala:57
 msgid "Code Block"
 msgstr ""
 
-#: src/Utils.vala:107 src/Utils.vala:113
+#: src/ToolbarMarkdown.vala:65
+msgid "Add Link"
+msgstr ""
+
+#: src/Utils.vala:133 src/Utils.vala:139
 #, c-format
 msgid "error: %s\n"
 msgstr ""
 
-#: src/Utils.vala:342
+#: src/Utils.vala:374
 msgid "Cancel"
+msgstr ""
+
+#: src/Utils.vala:385
+msgid "Yes"
+msgstr ""
+
+#: src/Utils.vala:385
+msgid "No"
+msgstr ""
+
+#: src/note_items/NoteItemTable.vala:49
+#, c-format
+msgid "Column %d"
 msgstr ""
 
 #: data/com.github.phase1geo.mosaic-note.shortcuts.ui:6
