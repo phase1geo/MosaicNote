@@ -27,6 +27,7 @@ public class FullTags {
 
   public signal void changed();
 
+  //-------------------------------------------------------------
   // Default constructor
   public FullTags( NotebookTree notebooks ) {
     _tags = new SList<FullTag>();
@@ -34,21 +35,25 @@ public class FullTags {
     load();
   }
 
+  //-------------------------------------------------------------
   // Returns the number of tags in this list.
   public int size() {
     return( (int)_tags.length() );
   }
 
+  //-------------------------------------------------------------
   // Returns the tag at the given position in the list.
   public FullTag get_tag( int pos ) {
     return( _tags.nth_data( pos ) );
   }
 
+  //-------------------------------------------------------------
   // XML file which stores that full list of tags
   private string xml_file() {
     return( Utils.user_location( "tags.xml" ) );
   }
 
+  //-------------------------------------------------------------
   // Returns the list of tags which match the given match string.
   public bool get_matches( Array<string> matches, string match_str ) {
     matches.remove_range( 0, matches.length );
@@ -60,6 +65,7 @@ public class FullTags {
     return( matches.length > 0 );
   }
 
+  //-------------------------------------------------------------
   // Adds the given tag (it it currently does not exist), adjusts the count
   // and sorts the tags in alphabetical order
   public void add_tag( string tag_name, int note_id ) {
@@ -79,6 +85,7 @@ public class FullTags {
     changed();
   }
 
+  //-------------------------------------------------------------
   // Decrements the tag count and, if it is zero, deletes the tag
   public void delete_tag( string tag_name, int note_id ) {
     var tag = new FullTag( tag_name, _notebooks );  
@@ -98,6 +105,17 @@ public class FullTags {
   }
 
   //-------------------------------------------------------------
+  // Adds all of the tags in the given note to this list.  This
+  // will only be called when notes are being moved from the trash
+  // to a notebook.
+  public void add_note_tags( Note note ) {
+    for( int i=0; i<note.tags.size(); i++ ) {
+      var tag = note.tags.get_tag( i );
+      add_tag( tag, note.id );
+    }
+  }
+
+  //-------------------------------------------------------------
   // Deletes all of the given note's tags from the list.
   public void delete_note_tags( Note note ) {
     for( int i=0; i<note.tags.size(); i++ ) {
@@ -106,6 +124,16 @@ public class FullTags {
     }
   }
 
+  //-------------------------------------------------------------
+  // Removes all of the tags from the notes in the given notebook.
+  public void delete_notebook_tags( Notebook nb ) {
+    for( int i=0; i<nb.count(); i++ ) {
+      var note = nb.get_note( i );
+      delete_note_tags( note );
+    }
+  }
+
+  //-------------------------------------------------------------
   // Saves this information in XML format
   public void save() {
 
@@ -127,6 +155,7 @@ public class FullTags {
 
   }
 
+  //-------------------------------------------------------------
   // Loads the contents of the full list of tags from XML format
   private void load() {
 
@@ -153,7 +182,9 @@ public class FullTags {
   
   }
 
-  // Checks the version of the XML file for any structural changes and takes action
+  //-------------------------------------------------------------
+  // Checks the version of the XML file for any structural
+  // changes and takes action
   private void check_version( string version ) {
 
     // Nothing to do yet

@@ -340,20 +340,23 @@ public class Sidebar : Box {
       var nb   = (BaseNotebook)row.get_item();
       var note = (val.get_object() as Note);
       if( note != null ) {
-        stdout.printf( "dropping, title: %s, x: %g, y: %g\n", note.title, x, y );
         if( nb_is_node( nb ) ) {
           var node = (NotebookTree.Node)nb;
-          node.get_notebook().move_note( note );
+          move_note_to_notebook( note, node.get_notebook() );
           return( true );
-        } else if( nb_is_inbox( nb ) || nb_is_trash( nb ) ) {
+        } else if( nb_is_inbox( nb ) ) {
           var notebook = (Notebook)nb;
-          notebook.move_note( note );
+          move_note_to_notebook( note, notebook );
           return( true );
-        } else if( nb_is_smart( nb, SmartNotebookType.FAVORITE ) ) {
+        } else if( nb_is_trash( nb ) && !note_in_trash( note ) ) {
+          var notebook = (Notebook)nb;
+          move_note_to_notebook( note, notebook );
+          return( true );
+        } else if( nb_is_smart( nb, SmartNotebookType.FAVORITE ) && !note_in_trash( note ) ) {
           note.favorite = true;
           _win.smart_notebooks.handle_note( note );
           return( false );
-        } else if( nb_is_tag( nb ) ) {
+        } else if( nb_is_tag( nb ) && !note_in_trash( note ) ) {
           var notebook = (FullTag)nb;
           notebook.add_note_id( note.id );
           note.tags.add_tag( notebook.name );
@@ -572,6 +575,29 @@ public class Sidebar : Box {
 	}
 
   //-------------------------------------------------------------
+  // Returns true if the given note is currently in the trash.
+  private bool note_in_trash( Note note ) {
+    return( note.notebook == _win.notebooks.trash );
+  }
+
+  //-------------------------------------------------------------
+  // Called whenever we need to move a note to another notebook.
+  // If the notebook we are moving to is the trash, remove the note's
+  // tags from the full tags list and remove the note from the smart
+  // notebooks.  If we are moving a note from the trash, add the note's
+  // tags to the full list of tags and add the note to any smartbooks.
+  private void move_note_to_notebook( Note note, Notebook notebook ) {
+    if( note.notebook == _win.notebooks.trash ) {
+      _win.full_tags.add_note_tags( note );
+      _win.smart_notebooks.handle_note( note );
+    } else if( notebook == _win.notebooks.trash ) {
+      _win.full_tags.delete_note_tags( note );
+      _win.smart_notebooks.remove_note( note );
+    }
+    notebook.move_note( note );
+  }
+
+  //-------------------------------------------------------------
   // Adjusts the UI to allow the user to create a new notebook.
   private void action_add_new_notebook() {
     add_requested( _notebook_add_pos );
@@ -613,11 +639,14 @@ public class Sidebar : Box {
     var nb  = (BaseNotebook)row.get_item();
     if( nb_is_node( nb ) ) {
       row = row.get_parent();
+      var notebook = ((NotebookTree.Node)nb).get_notebook();
+      _win.full_tags.delete_notebook_tags( notebook );
+      _win.notebooks.trash.add_notebook( notebook );
       if( row == null ) {
-        _win.notebooks.remove_notebook( ((NotebookTree.Node)nb).get_notebook() );
+        _win.notebooks.remove_notebook( notebook );
       } else {
         var parent = (NotebookTree.Node)row.get_item();
-        parent.remove_notebook( ((NotebookTree.Node)nb).get_notebook() );
+        parent.remove_notebook( notebook );
       }
     } else if( nb_is_smart( nb, SmartNotebookType.USER ) ) {
       _win.smart_notebooks.remove_notebook( (SmartNotebook)nb );

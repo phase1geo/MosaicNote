@@ -120,6 +120,7 @@ public class NotesPanel : Box {
   //-------------------------------------------------------------
   // Update UI from the current notebook
   public void update_notes() {
+    stdout.printf( "In update_notes\n" );
     var row = _list.get_selected_row();
     if( row != null ) {
       var pos = row.get_index();

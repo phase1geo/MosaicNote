@@ -11,8 +11,9 @@ TODO:
    ☐ Add ability to past note link into a note
  ☐ Add support for undo/redo
    Need to figure out what we will be able to undo/redo (it won't be everything)
- ☐ Add UML "templates"
-   We will probably just use the UML examples from the PlantUML website here
+ ☐ Add support for NotesPanel sorting
+ ☐ Add drag and drop support for organizing notebooks
+ ☐ Add drag and drop support for reorganizing smart notebooks
 
 ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
 Archive:

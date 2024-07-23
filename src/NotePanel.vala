@@ -433,6 +433,12 @@ public class NotePanel : Box {
   // to the note history.
   public void populate_with_note( Note? note, bool add_to_history ) {
 
+    // If we are populating with the same note as before, return immediately
+    if( _note == note ) {
+      return;
+    }
+
+    // If we had a previously displayed note, save it before populating with the new note
     if( _note != null ) {
       save();
     }

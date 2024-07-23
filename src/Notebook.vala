@@ -23,9 +23,9 @@ public class Notebook : BaseNotebook {
 
 	public static int current_id = 0;
 
-	private int         _id;
-	private Array<Note> _notes;
-	private bool        _modified = false;
+	private int       _id;
+  private ListStore _notes;
+	private bool      _modified = false;
 
 	public int id {
 		get {
@@ -38,42 +38,34 @@ public class Notebook : BaseNotebook {
 	public Notebook( string name ) {
     base( name );
 		_id    = current_id++;
-	  _notes = new Array<Note>();	
+    _notes = new ListStore( typeof( Note ) );
 	}
 
   //-------------------------------------------------------------
 	// Construct from XML file
 	public Notebook.from_xml( int id, string? build_name = null ) {
     base( "" );
-		_notes = new Array<Note>();
+    _notes = new ListStore( typeof( Note ) );
 		load( id, build_name );
 	}
 
   //-------------------------------------------------------------
+  // Returns the model containing the list of notes
+  public ListStore get_model() {
+    return( _notes );
+  }
+
+  //-------------------------------------------------------------
 	// Number of stores notes
 	public override int count() {
-		return( (int)_notes.length );
+		return( (int)_notes.get_n_items() );
 	}
 
   //-------------------------------------------------------------
 	// Returns the note at the given position
 	public Note get_note( int pos ) {
-		return( _notes.index( pos ) );
+		return( (Note)_notes.get_item( pos ) );
 	}
-
-  //-------------------------------------------------------------
-  // Returns the model containing the list of stored notes
-  public override ListModel? get_model() {
-
-    var list = new ListStore( typeof(Note) );
-
-    for( int i=0; i<_notes.length; i++ ) {
-      list.append( _notes.index( i ) );
-    }
-
-    return( list );
-
-  }
 
   //-------------------------------------------------------------
 	// Returns true if the given ID matches our own
@@ -84,17 +76,31 @@ public class Notebook : BaseNotebook {
   //-------------------------------------------------------------
 	// Adds the given note to the notebook
   public void add_note( Note note ) {
-  	_notes.append_val( note );
+  	_notes.append( note );
   	_modified = true;
   	changed();
   }	
 
   //-------------------------------------------------------------
+  // Moves all of the notes from the given notebook into this
+  // notebook.
+  public void add_notebook( Notebook nb ) {
+    if( nb.count() > 0 ) {
+      for( int i=0; i<nb.count(); i++ ) {
+        var note = nb.get_note( i );
+        _notes.append( note );
+      }
+      _modified = true;
+      changed();
+    }
+  }
+
+  //-------------------------------------------------------------
   // Searches for and deletes the note (if found) in the notebook
   public void delete_note( Note note ) {
-    for( int i=0; i<_notes.length; i++ ) {
-      if( _notes.index( i ) == note ) {
-        _notes.remove_index( i );
+    for( int i=0; i<count(); i++ ) {
+      if( get_note( i ) == note ) {
+        _notes.remove( i );
         _modified = true;
         changed();
         break;
@@ -106,8 +112,8 @@ public class Notebook : BaseNotebook {
   // Deletes all notes in the notebook.  This is only used for the
   // special trash notebook.
   public void delete_all_notes() {
-    if( _notes.length > 0 ) {
-      _notes.remove_range( 0, _notes.length );
+    if( count() > 0 ) {
+      _notes.remove_all();
       _modified = true;
       changed();
     }
@@ -117,7 +123,7 @@ public class Notebook : BaseNotebook {
   // Moves the specified note to this notebook from its previous
   // notebook.
   public void move_note( Note note ) {
-    _notes.append_val( note );
+    _notes.append( note );
     note.notebook.delete_note( note );
     note.notebook = this;
     _modified = true;
@@ -128,9 +134,10 @@ public class Notebook : BaseNotebook {
   // Searches the list of notes for one that matches the given ID.
   // If it is found, return it; otherwise, return null.
   public Note? find_note_by_id( int id ) {
-  	for( int i=0; i<_notes.length; i++ ) {
-  		if( _notes.index( i ).id == id ) {
-  			return( _notes.index( i ) );
+  	for( int i=0; i<count(); i++ ) {
+      var note = get_note( i );
+  		if( note.id == id ) {
+  			return( note );
   		}
   	}
   	return( null );
@@ -140,9 +147,10 @@ public class Notebook : BaseNotebook {
   // Searches the list of notes for one that matches the given title.
   // If it is found, return it; otherwise, return null.
   public Note? find_note_by_title( string title ) {
-    for( int i=0; i<_notes.length; i++ ) {
-      if( _notes.index( i ).title == title ) {
-        return( _notes.index( i ) );
+    for( int i=0; i<count(); i++ ) {
+      var note = get_note( i );
+      if( note.title == title ) {
+        return( note );
       }
     }
     return( null );
@@ -151,9 +159,10 @@ public class Notebook : BaseNotebook {
   //-------------------------------------------------------------
   // Searches for notes that contain the given tag and appends them to the given notes list.
   public void get_notes_with_tag( string tag, Array<Note> notes ) {
-  	for( int i=0; i<_notes.length; i++ ) {
-  		if( _notes.index( i ).contains_tag( tag ) ) {
-  			notes.append_val( _notes.index( i ) );
+  	for( int i=0; i<count(); i++ ) {
+      var note = get_note( i );
+  		if( note.contains_tag( tag ) ) {
+  			notes.append_val( note );
   		}
   	}
   }
@@ -162,8 +171,8 @@ public class Notebook : BaseNotebook {
   // Populates the given smart notebook with the notes that match
   // the smart criteria.
   public void populate_smart_notebook( SmartNotebook notebook ) {
-    for( int i=0; i<_notes.length; i++ ) {
-      notebook.handle_note( _notes.index( i ) );
+    for( int i=0; i<count(); i++ ) {
+      notebook.handle_note( get_note( i ) );
     }
   }
 
@@ -171,8 +180,8 @@ public class Notebook : BaseNotebook {
   // Returns true if anything has been modified by the user in this notebook
   public bool is_modified() {
   	if( !_modified ) {
-      for( int i=0; i<_notes.length; i++ ) {
-      	if( _notes.index( i ).modified ) {
+      for( int i=0; i<count(); i++ ) {
+      	if( get_note( i ).modified ) {
       		return( true );
       	}
       }
@@ -214,8 +223,8 @@ public class Notebook : BaseNotebook {
 
     base_save( root );
 
-	  for( uint i=0; i<_notes.length; i++ ) {
-	  	var note = _notes.index( i );
+	  for( int i=0; i<count(); i++ ) {
+	  	var note = get_note( i );
 	  	root->add_child( note.save() );
 	  } 
 	
@@ -258,7 +267,7 @@ public class Notebook : BaseNotebook {
     for( Xml.Node* it = root->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "note") ) {
       	var note = new Note.from_xml( this, it );
-      	_notes.append_val( note );
+      	_notes.append( note );
       }
     }
     
