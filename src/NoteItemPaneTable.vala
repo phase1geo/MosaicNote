@@ -295,8 +295,6 @@ public class NoteItemPaneTable : NoteItemPane {
   // Sets up a checkbox for a given row.
   private CheckButton setup_checkbox( int column, ListItem li ) {
 
-    stdout.printf( "Setting up a checkbox\n" );
-
     var cb = new CheckButton() {
       halign = align_from_justify( ((NoteItemTable)item).get_column( column ).justify )
     };

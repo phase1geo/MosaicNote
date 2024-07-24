@@ -160,7 +160,7 @@ public class NoteItemTableColumn {
 		if( t != null ) {
 			_type = TableColumnType.parse( t );
 		}
-		var j = node->get_prop( "j" );
+		var j = node->get_prop( "justify" );
 		if( j != null ) {
 			switch( j ) {
 				case "center" :  _justify = Gtk.Justification.CENTER;  break;
@@ -201,6 +201,17 @@ public class NoteItemTableRow : Object {
 		for( int i=0; i<other.columns(); i++ ) {
 			_values.append_val( other.get_value( i ) );
 		}
+	}
+
+	//-------------------------------------------------------------
+	// Searches for the given string in the specified column.
+	public bool search( string str, bool[] check_cols ) {
+		for( int i=0; i<_values.length; i++ ) {
+			if( check_cols[i] && _values.index( i ).contains( str ) ) {
+				return( true );
+			}
+		}
+    return( false );
 	}
 
 	//-------------------------------------------------------------
@@ -335,6 +346,21 @@ public class NoteItemTable : NoteItem {
     	}
     }
   }
+
+  //-------------------------------------------------------------
+	// Used for string searching
+	public override bool search( string str ) {
+		bool[] check_cols = {};
+		for( int i=0; i<columns(); i++ ) {
+      check_cols += (_columns.index( i ).data_type == TableColumnType.TEXT);
+		}
+		for( int i=0; i<rows(); i++ ) {
+			if( get_row( i ).search( str, check_cols ) ) {
+				return( true );
+			}
+		}
+    return( false );
+	}
 
   //-------------------------------------------------------------
   // Called whenever something changes in the table.
