@@ -19,17 +19,63 @@
 * Authored by: Trevor Williams <phase1geo@gmail.com>
 */
 
+public enum TableColumnType {
+	TEXT,
+	CHECKBOX,
+	NUM;
+
+	//-------------------------------------------------------------
+	// Returns a stringified version of this value.
+	public string to_string() {
+		switch( this ) {
+			case TEXT     :  return( "text" );
+			case CHECKBOX :  return( "checkbox" );
+			default       :  assert_not_reached();
+		}
+	}
+
+	//-------------------------------------------------------------
+	// Returns a label that can be displayed within the UI.
+	public string label() {
+		switch( this ) {
+			case TEXT     :  return( _( "Text" ) );
+			case CHECKBOX :  return( _( "Checkbox" ) );
+			default       :  assert_not_reached();
+		}
+	}
+
+	//-------------------------------------------------------------
+	// Parses the stringified version of a valid column type and returns
+	// the associated value.
+	public static TableColumnType parse( string val ) {
+		switch( val ) {
+			case "text"     :  return( TEXT );
+			case "checkbox" :  return( CHECKBOX );
+			default         :  return( TEXT );
+		}
+	}
+
+}
+
+//=============================================================
+
 public class NoteItemTableColumn {
 
 	private string            _header  = "";
 	private Gtk.Justification _justify = Gtk.Justification.LEFT;
+	private TableColumnType   _type    = TableColumnType.TEXT;
+
+	public signal void changed();
 
 	public string header {
 		get {
 			return( _header );
 		}
 		set {
-			_header = value;
+			if( _header != value ) {
+  			_header = value;
+	  		changed();
+	  	}
 		}
 	}
 
@@ -38,7 +84,22 @@ public class NoteItemTableColumn {
 			return( _justify );
 		}
 		set {
-			_justify = value;
+			if( _justify != value ) {
+				_justify = value;
+				changed();
+			}
+		}
+	}
+
+	public TableColumnType data_type {
+		get {
+			return( _type );
+		}
+		set {
+			if( _type != value ) {
+				_type = value;
+				changed();
+			}
 		}
 	}
 
@@ -79,6 +140,7 @@ public class NoteItemTableColumn {
 	public Xml.Node* save() {
 		Xml.Node* node = new Xml.Node( null, "column" );
 		node->set_prop( "header", _header );
+		node->set_prop( "type",   _type.to_string() );
 		switch( _justify ) {
 			case Gtk.Justification.CENTER :  node->set_prop( "justify", "center" );  break;
 			case Gtk.Justification.RIGHT  :  node->set_prop( "justify", "right" );   break;
@@ -93,6 +155,10 @@ public class NoteItemTableColumn {
 		var h = node->get_prop( "header" );
 		if( h != null ) {
 			_header = h;
+		}
+		var t = node->get_prop( "type" );
+		if( t != null ) {
+			_type = TableColumnType.parse( t );
 		}
 		var j = node->get_prop( "j" );
 		if( j != null ) {
@@ -217,8 +283,7 @@ public class NoteItemTable : NoteItem {
 		set {
 			if( _description != value ) {
 				_description = value;
-				modified = true;
-				changed();
+				handle_change();
 			}
 		}
 	}
@@ -238,6 +303,7 @@ public class NoteItemTable : NoteItem {
 		for( int i=0; i<columns; i++ ) {
 			var column = new NoteItemTableColumn( i );
 			_columns.append_val( column );
+			column.changed.connect( handle_change );
 		}
 		for( int i=0; i<rows; i++ ) {
 			var row = new NoteItemTableRow( columns );
@@ -265,8 +331,16 @@ public class NoteItemTable : NoteItem {
     	for( int col=0; col<table.columns(); col++ ) {
 		    var column = new NoteItemTableColumn.copy( table.get_column( col ) );
 		    _columns.insert_val( col, column );
+			  column.changed.connect( handle_change );
     	}
     }
+  }
+
+  //-------------------------------------------------------------
+  // Called whenever something changes in the table.
+  private void handle_change() {
+  	modified = true;
+  	changed();
   }
 
 	//-------------------------------------------------------------
@@ -315,26 +389,24 @@ public class NoteItemTable : NoteItem {
 			justify = col_justify
 		};
 		_columns.insert_val( index, col );
+		col.changed.connect( handle_change );
 		for( int i=0; i<rows(); i++ ) {
 			var row = get_row( i );
 			row.insert_column( index, "" );
 		}
-  	modified = true;
-  	changed();
- 	  // _rows.items_changed( 0, 1, 1 );
+		handle_change();
 	}
 
 	//-------------------------------------------------------------
 	// Deletes the column at the given index.
 	public void delete_column( int index ) {
+		_columns.index( index ).changed.disconnect( handle_change );
 		_columns.remove_index( index );
 		for( int i=0; i<rows(); i++ ) {
 			var row = get_row( i );
 			row.delete_column( index );
 		}
-  	modified = true;
-  	changed();
-//	  _rows.items_changed( 0, 0, 1 );
+		handle_change();
 	}
 
 	//-------------------------------------------------------------
@@ -342,16 +414,14 @@ public class NoteItemTable : NoteItem {
 	public void insert_row( int index ) {
 		var row = new NoteItemTableRow( (int)_columns.length );
 		_rows.insert( index, row );
-  	modified = true;
-  	changed();
+		handle_change();
 	}
 
 	//-------------------------------------------------------------
 	// Deletes the row at the given index.
 	public void delete_row( int index ) {
 		_rows.remove( index );
-  	modified = true;
-  	changed();
+		handle_change();
 	}
 
 	//-------------------------------------------------------------
@@ -408,6 +478,7 @@ public class NoteItemTable : NoteItem {
   		if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "column") ) {
     		var column = new NoteItemTableColumn.from_xml( it );
     		_columns.append_val( column );
+    		column.changed.connect( handle_change );
     	}
   	}
   }

@@ -51,7 +51,7 @@ public class Notebook : BaseNotebook {
 
   //-------------------------------------------------------------
   // Returns the model containing the list of notes
-  public ListStore get_model() {
+  public override ListModel? get_model() {
     return( _notes );
   }
 
