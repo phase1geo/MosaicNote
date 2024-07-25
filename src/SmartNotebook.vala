@@ -160,7 +160,10 @@ public class SmartNotebook : BaseNotebook {
     var list = new ListStore( typeof(Note) );
 
     _notes.foreach((id) => {
-      list.append( _notebooks.find_note_by_id( id ) );
+      var note = _notebooks.find_note_by_id( id );
+      if( note != null ) {
+        list.append( note );
+      }
       return( true );
     });
 

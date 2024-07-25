@@ -130,6 +130,7 @@ public class NoteItemPaneTable : NoteItemPane {
 
     var settings = new MenuButton() {
       halign       = Align.END,
+      has_frame    = false,
       icon_name    = "emblem-system-symbolic",
       tooltip_text = _( "Table Controls" ),
       popover      = popup_menu
@@ -312,13 +313,11 @@ public class NoteItemPaneTable : NoteItemPane {
   //-------------------------------------------------------------
   // Creates an auto-numbered cell whose value is the position of the
   // list item in the list plus one.
-  private Box setup_auto_number() {
+  private Box setup_auto_number( string? num = null ) {
 
-    stdout.printf( "In setup_auto_number\n" );
-
-    var label = new Label( "" ) {
+    var label = new Label( num ?? "" ) {
       valign = Align.START,
-      vexpand = true,
+      // vexpand = true,
       wrap = false
     };
 
@@ -336,6 +335,8 @@ public class NoteItemPaneTable : NoteItemPane {
   private TextView setup_text( int column, ListItem li ) {
 
     var text = new TextView() {
+      halign = Align.FILL,
+      hexpand = true,
       justification = ((NoteItemTable)item).get_column( column ).justify,
       wrap_mode = WrapMode.WORD
     };
@@ -394,8 +395,6 @@ public class NoteItemPaneTable : NoteItemPane {
     var li         = (ListItem)obj;
     var table_item = (NoteItemTable)item;
 
-    stdout.printf( "In row_setup, column: %d, row: %u, autonum: %s\n", column, li.get_position(), table_item.auto_number.to_string() );
-
     var box = new Box( Orientation.HORIZONTAL, 5 ) {
       margin_start  = 5,
       margin_end    = 5,
@@ -403,13 +402,9 @@ public class NoteItemPaneTable : NoteItemPane {
       margin_bottom = 5
     };
 
-    li.child = box;
-
     if( (column == 0) && table_item.auto_number ) {
       box.append( setup_auto_number() );
     }
-
-    stdout.printf( "column: %d, data_type: %s\n", column, table_item.get_column( column ).data_type.to_string() );
 
     switch( table_item.get_column( column ).data_type ) {
       case TableColumnType.TEXT     :  box.append( setup_text( column, li ) );      break;
@@ -417,12 +412,14 @@ public class NoteItemPaneTable : NoteItemPane {
       default                       :  assert_not_reached();
     }
 
+    li.child = box;
+
     auto_number_changed.connect(() => {
       var col_index = get_cv_column_index( col_id );
       if( col_index == 0 ) {
         var b = (Box)li.child;
         if( table_item.auto_number ) {
-          b.prepend( setup_auto_number() );
+          b.prepend( setup_auto_number( "%u.".printf( li.get_position() + 1 ) ) );
         } else {
           b.remove( b.get_first_child() );
         }
@@ -479,7 +476,7 @@ public class NoteItemPaneTable : NoteItemPane {
     var table_item = (NoteItemTable)item;
 
     if( (column == 0) && table_item.auto_number ) {
-      var lbl = (Label)li.child.get_first_child();
+      var lbl = (Label)li.child.get_first_child().get_first_child();
       lbl.label = "%u.".printf( li.get_position() + 1 );
     }
 
