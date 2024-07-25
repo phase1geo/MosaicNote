@@ -286,6 +286,7 @@ public class NoteItemTable : NoteItem {
 	private string                     _description = "";
 	private Array<NoteItemTableColumn> _columns;
 	private ListStore                  _rows;
+	private bool                       _auto_number = false;
 
 	public string description {
 		get {
@@ -302,6 +303,18 @@ public class NoteItemTable : NoteItem {
 	public ListStore model {
 		get {
 			return( _rows );
+		}
+	}
+
+	public bool auto_number {
+		get {
+			return( _auto_number );
+		}
+		set {
+			if( _auto_number != value ) {
+				_auto_number = value;
+				handle_change();
+			}
 		}
 	}
 
@@ -455,6 +468,9 @@ public class NoteItemTable : NoteItem {
 	private string create_markdown_header() {
 		string[] columns = {};
 		string[] justs   = {};
+		if( _auto_number ) {
+			columns += "#";
+		}
 		for( int i=0; i<_columns.length; i++ ) {
 			columns += _columns.index( i ).header;
 			justs   += _columns.index( i ).justify_string();
@@ -466,8 +482,14 @@ public class NoteItemTable : NoteItem {
 	// Converts the content to markdown text
 	public override string to_markdown( bool pandoc ) {
 		var str = create_markdown_header();
-		for( int i=0; i<rows(); i++ ) {
-			str += get_row( i ).to_markdown() + "\n";
+		if( _auto_number ) {
+			for( int i=0; i<rows(); i++ ) {
+				str += "| %d %s\n".printf( (i + 1), get_row( i ).to_markdown() );
+			}
+		} else {
+			for( int i=0; i<rows(); i++ ) {
+				str += get_row( i ).to_markdown() + "\n";
+			}
 		}
 		return( str );
 	}
@@ -481,6 +503,7 @@ public class NoteItemTable : NoteItem {
     Xml.Node* rnode = new Xml.Node( null, "rows" );
 
     node->set_prop( "description", _description );
+    node->set_prop( "auto-number", _auto_number.to_string() );
 
     for( int i=0; i<_columns.length; i++ ) {
     	cnode->add_child( _columns.index( i ).save() );
@@ -529,6 +552,11 @@ public class NoteItemTable : NoteItem {
     var d = node->get_prop( "description" );
     if( d != null ) {
       _description = d;
+    }
+
+    var an = node->get_prop( "auto-number" );
+    if( an != null ) {
+    	_auto_number = bool.parse( an );
     }
 
     for( Xml.Node* it = node->children; it != null; it = it->next ) {

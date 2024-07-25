@@ -339,7 +339,6 @@ public class NoteItemPane : Box {
     text.add_controller( key );
 
     key.key_pressed.connect((keyval, keycode, state) => {
-      var shift   = (bool)(state & Gdk.ModifierType.SHIFT_MASK);
       var control = (bool)(state & Gdk.ModifierType.CONTROL_MASK);
       switch( keyval ) {
         case Gdk.Key.slash :

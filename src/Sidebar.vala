@@ -252,13 +252,6 @@ public class Sidebar : Box {
   }
 
   //-------------------------------------------------------------
-  // Returns true if the given base notebook is a built-in notebook
-  // (i.e., inbox or trash).
-  private bool nb_is_notebook( BaseNotebook nb ) {
-    return( (nb as Notebook) != null );
-  }
-
-  //-------------------------------------------------------------
   // Returns true if the given base notebook is the inbox.
   private bool nb_is_inbox( BaseNotebook nb ) {
     var notebook = (nb as Notebook);

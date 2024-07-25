@@ -105,12 +105,6 @@ public class NotesPanel : Box {
   }
 
   //-------------------------------------------------------------
-  // Returns true if the stored based notebook is a smart notebook.
-  private bool bn_is_smart() {
-    return( (_bn != null) && ((_bn as SmartNotebook) != null) );
-  }
-
-  //-------------------------------------------------------------
   // Returns true if the stored base notebook is a notebook (i.e., inbox
   // or trash).
   private bool bn_is_notebook() {
@@ -120,13 +114,10 @@ public class NotesPanel : Box {
   //-------------------------------------------------------------
   // Update UI from the current notebook
   public void update_notes() {
-    stdout.printf( "In update_notes\n" );
     var row = _list.get_selected_row();
     if( row != null ) {
       var pos = row.get_index();
-      _ignore = true;
       _model.items_changed( pos, 1, 1 );
-      _ignore = true;
       _list.select_row( _list.get_row_at_index( pos ) );
     }
   }

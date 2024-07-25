@@ -355,5 +355,4 @@ public class NoteItem {
     _content = node->get_content();
   }
 
-
 }

@@ -434,7 +434,9 @@ public class NotePanel : Box {
   public void populate_with_note( Note? note, bool add_to_history ) {
 
     // If we are populating with the same note as before, return immediately
+    stdout.printf( "_note.id: %d, note.id: %d\n", ((_note == null) ? -1 : _note.id), ((note == null) ? -1 : note.id) );
     if( _note == note ) {
+      stdout.printf( "  SAME!\n" );
       return;
     }
 

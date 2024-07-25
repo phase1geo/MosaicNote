@@ -39,6 +39,8 @@ public class NoteItemPaneTable : NoteItemPane {
     { "action_delete_column",        action_delete_column,        "s" },
   };
 
+  private signal void auto_number_changed();
+
   private signal void column_title_changed( string id );
   private signal void column_type_changed( string id );
   private signal void column_justify_changed( string id );
@@ -55,9 +57,49 @@ public class NoteItemPaneTable : NoteItemPane {
 
   }
 
+  //-------------------------------------------------------------
   // Grabs the focus of the note item at the specified position.
   public override void grab_item_focus( TextCursorPlacement placement ) {
     _table.grab_focus();
+  }
+
+  //-------------------------------------------------------------
+  // Adds the auto-number setting to the specified table settings
+  // widgets.
+  private void add_auto_number_setting( GLib.Menu menu, PopoverMenu popup_menu ) {
+
+    var table_item = (NoteItemTable)item;
+
+    var autonum_label = new Label( _( "Auto-number rows" ) ) {
+      halign = Align.START,
+      hexpand = true
+    };
+
+    var autonum_sw = new Switch() {
+      halign = Align.END,
+      active = table_item.auto_number
+    };
+
+    autonum_sw.notify["active"].connect(() => {
+      table_item.auto_number = autonum_sw.active;
+      auto_number_changed();
+    });
+
+    var autonum_box = new Box( Orientation.HORIZONTAL, 5 ) {
+      margin_start  = 10,
+      margin_end    = 10,
+      margin_top    = 5,
+      margin_bottom = 5
+    };
+    autonum_box.append( autonum_label );
+    autonum_box.append( autonum_sw );
+
+    var autonum_mi = new MenuItem( null, null );
+    autonum_mi.set_attribute( "custom", "s", "autonum" );
+
+    menu.append_item( autonum_mi );
+    popup_menu.add_child( autonum_box, "autonum" );
+
   }
 
   //-------------------------------------------------------------
@@ -80,7 +122,24 @@ public class NoteItemPaneTable : NoteItemPane {
       ((NoteItemTable)item).description = entry.text;
     });
 
-    return( entry );
+    var menu = new GLib.Menu();
+    var popup_menu = new PopoverMenu.from_model( menu );
+
+    // Add the settings
+    add_auto_number_setting( menu, popup_menu );
+
+    var settings = new MenuButton() {
+      halign       = Align.END,
+      icon_name    = "emblem-system-symbolic",
+      tooltip_text = _( "Table Controls" ),
+      popover      = popup_menu
+    };
+
+    var box = new Box( Orientation.HORIZONTAL, 5 );
+    box.append( entry );
+    box.append( settings );
+
+    return( box );
 
   }
 
@@ -120,7 +179,6 @@ public class NoteItemPaneTable : NoteItemPane {
   private string add_cv_column( int index ) {
 
     var table_item = (NoteItemTable)item;
-    var col_index  = index;
     var table_col  = table_item.get_column( index );
     var factory    = new SignalListItemFactory();
     var col_id_int = _col_id++;
@@ -252,6 +310,28 @@ public class NoteItemPaneTable : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Creates an auto-numbered cell whose value is the position of the
+  // list item in the list plus one.
+  private Box setup_auto_number() {
+
+    stdout.printf( "In setup_auto_number\n" );
+
+    var label = new Label( "" ) {
+      valign = Align.START,
+      vexpand = true,
+      wrap = false
+    };
+
+    var box = new Box( Orientation.VERTICAL, 0 ) {
+      halign = Align.START
+    };
+    box.append( label );
+
+    return( box );
+
+  }
+
+  //-------------------------------------------------------------
   // Setups up a text widget for the given cell.
   private TextView setup_text( int column, ListItem li ) {
 
@@ -310,38 +390,76 @@ public class NoteItemPaneTable : NoteItemPane {
   //-------------------------------------------------------------
   // Row factory setup function
   private void row_setup( int column, string col_id, Object obj ) {
-    var column_index = column;
-    var li = (ListItem)obj;
-    switch( ((NoteItemTable)item).get_column( column ).data_type ) {
-      case TableColumnType.TEXT     :  li.child = setup_text( column, li );      break;
-      case TableColumnType.CHECKBOX :  li.child = setup_checkbox( column, li );  break;
+
+    var li         = (ListItem)obj;
+    var table_item = (NoteItemTable)item;
+
+    stdout.printf( "In row_setup, column: %d, row: %u, autonum: %s\n", column, li.get_position(), table_item.auto_number.to_string() );
+
+    var box = new Box( Orientation.HORIZONTAL, 5 ) {
+      margin_start  = 5,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 5
+    };
+
+    li.child = box;
+
+    if( (column == 0) && table_item.auto_number ) {
+      box.append( setup_auto_number() );
     }
+
+    stdout.printf( "column: %d, data_type: %s\n", column, table_item.get_column( column ).data_type.to_string() );
+
+    switch( table_item.get_column( column ).data_type ) {
+      case TableColumnType.TEXT     :  box.append( setup_text( column, li ) );      break;
+      case TableColumnType.CHECKBOX :  box.append( setup_checkbox( column, li ) );  break;
+      default                       :  assert_not_reached();
+    }
+
+    auto_number_changed.connect(() => {
+      var col_index = get_cv_column_index( col_id );
+      if( col_index == 0 ) {
+        var b = (Box)li.child;
+        if( table_item.auto_number ) {
+          b.prepend( setup_auto_number() );
+        } else {
+          b.remove( b.get_first_child() );
+        }
+      }
+    });
 
     column_justify_changed.connect((id) => {
       if( id == col_id ) {
-        var justify = ((NoteItemTable)item).get_column( column ).justify;
-        switch( ((NoteItemTable)item).get_column( column ).data_type ) {
-          case TableColumnType.TEXT     :  ((TextView)li.child).justification = justify;  break;
-          case TableColumnType.CHECKBOX :  ((CheckButton)li.child).halign = align_from_justify( justify );  break;
+        var justify = table_item.get_column( column ).justify;
+        var child   = li.child.get_last_child();
+        switch( table_item.get_column( column ).data_type ) {
+          case TableColumnType.TEXT     :  ((TextView)child).justification = justify;  break;
+          case TableColumnType.CHECKBOX :  ((CheckButton)child).halign = align_from_justify( justify );  break;
+          default                       :  assert_not_reached();
         }
       }
     });
 
     column_type_changed.connect((id) => {
       if( id == col_id ) {
-        switch( ((NoteItemTable)item).get_column( column ).data_type ) {
-          case TableColumnType.TEXT     :  li.child = setup_text( column, li );      break;
-          case TableColumnType.CHECKBOX :  li.child = setup_checkbox( column, li );  break;
+        var b = (Box)li.child;
+        b.remove( b.get_last_child() );
+        switch( table_item.get_column( column ).data_type ) {
+          case TableColumnType.TEXT     :  b.append( setup_text( column, li ) );      break;
+          case TableColumnType.CHECKBOX :  b.append( setup_checkbox( column, li ) );  break;
+          default                       :  assert_not_reached();
         }
       }
     });
+
   }
 
   //-------------------------------------------------------------
   // Binds the associated text to the listitem value.
   private void bind_text( int column, ListItem li ) {
     var row  = (NoteItemTableRow)li.item;
-    var text = (TextView)li.child;
+    var text = (TextView)li.child.get_last_child();
     text.buffer.text = row.get_value( column );
   }
 
@@ -349,18 +467,28 @@ public class NoteItemPaneTable : NoteItemPane {
   // Binds the associated checkbutton to the listitem value.
   private void bind_checkbox( int column, ListItem li ) {
     var row      = (NoteItemTableRow)li.item;
-    var checkbox = (CheckButton)li.child;
+    var checkbox = (CheckButton)li.child.get_last_child();
     checkbox.active = bool.parse( row.get_value( column ) );
   }
 
   //-------------------------------------------------------------
   // Row factory bind function
   private void row_bind( int column, Object obj ) {
+
     var li = (ListItem)obj;
-    switch( ((NoteItemTable)item).get_column( column ).data_type ) {
+    var table_item = (NoteItemTable)item;
+
+    if( (column == 0) && table_item.auto_number ) {
+      var lbl = (Label)li.child.get_first_child();
+      lbl.label = "%u.".printf( li.get_position() + 1 );
+    }
+
+    switch( table_item.get_column( column ).data_type ) {
       case TableColumnType.TEXT     :  bind_text( column, li );      break;
       case TableColumnType.CHECKBOX :  bind_checkbox( column, li );  break;
+      default                       :  assert_not_reached();
     }
+
   }
 
   //-------------------------------------------------------------
@@ -440,6 +568,7 @@ public class NoteItemPaneTable : NoteItemPane {
       case Justification.LEFT   :  justify_menu.selected = 0;  break;
       case Justification.CENTER :  justify_menu.selected = 1;  break;
       case Justification.RIGHT  :  justify_menu.selected = 2;  break;
+      default                   :  assert_not_reached();
     }
 
     justify_menu.notify["selected"].connect(() => {
