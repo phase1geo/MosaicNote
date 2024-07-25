@@ -377,7 +377,8 @@ public class NoteItemPaneTable : NoteItemPane {
   private CheckButton setup_checkbox( int column, ListItem li ) {
 
     var cb = new CheckButton() {
-      halign = align_from_justify( ((NoteItemTable)item).get_column( column ).justify )
+      halign = align_from_justify( ((NoteItemTable)item).get_column( column ).justify ),
+      hexpand = true
     };
 
     cb.notify["active"].connect(() => {
@@ -519,7 +520,10 @@ public class NoteItemPaneTable : NoteItemPane {
     };
     grid.attach( title_entry, 1, 0 );
 
-    title_entry.activate.connect(() => {
+    var title_focus = new EventControllerFocus();
+    title_entry.add_controller( title_focus );
+
+    title_focus.leave.connect(() => {
       column.header = title_entry.text;
       column_title_changed( col_id );
     });
