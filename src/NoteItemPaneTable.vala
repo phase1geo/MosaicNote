@@ -335,10 +335,14 @@ public class NoteItemPaneTable : NoteItemPane {
   private TextView setup_text( int column, ListItem li ) {
 
     var text = new TextView() {
-      halign = Align.FILL,
-      hexpand = true,
+      halign        = Align.FILL,
+      hexpand       = true,
       justification = ((NoteItemTable)item).get_column( column ).justify,
-      wrap_mode = WrapMode.WORD
+      wrap_mode     = WrapMode.WORD,
+      right_margin  = 5,
+      left_margin   = 5,
+      top_margin    = 5,
+      bottom_margin = 5
     };
 
     var focus_controller = new EventControllerFocus();
