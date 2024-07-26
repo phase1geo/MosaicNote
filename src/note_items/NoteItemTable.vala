@@ -22,6 +22,7 @@
 public enum TableColumnType {
 	TEXT,
 	CHECKBOX,
+	DATE,
 	NUM;
 
 	//-------------------------------------------------------------
@@ -30,6 +31,7 @@ public enum TableColumnType {
 		switch( this ) {
 			case TEXT     :  return( "text" );
 			case CHECKBOX :  return( "checkbox" );
+			case DATE     :  return( "date" );
 			default       :  assert_not_reached();
 		}
 	}
@@ -40,6 +42,7 @@ public enum TableColumnType {
 		switch( this ) {
 			case TEXT     :  return( _( "Text" ) );
 			case CHECKBOX :  return( _( "Checkbox" ) );
+			case DATE     :  return( _( "Date" ) );
 			default       :  assert_not_reached();
 		}
 	}
@@ -51,6 +54,7 @@ public enum TableColumnType {
 		switch( val ) {
 			case "text"     :  return( TEXT );
 			case "checkbox" :  return( CHECKBOX );
+			case "date"     :  return( DATE );
 			default         :  return( TEXT );
 		}
 	}

@@ -394,6 +394,42 @@ public class NoteItemPaneTable : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Sets up a date picker for a given column/row.
+  private Box setup_date( int column, ListItem li ) {
+
+    var lbl = new Label( "" ) {
+      halign  = Align.START,
+      hexpand = true
+    };
+
+    var cal = new Calendar();
+
+    var popup = new Popover() {
+      child = cal
+    };
+
+    cal.day_selected.connect(() => {
+      var date = cal.get_date();
+      lbl.label = date.format( "%b %e, %Y" );
+      save_to_cell( li, column, date.format_iso8601() );
+      popup.popdown();
+    });
+
+    var mb = new MenuButton() {
+      halign = Align.END,
+      icon_name = "x-office-calendar-symbolic",
+      popover = popup
+    };
+
+    var box = new Box( Orientation.HORIZONTAL, 5 );
+    box.append( lbl );
+    box.append( mb );
+
+    return( box );
+
+  }
+
+  //-------------------------------------------------------------
   // Row factory setup function
   private void row_setup( int column, string col_id, Object obj ) {
 
@@ -414,6 +450,7 @@ public class NoteItemPaneTable : NoteItemPane {
     switch( table_item.get_column( column ).data_type ) {
       case TableColumnType.TEXT     :  box.append( setup_text( column, li ) );      break;
       case TableColumnType.CHECKBOX :  box.append( setup_checkbox( column, li ) );  break;
+      case TableColumnType.DATE     :  box.append( setup_date( column, li ) );      break;
       default                       :  assert_not_reached();
     }
 
@@ -438,6 +475,7 @@ public class NoteItemPaneTable : NoteItemPane {
         switch( table_item.get_column( column ).data_type ) {
           case TableColumnType.TEXT     :  ((TextView)child).justification = justify;  break;
           case TableColumnType.CHECKBOX :  ((CheckButton)child).halign = align_from_justify( justify );  break;
+          case TableColumnType.DATE     :  ((Label)child.get_first_child()).justify = justify;  break;
           default                       :  assert_not_reached();
         }
       }
@@ -450,6 +488,7 @@ public class NoteItemPaneTable : NoteItemPane {
         switch( table_item.get_column( column ).data_type ) {
           case TableColumnType.TEXT     :  b.append( setup_text( column, li ) );      break;
           case TableColumnType.CHECKBOX :  b.append( setup_checkbox( column, li ) );  break;
+          case TableColumnType.DATE     :  b.append( setup_date( column, li ) );      break;
           default                       :  assert_not_reached();
         }
       }
@@ -474,6 +513,20 @@ public class NoteItemPaneTable : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Updates the date widget to the current value.
+  private void bind_date( int column, ListItem li ) {
+    var row = (NoteItemTableRow)li.item;
+    var box = (Box)li.child.get_first_child();
+    var lbl = (Label)box.get_first_child();
+    var cal = (Calendar)box.get_last_child().get_first_child().get_first_child();
+    var dt  = new DateTime.from_iso8601( row.get_value( column ), null );
+    lbl.label = dt.format( "%b %e, %Y" );
+    cal.day   = dt.get_day_of_month();
+    cal.month = dt.get_month();
+    cal.year  = dt.get_year();
+  }
+
+  //-------------------------------------------------------------
   // Row factory bind function
   private void row_bind( int column, Object obj ) {
 
@@ -488,6 +541,7 @@ public class NoteItemPaneTable : NoteItemPane {
     switch( table_item.get_column( column ).data_type ) {
       case TableColumnType.TEXT     :  bind_text( column, li );      break;
       case TableColumnType.CHECKBOX :  bind_checkbox( column, li );  break;
+      case TableColumnType.DATE     :  bind_date( column, li );      break;
       default                       :  assert_not_reached();
     }
 
