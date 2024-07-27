@@ -209,14 +209,22 @@ public class NoteItemPaneTable : NoteItemPane {
 #if GTK412
       id          = col_id,
 #endif
-      expand      = true,
-      resizable   = true,
+      expand      = table_item.get_column( index ).data_type.is_expandable(),
+      resizable   = table_item.get_column( index ).data_type.is_resizable(),
       header_menu = head_menu
     };
 
     column_title_changed.connect((id) => {
       if( id == col_id ) {
         col.title = table_col.header;
+      }
+    });
+
+    column_type_changed.connect((id) => {
+      if( id == col_id ) {
+        var col_index = get_cv_column_index( col_id );
+        col.expand    = table_item.get_column( col_index ).data_type.is_expandable();
+        col.resizable = table_item.get_column( col_index ).data_type.is_resizable();
       }
     });
 
@@ -398,11 +406,13 @@ public class NoteItemPaneTable : NoteItemPane {
   private Box setup_date( int column, ListItem li ) {
 
     var lbl = new Label( "" ) {
-      halign  = Align.START,
+      halign = Align.START,
       hexpand = true
     };
 
-    var cal = new Calendar();
+    var cal = new Calendar() {
+      halign = Align.END
+    };
 
     var popup = new Popover() {
       child = cal
@@ -418,12 +428,29 @@ public class NoteItemPaneTable : NoteItemPane {
     var mb = new MenuButton() {
       halign = Align.END,
       icon_name = "x-office-calendar-symbolic",
-      popover = popup
+      popover = popup,
+      visible = false
     };
 
-    var box = new Box( Orientation.HORIZONTAL, 5 );
+    var box = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign  = Align.FILL,
+      hexpand = true,
+      valign  = Align.FILL,
+      vexpand = true
+    };
     box.append( lbl );
     box.append( mb );
+
+    var motion = new EventControllerMotion();
+    box.add_controller( motion );
+
+    motion.enter.connect(() => {
+      mb.visible = true;
+    });
+
+    motion.leave.connect(() => {
+      mb.visible = false;
+    });
 
     return( box );
 

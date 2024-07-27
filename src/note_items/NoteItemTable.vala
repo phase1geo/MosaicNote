@@ -59,6 +59,20 @@ public enum TableColumnType {
 		}
 	}
 
+	//-------------------------------------------------------------
+	// Returns true if this column type should be auto-expanded to
+	// take up an equal share of available space.
+	public bool is_expandable() {
+		return( this == TEXT );
+	}
+
+	//-------------------------------------------------------------
+	// Returns true if this column type should allow its size to be
+	// resized.
+	public bool is_resizable() {
+		return( this == TEXT );
+	}
+
 }
 
 //=============================================================
