@@ -143,6 +143,7 @@ public class Utils {
 
   //-------------------------------------------------------------
   // Prepares the given note string for use in a markup tooltip
+  /*
   public static string prepare_note_markup( string note ) {
     var str = markdown_to_html( note );  // .replace( "<", "&lt;" ).replace( ">", "&gt;" ) );
     // stdout.printf( "---------------\n%s--------------\n", str );
@@ -222,6 +223,7 @@ public class Utils {
       return( "<" + tag + ">" + html + "</" + tag + ">" );
     }
   }
+  */
 
   //-------------------------------------------------------------
   // Returns the line height of the first line of the given pango layout

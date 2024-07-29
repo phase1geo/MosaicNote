@@ -211,7 +211,7 @@ public class SmartNotebook : BaseNotebook {
   public bool handle_note( Note note ) {
 
     // Check to see if the note passes all of the stored filters
-    if( _filter.check_note( note ) ) {
+    if( (_filter == null) || _filter.check_note( note ) ) {
 
       var modified = _notes.add( note.id );
       _modified |= modified;
@@ -248,7 +248,9 @@ public class SmartNotebook : BaseNotebook {
       node->set_prop( "extra", _extra );
     }
 
-    node->add_child( _filter.save() );
+    if( _filter != null ) {
+      node->add_child( _filter.save() );
+    }
 
     _modified = false;
 
