@@ -39,6 +39,7 @@ public class NoteItemPane : Box {
   private NoteItem     _item;
   private SpellChecker _spell;
   private Stack        _stack;
+  private Widget       _header1;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_add_item_above", action_add_item_above },
@@ -49,6 +50,11 @@ public class NoteItemPane : Box {
   protected MainWindow win {
     get {
       return( _win );
+    }
+  }
+  protected Widget header1 {
+    get {
+      return( _header1 );
     }
   }
   public NoteItem item {
@@ -62,7 +68,7 @@ public class NoteItemPane : Box {
   public signal void add_item( bool above, NoteItemType? type );
   public signal void remove_item( bool forward );
   public signal void move_item( bool up );
-  public signal void set_as_current();
+  public signal void set_as_current( string msg = "" );
   public signal void note_link_clicked( string link );
 
   //-------------------------------------------------------------
@@ -93,7 +99,8 @@ public class NoteItemPane : Box {
     create_bar();
 
     // If we are being set as the current item, make sure that we are drawn as the current item
-    set_as_current.connect(() => {
+    set_as_current.connect((msg) => {
+      stdout.printf( "In set_as_current, msg: %s, pane: %s\n", msg, item.content );
       add_css_class( "active-item" );
       _stack.visible_child_name = "selected";
       _stack.visible = true;
@@ -438,7 +445,7 @@ public class NoteItemPane : Box {
       if( item.item_type.spell_checkable() ) {
         set_spellchecker();
       }
-      set_as_current();
+      set_as_current( "pane (%s) getting focus".printf( item.content ) );
     });
 
     save.connect(() => {
@@ -515,6 +522,19 @@ public class NoteItemPane : Box {
       menu_model = menu
     };
 
+    _header1 = create_header1();
+
+    var header2 = create_header2();
+
+    _stack = new Stack() {
+      halign = Align.FILL,
+      hexpand = true
+    };
+    _stack.add_named( _header1, "selected" );
+    if( header2 != null ) {
+      _stack.add_named( header2, "unselected" );
+    }
+
     var box = new Box( Orientation.HORIZONTAL, 5 ) {
       halign        = Align.FILL,
       margin_start  = 5,
@@ -524,7 +544,7 @@ public class NoteItemPane : Box {
     };
 
     box.append( expand );
-    box.append( create_header1() );
+    box.append( _stack );
     box.append( more );
 
     var sep = new Separator( Orientation.HORIZONTAL );
@@ -536,14 +556,6 @@ public class NoteItemPane : Box {
     header.append( sep );
     header.append( box );
 
-    var header2 = create_header2();
-
-    _stack = new Stack();
-    _stack.add_named( header, "selected" );
-    if( header2 != null ) {
-      _stack.add_named( header2, "unselected" );
-    }
-
     var pane = create_pane();
     pane.visible = item.expanded;
 
@@ -551,9 +563,10 @@ public class NoteItemPane : Box {
       item.expanded = !item.expanded;
       pane.visible  = item.expanded;
       expand.label  = item.expanded ? "\u23f7" : "\u23f5";
+      _stack.visible_child_name = item.expanded ? "selected" : "unselected";
     });
 
-    append( _stack );
+    append( header );
     append( pane );
 
   }

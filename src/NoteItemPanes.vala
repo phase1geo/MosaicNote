@@ -140,17 +140,18 @@ public class NoteItemPanes : Box {
     pane.add_item.connect((above, type) => {
       var index = Utils.get_child_index( this, pane );
       add_new_item( ((type == null) ? NoteItemType.MARKDOWN : type), (above ? index : (index + 1)) );
-      pane.set_as_current();
+      // pane.set_as_current( "pane.add_item (%s)".printf( item.content ) );
     });
 
     pane.remove_item.connect((forward) => {
       var index = Utils.get_child_index( this, pane );
+      var size  = _size;
       remove( pane );
       _size--;
       _note.delete_note_item( index );
       if( (forward || (index == 0)) && (get_pane( index ) != null) ) {
         get_pane( index ).grab_item_focus( TextCursorPlacement.NO_CHANGE );
-      } else if( (!forward || (index == (_size - 1))) && (get_pane( index - 1 ) != null) ) {
+      } else if( (!forward || (index == (size - 1))) && (get_pane( index - 1 ) != null) ) {
         get_pane( index - 1 ).grab_item_focus( TextCursorPlacement.NO_CHANGE );
       } else {
         add_new_item( NoteItemType.MARKDOWN, -1 );
@@ -181,7 +182,8 @@ public class NoteItemPanes : Box {
       }
     });
 
-    pane.set_as_current.connect(() => {
+    pane.set_as_current.connect((msg) => {
+      stdout.printf( "current_item: %d\n", _current_item );
       if( (_current_item != -1) && (_current_item != Utils.get_child_index( this, pane )) ) {
         var other_pane = (NoteItemPane)Utils.get_child_at_index( this, _current_item );
         if( other_pane != null ) {

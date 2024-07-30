@@ -122,7 +122,7 @@ public enum NoteItemType {
 			case CODE     :  return( new NoteItemCode( note ) );
 			case IMAGE    :  return( new NoteItemImage( note ) );
       case UML      :  return( new NoteItemUML( note ) );
-      case TABLE    :  return( new NoteItemTable( note, 2, 3 ) );
+      case TABLE    :  return( new NoteItemTable( note, 0, 0 ) );
 			default       :  assert_not_reached();
 		}
 	}

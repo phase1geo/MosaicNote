@@ -20,9 +20,7 @@
 */
 
 using Gtk;
-#if !GTK412
 using Gee;
-#endif
 
 public class NoteItemPaneTable : NoteItemPane {
 
@@ -106,6 +104,8 @@ public class NoteItemPaneTable : NoteItemPane {
   // Create custom header when the pane is selected.
   protected override Widget create_header1() {
 
+    var table_item = (NoteItemTable)item;
+
     var entry = new Entry() {
       has_frame = false,
       placeholder_text = _( "Description (optional)" ),
@@ -136,12 +136,31 @@ public class NoteItemPaneTable : NoteItemPane {
       popover      = popup_menu
     };
 
-    var box = new Box( Orientation.HORIZONTAL, 5 );
+    var box = new Box( Orientation.HORIZONTAL, 5 ) {
+      visible = (table_item.columns() > 0)
+    };
     box.append( entry );
     box.append( settings );
 
     return( box );
 
+  }
+
+  //-------------------------------------------------------------
+  // Displays the secondary header when this note is not expanded.
+  protected override Widget? create_header2() {
+    var table_item = (NoteItemTable)item;
+    var label = new Label( table_item.description ) {
+      halign = Align.START
+    };
+    return( label );
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if there is a description associated with this pane
+  protected override bool show_header2() {
+    stdout.printf( "In show_header2\n" );
+    return( true );  // ((NoteItemTable)item).description != "" );
   }
 
 #if GTK412
@@ -163,9 +182,6 @@ public class NoteItemPaneTable : NoteItemPane {
     var find_col = _col_map.get( col_id );
     for( int i=0; i<store.get_n_items(); i++ ) {
       var col = (store.get_item( i ) as ColumnViewColumn);
-      if( col == null ) {
-        stdout.printf( "li.item is not a ColumnViewColumn\n" );
-      }
       if( col == find_col ) {
         return( i );
       }
@@ -248,6 +264,72 @@ public class NoteItemPaneTable : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Creates the table maker interface.
+  private Widget create_table_maker( Stack stack ) {
+
+    var title = new Label( Utils.make_title( _( "Configure Table" ) ) ) {
+      margin_bottom = 10,
+      use_markup = true
+    };
+
+    var col_lbl = new Label( _( "Columns:" ) ) {
+      xalign = (float)0.0
+    };
+    var col_sb  = new SpinButton.with_range( 1.0, 10.0, 1.0 );
+
+    var row_lbl = new Label( _( "Rows:" ) ) {
+      xalign = (float)0.0
+    };
+    var row_sb  = new SpinButton.with_range( 1.0, 100.0, 1.0 );
+
+    var rnum = new CheckButton.with_label( _( "Show row numbers" ) );
+
+    var create = new Button.with_label( _( "Create Table" ) ) {
+      halign = Align.END,
+      hexpand = true
+    };
+
+    create.clicked.connect(() => {
+      var table_item = (NoteItemTable)item;
+      for( int i=0; i<(int)col_sb.value; i++ ) {
+        table_item.insert_column( i, _( "Column %d" ).printf( i ), Gtk.Justification.LEFT );
+      }
+      for( int i=0; i<(int)row_sb.value; i++ ) {
+        table_item.insert_row( i );
+      }
+      table_item.auto_number = rnum.active;
+      for( int i=0; i<table_item.columns(); i++ ) {
+        add_cv_column( i );
+      }
+      header1.visible = true;
+      stack.visible_child_name = "table";
+    });
+
+    var bbox = new Box( Orientation.HORIZONTAL, 5 );
+    bbox.append( create );
+
+    var grid = new Grid() {
+      halign = Align.CENTER,
+      valign = Align.CENTER,
+      row_spacing = 10,
+      column_spacing = 10
+    };
+    grid.attach( title,   0, 0, 2 );
+    grid.attach( col_lbl, 0, 1 );
+    grid.attach( col_sb,  1, 1 );
+    grid.attach( row_lbl, 0, 2 );
+    grid.attach( row_sb,  1, 2 );
+    grid.attach( rnum,    0, 3, 2 );
+    grid.attach( bbox,    0, 4, 2 );
+
+    var box = new Box( Orientation.VERTICAL, 0 );
+    box.append( grid );
+
+    return( box );
+
+  }
+
+  //-------------------------------------------------------------
   // Adds the UI for the table panel.
   protected override Widget create_pane() {
 
@@ -266,13 +348,21 @@ public class NoteItemPaneTable : NoteItemPane {
       show_row_separators = true,
       show_column_separators = true
     };
+    _table.add_css_class( "table-border" );
 
-    _table.set_size_request( -1, 300 );
+    var stack = new Stack();
+
+    var maker = create_table_maker( stack );
+
+    stack.add_named( _table, "table" );
+    stack.add_named( maker,  "maker" );
+
+    // _table.set_size_request( -1, 300 );
 
     if( table_item.columns() == 0 ) {
-      stdout.printf( "Make table\n" );
-      // FOOBAR
+      stack.visible_child_name = "maker";
     } else {
+      stack.visible_child_name = "table";
       for( int i=0; i<table_item.columns(); i++ ) {
         add_cv_column( i );
       }
@@ -305,7 +395,7 @@ public class NoteItemPaneTable : NoteItemPane {
     handle_key_events( _image );
     */
 
-    return( _table );
+    return( stack );
 
   }
 
@@ -405,40 +495,54 @@ public class NoteItemPaneTable : NoteItemPane {
   // Sets up a date picker for a given column/row.
   private Box setup_date( int column, ListItem li ) {
 
-    var lbl = new Label( "" ) {
-      halign = Align.START,
-      hexpand = true
-    };
+    var table_item = (NoteItemTable)item;
 
     var cal = new Calendar() {
       halign = Align.END
     };
 
-    var popup = new Popover() {
-      child = cal
+    var clear = new Button.with_label( _( "Clear date" ) ) {
+      has_frame = false
     };
+
+    var cbox = new Box( Orientation.VERTICAL, 5 );
+    cbox.append( cal );
+    cbox.append( clear );
+
+    var popup = new Popover() {
+      child = cbox
+    };
+
+    var mb = new MenuButton() {
+      halign    = align_from_justify( table_item.get_column( column ).justify ),
+      label     = "",
+      icon_name = "x-office-calendar-symbolic",
+      popover   = popup,
+      visible   = false,
+      always_show_arrow = false,
+      has_frame         = false,
+      direction         = ArrowType.NONE
+    };
+
+    clear.clicked.connect(() => {
+      mb.label     = null;
+      mb.icon_name = "x-office-calendar-symbolic";
+      mb.visible   = false;
+      save_to_cell( li, column, "" );
+      popup.popdown();
+    });
 
     cal.day_selected.connect(() => {
       var date = cal.get_date();
-      lbl.label = date.format( "%b %e, %Y" );
+      mb.label = date.format( "%b %e, %Y" );
       save_to_cell( li, column, date.format_iso8601() );
       popup.popdown();
     });
 
-    var mb = new MenuButton() {
-      halign = Align.END,
-      icon_name = "x-office-calendar-symbolic",
-      popover = popup,
-      visible = false
-    };
-
     var box = new Box( Orientation.HORIZONTAL, 5 ) {
-      halign  = Align.FILL,
-      hexpand = true,
-      valign  = Align.FILL,
-      vexpand = true
+      halign = Align.FILL,
+      hexpand = true
     };
-    box.append( lbl );
     box.append( mb );
 
     var motion = new EventControllerMotion();
@@ -449,7 +553,7 @@ public class NoteItemPaneTable : NoteItemPane {
     });
 
     motion.leave.connect(() => {
-      mb.visible = false;
+      mb.visible = (mb.label != null);
     });
 
     return( box );
@@ -502,7 +606,7 @@ public class NoteItemPaneTable : NoteItemPane {
         switch( table_item.get_column( column ).data_type ) {
           case TableColumnType.TEXT     :  ((TextView)child).justification = justify;  break;
           case TableColumnType.CHECKBOX :  ((CheckButton)child).halign = align_from_justify( justify );  break;
-          case TableColumnType.DATE     :  ((Label)child.get_first_child()).justify = justify;  break;
+          case TableColumnType.DATE     :  ((MenuButton)child.get_first_child().get_first_child()).halign = align_from_justify( justify );  break;
           default                       :  assert_not_reached();
         }
       }
@@ -543,11 +647,19 @@ public class NoteItemPaneTable : NoteItemPane {
   // Updates the date widget to the current value.
   private void bind_date( int column, ListItem li ) {
     var row = (NoteItemTableRow)li.item;
-    var box = (Box)li.child.get_first_child();
-    var lbl = (Label)box.get_first_child();
-    var cal = (Calendar)box.get_last_child().get_first_child().get_first_child();
+    var mb  = (MenuButton)li.child.get_first_child().get_first_child();
+    var pop = mb.popover;
+    var cal = (Calendar)pop.child.get_first_child();
     var dt  = new DateTime.from_iso8601( row.get_value( column ), null );
-    lbl.label = dt.format( "%b %e, %Y" );
+    if( dt == null ) {
+      dt = new DateTime.now_local();
+      mb.label = null;
+      mb.icon_name = "x-office-calendar-symbolic";
+    } else {
+      mb.icon_name = null;
+      mb.label = dt.format( "%b %e, %Y" );
+      mb.visible = true;
+    }
     cal.day   = dt.get_day_of_month();
     cal.month = dt.get_month();
     cal.year  = dt.get_year();
