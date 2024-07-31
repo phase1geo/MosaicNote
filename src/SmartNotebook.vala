@@ -50,7 +50,7 @@ public enum SmartNotebookType {
       case "favorite" :  return( FAVORITE );
       case "tag"      :  return( TAG );
       case "search"   :  return( SEARCH );
-      default         :  assert_not_reached();
+      default         :  return( USER );
     }
   }
 
