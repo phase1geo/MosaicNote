@@ -183,7 +183,6 @@ public class NoteItemPanes : Box {
     });
 
     pane.set_as_current.connect((msg) => {
-      stdout.printf( "current_item: %d\n", _current_item );
       if( (_current_item != -1) && (_current_item != Utils.get_child_index( this, pane )) ) {
         var other_pane = (NoteItemPane)Utils.get_child_at_index( this, _current_item );
         if( other_pane != null ) {

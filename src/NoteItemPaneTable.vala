@@ -35,6 +35,9 @@ public class NoteItemPaneTable : NoteItemPane {
     { "action_insert_column_before", action_insert_column_before, "s" },
     { "action_insert_column_after",  action_insert_column_after,  "s" },
     { "action_delete_column",        action_delete_column,        "s" },
+    { "action_insert_row_before",    action_insert_row_before,    "i" },
+    { "action_insert_row_after",     action_insert_row_after,     "i" },
+    { "action_delete_row",           action_delete_row,           "i" },
   };
 
   private signal void auto_number_changed();
@@ -159,7 +162,6 @@ public class NoteItemPaneTable : NoteItemPane {
   //-------------------------------------------------------------
   // Returns true if there is a description associated with this pane
   protected override bool show_header2() {
-    stdout.printf( "In show_header2\n" );
     return( true );  // ((NoteItemTable)item).description != "" );
   }
 
@@ -367,6 +369,20 @@ public class NoteItemPaneTable : NoteItemPane {
         add_cv_column( i );
       }
     }
+
+    var table_click = new GestureClick() {
+      button = Gdk.BUTTON_SECONDARY
+    };
+    _table.add_controller( table_click );
+
+    table_click.pressed.connect((n_press, x, y) => {
+      stdout.printf( "Table right clicked\n" );
+      // FOOBAR
+    });
+
+    table_click.released.connect((n_press, x, y) => {
+      stdout.printf( "Table right released\n" );
+    });
 
     /*
     if( image_item.uri == "" ) {
@@ -836,6 +852,36 @@ public class NoteItemPaneTable : NoteItemPane {
       var table_item = (NoteItemTable)item;
       table_item.delete_column( index );
       remove_cv_column( index );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Inserts a new row before the passed row position.
+  private void action_insert_row_before( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      var index      = variant.get_int32();
+      var table_item = (NoteItemTable)item;
+      table_item.insert_row( index );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Inserts a new row after the passed row position.
+  private void action_insert_row_after( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      var index = variant.get_int32();
+      var table_item = (NoteItemTable)item;
+      table_item.insert_row( index + 1 );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Deletes the row at the passed row position.
+  private void action_delete_row( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      var index = variant.get_int32();
+      var table_item = (NoteItemTable)item;
+      table_item.delete_row( index );
     }
   }
 

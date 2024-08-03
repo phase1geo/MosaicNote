@@ -210,17 +210,13 @@ public class MainWindow : Gtk.ApplicationWindow {
     _sidebar.notebook_selected.connect((nb) => {
       if( nb != null ) {
         var node = (nb as NotebookTree.Node);
-        stdout.printf( "Calling populate_with_notebook\n" );
         _ignore = true;
         _notes.populate_with_notebook( nb );
-        stdout.printf( "Calling select_row\n" );
         _notes.select_row( 0 );
-        stdout.printf( "Done\n" );
         if( node != null ) {
           MosaicNote.settings.set_int( "last-notebook", node.get_notebook().id );
         }
       } else {
-        stdout.printf( "Calling populate_with_notebook B\n" );
         _notes.populate_with_notebook( nb );
       }
     });

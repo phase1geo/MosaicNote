@@ -100,7 +100,6 @@ public class NoteItemPane : Box {
 
     // If we are being set as the current item, make sure that we are drawn as the current item
     set_as_current.connect((msg) => {
-      stdout.printf( "In set_as_current, msg: %s, pane: %s\n", msg, item.content );
       add_css_class( "active-item" );
       _stack.visible_child_name = "selected";
       _stack.visible = true;
