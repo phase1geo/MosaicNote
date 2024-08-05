@@ -35,8 +35,7 @@ public class NoteItemPaneTable : NoteItemPane {
     { "action_insert_column_before", action_insert_column_before, "s" },
     { "action_insert_column_after",  action_insert_column_after,  "s" },
     { "action_delete_column",        action_delete_column,        "s" },
-    { "action_insert_row_before",    action_insert_row_before,    "i" },
-    { "action_insert_row_after",     action_insert_row_after,     "i" },
+    { "action_insert_row",           action_insert_row,           "i" },
     { "action_delete_row",           action_delete_row,           "i" },
   };
 
@@ -259,10 +258,11 @@ public class NoteItemPaneTable : NoteItemPane {
   //-------------------------------------------------------------
   // Removes the ColumnView column at the given index.
   private void remove_cv_column( int index ) {
-
     var columns = (GLib.ListStore)_table.columns;
-    columns.remove( index );
-
+    var column  = (ColumnViewColumn)columns.get_item( index );
+    if( column != null ) {
+      _table.remove_column( column );
+    }
   }
 
   //-------------------------------------------------------------
@@ -359,8 +359,6 @@ public class NoteItemPaneTable : NoteItemPane {
     stack.add_named( _table, "table" );
     stack.add_named( maker,  "maker" );
 
-    // _table.set_size_request( -1, 300 );
-
     if( table_item.columns() == 0 ) {
       stack.visible_child_name = "maker";
     } else {
@@ -370,45 +368,31 @@ public class NoteItemPaneTable : NoteItemPane {
       }
     }
 
-    var table_click = new GestureClick() {
+    /*
+    var left_click = new GestureClick() {
+      button = Gdk.BUTTON_PRIMARY
+    };
+    var right_click = new GestureClick() {
       button = Gdk.BUTTON_SECONDARY
     };
-    _table.add_controller( table_click );
+    _table.add_controller( left_click );
+    _table.add_controller( right_click );
 
-    table_click.pressed.connect((n_press, x, y) => {
-      stdout.printf( "Table right clicked\n" );
-      // FOOBAR
+    left_click.pressed.connect((n_press, x, y) => {
+      stdout.printf( "Table left clicked\n" );
     });
 
-    table_click.released.connect((n_press, x, y) => {
+    left_click.released.connect((n_press, x, y) => {
+      stdout.printf( "Table left released\n" );
+    });
+
+    right_click.pressed.connect((n_press, x, y) => {
+      stdout.printf( "Table right clicked\n" );
+    });
+
+    right_click.released.connect((n_press, x, y) => {
       stdout.printf( "Table right released\n" );
     });
-
-    /*
-    if( image_item.uri == "" ) {
-      image_dialog( image_item, _image );
-    } else {
-      _image.file = File.new_for_path( image_item.get_resource_filename() );
-    }
-
-    var box = new Box( Orientation.VERTICAL, 0 );
-    box.append( _image );
-    box.set_size_request( -1, 500 );
-    box.add_css_class( "themed" );
-
-    image_click.pressed.connect((n_press, x, y) => {
-      if( n_press == 1 ) {
-        _image.grab_focus();
-      } else if( n_press == 2 ) {
-        image_dialog( image_item, _image );
-      }
-    });
-
-    image_focus.enter.connect(() => {
-      set_as_current();
-    });
-
-    handle_key_events( _image );
     */
 
     return( stack );
@@ -530,11 +514,10 @@ public class NoteItemPaneTable : NoteItemPane {
     };
 
     var mb = new MenuButton() {
-      halign    = align_from_justify( table_item.get_column( column ).justify ),
-      label     = "",
-      icon_name = "x-office-calendar-symbolic",
-      popover   = popup,
-      visible   = false,
+      halign            = align_from_justify( table_item.get_column( column ).justify ),
+      label             = "",
+      icon_name         = "x-office-calendar-symbolic",
+      popover           = popup,
       always_show_arrow = false,
       has_frame         = false,
       direction         = ArrowType.NONE
@@ -543,7 +526,6 @@ public class NoteItemPaneTable : NoteItemPane {
     clear.clicked.connect(() => {
       mb.label     = null;
       mb.icon_name = "x-office-calendar-symbolic";
-      mb.visible   = false;
       save_to_cell( li, column, "" );
       popup.popdown();
     });
@@ -561,17 +543,6 @@ public class NoteItemPaneTable : NoteItemPane {
     };
     box.append( mb );
 
-    var motion = new EventControllerMotion();
-    box.add_controller( motion );
-
-    motion.enter.connect(() => {
-      mb.visible = true;
-    });
-
-    motion.leave.connect(() => {
-      mb.visible = (mb.label != null);
-    });
-
     return( box );
 
   }
@@ -580,6 +551,7 @@ public class NoteItemPaneTable : NoteItemPane {
   // Row factory setup function
   private void row_setup( int column, string col_id, Object obj ) {
 
+    var cell       = (ColumnViewCell)obj;
     var li         = (ListItem)obj;
     var table_item = (NoteItemTable)item;
 
@@ -641,6 +613,51 @@ public class NoteItemPaneTable : NoteItemPane {
       }
     });
 
+    var left_click = new GestureClick() {
+      button = Gdk.BUTTON_PRIMARY
+    };
+    var right_click = new GestureClick() {
+      button = Gdk.BUTTON_SECONDARY
+    };
+
+    left_click.pressed.connect((n, x, y) => {
+      stdout.printf( "Left pressed\n" );
+      var child = li.child.get_last_child();
+      switch( table_item.get_column( column ).data_type ) {
+        case TableColumnType.TEXT     :  Idle.add(() => { child.grab_focus(); return( false ); });  break;
+        case TableColumnType.CHECKBOX :  child.grab_focus();  break;
+        case TableColumnType.DATE     :  child.get_first_child().get_first_child().grab_focus();  break;
+        default                       :  assert_not_reached();
+      }
+    });
+    right_click.pressed.connect((n, x, y) => {
+      create_row_contextual_menu( box, x, y );
+    });
+
+    box.add_controller( left_click );
+    box.add_controller( right_click );
+
+  }
+
+  private void create_row_contextual_menu( Box box, double x, double y ) {
+
+    var row_num = 0;
+
+    var add_menu = new GLib.Menu();
+    add_menu.append( _( "Insert row above" ), "table.action_insert_row(%d)".printf( row_num ) );
+    add_menu.append( _( "Insert row below" ), "table.action_insert_row(%d)".printf( row_num + 1 ) );
+    var del_menu = new GLib.Menu();
+    del_menu.append( _( "Remove row" ), "table.action_delete_row(%d)".printf( row_num ) );
+    var menu = new GLib.Menu();
+    menu.append_section( null, add_menu );
+    menu.append_section( null, del_menu );
+
+    var popover = new PopoverMenu.from_model( menu ) {
+      has_arrow = false
+    };
+    popover.set_parent( box );
+    popover.popup();
+
   }
 
   //-------------------------------------------------------------
@@ -674,7 +691,6 @@ public class NoteItemPaneTable : NoteItemPane {
     } else {
       mb.icon_name = null;
       mb.label = dt.format( "%b %e, %Y" );
-      mb.visible = true;
     }
     cal.day   = dt.get_day_of_month();
     cal.month = dt.get_month();
@@ -857,21 +873,11 @@ public class NoteItemPaneTable : NoteItemPane {
 
   //-------------------------------------------------------------
   // Inserts a new row before the passed row position.
-  private void action_insert_row_before( SimpleAction action, Variant? variant ) {
+  private void action_insert_row( SimpleAction action, Variant? variant ) {
     if( variant != null ) {
       var index      = variant.get_int32();
       var table_item = (NoteItemTable)item;
       table_item.insert_row( index );
-    }
-  }
-
-  //-------------------------------------------------------------
-  // Inserts a new row after the passed row position.
-  private void action_insert_row_after( SimpleAction action, Variant? variant ) {
-    if( variant != null ) {
-      var index = variant.get_int32();
-      var table_item = (NoteItemTable)item;
-      table_item.insert_row( index + 1 );
     }
   }
 
