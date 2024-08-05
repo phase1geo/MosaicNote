@@ -1,22 +1,30 @@
 TODO:
 
- ☐ Add support for table note item
-   ☐ Use ColumnView widget with embedded textboxes
  ☐ Add support for math note item
    Still trying to figure out what to do here.
    I would like to use AsciiMath for the text input and generate a PNG file
+ ☐ Add support for file/asset manager note item
+   Allows the user to add file links, URLs, etc. and they are saved in an editable list
  ☐ Add support for note linking
    ☐ Add auto-completion when entering note links
+     Not exactly sure how to currently implement this
    ☐ Add button to copy a note link to the clipboard
-   ☐ Add ability to past note link into a note
- ☐ Add support for undo/redo
-   Need to figure out what we will be able to undo/redo (it won't be everything)
+   ☐ Add ability to paste note link into a note
+   ☐ Create back-linking
+     This is going to be tricky because it will require checking for note links in the
+     notes whenever a note is saved and updating those notes.
+ ☐ Add support for exporting a note item
+   ☐ Add ability to save to file or copy to clipboard
  ☐ Add support for NotesPanel sorting
  ☐ Add drag and drop support for organizing notebooks
  ☐ Add drag and drop support for reorganizing smart notebooks
+ ☐ Add support for undo/redo
+   Need to figure out what we will be able to undo/redo (it won't be everything)
 
 ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
 Archive:
+ ✔ Use ColumnView widget with embedded textboxes @done (24-08-04 23:21) @project(TODO)
+ ✔ Add support for table note item @done (24-08-04 23:21) @project(TODO)
  ✔ Add support for note drag and drop support @done (24-07-21 17:36) @project(TODO)
  ✔ Add support for note locking @done (24-07-15 23:04) @project(TODO)
   When a note is "locked" it cannot be changed without unlocking it first
