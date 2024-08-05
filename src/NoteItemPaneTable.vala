@@ -368,33 +368,6 @@ public class NoteItemPaneTable : NoteItemPane {
       }
     }
 
-    /*
-    var left_click = new GestureClick() {
-      button = Gdk.BUTTON_PRIMARY
-    };
-    var right_click = new GestureClick() {
-      button = Gdk.BUTTON_SECONDARY
-    };
-    _table.add_controller( left_click );
-    _table.add_controller( right_click );
-
-    left_click.pressed.connect((n_press, x, y) => {
-      stdout.printf( "Table left clicked\n" );
-    });
-
-    left_click.released.connect((n_press, x, y) => {
-      stdout.printf( "Table left released\n" );
-    });
-
-    right_click.pressed.connect((n_press, x, y) => {
-      stdout.printf( "Table right clicked\n" );
-    });
-
-    right_click.released.connect((n_press, x, y) => {
-      stdout.printf( "Table right released\n" );
-    });
-    */
-
     return( stack );
 
   }
@@ -415,7 +388,6 @@ public class NoteItemPaneTable : NoteItemPane {
 
     var label = new Label( num ?? "" ) {
       valign = Align.START,
-      // vexpand = true,
       wrap = false
     };
 
@@ -444,8 +416,20 @@ public class NoteItemPaneTable : NoteItemPane {
     };
 
     var focus_controller = new EventControllerFocus();
+    focus_controller.enter.connect(() => {
+      _table.model.select_item( li.get_position(), true );
+    });
     focus_controller.leave.connect(() => {
       save_to_cell( li, column, text.buffer.text );
+    });
+
+    var key_controller = new EventControllerKey();
+    key_controller.key_pressed.connect((keyval, keycode, state) => {
+      switch( keyval ) {
+        case Gdk.Key.Tab          :  _table.child_focus( DirectionType.TAB_FORWARD );   return( true );
+        case Gdk.Key.ISO_Left_Tab :  _table.child_focus( DirectionType.TAB_BACKWARD );  return( true );
+        default                   :  return( false );
+      }
     });
 
     // If we need to save, check to see if a table cell has focus and
@@ -457,6 +441,7 @@ public class NoteItemPaneTable : NoteItemPane {
     });
 
     text.add_controller( focus_controller );
+    text.add_controller( key_controller );
 
     return( text );
 
@@ -551,7 +536,6 @@ public class NoteItemPaneTable : NoteItemPane {
   // Row factory setup function
   private void row_setup( int column, string col_id, Object obj ) {
 
-    var cell       = (ColumnViewCell)obj;
     var li         = (ListItem)obj;
     var table_item = (NoteItemTable)item;
 
@@ -621,7 +605,6 @@ public class NoteItemPaneTable : NoteItemPane {
     };
 
     left_click.pressed.connect((n, x, y) => {
-      stdout.printf( "Left pressed\n" );
       var child = li.child.get_last_child();
       switch( table_item.get_column( column ).data_type ) {
         case TableColumnType.TEXT     :  Idle.add(() => { child.grab_focus(); return( false ); });  break;
@@ -631,7 +614,9 @@ public class NoteItemPaneTable : NoteItemPane {
       }
     });
     right_click.pressed.connect((n, x, y) => {
-      create_row_contextual_menu( box, x, y );
+      var pos = li.get_position();
+      _table.model.select_item( pos, true );
+      show_row_contextual_menu( box, pos );
     });
 
     box.add_controller( left_click );
@@ -639,19 +624,28 @@ public class NoteItemPaneTable : NoteItemPane {
 
   }
 
-  private void create_row_contextual_menu( Box box, double x, double y ) {
-
-    var row_num = 0;
+  //-------------------------------------------------------------
+  // Creates the contextual menu for manipulating rows.
+  private GLib.Menu create_row_contextual_menu( uint row_num ) {
 
     var add_menu = new GLib.Menu();
-    add_menu.append( _( "Insert row above" ), "table.action_insert_row(%d)".printf( row_num ) );
-    add_menu.append( _( "Insert row below" ), "table.action_insert_row(%d)".printf( row_num + 1 ) );
+    add_menu.append( _( "Insert row above" ), "table.action_insert_row(%u)".printf( row_num ) );
+    add_menu.append( _( "Insert row below" ), "table.action_insert_row(%u)".printf( row_num + 1 ) );
     var del_menu = new GLib.Menu();
-    del_menu.append( _( "Remove row" ), "table.action_delete_row(%d)".printf( row_num ) );
+    del_menu.append( _( "Remove row" ), "table.action_delete_row(%u)".printf( row_num ) );
     var menu = new GLib.Menu();
     menu.append_section( null, add_menu );
     menu.append_section( null, del_menu );
 
+    return( menu );
+
+  }
+
+  //-------------------------------------------------------------
+  // Creates and displays the contextual menu for manipulating rows.
+  private void show_row_contextual_menu( Box box, uint row_num ) {
+
+    var menu = create_row_contextual_menu( row_num );
     var popover = new PopoverMenu.from_model( menu ) {
       has_arrow = false
     };
@@ -666,6 +660,7 @@ public class NoteItemPaneTable : NoteItemPane {
     var row  = (NoteItemTableRow)li.item;
     var text = (TextView)li.child.get_last_child();
     text.buffer.text = row.get_value( column );
+    text.extra_menu  = create_row_contextual_menu( li.get_position() );
   }
 
   //-------------------------------------------------------------
