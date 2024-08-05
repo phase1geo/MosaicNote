@@ -1,13 +1,14 @@
 src/Application.vala
 src/MainWindow.vala
-src/NoteItem.vala
-src/NoteItemPane.vala
+src/NotebookTree.vala
 src/NoteItemPaneCode.vala
 src/NoteItemPaneImage.vala
 src/NoteItemPaneTable.vala
 src/NoteItemPaneUML.vala
+src/NoteItemPane.vala
+src/note_items/NoteItemTable.vala
+src/NoteItem.vala
 src/NotePanel.vala
-src/NotebookTree.vala
 src/NotesPanel.vala
 src/Preferences.vala
 src/SearchBox.vala
@@ -22,5 +23,4 @@ src/TagEntry.vala
 src/ToolbarCode.vala
 src/ToolbarMarkdown.vala
 src/Utils.vala
-src/note_items/NoteItemTable.vala
 data/com.github.phase1geo.mosaic-note.shortcuts.ui

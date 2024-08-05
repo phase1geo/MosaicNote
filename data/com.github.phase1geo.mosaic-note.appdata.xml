@@ -30,6 +30,7 @@
   </screenshots>
   <launchable type="desktop-id">com.github.phase1geo.mosaic-note.desktop</launchable>
   <developer_name>Trevor Williams</developer_name>
+  <developer>com.github.phase1geo</developer>
   <url type="homepage">https://github.com/phase1geo/MosaicNote/</url>
   <url type="bugtracker">https://github.com/phase1geo/MosaicNote/issues/</url>
   <custom>

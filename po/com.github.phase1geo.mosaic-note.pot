@@ -1,14 +1,14 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# Translation file for MosaicNote
+# Copyright (C) 2024
 # This file is distributed under the same license as the com.github.phase1geo.mosaic-note package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Trevor Williams <phase1geo@gmail.com>, 2024.
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: com.github.phase1geo.mosaic-note\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-21 22:57-0500\n"
+"POT-Creation-Date: 2024-08-04 22:39-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -31,36 +31,193 @@ msgstr ""
 msgid "Run '%s --help' to see valid options\n"
 msgstr ""
 
-#: src/MainWindow.vala:176
+#: src/MainWindow.vala:177
 msgid "MosaicNote"
 msgstr ""
 
-#: src/MainWindow.vala:353
+#: src/MainWindow.vala:359
 msgid "Search notes"
 msgstr ""
 
-#: src/MainWindow.vala:374
+#: src/MainWindow.vala:380
 msgid "Show all panels"
 msgstr ""
 
-#: src/MainWindow.vala:375
+#: src/MainWindow.vala:381
 msgid "Show note panel only"
 msgstr ""
 
-#: src/MainWindow.vala:376
+#: src/MainWindow.vala:382
 msgid "Do not show sidebar"
 msgstr ""
 
-#: src/MainWindow.vala:381
+#: src/MainWindow.vala:387
 msgid "Change Panel Layout"
 msgstr ""
 
-#: src/MainWindow.vala:401
+#: src/MainWindow.vala:407
 msgid "Shorcuts Cheatsheet…"
 msgstr ""
 
-#: src/MainWindow.vala:402
+#: src/MainWindow.vala:408
 msgid "Preferences…"
+msgstr ""
+
+#: src/NotebookTree.vala:576 src/NotebookTree.vala:613
+msgid "Inbox"
+msgstr ""
+
+#: src/NotebookTree.vala:577 src/NotebookTree.vala:619
+msgid "Trash"
+msgstr ""
+
+#: src/NoteItemPaneCode.vala:62 src/NoteItemPaneUML.vala:60
+msgid "Description (Optional)"
+msgstr ""
+
+#: src/NoteItemPaneImage.vala:42 src/NoteItemPaneImage.vala:54
+msgid "Select Image"
+msgstr ""
+
+#: src/NoteItemPaneImage.vala:42 src/NoteItemPaneImage.vala:54
+msgid "Select"
+msgstr ""
+
+#: src/NoteItemPaneImage.vala:78 src/NoteItemPaneTable.vala:113
+msgid "Description (optional)"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:73
+msgid "Auto-number rows"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:137
+msgid "Table Controls"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:214
+msgid "Format column"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:216
+msgid "Insert column before"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:217
+msgid "Insert column after"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:219
+msgid "Remove column"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:272
+msgid "Configure Table"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:277
+msgid "Columns:"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:282
+msgid "Rows:"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:287
+msgid "Show row numbers"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:289
+msgid "Create Table"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:297 src/note_items/NoteItemTable.vala:128
+#, c-format
+msgid "Column %d"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:489
+msgid "Clear date"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:632
+msgid "Insert row above"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:633
+msgid "Insert row below"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:635
+msgid "Remove row"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:734
+msgid "Title:"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:755
+msgid "Content Type:"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:779
+msgid "Justify:"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:785
+msgid "Left"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:785
+msgid "Center"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:785
+msgid "Right"
+msgstr ""
+
+#: src/NoteItemPaneTable.vala:813
+msgid "Format Column"
+msgstr ""
+
+#: src/NoteItemPaneUML.vala:75
+msgid "Open UML documentation in browser"
+msgstr ""
+
+#: src/NoteItemPaneUML.vala:82
+msgid "preferences-color-symbolic"
+msgstr ""
+
+#: src/NoteItemPaneUML.vala:84
+msgid "Generate diagram"
+msgstr ""
+
+#: src/NoteItemPaneUML.vala:162
+msgid "Generating Diagram..."
+msgstr ""
+
+#: src/NoteItemPane.vala:508
+msgid "Add Block Above"
+msgstr ""
+
+#: src/NoteItemPane.vala:509
+msgid "Add Block Below"
+msgstr ""
+
+#: src/NoteItemPane.vala:512
+msgid "Delete Block"
+msgstr ""
+
+#: src/note_items/NoteItemTable.vala:43
+msgid "Text"
+msgstr ""
+
+#: src/note_items/NoteItemTable.vala:44
+msgid "Checkbox"
+msgstr ""
+
+#: src/note_items/NoteItemTable.vala:45
+msgid "Date"
 msgstr ""
 
 #: src/NoteItem.vala:49 src/NoteItem.vala:91
@@ -103,62 +260,6 @@ msgstr ""
 msgid "Table"
 msgstr ""
 
-#: src/NoteItemPane.vala:503
-msgid "Add Block Above"
-msgstr ""
-
-#: src/NoteItemPane.vala:504
-msgid "Add Block Below"
-msgstr ""
-
-#: src/NoteItemPane.vala:507
-msgid "Delete Block"
-msgstr ""
-
-#: src/NoteItemPaneCode.vala:62 src/NoteItemPaneUML.vala:60
-msgid "Description (Optional)"
-msgstr ""
-
-#: src/NoteItemPaneImage.vala:42 src/NoteItemPaneImage.vala:54
-msgid "Select Image"
-msgstr ""
-
-#: src/NoteItemPaneImage.vala:42 src/NoteItemPaneImage.vala:54
-msgid "Select"
-msgstr ""
-
-#: src/NoteItemPaneImage.vala:78 src/NoteItemPaneTable.vala:64
-msgid "Description (optional)"
-msgstr ""
-
-#: src/NoteItemPaneTable.vala:133
-msgid "Insert column before"
-msgstr ""
-
-#: src/NoteItemPaneTable.vala:134
-msgid "Insert column after"
-msgstr ""
-
-#: src/NoteItemPaneTable.vala:136
-msgid "Remove column"
-msgstr ""
-
-#: src/NoteItemPaneUML.vala:75
-msgid "Open UML documentation in browser"
-msgstr ""
-
-#: src/NoteItemPaneUML.vala:82
-msgid "preferences-color-symbolic"
-msgstr ""
-
-#: src/NoteItemPaneUML.vala:84
-msgid "Generate diagram"
-msgstr ""
-
-#: src/NoteItemPaneUML.vala:158
-msgid "Generating Diagram..."
-msgstr ""
-
 #: src/NotePanel.vala:155
 msgid "No Note Selected"
 msgstr ""
@@ -191,23 +292,15 @@ msgstr ""
 msgid "Title (Optional)"
 msgstr ""
 
-#: src/NotePanel.vala:508 src/NotePanel.vala:519
+#: src/NotePanel.vala:513 src/NotePanel.vala:524
 msgid "Export"
-msgstr ""
-
-#: src/NotebookTree.vala:576 src/NotebookTree.vala:613
-msgid "Inbox"
-msgstr ""
-
-#: src/NotebookTree.vala:577 src/NotebookTree.vala:619
-msgid "Trash"
 msgstr ""
 
 #: src/NotesPanel.vala:78
 msgid "Add new note"
 msgstr ""
 
-#: src/NotesPanel.vala:175
+#: src/NotesPanel.vala:167
 msgid "Untitled Note"
 msgstr ""
 
@@ -390,63 +483,63 @@ msgstr ""
 msgid "Tags"
 msgstr ""
 
-#: src/Sidebar.vala:375
+#: src/Sidebar.vala:371
 msgid "New Sub-Notebook"
 msgstr ""
 
-#: src/Sidebar.vala:376
+#: src/Sidebar.vala:372
 msgid "Rename Notebook"
 msgstr ""
 
-#: src/Sidebar.vala:378
+#: src/Sidebar.vala:374
 msgid "Delete Notebook"
 msgstr ""
 
-#: src/Sidebar.vala:386
+#: src/Sidebar.vala:382
 msgid "Empty Trash"
 msgstr ""
 
-#: src/Sidebar.vala:391
+#: src/Sidebar.vala:387
 msgid "Edit Search Criteria"
 msgstr ""
 
-#: src/Sidebar.vala:392
+#: src/Sidebar.vala:388
 msgid "Save Search as Smart Notebook"
 msgstr ""
 
-#: src/Sidebar.vala:397
+#: src/Sidebar.vala:393
 msgid "Edit Match Criteria"
 msgstr ""
 
-#: src/Sidebar.vala:398
+#: src/Sidebar.vala:394
 msgid "Rename Smart Notebook"
 msgstr ""
 
-#: src/Sidebar.vala:400
+#: src/Sidebar.vala:396
 msgid "Delete Smart Notebook"
 msgstr ""
 
-#: src/Sidebar.vala:416
+#: src/Sidebar.vala:412
 msgid "Enter Notebook Name"
 msgstr ""
 
-#: src/Sidebar.vala:635
+#: src/Sidebar.vala:657
 msgid "Delete Notebook?"
 msgstr ""
 
-#: src/Sidebar.vala:635 src/Sidebar.vala:637
+#: src/Sidebar.vala:657 src/Sidebar.vala:659
 msgid "This action cannot be reversed"
 msgstr ""
 
-#: src/Sidebar.vala:637
+#: src/Sidebar.vala:659
 msgid "Delete Smart Notebook?"
 msgstr ""
 
-#: src/Sidebar.vala:673
+#: src/Sidebar.vala:695
 msgid "Empty Trash?"
 msgstr ""
 
-#: src/Sidebar.vala:673
+#: src/Sidebar.vala:695
 msgid "This action is not reversable"
 msgstr ""
 
@@ -720,21 +813,16 @@ msgstr ""
 msgid "error: %s\n"
 msgstr ""
 
-#: src/Utils.vala:374
+#: src/Utils.vala:376
 msgid "Cancel"
 msgstr ""
 
-#: src/Utils.vala:385
+#: src/Utils.vala:387
 msgid "Yes"
 msgstr ""
 
-#: src/Utils.vala:385
+#: src/Utils.vala:387
 msgid "No"
-msgstr ""
-
-#: src/note_items/NoteItemTable.vala:49
-#, c-format
-msgid "Column %d"
 msgstr ""
 
 #: data/com.github.phase1geo.mosaic-note.shortcuts.ui:6
