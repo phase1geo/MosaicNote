@@ -108,15 +108,13 @@ public class NoteItemPaneTable : NoteItemPane {
 
     var table_item = (NoteItemTable)item;
 
-    var entry = new Entry() {
-      has_frame = false,
-      placeholder_text = _( "Description (optional)" ),
+    var entry = new EditableLabel( _( "Description (optional)" ) ) {
       halign = Align.FILL,
       hexpand = true,
       text = ((NoteItemTable)item).description
     };
 
-    entry.activate.connect(() => {
+    entry.changed.connect(() => {
       ((NoteItemTable)item).description = entry.text;
     });
 
@@ -344,7 +342,7 @@ public class NoteItemPaneTable : NoteItemPane {
 
     _table = new ColumnView( selector ) {
 #if GTK412
-      tab_behavior = ListTabBehavior.CELL,
+      // tab_behavior = ListTabBehavior.ALL,
 #endif
       halign = Align.FILL,
       show_row_separators = true,
