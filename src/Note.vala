@@ -19,6 +19,8 @@
 * Authored by: Trevor Williams <phase1geo@gmail.com>
 */
 
+using Gee;
+
 public class Note : Object {
 
 	public static int current_id = 0;
@@ -33,6 +35,7 @@ public class Note : Object {
   private bool            _favorite;  // done
 	private Tags            _tags;      // done
 	private Array<NoteItem> _items;
+	private HashSet<int>    _referred;
 
 	public bool modified { get; private set; default = false; }
 
@@ -112,9 +115,16 @@ public class Note : Object {
     }
   }
 
+  public HashSet<int> referred {
+  	get {
+  		return( _referred );
+  	}
+  }
+
   public signal void changed();
   public signal void title_changed();
 
+	//-------------------------------------------------------------
 	// Default constructor
 	public Note( Notebook nb ) {
 		_nb       = nb;
@@ -127,40 +137,48 @@ public class Note : Object {
     _favorite = false;
 		_tags     = new Tags();
     _items    = new Array<NoteItem>();
+    _referred = new HashSet<int>();
 
     var item = new NoteItemMarkdown( this );
     add_note_item( 0, item );
 	}
 
+	//-------------------------------------------------------------
 	// Constructs note from XML node
 	public Note.from_xml( Notebook nb, Xml.Node* node ) {
-		_nb    = nb;
-    _tags  = new Tags();
-    _items = new Array<NoteItem>();
+		_nb       = nb;
+    _tags     = new Tags();
+    _items    = new Array<NoteItem>();
+    _referred = new HashSet<int>();
 
 		load( node );
 	}
 
+	//-------------------------------------------------------------
 	// Updates the viewed timestamp
 	public void reviewed() {
 		_viewed = new DateTime.now_local();
 	}
 
+	//-------------------------------------------------------------
   // Returns the number of note items in the array
   public int size() {
     return( (int)_items.length );
   }
 
+	//-------------------------------------------------------------
   // Returns the note item at the given position
   public NoteItem get_item( int pos ) {
     return( _items.index( pos ) );
   }
 
+	//-------------------------------------------------------------
 	// Adds the given note item to this list of items at the given position.
 	public void add_note_item( uint pos, NoteItem item ) {
 		_items.insert_val( pos, item );
 	}
 
+	//-------------------------------------------------------------
 	// Removes the note item at the given position.
 	public void delete_note_item( uint pos ) {
     get_item( (int)pos ).delete_resource();
@@ -168,6 +186,7 @@ public class Note : Object {
 		_modified = true;
 	}
 
+	//-------------------------------------------------------------
   // Moves the item at the old position to the new position in the item array.
   public void move_item( int old_pos, int new_pos ) {
     var item = _items.index( old_pos );
@@ -179,6 +198,7 @@ public class Note : Object {
     }
   }
 
+	//-------------------------------------------------------------
   // Returns a string containing the content of the note in Markdown format
   public string to_markdown( bool pandoc = false ) {
     var mod_title = _title.replace( "'", "''" );
@@ -191,6 +211,7 @@ public class Note : Object {
   	return( str );
   }
 
+	//-------------------------------------------------------------
   // Populates the given array with the list of languages that are used by the node.
   // We use a HashSet so that the final list of languages doesn't contain any duplicates.
   public void get_needed_languages( Gee.HashSet<string> langs ) {
@@ -202,6 +223,7 @@ public class Note : Object {
   	}
   }
 
+	//-------------------------------------------------------------
   // Converts the current note item to the specified item and stores this
   // new item in its place.
   public void convert_note_item( uint pos, NoteItem to_item ) {
@@ -210,16 +232,44 @@ public class Note : Object {
     _modified = true;
   }
 
+	//-------------------------------------------------------------
 	// Returns the result of comparing our note to the given note
 	public static int compare( Note a, Note b ) {
 		return( (int)(a._id > b._id) - (int)(a._id < b._id) );
 	}
 
+	//-------------------------------------------------------------
 	// Returns true if this note contains a tag with the given string.
 	public bool contains_tag( string tag ) {
 		return( _tags.contains_tag( tag ) );
 	}
 
+	//-------------------------------------------------------------
+	// Gets the note link titles from all of the note items.
+	public void get_note_links( HashSet<string> note_titles ) {
+		for( int i=0; i<_items.length; i++ ) {
+			var item = _items.index( i );
+			item.get_note_links( note_titles );
+		}
+	}
+
+	//-------------------------------------------------------------
+	// Adds the given note id to the list of referred links.
+	public void add_referred( int id ) {
+		if( _referred.add( id ) ) {
+			_modified = true;
+		}
+	}
+
+	//-------------------------------------------------------------
+	// Removes the given note id from the list of referred links.
+	public void remove_referred( int id ) {
+		if( _referred.remove( id ) ) {
+			_modified = true;
+		}
+	}
+
+	//-------------------------------------------------------------
 	// Saves the note in XML format
 	public Xml.Node* save() {
 
@@ -230,6 +280,12 @@ public class Note : Object {
 
 		Xml.Node* node  = new Xml.Node( null, "note" );
 		Xml.Node* items = new Xml.Node( null, "items" );
+		string[] referred_list = {};
+
+		_referred.foreach((id) => {
+			referred_list += id.to_string();
+			return( true );
+  	});
 
 		node->set_prop( "id",      _id.to_string() );
 		node->set_prop( "title",   _title );
@@ -238,6 +294,7 @@ public class Note : Object {
 		node->set_prop( "viewed",  _viewed.format_iso8601() );
 		node->set_prop( "locked",  _locked.to_string() );
     node->set_prop( "favorite", _favorite.to_string() );
+    node->set_prop( "referred", string.joinv( ",", referred_list ) );
 
 		node->add_child( _tags.save() );
 
@@ -291,6 +348,14 @@ public class Note : Object {
     var f = node->get_prop( "favorite" );
     if( f != null ) {
       _favorite = bool.parse( f );
+    }
+
+    var r = node->get_prop( "referred" );
+    if( r != null ) {
+    	var referred_list = r.split( "," );
+    	foreach( var id in referred_list ) {
+    		_referred.add( int.parse( id ) );
+    	}
     }
 
 		for( Xml.Node* it = node->children; it != null; it = it->next ) {

@@ -20,6 +20,7 @@
 */
 
 using Gtk;
+using Gee;
 
 public class NotePanel : Box {
 
@@ -29,18 +30,20 @@ public class NotePanel : Box {
   private Stack      _stack;
   private SearchBox  _search;
 
-  private TagBox        _tags;
-  private DropDown      _item_selector;
-  private Stack         _toolbar_stack;
-  private Button        _favorite;
-  private Button        _locked;
-  private Entry         _title;
-  private Box           _created_box;
-  private Label         _created;
-  private NoteItemPanes _content;
-  private Button        _hist_prev;
-  private Button        _hist_next;
-  private bool          _ignore = false;
+  private TagBox          _tags;
+  private DropDown        _item_selector;
+  private Stack           _toolbar_stack;
+  private Button          _favorite;
+  private Button          _locked;
+  private Entry           _title;
+  private Box             _created_box;
+  private Label           _created;
+  private NoteItemPanes   _content;
+  private Button          _hist_prev;
+  private Button          _hist_next;
+  private Box             _references;
+  private bool            _ignore = false;
+  private HashSet<string> _orig_link_titles;
 
   public SearchBox search {
     get {
@@ -50,7 +53,7 @@ public class NotePanel : Box {
 
   public signal void tag_added( string name, int note_id );
   public signal void tag_removed( string name, int note_id );
-  public signal void note_saved( Note note );
+  public signal void note_saved( Note note, HashSet<string>? orig_link_titles );
   public signal void note_link_clicked( string link, Note note );
   public signal void search_hidden();
 
@@ -70,6 +73,7 @@ public class NotePanel : Box {
     );
 
     _win = win;
+    _orig_link_titles = new HashSet<string>();
 
     // Initialize the language manager
     initialize_languages();
@@ -305,7 +309,7 @@ public class NotePanel : Box {
     _title.activate.connect(() => {
       if( _note != null ) {
         _note.title = _title.text;
-        note_saved( _note );
+        note_saved( _note, null );
       }
       _content.get_pane( 0 ).grab_item_focus( TextCursorPlacement.START );
     });
@@ -325,10 +329,13 @@ public class NotePanel : Box {
       note_link_clicked( link, _note );
     });
 
+    _references = create_references();
+
     var cbox = new Box( Orientation.VERTICAL, 5 );
     cbox.add_css_class( "themed" );
     cbox.append( _title );
     cbox.append( _content );
+    cbox.append( _references );
 
     var sw = new ScrolledWindow() {
       halign = Align.FILL,
@@ -349,13 +356,49 @@ public class NotePanel : Box {
         _note.tags.copy( _tags.tags );
         _note.title = _title.text;
         _content.save();
-        note_saved( _note );
+        note_saved( _note, _orig_link_titles );
       }
     });
 
     return( box );
 
 	}
+
+  //-------------------------------------------------------------
+  // Creates the list of notes which contain links to this note.
+  private Box create_references() {
+
+    var label = new Label( Utils.make_title( _( "Note References" ) ) ) {
+      use_markup = true
+    };
+
+    var sep = new Separator( Orientation.HORIZONTAL );
+
+    _references = new Box( Orientation.VERTICAL, 5 );
+    _references.append( label );
+    _references.append( sep );
+
+    return( _references );
+
+  }
+
+  //-------------------------------------------------------------
+  // Adds the list of notes that reference
+  private void add_references() {
+    _note.referred.foreach((id) => {
+      var ref_note = _win.notebooks.find_note_by_id( id );
+      if( ref_note != null ) {
+        var link = new LinkButton.with_label( id.to_string(), ref_note.title );
+        link.activate_link.connect(() => {
+          _win.sidebar.select_notebook( ref_note.notebook );
+          _win.notes.select_note( ref_note.id, true );
+          return( true );
+        });
+        _references.append( link );
+      }
+      return( true );
+    });
+  }
 
   //-------------------------------------------------------------
   // Sets the lock status to the given value and updates the
@@ -457,6 +500,10 @@ public class NotePanel : Box {
       _note.reviewed();
 
       _content.populate( _note );
+
+      _orig_link_titles.clear();
+      _note.get_note_links( _orig_link_titles );
+      add_references();
 
       // Update the note history
       if( add_to_history ) {

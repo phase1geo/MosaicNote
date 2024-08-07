@@ -19,6 +19,8 @@
 * Authored by: Trevor Williams <phase1geo@gmail.com>
 */
 
+using Gee;
+
 public enum NoteItemType {
 	MARKDOWN,
 	CODE,
@@ -327,6 +329,10 @@ public class NoteItem {
     }
     return( false );
   }
+
+  //-------------------------------------------------------------
+  // Adds any note links stored in the note item.
+  public virtual void get_note_links( HashSet<string> note_titles ) {}
 
   //-------------------------------------------------------------
 	// Saves this note item

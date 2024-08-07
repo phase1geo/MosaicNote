@@ -20,6 +20,7 @@
 */
 
 using Gtk;
+using Gee;
 
 //-------------------------------------------------------------
 // Note item pane that represents Markdown text.  Contains proper
@@ -87,8 +88,10 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   private bool within_note_link( TextIter start, TextIter end ) {
     var bstart = start;
     var bend   = end;
-    return( bstart.backward_chars( 2 ) && (_text.buffer.get_text( bstart, start, false ) == "[[") &&
-            bend.forward_chars( 2 )    && (_text.buffer.get_text( end, bend, false ) == "]]") );
+    bstart.backward_chars( 2 );
+    bend.forward_chars( 2 );
+    return( (_text.buffer.get_text( bstart, start, false ) == "[[") &&
+            (_text.buffer.get_text( end, bend, false ) == "]]") );
   }
 
   //-------------------------------------------------------------

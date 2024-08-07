@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023 (https://github.com/phase1geo/Journaler)
+* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -21,6 +21,7 @@
 
 using Gtk;
 using Gdk;
+using Gee;
 
 public enum PanelMode {
   ALL,
@@ -118,6 +119,12 @@ public class MainWindow : Gtk.ApplicationWindow {
     }
   }
 
+  public Sidebar sidebar {
+    get {
+      return( _sidebar );
+    }
+  }
+
   public NotebookTree notebooks {
     get {
       return( _notebooks );
@@ -160,7 +167,8 @@ public class MainWindow : Gtk.ApplicationWindow {
     }
   }
 
-  /* Create the main window UI */
+  //-------------------------------------------------------------
+  // Create the main window UI
   public MainWindow( Gtk.Application app, GLib.Settings settings ) {
 
     Object( application: app );
@@ -239,7 +247,8 @@ public class MainWindow : Gtk.ApplicationWindow {
       _notes.update_notes();
     });
 
-    _note.note_saved.connect((note) => {
+    _note.note_saved.connect((note, orig_link_titles) => {
+      update_note_links( note, orig_link_titles );
       _notes.update_notes();
       _smart_notebooks.handle_note( note );
     });
@@ -317,7 +326,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Loads the application-wide CSS */
+  //-------------------------------------------------------------
+  // Loads the application-wide CSS
   private void load_css() {
 
     var provider = new CssProvider();
@@ -326,7 +336,33 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Returns the name of the icon to use for a headerbar icon */
+  //-------------------------------------------------------------
+  // Update the note links associated with the given note.
+  private void update_note_links( Note note, HashSet<string> orig_link_titles ) {
+    var note_titles = new HashSet<string>();
+    note.get_note_links( note_titles );
+    note_titles.foreach((title) => {
+      if( orig_link_titles.contains( title ) ) {
+        orig_link_titles.remove( title );
+      } else {
+        var linked_note = _notebooks.find_note_by_title( title );
+        if( linked_note != null ) {
+          linked_note.add_referred( note.id );
+        }
+      }
+      return( true );
+    });
+    orig_link_titles.foreach((title) => {
+      var linked_note = _notebooks.find_note_by_title( title );
+      if( linked_note != null ) {
+        linked_note.remove_referred( note.id );
+      }
+      return( true );
+    });
+  }
+
+  //-------------------------------------------------------------
+  // Returns the name of the icon to use for a headerbar icon
   private string get_header_icon_name( string icon_name, string? symbolic = null ) {
     if( symbolic == null ) {
       return( "%s%s".printf( icon_name, (on_elementary ? "" : "-symbolic") ) );
@@ -335,7 +371,8 @@ public class MainWindow : Gtk.ApplicationWindow {
     }
   }
 
-  /* Adds keyboard shortcuts for the menu actions */
+  //-------------------------------------------------------------
+  // Adds keyboard shortcuts for the menu actions
   private void add_keyboard_shortcuts( Gtk.Application app ) {
 
     app.set_accels_for_action( "win.action_save",        { "<Control>s" } );
@@ -434,7 +471,8 @@ public class MainWindow : Gtk.ApplicationWindow {
     destroy();
   }
 
-  /* Displays the shortcuts cheatsheet */
+  //-------------------------------------------------------------
+  // Displays the shortcuts cheatsheet
   private void action_shortcuts() {
 
     var builder = new Builder.from_resource( "/com/github/phase1geo/mosaic-note/shortcuts.ui" );
@@ -451,7 +489,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Displays the preferences window and then handles its closing */
+  //-------------------------------------------------------------
+  // Displays the preferences window and then handles its closing
   private void action_preferences() {
     var prefs = new Preferences( this );
     prefs.show();
