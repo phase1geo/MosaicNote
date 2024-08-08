@@ -430,9 +430,13 @@ public class Utils {
   //-------------------------------------------------------------
   // Clears the given listbox widget
   public static void clear_listbox( ListBox box ) {
+#if GTK412
+    box.remove_all();
+#else    
     while( box.get_row_at_index( 0 ) != null ) {
       box.remove( box.get_row_at_index( 0 ) );
     }
+#endif
   }
 
   //-------------------------------------------------------------

@@ -41,7 +41,7 @@ public class NotePanel : Box {
   private NoteItemPanes   _content;
   private Button          _hist_prev;
   private Button          _hist_next;
-  private Box             _references;
+  private ListBox         _references;
   private bool            _ignore = false;
   private HashSet<string> _orig_link_titles;
 
@@ -320,7 +320,6 @@ public class NotePanel : Box {
       halign = Align.FILL,
       valign = Align.START,
       vexpand = true,
-      margin_bottom = 200
     };
     _content.item_selected.connect((pane) => {
       set_toolbar_for_pane( pane );
@@ -329,13 +328,13 @@ public class NotePanel : Box {
       note_link_clicked( link, _note );
     });
 
-    _references = create_references();
+    var references = create_references();
 
     var cbox = new Box( Orientation.VERTICAL, 5 );
     cbox.add_css_class( "themed" );
     cbox.append( _title );
     cbox.append( _content );
-    cbox.append( _references );
+    cbox.append( references );
 
     var sw = new ScrolledWindow() {
       halign = Align.FILL,
@@ -368,36 +367,63 @@ public class NotePanel : Box {
   // Creates the list of notes which contain links to this note.
   private Box create_references() {
 
-    var label = new Label( Utils.make_title( _( "Note References" ) ) ) {
+    var label = new Label( Utils.make_title( _( "Referenced By Notes" ) ) ) {
+      halign = Align.START,
       use_markup = true
     };
 
     var sep = new Separator( Orientation.HORIZONTAL );
 
-    _references = new Box( Orientation.VERTICAL, 5 );
-    _references.append( label );
-    _references.append( sep );
+    _references = new ListBox() {
+      halign = Align.START,
+      selection_mode = SelectionMode.NONE
+    };
 
-    return( _references );
+    var box = new Box( Orientation.VERTICAL, 5 ) {
+      margin_top = 10,
+      margin_bottom = 200
+    };
+    box.append( label );
+    box.append( sep );
+    box.append( _references );
+
+    return( box );
 
   }
 
   //-------------------------------------------------------------
   // Adds the list of notes that reference
   private void add_references() {
-    _note.referred.foreach((id) => {
-      var ref_note = _win.notebooks.find_note_by_id( id );
-      if( ref_note != null ) {
-        var link = new LinkButton.with_label( id.to_string(), ref_note.title );
-        link.activate_link.connect(() => {
-          _win.sidebar.select_notebook( ref_note.notebook );
-          _win.notes.select_note( ref_note.id, true );
-          return( true );
-        });
-        _references.append( link );
-      }
-      return( true );
-    });
+    Utils.clear_listbox( _references );
+    if( _note.referred.size == 0 ) {
+      var label = new Label( _( "<i>None</i>" ) ) {
+        use_markup = true,
+        margin_top = 5,
+        margin_bottom = 5
+      };
+      _references.append( label );
+    } else {
+      _note.referred.foreach((id) => {
+        var ref_note = _win.notebooks.find_note_by_id( id );
+        if( ref_note != null ) {
+          var dash = new Label( "-" );
+          var link = new LinkButton( (ref_note.title == "") ? _( "Untitled Note" ) : ref_note.title );
+          link.activate_link.connect(() => {
+            _win.sidebar.select_notebook( ref_note.notebook );
+            _win.notes.select_note( ref_note.id, true );
+            return( true );
+          });
+          var box = new Box( Orientation.HORIZONTAL, 5 ) {
+            margin_top = 5,
+            margin_bottom = 5
+          };
+          box.append( dash );
+          box.append( link );
+          _references.append( box );
+        }
+        return( true );
+      });
+    }
   }
 
   //-------------------------------------------------------------

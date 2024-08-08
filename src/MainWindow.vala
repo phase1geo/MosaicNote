@@ -329,11 +329,9 @@ public class MainWindow : Gtk.ApplicationWindow {
   //-------------------------------------------------------------
   // Loads the application-wide CSS
   private void load_css() {
-
     var provider = new CssProvider();
     provider.load_from_resource( "/com/github/phase1geo/mosaic-note/Application.css" );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
-
   }
 
   //-------------------------------------------------------------
