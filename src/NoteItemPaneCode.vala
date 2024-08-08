@@ -57,15 +57,14 @@ public class NoteItemPaneCode : NoteItemPane {
   // Adds an optional description entry field for the code.
   protected override Widget create_header1() {
 
-    var entry = new Entry() {
-      has_frame = false,
-      placeholder_text = _( "Description (Optional)" ),
+    var code_item = (NoteItemCode)item;
+
+    var entry = new EditableLabel( (code_item.description == "") ? _( "Description (Optional)" ) : code_item.description ) {
       halign = Align.FILL,
-      hexpand = true,
-      text = ((NoteItemCode)item).description
+      hexpand = true
     };
 
-    entry.activate.connect(() => {
+    entry.changed.connect(() => {
       ((NoteItemCode)item).description = entry.text;
     });
 

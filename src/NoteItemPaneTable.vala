@@ -108,10 +108,9 @@ public class NoteItemPaneTable : NoteItemPane {
 
     var table_item = (NoteItemTable)item;
 
-    var entry = new EditableLabel( _( "Description (optional)" ) ) {
+    var entry = new EditableLabel( (table_item.description == "") ? _( "Description (optional)" ) : table_item.description ) {
       halign = Align.FILL,
-      hexpand = true,
-      text = ((NoteItemTable)item).description
+      hexpand = true
     };
 
     entry.changed.connect(() => {

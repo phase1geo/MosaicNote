@@ -73,15 +73,14 @@ public class NoteItemPaneImage : NoteItemPane {
   // Create custom header when the pane is selected.
   protected override Widget create_header1() {
 
-    var entry = new Entry() {
-      has_frame = false,
-      placeholder_text = _( "Description (optional)" ),
+    var image_item = (NoteItemImage)item;
+
+    var entry = new EditableLabel( (image_item.description == "") ? _( "Description (optional)" ) : image_item.description ) {
       halign = Align.FILL,
-      hexpand = true,
-      text = ((NoteItemImage)item).description
+      hexpand = true
     };
 
-    entry.activate.connect(() => {
+    entry.changed.connect(() => {
       ((NoteItemImage)item).description = entry.text;
     });
 

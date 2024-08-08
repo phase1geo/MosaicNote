@@ -54,15 +54,14 @@ public class NoteItemPaneUML : NoteItemPane {
   // Displays the header bar when the pane is selected
   protected override Widget create_header1() {
 
-    var entry = new Entry() {
+    var uml_item = (NoteItemUML)item;
+
+    var entry = new EditableLabel( (uml_item.description == "") ? _( "Description (optional)" ) : uml_item.description ) {
       halign = Align.FILL,
-      hexpand = true,
-      placeholder_text = _( "Description (Optional)" ),
-      has_frame = false,
-      text = ((NoteItemUML)item).description
+      hexpand = true
     };
 
-    entry.activate.connect(() => {
+    entry.changed.connect(() => {
       ((NoteItemUML)item).description = entry.text;
     });
 
