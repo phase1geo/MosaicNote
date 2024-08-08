@@ -19,6 +19,8 @@
 * Authored by: Trevor Williams <phase1geo@gmail.com>
 */
 
+using Gee;
+
 public class NoteItemMarkdown : NoteItem {
 
 	// Default constructor
@@ -36,5 +38,22 @@ public class NoteItemMarkdown : NoteItem {
 	public override string to_markdown( bool pandoc ) {
 		return( content );
 	}
+
+  //-------------------------------------------------------------
+  // Retrieves all of the note links in the text.
+  public override void get_note_links( HashSet<string> note_titles ) {
+    try {
+      MatchInfo matches;
+      var re    = new Regex("\\[\\[(.*?)\\]\\]");
+      var start = 0;
+      if( re.match_full( content, -1, start, 0, out matches ) ) {
+        int start_pos, end_pos;
+        matches.fetch_pos( 1, out start_pos, out end_pos );
+        note_titles.add( content.slice( start_pos, end_pos ) );
+        start = end_pos;
+      }
+    } catch( RegexError e ) {}
+  }
+
 
 }
