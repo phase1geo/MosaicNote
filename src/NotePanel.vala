@@ -367,7 +367,7 @@ public class NotePanel : Box {
   // Creates the list of notes which contain links to this note.
   private Box create_references() {
 
-    var label = new Label( Utils.make_title( _( "Referenced By Notes" ) ) ) {
+    var label = new Label( Utils.make_title( _( "Referenced By" ) ) ) {
       halign = Align.START,
       use_markup = true
     };

@@ -143,6 +143,8 @@ public class NotesPanel : Box {
     var row = _list.get_row_at_index( index );
     if( row != null ) {
       _list.select_row( row );
+    } else {
+      note_selected( null );
     }
   }
 
