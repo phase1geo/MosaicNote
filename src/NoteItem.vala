@@ -27,6 +27,7 @@ public enum NoteItemType {
 	IMAGE,
   UML,
   TABLE,
+  ASSETS,
 	NUM;
 
   //-------------------------------------------------------------
@@ -39,6 +40,7 @@ public enum NoteItemType {
 			case IMAGE    :  return( "image" );
       case UML      :  return( "uml" );
       case TABLE    :  return( "table" );
+      case ASSETS   :  return( "assets" );
 			default       :  assert_not_reached();
 		}
 	}
@@ -53,6 +55,7 @@ public enum NoteItemType {
       case IMAGE    :  return( _( "image" ) );
       case UML      :  return( _( "uml" ) );
       case TABLE    :  return( _( "table" ) );
+      case ASSETS   :  return( _( "assets" ) );
       default       :  assert_not_reached();
     }
   }
@@ -67,6 +70,7 @@ public enum NoteItemType {
 			case IMAGE    :  return( _( "Image" ) );
       case UML      :  return( _( "UML Diagram" ) );
       case TABLE    :  return( _( "Table" ) );
+      case ASSETS   :  return( _( "Files" ) );
 			default       :  assert_not_reached();
 		}
 	}
@@ -81,6 +85,7 @@ public enum NoteItemType {
 			case "image"    :  return( IMAGE );
       case "uml"      :  return( UML );
       case "table"    :  return( TABLE );
+      case "assets"   :  return( ASSETS );
 			default         :  return( NUM );
 		}
 	}
@@ -100,6 +105,8 @@ public enum NoteItemType {
       return( UML );
     } else if( down == _( "table" ) ) {
       return( TABLE );
+    } else if( down == _( "assets" ) ) {
+      return( ASSETS );
     } else {
       return( NUM );
     }
@@ -125,6 +132,7 @@ public enum NoteItemType {
 			case IMAGE    :  return( new NoteItemImage( note ) );
       case UML      :  return( new NoteItemUML( note ) );
       case TABLE    :  return( new NoteItemTable( note, 0, 0 ) );
+      case ASSETS   :  return( new NoteItemAssets( note ) );
 			default       :  assert_not_reached();
 		}
 	}
@@ -138,6 +146,7 @@ public enum NoteItemType {
       case IMAGE    :  return( new ToolbarItem() );
       case UML      :  return( new ToolbarItem() );
       case TABLE    :  return( new ToolbarItem() );
+      case ASSETS   :  return( new ToolbarItem() );
       default       :  assert_not_reached();
     }
   }

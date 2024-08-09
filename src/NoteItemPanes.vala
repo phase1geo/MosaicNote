@@ -134,6 +134,7 @@ public class NoteItemPanes : Box {
       case NoteItemType.IMAGE    :  pane = new NoteItemPaneImage( _win, item, _spell );     break;
       case NoteItemType.UML      :  pane = new NoteItemPaneUML( _win, item, _spell );       break;
       case NoteItemType.TABLE    :  pane = new NoteItemPaneTable( _win, item, _spell );     break;
+      case NoteItemType.ASSETS   :  pane = new NoteItemPaneAssets( _win, item, _spell );    break;
       default                    :  return;
     }
 

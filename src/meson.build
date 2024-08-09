@@ -14,6 +14,7 @@ sources += files(
     'NoteHistory.vala',
     'NoteItem.vala',
     'NoteItemPane.vala',
+    'NoteItemPaneAssets.vala',
     'NoteItemPaneCode.vala',
     'NoteItemPaneImage.vala',
     'NoteItemPaneMarkdown.vala',
