@@ -3,23 +3,34 @@ TODO:
  ☐ Add support for math note item
    Still trying to figure out what to do here.
    I would like to use AsciiMath for the text input and generate a PNG file
- ☐ Add support for file/asset manager note item
+ ☐ Add support for file/asset manager note item @ip
    Allows the user to add file links, URLs, etc. and they are saved in an editable list
  ☐ Add support for note linking
    ☐ Add auto-completion when entering note links
      Not exactly sure how to currently implement this
    ☐ Add button to copy a note link to the clipboard
    ☐ Add ability to paste note link into a note
-   ☐ Create back-linking
+   ✔ Create back-linking @done (24-08-07 23:05)
      This is going to be tricky because it will require checking for note links in the
      notes whenever a note is saved and updating those notes.
  ☐ Add support for exporting a note item
    ☐ Add ability to save to file or copy to clipboard
- ☐ Add support for NotesPanel sorting
+ ☐ Add support for NotesPanel sorting @ip
  ☐ Add drag and drop support for organizing notebooks
  ☐ Add drag and drop support for reorganizing smart notebooks
  ☐ Add support for undo/redo
    Need to figure out what we will be able to undo/redo (it won't be everything)
+ ☐ Add ability to import a note from Markdown format
+   Note should do the file processing
+ ☐ Add ability to import a directory full of Markdown notes into notebook(s)
+   This could be used to import notes from another tool perhaps
+ ☐ Add ability to export all notes into a series of directories
+   Similar in structure to how IA writer notes are handled (I forget the format)
+
+
+BUGS:
+
+  ☐ When a Markdown note item loses focus, the "More" button moves to the left instead of staying on the right
 
 ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
 Archive:

@@ -21,14 +21,156 @@
 
 using Gtk;
 
+public enum NoteSortType {
+  TITLE,
+  CREATED,
+  UPDATED,
+  VIEWED,
+  NUM;
+
+  public string to_string() {
+    switch( this ) {
+      case TITLE   :  return( "title" );
+      case CREATED :  return( "created" );
+      case UPDATED :  return( "updated" );
+      case VIEWED  :  return( "viewed" );
+      default      :  assert_not_reached();
+    }
+  }
+
+  public string label() {
+    switch( this ) {
+      case TITLE   :  return( _( "Title" ) );
+      case CREATED :  return( _( "Date Created" ) );
+      case UPDATED :  return( _( "Date Last Updated" ) );
+      case VIEWED  :  return( _( "Date Last Viewed" ) );
+      default      :  assert_not_reached();
+    }
+  }
+
+  public static NoteSortType parse( string val ) {
+    switch( val ) {
+      case "title"   :  return( TITLE );
+      case "created" :  return( CREATED );
+      case "updated" :  return( UPDATED );
+      case "viewed"  :  return( VIEWED );
+      default        :  return( TITLE );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Compares the note titles in ascending order.
+  private int title_compare_ascend( Note a, Note b ) {
+    return( strcmp( a.title, b.title ) );
+  }
+
+  //-------------------------------------------------------------
+  // Compares the note titles in descending order.
+  private int title_compare_descend( Note a, Note b ) {
+    return( strcmp( b.title, a.title ) );
+  }
+
+  //-------------------------------------------------------------
+  // Compares two dates.
+  private int date_compare( DateTime a, DateTime b ) {
+    return( (int)(a.to_unix() - b.to_unix()) );
+  }
+
+  //-------------------------------------------------------------
+  // Compares creation dates of two notes in ascending order.
+  private int created_compare_ascend( Note a, Note b ) {
+    return( date_compare( a.created, b.created ) );
+  }
+
+  //-------------------------------------------------------------
+  // Compares creation dates of two notes in descending order.
+  private int created_compare_descend( Note a, Note b ) {
+    return( date_compare( b.created, a.created ) );
+  }
+
+  //-------------------------------------------------------------
+  // Compares update dates of two notes in ascending order.
+  private int updated_compare_ascend( Note a, Note b ) {
+    return( date_compare( a.updated, b.updated ) );
+  }
+
+  //-------------------------------------------------------------
+  // Compares update dates of two notes in descending order.
+  private int updated_compare_descend( Note a, Note b ) {
+    return( date_compare( b.updated, a.updated ) );
+  }
+
+  //-------------------------------------------------------------
+  // Compares last viewed dates of two notes in ascending order.
+  private int viewed_compare_ascend( Note a, Note b ) {
+    return( date_compare( a.viewed, b.viewed ) );
+  }
+
+  //-------------------------------------------------------------
+  // Compares last viewed dates of two notes in descending order.
+  private int viewed_compare_descend( Note a, Note b ) {
+    return( date_compare( b.viewed, a.viewed ) );
+  }
+
+  //-------------------------------------------------------------
+  // Returns the comparison function based on this value and
+  // the ascend.
+  public int do_compare( Note a, Note b, bool ascend ) {
+    if( ascend ) {
+      switch( this ) {
+        case TITLE   :  return( title_compare_ascend( a, b ) );
+        case CREATED :  return( created_compare_ascend( a, b ) );
+        case UPDATED :  return( updated_compare_ascend( a, b ) );
+        case VIEWED  :  return( viewed_compare_ascend( a, b ) );
+        default      :  assert_not_reached();
+      }
+    } else {
+      switch( this ) {
+        case TITLE   :  return( title_compare_descend( a, b ) );
+        case CREATED :  return( created_compare_descend( a, b ) );
+        case UPDATED :  return( updated_compare_descend( a, b ) );
+        case VIEWED  :  return( viewed_compare_descend( a, b ) );
+        default      :  assert_not_reached();
+      }
+    }
+  }
+}
+
+public class NoteSorter : Sorter {
+
+  public NoteSortType sort_type { get; set; default = NoteSortType.CREATED; }
+  public bool         ascend    { get; set; default = false; }
+
+  //-------------------------------------------------------------
+  // Default constructor
+  public NoteSorter() {
+    // base();
+  }
+
+  //-------------------------------------------------------------
+  // Returns the result of comparing the two notes based on the current
+  // sort_type and ascend value.
+  public override Ordering compare( Object? a, Object? b ) {
+    return( Ordering.from_cmpfunc( sort_type.do_compare( (Note)a, (Note)b, ascend ) ) );
+  }
+
+}
+
 public class NotesPanel : Box {
 
   private MainWindow    _win;
 	private BaseNotebook? _bn = null;
 	private ListBox       _list;
-  private ListModel     _model;
+  private SortListModel _model;
   private Button        _add;
-  private bool          _ignore = false;
+  private bool          _ignore      = false;
+  private MenuButton    _sort;
+  private NoteSorter    _sorter;
+
+  private const GLib.ActionEntry[] action_entries = {
+    { "action_set_sort_type",      action_set_sort_type, "i" },
+    { "action_set_sort_direction", action_set_sort_direction, "i" },
+  };
 
 	public signal void note_selected( Note? note );
 
@@ -45,6 +187,9 @@ public class NotesPanel : Box {
 			selection_mode = SelectionMode.BROWSE,
       show_separators = true
 		};
+
+    _sorter = new NoteSorter();
+    _model  = new SortListModel( null, _sorter );
 
     var list_key = new EventControllerKey();
     _list.add_controller( list_key );
@@ -75,6 +220,7 @@ public class NotesPanel : Box {
       margin_start = 5,
       margin_top = 5,
       margin_bottom = 5,
+      halign = Align.START,
 			tooltip_text = _( "Add new note" ),
       sensitive = false
 		};
@@ -87,14 +233,42 @@ public class NotesPanel : Box {
       _list.select_row( _list.get_row_at_index( nb.count() - 1 ) );
 		});
 
+    // Create sorting menu
+    var sort_type = new GLib.Menu();
+    for( int i=0; i<NoteSortType.NUM; i++ ) {
+      var stype = (NoteSortType)i;
+      sort_type.append( stype.label(), "notes.action_set_sort_type(%d)".printf( i ) );
+    }
+    var dir_type = new GLib.Menu();
+    dir_type.append( _( "Ascending" ),  "notes.action_set_sort_direction(%d)".printf( 1 ) );
+    dir_type.append( _( "Descending" ), "notes.action_set_sort_direction(%d)".printf( 0 ) );
+    var sort_menu = new GLib.Menu();
+    sort_menu.append_section( null, sort_type );
+    sort_menu.append_section( null, dir_type );
+
+    _sort = new MenuButton() {
+      has_frame  = false,
+      icon_name  = "view-sort-descending-symbolic",
+      halign     = Align.END,
+      hexpand    = true,
+      menu_model = sort_menu,
+      sensitive  = false
+    };
+
 		var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
 			valign = Align.END
 		};
 
 		bbox.append( _add );
+    bbox.append( _sort );
 
 		append( _list );
 		append( bbox );
+
+    /* Set the stage for menu actions */
+    var actions = new SimpleActionGroup ();
+    actions.add_action_entries( action_entries, this );
+    insert_action_group( "notes", actions );
 
 	}
 
@@ -127,13 +301,16 @@ public class NotesPanel : Box {
   public void populate_with_notebook( BaseNotebook? bn ) {
     _bn = bn;
     if( bn != null ) {
-      _model = bn.get_model();
+      _model.set_model( bn.get_model() );
       _list.bind_model( _model, create_note );
-      _add.sensitive = bn_is_node() || (bn_is_notebook() && (_win.notebooks.inbox == (Notebook)_bn));
+      var sensitive = bn_is_node() || (bn_is_notebook() && (_win.notebooks.inbox == (Notebook)_bn));
+      _add.sensitive  = sensitive;
+      _sort.sensitive = sensitive;
     } else {
-      _model = null;
+      _model.set_model( null );
       _list.bind_model( null, create_note );
-      _add.sensitive = false;
+      _add.sensitive  = false;
+      _sort.sensitive = false;
     }
   }
 
@@ -224,6 +401,26 @@ public class NotesPanel : Box {
         _win.notebooks.trash.move_note( note );
       }
       populate_with_notebook( _bn );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Sets the sort type of the model sorter to the associated value.
+  private void action_set_sort_type( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      _sorter.sort_type = (NoteSortType)variant.get_int32();
+      _sorter.changed( SorterChange.DIFFERENT );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Sets the sort order of the model sorter.  Updates the sort
+  // icon to match.
+  private void action_set_sort_direction( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      _sorter.ascend = (variant.get_int32() == 1);
+      _sort.icon_name = _sorter.ascend ? "view-sort-ascending-symbolic" : "view-sort-descending-symbolic";
+      _sorter.changed( SorterChange.INVERTED );
     }
   }
 
