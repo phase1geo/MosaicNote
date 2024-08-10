@@ -10,12 +10,8 @@ TODO:
      Not exactly sure how to currently implement this
    ☐ Add button to copy a note link to the clipboard
    ☐ Add ability to paste note link into a note
-   ✔ Create back-linking @done (24-08-07 23:05)
-     This is going to be tricky because it will require checking for note links in the
-     notes whenever a note is saved and updating those notes.
  ☐ Add support for exporting a note item
    ☐ Add ability to save to file or copy to clipboard
- ☐ Add support for NotesPanel sorting @ip
  ☐ Add drag and drop support for organizing notebooks
  ☐ Add drag and drop support for reorganizing smart notebooks
  ☐ Add support for undo/redo
@@ -34,6 +30,10 @@ BUGS:
 
 ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
 Archive:
+ ✔ Add support for NotesPanel sorting @ip @done (24-08-10 00:25) @project(TODO)
+ ✔ Create back-linking @done (24-08-07 23:05) @project(TODO)
+  This is going to be tricky because it will require checking for note links in the
+  notes whenever a note is saved and updating those notes.
  ✔ Use ColumnView widget with embedded textboxes @done (24-08-04 23:21) @project(TODO)
  ✔ Add support for table note item @done (24-08-04 23:21) @project(TODO)
  ✔ Add support for note drag and drop support @done (24-07-21 17:36) @project(TODO)
