@@ -233,11 +233,16 @@ public class NotesPanel : Box {
       _list.select_row( _list.get_row_at_index( nb.count() - 1 ) );
 		});
 
+    var actions = new SimpleActionGroup();
+
     // Create sorting menu
+    var sort_menu = create_sort_menu( actions );
+
+    /*
     var sort_type = new GLib.Menu();
     for( int i=0; i<NoteSortType.NUM; i++ ) {
       var stype = (NoteSortType)i;
-      sort_type.append( stype.label(), "notes.action_set_sort_type(%d)".printf( i ) );
+      sort_type.append( stype.label(), stype.to_string() );
     }
     var dir_type = new GLib.Menu();
     dir_type.append( _( "Ascending" ),  "notes.action_set_sort_direction(%d)".printf( 1 ) );
@@ -245,6 +250,7 @@ public class NotesPanel : Box {
     var sort_menu = new GLib.Menu();
     sort_menu.append_section( null, sort_type );
     sort_menu.append_section( null, dir_type );
+    */
 
     _sort = new MenuButton() {
       has_frame  = false,
@@ -266,11 +272,84 @@ public class NotesPanel : Box {
 		append( bbox );
 
     /* Set the stage for menu actions */
-    var actions = new SimpleActionGroup ();
     actions.add_action_entries( action_entries, this );
     insert_action_group( "notes", actions );
 
 	}
+
+  //-------------------------------------------------------------
+  // Creates the sorting menu actions.
+  private GLib.Menu create_sort_menu( SimpleActionGroup action_group ) {
+
+    SimpleAction[] type_actions = {};
+
+    var sort_types = new GLib.Menu();
+
+    // Create sort type menu items
+    for( int i=0; i<NoteSortType.NUM; i++ ) {
+      var sort_type = (NoteSortType)i;
+      var action = new SimpleAction.stateful( sort_type.to_string(), null, new Variant.boolean( _sorter.sort_type == sort_type ) );
+      action.activate.connect(() => {
+        var state = action.get_state();
+        var b     = state.get_boolean();
+        action.set_state( new Variant.boolean( !b ) );
+      });
+      action_group.add_action( action );
+      sort_types.append( sort_type.label(), "notes.%s".printf( sort_type.to_string() ) );
+      type_actions += action;
+    }
+
+    var index = 0;
+    foreach( var action in type_actions ) {
+      var sort_type = (NoteSortType)index++;
+      action.activate.connect(() => {
+        if( _sorter.sort_type != sort_type ) {
+          foreach( var a in type_actions ) {
+            a.set_state( new Variant.boolean( false ) );
+          }
+          action.set_state( new Variant.boolean( true ) );
+          _sorter.sort_type = sort_type;
+          _sorter.changed( SorterChange.DIFFERENT );
+        }
+      });
+    }
+
+    // Create sort direction menu items
+    var ascending  = new SimpleAction.stateful( "ascending", null, new Variant.boolean( _sorter.ascend ) );
+    var descending = new SimpleAction.stateful( "descending", null, new Variant.boolean( !_sorter.ascend ) );
+
+    ascending.activate.connect(() => {
+      if( !_sorter.ascend ) {
+        ascending.set_state( new Variant.boolean( true ) );
+        descending.set_state( new Variant.boolean( false ) );
+        _sorter.ascend = true;
+        _sorter.changed( SorterChange.INVERTED );
+      }
+    });
+
+    descending.activate.connect(() => {
+      if( _sorter.ascend ) {
+        descending.set_state( new Variant.boolean( true ) );
+        ascending.set_state( new Variant.boolean( false ) );
+        _sorter.ascend = false;
+        _sorter.changed( SorterChange.INVERTED );
+      }
+    });
+
+    action_group.add_action( ascending );
+    action_group.add_action( descending );
+
+    var dir_types  = new GLib.Menu();
+    dir_types.append( _( "Ascending" ), "notes.ascending" );
+    dir_types.append( _( "Descending" ), "notes.descending" );
+
+    var sort_menu = new GLib.Menu();
+    sort_menu.append_section( null, sort_types );
+    sort_menu.append_section( null, dir_types );
+
+    return( sort_menu );
+
+  }
 
   //-------------------------------------------------------------
   // Returns true if the stored base notebook is from the notebook tree.

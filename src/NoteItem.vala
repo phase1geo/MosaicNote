@@ -325,13 +325,7 @@ public class NoteItem {
     var resource = get_resource_filename();
     if( FileUtils.test( resource, FileTest.EXISTS ) ) {
       if( FileUtils.test( resource, FileTest.IS_SYMLINK ) ) {
-        try {
-          string target_path = FileUtils.read_link( resource );
-          return( FileUtils.unlink( resource ) == 0 );
-        } catch( FileError e ) {
-          stdout.printf( "ERROR:  %s\n", e.message );
-          return( false );
-        }
+        return( FileUtils.unlink( resource ) == 0 );
       } else {
         return( FileUtils.unlink( resource ) == 0 );
       }
