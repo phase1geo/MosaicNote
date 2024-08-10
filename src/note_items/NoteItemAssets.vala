@@ -27,12 +27,14 @@ public class NoteItemAssets : NoteItem {
 	// Default constructor
 	public NoteItemAssets( Note note ) {
 		base( note, NoteItemType.ASSETS );
+    _assets = new Array<string>();
 	}
 
   //-------------------------------------------------------------
 	// Constructor from XML node
 	public NoteItemAssets.from_xml( Note note, Xml.Node* node ) {
 		base( note, NoteItemType.ASSETS );
+    _assets = new Array<string>();
 		load( node );
 	}
 

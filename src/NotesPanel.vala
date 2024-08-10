@@ -238,20 +238,6 @@ public class NotesPanel : Box {
     // Create sorting menu
     var sort_menu = create_sort_menu( actions );
 
-    /*
-    var sort_type = new GLib.Menu();
-    for( int i=0; i<NoteSortType.NUM; i++ ) {
-      var stype = (NoteSortType)i;
-      sort_type.append( stype.label(), stype.to_string() );
-    }
-    var dir_type = new GLib.Menu();
-    dir_type.append( _( "Ascending" ),  "notes.action_set_sort_direction(%d)".printf( 1 ) );
-    dir_type.append( _( "Descending" ), "notes.action_set_sort_direction(%d)".printf( 0 ) );
-    var sort_menu = new GLib.Menu();
-    sort_menu.append_section( null, sort_type );
-    sort_menu.append_section( null, dir_type );
-    */
-
     _sort = new MenuButton() {
       has_frame  = false,
       icon_name  = "view-sort-descending-symbolic",

@@ -40,3 +40,9 @@
    border-width: 1px;
    border-color: #888;
 }
+
+.drop-area {
+  border-style: dashed;
+  border-width: 1px;
+  border-color: #888;
+}

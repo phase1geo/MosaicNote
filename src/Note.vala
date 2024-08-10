@@ -381,6 +381,7 @@ public class Note : Object {
         	case NoteItemType.IMAGE    :  load_image_item( it );     break;
         	case NoteItemType.UML      :  load_uml_item( it );       break;
         	case NoteItemType.TABLE    :  load_table_item( it );     break;
+          case NoteItemType.ASSETS   :  load_assets_item( it );    break;
           default                    :  break;
         }
 			}
@@ -421,5 +422,12 @@ public class Note : Object {
 		var item = new NoteItemTable.from_xml( this, node );
 		_items.append_val( item );
 	}
+
+  //-------------------------------------------------------------
+  // Loads an asset item from XML data
+  private void load_assets_item( Xml.Node* node ) {
+    var item = new NoteItemAssets.from_xml( this, node );
+    _items.append_val( item );
+  }
 
 }
