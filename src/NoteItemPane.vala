@@ -125,7 +125,7 @@ public class NoteItemPane : Box {
 
   //-------------------------------------------------------------
   // Clears the current indicator
-  public void clear_current() {
+  public virtual void clear_current() {
     remove_css_class( "active-item" );
     if( item.expanded ) {
       if( (_stack.get_child_by_name( "unselected" ) != null) && show_header2() ) {
@@ -186,7 +186,7 @@ public class NoteItemPane : Box {
 
     text.buffer.get_start_iter( out iter );
     text.get_iter_location( iter, out location );
-    text.set_size_request( -1, (location.height + 2) );
+    text.set_size_request( -1, (location.height + 4) );
 
   }
 
@@ -259,6 +259,18 @@ public class NoteItemPane : Box {
   }
 
   //-------------------------------------------------------------
+  // Allows derived class to handle an up key event.
+  protected virtual bool handled_up() {
+    return( false );
+  }
+
+  //-------------------------------------------------------------
+  // Allows derived class to handle a down key event.
+  protected virtual bool handled_down() {
+    return( false );
+  }
+
+  //-------------------------------------------------------------
   // Adds keyboard events when this note item has keyboard input focus.
   // Events will add new items, delete the current item, or move the
   // input focus to the next or previous item.
@@ -298,7 +310,7 @@ public class NoteItemPane : Box {
             if( control ) {
               move_item( true );
               return( true );
-            } else {
+            } else if( !handled_up() ) {
               var text = get_text();
               if( text != null ) {
                 TextIter iter;
@@ -317,7 +329,7 @@ public class NoteItemPane : Box {
             if( control ) {
               move_item( false );
               return( true );
-            } else {
+            } else if( !handled_down() ) {
               var text = get_text();
               if( text != null ) {
                 TextIter iter;

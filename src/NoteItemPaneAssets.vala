@@ -27,6 +27,7 @@ using Gee;
 public class NoteItemPaneAssets : NoteItemPane {
 
   private ListBox _listbox;
+  private Box     _drop_box;
 
   public NoteItemAssets assets_item {
     get {
@@ -44,55 +45,169 @@ public class NoteItemPaneAssets : NoteItemPane {
   // Grabs the focus of the note item at the specified position.
   public override void grab_item_focus( TextCursorPlacement placement ) {
     _listbox.grab_focus();
+    _listbox.select_row( _listbox.get_row_at_index( 0 ) );
+    _drop_box.visible = true;
   }
 
   //-------------------------------------------------------------
   // Adds the given asset to the listbox.
   private void add_asset( string uri, bool add_to_item ) {
+
     var label  = new Label( Filename.display_basename( uri ) ) {
       ellipsize = Pango.EllipsizeMode.MIDDLE
     };
+
     var button = new LinkButton( Filename.display_basename( uri ) ) {
       halign = Align.START,
       hexpand = true,
-      child = label
+      child = label,
+      tooltip_text = uri
     };
+
     button.activate_link.connect(() => {
       button.visited = true;
       Utils.open_url( uri );
       return( true );
     });
+
     _listbox.append( button );
+
     if( add_to_item ) {
       assets_item.add_asset( uri );
     }
+
+  }
+
+  // Displays a dialog to request
+  private void show_file_dialog() {
+
+#if GTK410
+    var dialog = Utils.make_file_chooser( _( "Select File" ), _( "Select" ) );
+
+    dialog.open.begin( win, null, (obj, res) => {
+      try {
+        var file = dialog.open.end( res );
+        if( file != null ) {
+          add_asset( file.get_uri(), true );
+        }
+      } catch( Error e ) {}
+    });
+#else
+    var dialog = Utils.make_file_chooser( _( "Select File" ), win, FileChooserAction.OPEN, _( "Select" ) );
+
+    dialog.response.connect((id) => {
+      if( id == ResponseType.ACCEPT ) {
+        var file = dialog.get_file();
+        if( file != null ) {
+          add_asset( file.get_uri(), true );
+        }
+      }
+      dialog.destroy();
+    });
+
+    dialog.show();
+#endif
+
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if the listbox will use the up key event.
+  protected override bool handled_up() {
+    var row = _listbox.get_selected_row();
+    return( (row != null) && (row.get_index() > 0) );
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if the listbox will use the down key event.
+  protected override bool handled_down() {
+    var row = _listbox.get_selected_row();
+    return( (row != null) && (row.get_index() < (assets_item.size() - 1)));
+  }
+
+  //-------------------------------------------------------------
+  // Add elements to the note item header bar
+  protected override Widget create_header1() {
+
+    var add = new Button.from_icon_name( "list-add-symbolic" ) {
+      halign       = Align.END,
+      hexpand      = true,
+      tooltip_text = _( "Add assets" )
+    };
+
+    add.clicked.connect(() => {
+      show_file_dialog();
+    });
+
+    return( add );
+
+  }
+
+  //-------------------------------------------------------------
+  // Called when our item box loses focus.
+  public override void clear_current() {
+    base.clear_current();
+    _drop_box.visible = false;
+    _listbox.select_row( null );
   }
 
   //-------------------------------------------------------------
   // Adds a new Markdown item at the given position in the content area
   protected override Widget create_pane() {
 
+    var label = new Label( Utils.make_title( _( "Files" ) ) ) {
+      halign       = Align.START,
+      hexpand      = true,
+      use_markup   = true,
+      margin_start = 5,
+      margin_end   = 5
+    };
+
+    var focus = new EventControllerFocus();
+    var key   = new EventControllerKey();
+
     _listbox = new ListBox() {
       halign  = Align.START,
       hexpand = true,
-      selection_mode = SelectionMode.NONE
+      selection_mode = SelectionMode.SINGLE
     };
+    _listbox.add_controller( key );
+    _listbox.add_controller( focus );
+
+    key.key_pressed.connect((keyval, keycode, state) => {
+      var row = _listbox.get_selected_row();
+      if( row != null ) {
+        if( (keyval == Gdk.Key.Delete) || (keyval == Gdk.Key.BackSpace) ) {
+          assets_item.remove_asset( row.get_index() );
+          _listbox.remove( row );
+          return( true );
+        }
+      }
+      return( false );
+    });
+
+    focus.enter.connect(() => {
+      set_as_current();
+      _drop_box.visible = true;
+    });
 
     var drop_label = new Label( _( "Drag file or URL here to add" ) ) {
       halign = Align.CENTER,
       hexpand = true,
-      margin_top = 20,
-      margin_bottom = 20
+      margin_top = 10,
+      margin_bottom = 10
     };
 
-    var drop_box = new Box( Orientation.HORIZONTAL, 5 ) {
-      halign = Align.FILL,
+    _drop_box = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign        = Align.FILL,
+      margin_start  = 5,
+      margin_end    = 5,
+      margin_bottom = 5
     };
-    drop_box.append( drop_label );
-    drop_box.add_css_class( "drop-area" );
+    _drop_box.append( drop_label );
+    _drop_box.add_css_class( "drop-area" );
 
     var drop = new DropTarget( typeof( File ), Gdk.DragAction.COPY );
-    drop_box.add_controller( drop );
+    _drop_box.add_controller( drop );
 
     drop.drop.connect((val, x, y) => {
       var file = (File)val.get_object();
@@ -104,13 +219,16 @@ public class NoteItemPaneAssets : NoteItemPane {
     });
 
     var box = new Box( Orientation.VERTICAL, 5 );
+    box.append( label );
     box.append( _listbox );
-    box.append( drop_box );
+    box.append( _drop_box );
 
     for( int i=0; i<assets_item.size(); i++ ) {
       var asset = assets_item.get_asset( i );
       add_asset( asset, false );
     }
+
+    handle_key_events( _listbox );
 
     return( box );
 
