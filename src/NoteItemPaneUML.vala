@@ -123,12 +123,6 @@ public class NoteItemPaneUML : NoteItemPane {
   }
 
   //-------------------------------------------------------------
-  // Returns true if there is a description associated with this pane
-  protected override bool show_header2() {
-    return( ((NoteItemUML)item).description != "" );
-  }
-
-  //-------------------------------------------------------------
   // Adds a new UML item at the given position in the content area
   protected override Widget create_pane() {
 

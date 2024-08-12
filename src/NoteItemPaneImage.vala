@@ -106,12 +106,6 @@ public class NoteItemPaneImage : NoteItemPane {
   }
 
   //-------------------------------------------------------------
-  // Returns true if there is a description associated with this pane.
-  protected override bool show_header2() {
-    return( ((NoteItemImage)item).description != "" );
-  }
-
-  //-------------------------------------------------------------
   // Adds the UI for the image panel.
   protected override Widget create_pane() {
 

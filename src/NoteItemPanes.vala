@@ -184,14 +184,17 @@ public class NoteItemPanes : Box {
     });
 
     pane.set_as_current.connect((msg) => {
-      if( (_current_item != -1) && (_current_item != Utils.get_child_index( this, pane )) ) {
+      if( _current_item == -1 ) {
+        _current_item = Utils.get_child_index( this, pane );
+        item_selected( pane );
+      } else if( _current_item != Utils.get_child_index( this, pane ) ) {
         var other_pane = (NoteItemPane)Utils.get_child_at_index( this, _current_item );
         if( other_pane != null ) {
           other_pane.clear_current();
         }
+        _current_item = Utils.get_child_index( this, pane );
+        item_selected( pane );
       }
-      _current_item = Utils.get_child_index( this, pane );
-      item_selected( pane );
     });
 
     pane.note_link_clicked.connect((link) => {

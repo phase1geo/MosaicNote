@@ -26,6 +26,7 @@ using Gee;
 // Note item pane that represents asset links.
 public class NoteItemPaneAssets : NoteItemPane {
 
+  private Button  _add;
   private ListBox _listbox;
   private Box     _drop_box;
 
@@ -44,8 +45,12 @@ public class NoteItemPaneAssets : NoteItemPane {
   //-------------------------------------------------------------
   // Grabs the focus of the note item at the specified position.
   public override void grab_item_focus( TextCursorPlacement placement ) {
-    _listbox.grab_focus();
-    _listbox.select_row( _listbox.get_row_at_index( 0 ) );
+    if( assets_item.size() > 0 ) {
+      _listbox.grab_focus();
+      _listbox.select_row( _listbox.get_row_at_index( 0 ) );
+    } else {
+      _add.grab_focus();
+    }
     _drop_box.visible = true;
   }
 
@@ -53,24 +58,14 @@ public class NoteItemPaneAssets : NoteItemPane {
   // Adds the given asset to the listbox.
   private void add_asset( string uri, bool add_to_item ) {
 
-    var label  = new Label( Filename.display_basename( uri ) ) {
-      ellipsize = Pango.EllipsizeMode.MIDDLE
-    };
-
-    var button = new LinkButton( Filename.display_basename( uri ) ) {
+    var label = new Label( Filename.display_basename( uri ) ) {
       halign = Align.START,
       hexpand = true,
-      child = label,
+      ellipsize = Pango.EllipsizeMode.MIDDLE,
       tooltip_text = uri
     };
 
-    button.activate_link.connect(() => {
-      button.visited = true;
-      Utils.open_url( uri );
-      return( true );
-    });
-
-    _listbox.append( button );
+    _listbox.append( label );
 
     if( add_to_item ) {
       assets_item.add_asset( uri );
@@ -78,6 +73,7 @@ public class NoteItemPaneAssets : NoteItemPane {
 
   }
 
+  //-------------------------------------------------------------
   // Displays a dialog to request
   private void show_file_dialog() {
 
@@ -128,17 +124,17 @@ public class NoteItemPaneAssets : NoteItemPane {
   // Add elements to the note item header bar
   protected override Widget create_header1() {
 
-    var add = new Button.from_icon_name( "list-add-symbolic" ) {
+    _add = new Button.from_icon_name( "list-add-symbolic" ) {
       halign       = Align.END,
       hexpand      = true,
       tooltip_text = _( "Add assets" )
     };
 
-    add.clicked.connect(() => {
+    _add.clicked.connect(() => {
       show_file_dialog();
     });
 
-    return( add );
+    return( _add );
 
   }
 
@@ -155,11 +151,11 @@ public class NoteItemPaneAssets : NoteItemPane {
   protected override Widget create_pane() {
 
     var label = new Label( Utils.make_title( _( "Files" ) ) ) {
-      halign       = Align.START,
-      hexpand      = true,
-      use_markup   = true,
-      margin_start = 5,
-      margin_end   = 5
+      halign     = Align.START,
+      hexpand    = true,
+      use_markup = true,
+      can_focus  = true,
+      focusable  = true
     };
 
     var focus = new EventControllerFocus();
@@ -168,10 +164,16 @@ public class NoteItemPaneAssets : NoteItemPane {
     _listbox = new ListBox() {
       halign  = Align.START,
       hexpand = true,
-      selection_mode = SelectionMode.SINGLE
+      selection_mode = SelectionMode.SINGLE,
+      activate_on_single_click = false
     };
     _listbox.add_controller( key );
     _listbox.add_controller( focus );
+
+    _listbox.row_activated.connect((row) => {
+      var uri = assets_item.get_asset( row.get_index() );
+      Utils.open_url( uri );
+    });
 
     key.key_pressed.connect((keyval, keycode, state) => {
       var row = _listbox.get_selected_row();
@@ -218,7 +220,12 @@ public class NoteItemPaneAssets : NoteItemPane {
       return( false );
     });
 
-    var box = new Box( Orientation.VERTICAL, 5 );
+    var box = new Box( Orientation.VERTICAL, 5 ) {
+      margin_start  = 5,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 5
+    };
     box.append( label );
     box.append( _listbox );
     box.append( _drop_box );

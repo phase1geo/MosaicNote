@@ -128,11 +128,7 @@ public class NoteItemPane : Box {
   public virtual void clear_current() {
     remove_css_class( "active-item" );
     if( item.expanded ) {
-      if( (_stack.get_child_by_name( "unselected" ) != null) && show_header2() ) {
-        _stack.visible_child_name = "unselected";
-      } else {
-        _stack.visible = false;
-      }
+      _stack.visible_child_name = "unselected";
     }
   }
 
@@ -536,15 +532,14 @@ public class NoteItemPane : Box {
     _header1 = create_header1();
 
     var header2 = create_header2();
+    click_to_current( header2 );
 
     _stack = new Stack() {
       halign = Align.FILL,
       hexpand = true
     };
     _stack.add_named( _header1, "selected" );
-    if( header2 != null ) {
-      _stack.add_named( header2, "unselected" );
-    }
+    _stack.add_named( header2, "unselected" );
 
     var box = new Box( Orientation.HORIZONTAL, 5 ) {
       halign        = Align.FILL,
@@ -568,6 +563,7 @@ public class NoteItemPane : Box {
     header.append( box );
 
     var pane = create_pane();
+    click_to_current( pane );
     pane.visible = item.expanded;
 
     expand.clicked.connect(() => {
@@ -583,6 +579,18 @@ public class NoteItemPane : Box {
   }
 
   //-------------------------------------------------------------
+  // This function will make the given widget cause the pane to
+  // become the current pane when it is clicked.
+  protected void click_to_current( Widget widget ) {
+    var click = new GestureClick();
+    click.pressed.connect((n_press, x, y) => {
+      set_as_current();
+      grab_item_focus( TextCursorPlacement.NO_CHANGE );
+    });
+    widget.add_controller( click );
+  }
+
+  //-------------------------------------------------------------
   // Optional area above pane where a single row of horizontal
   // UI elements can be placed.
   protected virtual Widget create_header1() {
@@ -590,6 +598,7 @@ public class NoteItemPane : Box {
       halign = Align.FILL,
       hexpand = true
     };
+    // click_to_current( box );
     return( box );
   }
 
@@ -597,14 +606,12 @@ public class NoteItemPane : Box {
   // Creates the header that will be displayed when the pane is
   // expanded and not selected.
   protected virtual Widget? create_header2() {
-    return( null );
-  }
-
-  //-------------------------------------------------------------
-  // Returns true if the header2 should be displayed when the pane
-  // is not the current pane.
-  protected virtual bool show_header2() {
-    return( false );
+    var box = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign = Align.FILL,
+      hexpand = true
+    };
+    // click_to_current( box );
+    return( box );
   }
 
   //-------------------------------------------------------------

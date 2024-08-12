@@ -155,12 +155,6 @@ public class NoteItemPaneTable : NoteItemPane {
     return( label );
   }
 
-  //-------------------------------------------------------------
-  // Returns true if there is a description associated with this pane
-  protected override bool show_header2() {
-    return( true );  // ((NoteItemTable)item).description != "" );
-  }
-
 #if GTK412
   //-------------------------------------------------------------
   // Returns the index of the column with the given ID.
