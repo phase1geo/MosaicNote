@@ -95,8 +95,9 @@ public class SmartNotebooks {
   // Returns the last search notebook from this list.  If one does
   // not exist, one is created and automatically added.
   public SmartNotebook get_search_notebook() {
-    if( _notebooks.index( 3 ).notebook_type == SmartNotebookType.SEARCH ) {
-      return( _notebooks.index( 3 ) );
+    var notebook = _notebooks.index( 3 );
+    if( (notebook != null) && (notebook.notebook_type == SmartNotebookType.SEARCH) ) {
+      return( notebook );
     }
     var search = new SmartNotebook( _( "Last Search" ), SmartNotebookType.SEARCH, _notebook_tree );
     _notebooks.insert_val( 3, search );

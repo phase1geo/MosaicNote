@@ -584,8 +584,10 @@ public class NoteItemPane : Box {
   protected void click_to_current( Widget widget ) {
     var click = new GestureClick();
     click.pressed.connect((n_press, x, y) => {
-      set_as_current();
-      grab_item_focus( TextCursorPlacement.NO_CHANGE );
+      if( !has_css_class( "active-item" ) ) {
+        set_as_current();
+        grab_item_focus( TextCursorPlacement.NO_CHANGE );
+      }
     });
     widget.add_controller( click );
   }

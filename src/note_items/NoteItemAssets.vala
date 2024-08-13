@@ -71,11 +71,31 @@ public class NoteItemAssets : NoteItem {
   }
 
   //-------------------------------------------------------------
+  // Inserts the given asset at the given position.
+  public void insert_asset( int index, string asset ) {
+    _assets.insert_val( index, asset );
+    modified = true;
+    changed();
+  }
+
+  //-------------------------------------------------------------
   // Removes the asset at the given index.
   public void remove_asset( int index ) {
     _assets.remove_index( index );
     modified = true;
     changed();
+  }
+
+  //-------------------------------------------------------------
+  // Used for string searching
+  public override bool search( string str ) {
+    stdout.printf( "Searching assets for (%s)\n", str );
+    for( int i=0; i<_assets.length; i++ ) {
+      if( _assets.index( i ).contains( str ) ) {
+        return( true );
+      }
+    }
+    return( false );
   }
 
   //-------------------------------------------------------------

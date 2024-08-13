@@ -30,6 +30,11 @@ public class NoteItemPaneAssets : NoteItemPane {
   private ListBox _listbox;
   private Box     _drop_box;
 
+  private const GLib.ActionEntry[] action_entries = {
+    { "action_copy_filepath", action_copy_filepath, "i" },
+    { "action_remove_file",   action_remove_file,   "i" },
+  };
+
   public NoteItemAssets assets_item {
     get {
       return( (NoteItemAssets)item );
@@ -40,6 +45,12 @@ public class NoteItemPaneAssets : NoteItemPane {
 	// Default constructor
 	public NoteItemPaneAssets( MainWindow win, NoteItem item, SpellChecker spell ) {
     base( win, item, spell );
+
+    // Set the stage for menu actions
+    var actions = new SimpleActionGroup ();
+    actions.add_action_entries( action_entries, this );
+    insert_action_group( "assets", actions );
+
   }
 
   //-------------------------------------------------------------
@@ -56,7 +67,7 @@ public class NoteItemPaneAssets : NoteItemPane {
 
   //-------------------------------------------------------------
   // Adds the given asset to the listbox.
-  private void add_asset( string uri, bool add_to_item ) {
+  private void add_asset( string uri, bool add_to_item, int insert_index = -1 ) {
 
     var label = new Label( Filename.display_basename( uri ) ) {
       halign = Align.START,
@@ -65,10 +76,18 @@ public class NoteItemPaneAssets : NoteItemPane {
       tooltip_text = uri
     };
 
-    _listbox.append( label );
+    if( insert_index == -1 ) {
+      _listbox.append( label );
+    } else {
+      _listbox.insert( label, insert_index );
+    }
 
     if( add_to_item ) {
-      assets_item.add_asset( uri );
+      if( insert_index == -1 ) {
+        assets_item.add_asset( uri );
+      } else {
+        assets_item.insert_asset( insert_index, uri );
+      }
     }
 
   }
@@ -147,6 +166,19 @@ public class NoteItemPaneAssets : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Creates a contextual menu for a given row in the listbox.
+  private GLib.Menu create_contextual_menu( int pos ) {
+    var copy_menu = new GLib.Menu();
+    copy_menu.append( _( "Copy Filepath" ), "assets.action_copy_filepath(%d)".printf( pos ) );
+    var del_menu = new GLib.Menu();
+    del_menu.append( _( "Remove File From List" ), "assets.action_remove_file(%d)".printf( pos ) );
+    var menu = new GLib.Menu();
+    menu.append_section( null, copy_menu );
+    menu.append_section( null, del_menu );
+    return( menu );
+  }
+
+  //-------------------------------------------------------------
   // Adds a new Markdown item at the given position in the content area
   protected override Widget create_pane() {
 
@@ -158,17 +190,26 @@ public class NoteItemPaneAssets : NoteItemPane {
       focusable  = true
     };
 
-    var focus = new EventControllerFocus();
-    var key   = new EventControllerKey();
+    var focus       = new EventControllerFocus();
+    var key         = new EventControllerKey();
+    var list_drag   = new DragSource();
+    var list_drop   = new DropTarget( typeof(File), Gdk.DragAction.COPY );
+    var right_click = new GestureClick() {
+      button = Gdk.BUTTON_SECONDARY
+    };
 
     _listbox = new ListBox() {
       halign  = Align.START,
       hexpand = true,
       selection_mode = SelectionMode.SINGLE,
-      activate_on_single_click = false
+      activate_on_single_click = false,
+      margin_start = 10
     };
     _listbox.add_controller( key );
     _listbox.add_controller( focus );
+    _listbox.add_controller( list_drag );
+    _listbox.add_controller( list_drop );
+    _listbox.add_controller( right_click );
 
     _listbox.row_activated.connect((row) => {
       var uri = assets_item.get_asset( row.get_index() );
@@ -192,6 +233,48 @@ public class NoteItemPaneAssets : NoteItemPane {
       _drop_box.visible = true;
     });
 
+    list_drop.motion.connect((x, y) => {
+      var row = _listbox.get_row_at_y( (int)y );
+      if( row != null ) {
+        _listbox.drag_unhighlight_row();
+        _listbox.drag_highlight_row( row );
+      }
+      return( Gdk.DragAction.COPY );
+    });
+
+    list_drop.leave.connect(() => {
+      _listbox.drag_unhighlight_row();
+    });
+
+    list_drop.drop.connect((val, x, y) => {
+      var file = (File)val.get_object();
+      if( file != null ) {
+        var row = _listbox.get_row_at_y( (int)y );
+        if( row != null ) {
+          var index = row.get_index();
+          add_asset( file.get_uri(), true, index );
+          _listbox.drag_unhighlight_row();
+          _listbox.select_row( _listbox.get_row_at_index( index ) );
+          return( true );
+        }
+      }
+      return( false );
+    });
+
+    right_click.pressed.connect((n_press, x, y) => {
+      var row = _listbox.get_row_at_y( (int)y );
+      if( row != null ) {
+        Gdk.Rectangle rect = {(int)x, (int)y, 1, 1};
+        _listbox.select_row( row );
+        var popover = new PopoverMenu.from_model( create_contextual_menu( row.get_index() ) ) {
+          pointing_to = rect,
+          position    = PositionType.TOP
+        };
+        popover.set_parent( _listbox );
+        popover.popup();
+      }
+    });
+
     var drop_label = new Label( _( "Drag file or URL here to add" ) ) {
       halign = Align.CENTER,
       hexpand = true,
@@ -208,13 +291,14 @@ public class NoteItemPaneAssets : NoteItemPane {
     _drop_box.append( drop_label );
     _drop_box.add_css_class( "drop-area" );
 
-    var drop = new DropTarget( typeof( File ), Gdk.DragAction.COPY );
-    _drop_box.add_controller( drop );
+    var box_drop = new DropTarget( typeof( File ), Gdk.DragAction.COPY );
+    _drop_box.add_controller( box_drop );
 
-    drop.drop.connect((val, x, y) => {
+    box_drop.drop.connect((val, x, y) => {
       var file = (File)val.get_object();
       if( file != null ) {
         add_asset( file.get_uri(), true );
+        _listbox.select_row( _listbox.get_row_at_index( assets_item.size() - 1 ) );
         return( true );
       }
       return( false );
@@ -239,6 +323,28 @@ public class NoteItemPaneAssets : NoteItemPane {
 
     return( box );
 
+  }
+
+  //-------------------------------------------------------------
+  // Copies the file link of the specified row to the clipboard.
+  private void action_copy_filepath( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      var index = variant.get_int32();
+      var uri   = assets_item.get_asset( index );
+      var clipboard = Gdk.Display.get_default().get_clipboard();
+      clipboard.set_text( uri );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Removes the given row from the file list.
+  private void action_remove_file( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      var index = variant.get_int32();
+      var row   = _listbox.get_row_at_index( index );
+      assets_item.remove_asset( index );
+      _listbox.remove( row );
+    }
   }
 
 }
