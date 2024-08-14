@@ -187,7 +187,8 @@ public class NoteItemPaneAssets : NoteItemPane {
       hexpand    = true,
       use_markup = true,
       can_focus  = true,
-      focusable  = true
+      focusable  = true,
+      margin_start = 5
     };
 
     var focus       = new EventControllerFocus();
@@ -235,11 +236,12 @@ public class NoteItemPaneAssets : NoteItemPane {
       _drop_box.visible = true;
     });
     
-    list_drag.prepare.connect((d) => {
-      var row = _listbox.get_selected_row();
+    list_drag.prepare.connect((x, y) => {
+      var row = _listbox.get_row_at_y( (int)y );
       if( row != null ) { 
+        _listbox.select_row( row );
         var val = Value( typeof(GLib.File) );
-        val = File.new_for_uri( assets_item.get_asset( row.get_index() );
+        val = File.new_for_uri( assets_item.get_asset( row.get_index() ) );
         var cp = new Gdk.ContentProvider.for_value( val );
         return( cp );
       }

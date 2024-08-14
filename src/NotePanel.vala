@@ -367,7 +367,7 @@ public class NotePanel : Box {
   // Creates the list of notes which contain links to this note.
   private Box create_references() {
 
-    var label = new Label( Utils.make_title( _( "Referenced By" ) ) ) {
+    var label = new Label( Utils.make_title( _( "Notes Linked To This Note" ) ) ) {
       halign = Align.START,
       use_markup = true
     };
@@ -380,7 +380,7 @@ public class NotePanel : Box {
     };
 
     var box = new Box( Orientation.VERTICAL, 5 ) {
-      margin_top = 10,
+      margin_top = 20,
       margin_bottom = 200
     };
     box.append( label );
