@@ -215,7 +215,7 @@ public class NoteItemPaneAssets : NoteItemPane {
     _listbox.add_controller( right_click );
 
     _listbox.row_activated.connect((row) => {
-      var uri = assets_item.get_asset( row.get_index() );
+      var uri = assets_item.get_asset( row.get_index() ).orig_path;
       Utils.open_url( uri );
     });
 
@@ -241,7 +241,7 @@ public class NoteItemPaneAssets : NoteItemPane {
       if( row != null ) { 
         _listbox.select_row( row );
         var val = Value( typeof(GLib.File) );
-        val = File.new_for_uri( assets_item.get_asset( row.get_index() ) );
+        val = File.new_for_uri( assets_item.get_asset( row.get_index() ).orig_path );
         var cp = new Gdk.ContentProvider.for_value( val );
         return( cp );
       }
@@ -330,7 +330,7 @@ public class NoteItemPaneAssets : NoteItemPane {
     box.append( _drop_box );
 
     for( int i=0; i<assets_item.size(); i++ ) {
-      var asset = assets_item.get_asset( i );
+      var asset = assets_item.get_asset( i ).orig_path;
       add_asset( asset, false );
     }
 
@@ -345,7 +345,7 @@ public class NoteItemPaneAssets : NoteItemPane {
   private void action_copy_filepath( SimpleAction action, Variant? variant ) {
     if( variant != null ) {
       var index = variant.get_int32();
-      var uri   = assets_item.get_asset( index );
+      var uri   = assets_item.get_asset( index ).orig_path;
       var clipboard = Gdk.Display.get_default().get_clipboard();
       clipboard.set_text( uri );
     }

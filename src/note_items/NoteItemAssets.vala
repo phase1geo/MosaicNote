@@ -143,7 +143,7 @@ public class NoteItemAssets : NoteItem {
     Xml.Node* node = base.save();
     for( int i=0; i<_assets.length; i++ ) {
       Xml.Node* asset = new Xml.Node( null, "asset" );
-      asset->set_prop( "id", _assets.index( i ).id );
+      asset->set_prop( "id", _assets.index( i ).id.to_string() );
       asset->set_prop( "path", _assets.index( i ).orig_path );
       node->add_child( asset );
     }
@@ -160,7 +160,7 @@ public class NoteItemAssets : NoteItem {
         var p = it->get_prop( "path" );
         if( (i != null) && (p != null) ) {
           var asset = new NoteItemAsset( int.parse( i ), p );
-          _assets.append( asset );
+          _assets.append_val( asset );
         }
       }
     }
