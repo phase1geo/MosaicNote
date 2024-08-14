@@ -19,22 +19,48 @@
 * Authored by: Trevor Williams <phase1geo@gmail.com>
 */
 
+public class NoteItemAsset {
+
+  private int    _id;
+  private string _path;
+
+  public int id {
+    get {
+      return( _id );
+    }
+  }
+
+  public string orig_path {
+    get {
+      return( _path );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Default constructor.
+  public NoteItemAsset( int id, string path ) {
+    _id   = id;
+    _path = path;
+  }
+
+}
+
 public class NoteItemAssets : NoteItem {
 
-  private Array<string> _assets;
+  private Array<NoteItemAsset> _assets;
 
   //-------------------------------------------------------------
 	// Default constructor
 	public NoteItemAssets( Note note ) {
 		base( note, NoteItemType.ASSETS );
-    _assets = new Array<string>();
+    _assets = new Array<NoteItemAsset>();
 	}
 
   //-------------------------------------------------------------
 	// Constructor from XML node
 	public NoteItemAssets.from_xml( Note note, Xml.Node* node ) {
 		base( note, NoteItemType.ASSETS );
-    _assets = new Array<string>();
+    _assets = new Array<NoteItemAsset>();
 		load( node );
 	}
 
@@ -58,13 +84,15 @@ public class NoteItemAssets : NoteItem {
 
   //-------------------------------------------------------------
   // Returns the asset at the given index.
-  public string get_asset( int index ) {
+  public NoteItemAsset get_asset( int index ) {
     return( _assets.index( index ) );
   }
 
   //-------------------------------------------------------------
   // Adds the given asset to our list.
-  public void add_asset( string asset ) {
+  public void add_asset( string asset_path ) {
+    var asset = new NoteItemAsset( current_resource_id++, asset_path );
+    // FOOBAR
     _assets.append_val( asset );
     modified = true;
     changed();
@@ -72,7 +100,8 @@ public class NoteItemAssets : NoteItem {
 
   //-------------------------------------------------------------
   // Inserts the given asset at the given position.
-  public void insert_asset( int index, string asset ) {
+  public void insert_asset( int index, string asset_path ) {
+    var asset = new NoteItemAsset( current_resource_id++, asset_path );
     _assets.insert_val( index, asset );
     modified = true;
     changed();
@@ -89,9 +118,8 @@ public class NoteItemAssets : NoteItem {
   //-------------------------------------------------------------
   // Used for string searching
   public override bool search( string str ) {
-    stdout.printf( "Searching assets for (%s)\n", str );
     for( int i=0; i<_assets.length; i++ ) {
-      if( _assets.index( i ).contains( str ) ) {
+      if( _assets.index( i ).orig_path.contains( str ) ) {
         return( true );
       }
     }
@@ -104,7 +132,7 @@ public class NoteItemAssets : NoteItem {
     string[] str = {};
     for( int i=0; i<_assets.length; i++ ) {
       var asset = _assets.index( i );
-    	str += "- [%s](%s)".printf( Filename.display_basename( asset ), asset );
+    	str += "- [%s](%s)".printf( Filename.display_basename( asset.orig_path ), asset.orig_path );
   	}
   	return( string.joinv( "\n", str ) );
   }
@@ -115,7 +143,8 @@ public class NoteItemAssets : NoteItem {
     Xml.Node* node = base.save();
     for( int i=0; i<_assets.length; i++ ) {
       Xml.Node* asset = new Xml.Node( null, "asset" );
-      asset->set_prop( "path", _assets.index( i ) );
+      asset->set_prop( "id", _assets.index( i ).id );
+      asset->set_prop( "path", _assets.index( i ).orig_path );
       node->add_child( asset );
     }
     return( node );
@@ -127,9 +156,11 @@ public class NoteItemAssets : NoteItem {
     base.load( node );
     for( Xml.Node* it = node->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "asset") ) {
+        var i = it->get_prop( "id" );
         var p = it->get_prop( "path" );
-        if( p != null ) {
-          _assets.append_val( p );
+        if( (i != null) && (p != null) ) {
+          var asset = new NoteItemAsset( int.parse( i ), p );
+          _assets.append( asset );
         }
       }
     }

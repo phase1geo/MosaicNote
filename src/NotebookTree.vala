@@ -542,6 +542,7 @@ public class NotebookTree {
 	  root->set_prop( "notebook-id", Notebook.current_id.to_string() );
 	  root->set_prop( "note-id", Note.current_id.to_string() );
 	  root->set_prop( "note-item-id", NoteItem.current_id.to_string() );
+    root->set_prop( "resource-id", NoteItem.current_resource_id.to_string() );
 	  root->set_prop( "inbox-id", _inbox.id.to_string() );
 	  root->set_prop( "trash-id", _trash.id.to_string() );
 
@@ -607,6 +608,11 @@ public class NotebookTree {
     var ni_id = root->get_prop( "note-item-id" );
     if( ni_id != null ) {
     	NoteItem.current_id = int.parse( ni_id );
+    }
+
+    var r_id = root->get_prop( "resource-id" );
+    if( r_id != null ) {
+      NoteItem.current_resource_id = int.parse( r_id );
     }
 
     var ib_id = root->get_prop( "inbox-id" );

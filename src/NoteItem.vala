@@ -200,6 +200,7 @@ public enum NoteItemType {
 public class NoteItem {
 
   public static int current_id = 0;
+  public static int current_resource_id = 0;
   private const int max_image_width = 800;
 
   private string _content  = "";
@@ -292,8 +293,12 @@ public class NoteItem {
 
   //-------------------------------------------------------------
 	// Returns the filename of the resource file associated with this note item
-  protected string get_resource_path( string extension ) {
-  	return( Path.build_filename( get_resource_dir(), "resource-%d.%s".printf( id, extension ) ) );
+  protected string get_resource_path( string extension, int? extra_id = null ) {
+    if( extra_id == null ) {
+    	return( Path.build_filename( get_resource_dir(), "resource-%d.%s".printf( id, extension ) ) );
+    } else {
+      return( Path.build_filename( get_resource_dir(), "resource-%d-%d.%s".printf( id, extra_id, extension ) ) );
+    }
   }
 
   //-------------------------------------------------------------
@@ -304,9 +309,9 @@ public class NoteItem {
 
   //-------------------------------------------------------------
   // Saves the given resource into the resource directory
-  protected bool save_as_resource( File from_file, bool link ) {
+  protected bool save_as_resource( File from_file, bool link, int? extra_id = null ) {
     Utils.create_dir( get_resource_dir() );
-    var to_file = File.new_for_path( get_resource_path( Utils.get_extension( from_file.get_path() ) ) );
+    var to_file = File.new_for_path( get_resource_path( Utils.get_extension( from_file.get_path() ), extra_id ) );
     try {
       if( link && (from_file.get_uri_scheme() == "file") ) {
         return( to_file.make_symbolic_link( from_file.get_path() ) );
