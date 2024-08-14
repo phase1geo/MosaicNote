@@ -192,7 +192,9 @@ public class NoteItemPaneAssets : NoteItemPane {
 
     var focus       = new EventControllerFocus();
     var key         = new EventControllerKey();
-    var list_drag   = new DragSource();
+    var list_drag   = new DragSource() {
+      actions = Gdk.DragAction.COPY
+    }; 
     var list_drop   = new DropTarget( typeof(File), Gdk.DragAction.COPY );
     var right_click = new GestureClick() {
       button = Gdk.BUTTON_SECONDARY
@@ -231,6 +233,17 @@ public class NoteItemPaneAssets : NoteItemPane {
     focus.enter.connect(() => {
       set_as_current();
       _drop_box.visible = true;
+    });
+    
+    list_drag.prepare.connect((d) => {
+      var row = _listbox.get_selected_row();
+      if( row != null ) { 
+        var val = Value( typeof(GLib.File) );
+        val = File.new_for_uri( assets_item.get_asset( row.get_index() );
+        var cp = new Gdk.ContentProvider.for_value( val );
+        return( cp );
+      }
+      return( null );
     });
 
     list_drop.motion.connect((x, y) => {
