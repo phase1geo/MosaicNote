@@ -100,9 +100,7 @@ public class MosaicNote : Gtk.Application {
     if( uri_query != null ) {
       var query_items = uri_query.split( "=" );
       if( (query_items[0] != "id") || !appwin.show_note( int.parse( query_items[1] ) ) ) {
-        stdout.printf( "Note ID not found\n" );
-      } else {
-        stdout.printf( "FOUND!\n" );
+        appwin.notification( "MosaicNote", "Linked note could not be found\n" );
       }
     }
 
@@ -121,6 +119,7 @@ public class MosaicNote : Gtk.Application {
             default          :  return;
           }
         }
+        /*
         stdout.printf( "Parsed URI\n" );
         stdout.printf( "  auth_params: %s\n", uri.get_auth_params() ?? "NA" );
         stdout.printf( "  flags:       %s\n", uri.get_flags().to_string() );
@@ -132,6 +131,7 @@ public class MosaicNote : Gtk.Application {
         stdout.printf( "  scheme:      %s\n", uri.get_scheme() );
         stdout.printf( "  user:        %s\n", uri.get_user() ?? "NA" );
         stdout.printf( "  userinfo:    %s\n", uri.get_userinfo() ?? "NA" );
+        */
       } catch( UriError e ) {
         stdout.printf( "URI parsing error: %s\n", e.message );
       }
