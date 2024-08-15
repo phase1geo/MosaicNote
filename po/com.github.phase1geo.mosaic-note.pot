@@ -1,14 +1,14 @@
-# Translation file for MosaicNote
-# Copyright (C) 2024
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the com.github.phase1geo.mosaic-note package.
-# Trevor Williams <phase1geo@gmail.com>, 2024.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: com.github.phase1geo.mosaic-note\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-08-04 22:39-0500\n"
+"POT-Creation-Date: 2024-08-13 23:32-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -31,47 +31,76 @@ msgstr ""
 msgid "Run '%s --help' to see valid options\n"
 msgstr ""
 
-#: src/MainWindow.vala:177
+#: src/MainWindow.vala:185
 msgid "MosaicNote"
 msgstr ""
 
-#: src/MainWindow.vala:359
+#: src/MainWindow.vala:394
 msgid "Search notes"
 msgstr ""
 
-#: src/MainWindow.vala:380
+#: src/MainWindow.vala:415
 msgid "Show all panels"
 msgstr ""
 
-#: src/MainWindow.vala:381
+#: src/MainWindow.vala:416
 msgid "Show note panel only"
 msgstr ""
 
-#: src/MainWindow.vala:382
+#: src/MainWindow.vala:417
 msgid "Do not show sidebar"
 msgstr ""
 
-#: src/MainWindow.vala:387
+#: src/MainWindow.vala:422
 msgid "Change Panel Layout"
 msgstr ""
 
-#: src/MainWindow.vala:407
+#: src/MainWindow.vala:442
 msgid "Shorcuts Cheatsheet…"
 msgstr ""
 
-#: src/MainWindow.vala:408
+#: src/MainWindow.vala:443
 msgid "Preferences…"
 msgstr ""
 
-#: src/NotebookTree.vala:576 src/NotebookTree.vala:613
+#: src/NotebookTree.vala:577 src/NotebookTree.vala:619
 msgid "Inbox"
 msgstr ""
 
-#: src/NotebookTree.vala:577 src/NotebookTree.vala:619
+#: src/NotebookTree.vala:578 src/NotebookTree.vala:625
 msgid "Trash"
 msgstr ""
 
-#: src/NoteItemPaneCode.vala:62 src/NoteItemPaneUML.vala:60
+#: src/NoteItemPaneAssets.vala:100 src/NoteItemPaneAssets.vala:111
+msgid "Select File"
+msgstr ""
+
+#: src/NoteItemPaneAssets.vala:100 src/NoteItemPaneAssets.vala:111
+#: src/NoteItemPaneImage.vala:42 src/NoteItemPaneImage.vala:54
+msgid "Select"
+msgstr ""
+
+#: src/NoteItemPaneAssets.vala:149
+msgid "Add assets"
+msgstr ""
+
+#: src/NoteItemPaneAssets.vala:172
+msgid "Copy Filepath"
+msgstr ""
+
+#: src/NoteItemPaneAssets.vala:174
+msgid "Remove File From List"
+msgstr ""
+
+#: src/NoteItemPaneAssets.vala:185 src/NoteItem.vala:73
+msgid "Files"
+msgstr ""
+
+#: src/NoteItemPaneAssets.vala:293
+msgid "Drag file or URL here to add"
+msgstr ""
+
+#: src/NoteItemPaneCode.vala:62
 msgid "Description (Optional)"
 msgstr ""
 
@@ -79,11 +108,8 @@ msgstr ""
 msgid "Select Image"
 msgstr ""
 
-#: src/NoteItemPaneImage.vala:42 src/NoteItemPaneImage.vala:54
-msgid "Select"
-msgstr ""
-
-#: src/NoteItemPaneImage.vala:78 src/NoteItemPaneTable.vala:113
+#: src/NoteItemPaneImage.vala:78 src/NoteItemPaneTable.vala:111
+#: src/NoteItemPaneUML.vala:59
 msgid "Description (optional)"
 msgstr ""
 
@@ -91,120 +117,120 @@ msgstr ""
 msgid "Auto-number rows"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:137
+#: src/NoteItemPaneTable.vala:134
 msgid "Table Controls"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:214
+#: src/NoteItemPaneTable.vala:205
 msgid "Format column"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:216
+#: src/NoteItemPaneTable.vala:207
 msgid "Insert column before"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:217
+#: src/NoteItemPaneTable.vala:208
 msgid "Insert column after"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:219
+#: src/NoteItemPaneTable.vala:210
 msgid "Remove column"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:272
+#: src/NoteItemPaneTable.vala:263
 msgid "Configure Table"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:277
+#: src/NoteItemPaneTable.vala:268
 msgid "Columns:"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:282
+#: src/NoteItemPaneTable.vala:273
 msgid "Rows:"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:287
+#: src/NoteItemPaneTable.vala:278
 msgid "Show row numbers"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:289
+#: src/NoteItemPaneTable.vala:280
 msgid "Create Table"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:297 src/note_items/NoteItemTable.vala:128
+#: src/NoteItemPaneTable.vala:288 src/note_items/NoteItemTable.vala:128
 #, c-format
 msgid "Column %d"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:489
+#: src/NoteItemPaneTable.vala:480
 msgid "Clear date"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:632
+#: src/NoteItemPaneTable.vala:623
 msgid "Insert row above"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:633
+#: src/NoteItemPaneTable.vala:624
 msgid "Insert row below"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:635
+#: src/NoteItemPaneTable.vala:626
 msgid "Remove row"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:734
+#: src/NoteItemPaneTable.vala:725
 msgid "Title:"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:755
+#: src/NoteItemPaneTable.vala:746
 msgid "Content Type:"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:779
+#: src/NoteItemPaneTable.vala:770
 msgid "Justify:"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:785
+#: src/NoteItemPaneTable.vala:776
 msgid "Left"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:785
+#: src/NoteItemPaneTable.vala:776
 msgid "Center"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:785
+#: src/NoteItemPaneTable.vala:776
 msgid "Right"
 msgstr ""
 
-#: src/NoteItemPaneTable.vala:813
+#: src/NoteItemPaneTable.vala:804
 msgid "Format Column"
 msgstr ""
 
-#: src/NoteItemPaneUML.vala:75
+#: src/NoteItemPaneUML.vala:74
 msgid "Open UML documentation in browser"
 msgstr ""
 
-#: src/NoteItemPaneUML.vala:82
+#: src/NoteItemPaneUML.vala:81
 msgid "preferences-color-symbolic"
 msgstr ""
 
-#: src/NoteItemPaneUML.vala:84
+#: src/NoteItemPaneUML.vala:83
 msgid "Generate diagram"
 msgstr ""
 
-#: src/NoteItemPaneUML.vala:162
+#: src/NoteItemPaneUML.vala:155
 msgid "Generating Diagram..."
 msgstr ""
 
-#: src/NoteItemPane.vala:508
+#: src/NoteItemPane.vala:516
 msgid "Add Block Above"
 msgstr ""
 
-#: src/NoteItemPane.vala:509
+#: src/NoteItemPane.vala:517
 msgid "Add Block Below"
 msgstr ""
 
-#: src/NoteItemPane.vala:512
+#: src/NoteItemPane.vala:520
 msgid "Delete Block"
 msgstr ""
 
@@ -220,88 +246,128 @@ msgstr ""
 msgid "Date"
 msgstr ""
 
-#: src/NoteItem.vala:49 src/NoteItem.vala:91
+#: src/NoteItem.vala:53 src/NoteItem.vala:98
 msgid "markdown"
 msgstr ""
 
-#: src/NoteItem.vala:50 src/NoteItem.vala:93
+#: src/NoteItem.vala:54 src/NoteItem.vala:100
 msgid "code"
 msgstr ""
 
-#: src/NoteItem.vala:51 src/NoteItem.vala:95
+#: src/NoteItem.vala:55 src/NoteItem.vala:102
 msgid "image"
 msgstr ""
 
-#: src/NoteItem.vala:52 src/NoteItem.vala:97
+#: src/NoteItem.vala:56 src/NoteItem.vala:104
 msgid "uml"
 msgstr ""
 
-#: src/NoteItem.vala:53 src/NoteItem.vala:99
+#: src/NoteItem.vala:57 src/NoteItem.vala:106
 msgid "table"
 msgstr ""
 
-#: src/NoteItem.vala:63
+#: src/NoteItem.vala:58 src/NoteItem.vala:108
+msgid "assets"
+msgstr ""
+
+#: src/NoteItem.vala:68
 msgid "Markdown"
 msgstr ""
 
-#: src/NoteItem.vala:64
+#: src/NoteItem.vala:69
 msgid "Code"
 msgstr ""
 
-#: src/NoteItem.vala:65 data/com.github.phase1geo.mosaic-note.shortcuts.ui:328
+#: src/NoteItem.vala:70 data/com.github.phase1geo.mosaic-note.shortcuts.ui:328
 msgid "Image"
 msgstr ""
 
-#: src/NoteItem.vala:66
+#: src/NoteItem.vala:71
 msgid "UML Diagram"
 msgstr ""
 
-#: src/NoteItem.vala:67
+#: src/NoteItem.vala:72
 msgid "Table"
 msgstr ""
 
-#: src/NotePanel.vala:155
+#: src/NotePanel.vala:159
 msgid "No Note Selected"
 msgstr ""
 
-#: src/NotePanel.vala:169
+#: src/NotePanel.vala:173
 msgid "Show Last Viewed Note"
 msgstr ""
 
-#: src/NotePanel.vala:179
+#: src/NotePanel.vala:183
 msgid "Show Next Viewed Note"
 msgstr ""
 
-#: src/NotePanel.vala:200
+#: src/NotePanel.vala:204
 msgid "Export note"
 msgstr ""
 
-#: src/NotePanel.vala:208
+#: src/NotePanel.vala:212
 msgid "Add to Favorites"
 msgstr ""
 
-#: src/NotePanel.vala:223
+#: src/NotePanel.vala:227
 msgid "Lock Note"
 msgstr ""
 
-#: src/NotePanel.vala:278
+#: src/NotePanel.vala:282
 msgid "Created:"
 msgstr ""
 
-#: src/NotePanel.vala:297
+#: src/NotePanel.vala:301
 msgid "Title (Optional)"
 msgstr ""
 
-#: src/NotePanel.vala:513 src/NotePanel.vala:524
+#: src/NotePanel.vala:370
+msgid "Notes Linked To This Note"
+msgstr ""
+
+#: src/NotePanel.vala:399
+msgid "<i>None</i>"
+msgstr ""
+
+#: src/NotePanel.vala:410 src/NotesPanel.vala:413
+msgid "Untitled Note"
+msgstr ""
+
+#: src/NotePanel.vala:586 src/NotePanel.vala:597
 msgid "Export"
 msgstr ""
 
-#: src/NotesPanel.vala:78
+#: src/NotesPanel.vala:43
+msgid "Title"
+msgstr ""
+
+#: src/NotesPanel.vala:44
+msgid "Date Created"
+msgstr ""
+
+#: src/NotesPanel.vala:45
+msgid "Date Last Updated"
+msgstr ""
+
+#: src/NotesPanel.vala:46
+msgid "Date Last Viewed"
+msgstr ""
+
+#: src/NotesPanel.vala:224
 msgid "Add new note"
 msgstr ""
 
-#: src/NotesPanel.vala:167
-msgid "Untitled Note"
+#: src/NotesPanel.vala:248
+msgid "Change sort order"
+msgstr ""
+
+#: src/NotesPanel.vala:331
+msgid "Ascending"
+msgstr ""
+
+#: src/NotesPanel.vala:332
+msgid "Descending"
 msgstr ""
 
 #: src/Preferences.vala:43
@@ -675,19 +741,19 @@ msgstr ""
 msgid "not in the last"
 msgstr ""
 
-#: src/SmartNotebooks.vala:101
+#: src/SmartNotebooks.vala:102
 msgid "Last Search"
 msgstr ""
 
-#: src/SmartNotebooks.vala:131
+#: src/SmartNotebooks.vala:132
 msgid "Favorites"
 msgstr ""
 
-#: src/SmartNotebooks.vala:135
+#: src/SmartNotebooks.vala:136
 msgid "Recents"
 msgstr ""
 
-#: src/SmartNotebooks.vala:139
+#: src/SmartNotebooks.vala:140
 msgid "All Notes"
 msgstr ""
 

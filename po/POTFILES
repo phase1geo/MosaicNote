@@ -1,6 +1,7 @@
 src/Application.vala
 src/MainWindow.vala
 src/NotebookTree.vala
+src/NoteItemPaneAssets.vala
 src/NoteItemPaneCode.vala
 src/NoteItemPaneImage.vala
 src/NoteItemPaneTable.vala

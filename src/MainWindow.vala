@@ -360,6 +360,21 @@ public class MainWindow : Gtk.ApplicationWindow {
   }
 
   //-------------------------------------------------------------
+  // Attempts to display the note with the given ID.  If the note
+  // was found, return true.  If the note ID could not be found,
+  // return false.
+  public bool show_note( int id ) {
+    var note = _notebooks.find_note_by_id( id );
+    if( note != null ) {
+      stdout.printf( "Notebook: %s, note title: %s\n", note.notebook.name, note.title );
+      _sidebar.select_notebook( note.notebook );
+      _notes.select_note( note.id, true );
+      return( true );
+    }
+    return( false );
+  }
+
+  //-------------------------------------------------------------
   // Returns the name of the icon to use for a headerbar icon
   private string get_header_icon_name( string icon_name, string? symbolic = null ) {
     if( symbolic == null ) {

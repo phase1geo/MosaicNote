@@ -715,6 +715,7 @@ public class Sidebar : Box {
       }
     }, out pos );
     if( found ) {
+      // TODO - Make sure that the notebook is within view
       selection.select_item( pos, true );
     }
   }

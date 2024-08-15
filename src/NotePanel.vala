@@ -198,11 +198,18 @@ public class NotePanel : Box {
       _note.tags.copy( _tags.tags );
     });
 
+    var copy_link = new Button.from_icon_name( "insert-link-symbolic" ) {
+      has_frame = false,
+      halign = Align.END,
+      tooltip_text = _( "Copy note link" ),
+      margin_start = 5
+    };
+    copy_link.clicked.connect( copy_note_link );
+
     var export = new Button.from_icon_name( "document-export-symbolic" ) {
       has_frame = false,
       halign = Align.END,
-      tooltip_text = _( "Export note" ),
-      margin_start = 5
+      tooltip_text = _( "Export note" )
     };
     export.clicked.connect( export_note );
 
@@ -235,6 +242,7 @@ public class NotePanel : Box {
       halign = Align.FILL
     };
     tbox.append( _tags );
+    tbox.append( copy_link );
     tbox.append( export );
     tbox.append( _favorite );
     tbox.append( _locked );
@@ -576,6 +584,14 @@ public class NotePanel : Box {
       _item_selector.sensitive = false;
       _toolbar_stack.visible_child_name = "none";
     }
+  }
+
+  //-------------------------------------------------------------
+  // Copies a Markdown link to open this note from a different
+  // application.
+  private void copy_note_link() {
+    var uri = "mosaicnote://show-note?id=%d".printf( _note.id );
+    Gdk.Display.get_default().get_clipboard().set_text( uri );
   }
 
   //-------------------------------------------------------------

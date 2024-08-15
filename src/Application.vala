@@ -34,6 +34,8 @@ public class MosaicNote : Gtk.Application {
 
   private MainWindow appwin;
 
+  //-------------------------------------------------------------
+  // Default constructor.
   public MosaicNote () {
 
     Object( application_id: "com.github.phase1geo.mosaic-note", flags: ApplicationFlags.HANDLES_OPEN );
@@ -45,10 +47,12 @@ public class MosaicNote : Gtk.Application {
 
     startup.connect( start_application );
     activate.connect( on_activate );
+    open.connect( open_files );
 
   }
 
-  /* First method called in the startup process */
+  //-------------------------------------------------------------
+  // First method called in the startup process
   private void start_application() {
 
     /* Initialize the settings */
@@ -83,11 +87,59 @@ public class MosaicNote : Gtk.Application {
 
   }
 
-  /* Called if we have no files to open */
+  //-------------------------------------------------------------
+  // Called if we have no files to open
   private void on_activate() {
   }
 
-  /* Parse the command-line arguments */
+  //-------------------------------------------------------------
+  // Attempts to show the note with the given query information.
+  // The query must be "id=N" where N is the note ID to display.
+  private void show_note( string? uri_query ) {
+
+    if( uri_query != null ) {
+      var query_items = uri_query.split( "=" );
+      if( (query_items[0] != "id") || !appwin.show_note( int.parse( query_items[1] ) ) ) {
+        stdout.printf( "Note ID not found\n" );
+      } else {
+        stdout.printf( "FOUND!\n" );
+      }
+    }
+
+  }
+
+  //-------------------------------------------------------------
+  // Opens files from the command-line.  The only "file" that we will
+  // handle is the URI scheme (mosaicnote://*).
+  private void open_files( File[] files, string hint ) {
+    if( files.length == 1 ) {
+      try {
+        var uri = Uri.parse( files[0].get_uri(), UriFlags.NONE );
+        if( uri.get_scheme() == "mosaicnote" ) {
+          switch( uri.get_host() ) {
+            case "show-note" :  show_note( uri.get_query() );  break;
+            default          :  return;
+          }
+        }
+        stdout.printf( "Parsed URI\n" );
+        stdout.printf( "  auth_params: %s\n", uri.get_auth_params() ?? "NA" );
+        stdout.printf( "  flags:       %s\n", uri.get_flags().to_string() );
+        stdout.printf( "  fragment:    %s\n", uri.get_fragment() ?? "NA" );
+        stdout.printf( "  host:        %s\n", uri.get_host() ?? "NA" );
+        stdout.printf( "  path:        %s\n", uri.get_path() );
+        stdout.printf( "  port:        %d\n", uri.get_port() );
+        stdout.printf( "  query:       %s\n", uri.get_query() ?? "NA" );
+        stdout.printf( "  scheme:      %s\n", uri.get_scheme() );
+        stdout.printf( "  user:        %s\n", uri.get_user() ?? "NA" );
+        stdout.printf( "  userinfo:    %s\n", uri.get_userinfo() ?? "NA" );
+      } catch( UriError e ) {
+        stdout.printf( "URI parsing error: %s\n", e.message );
+      }
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Parse the command-line arguments
   private void parse_arguments( ref unowned string[] args ) {
 
     var context = new OptionContext( "- MosaicNote Options" );
@@ -116,7 +168,8 @@ public class MosaicNote : Gtk.Application {
 
   }
 
-  /* Main routine which gets everything started */
+  //-------------------------------------------------------------
+  // Main routine which gets everything started
   public static int main( string[] args ) {
 
     // Make sure that we initialize the GtkSource library

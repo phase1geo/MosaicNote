@@ -29,6 +29,11 @@ install_data(
     install_dir: join_paths(get_option('datadir'), 'glib-2.0', 'schemas')
 )
 
+install_data(
+    meson.project_name() + '.mime.xml',
+    install_dir: join_paths(get_option('datadir'), 'mime', 'packages')
+)
+
 langs = ['plantuml', 'mosaic-markdown']
 
 foreach lang : langs
