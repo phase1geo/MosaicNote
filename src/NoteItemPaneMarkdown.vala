@@ -95,11 +95,55 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Checks the inserted text.  If the inserted text needs to be modified,
+  // we will setup a second insertion after Idle which will delete and
+  // replace the existing text.
+  private void check_inserted_text( ref TextIter iter, string str, int strlen ) {
+    var buffer = (GtkSource.Buffer)_text.buffer;
+    var offset = iter.get_offset();
+    if( str.contains( "mosaicnote://show-note?id=" ) ) {
+      Idle.add(() => {
+        TextIter start_iter;
+        buffer.get_iter_at_offset( out start_iter, offset );
+        var end_iter = start_iter;
+        start_iter.set_line_offset( 0 );
+        end_iter.forward_to_line_end();
+        try {
+          MatchInfo match;
+          var line = buffer.get_text( start_iter, end_iter, false );
+          stdout.printf( "line: %s\n", line );
+          var re = new Regex( """(\[\[)?mosaicnote://show-note\?id=(\d+)(\]\])?""" );
+          if( re.match( line, 0, out match ) ) {
+            stdout.printf( "Found match!\n" );
+            var note_id = int.parse( match.fetch( 2 ) );
+            stdout.printf( "  id: %d\n", note_id );
+            var note = win.notebooks.find_note_by_id( note_id );
+            if( note != null ) {
+              int start_pos, end_pos;
+              var replace_str = "[[%s]]".printf( note.title );
+              match.fetch_pos( 0, out start_pos, out end_pos );
+              start_iter.set_line_offset( start_pos );
+              end_iter.set_line_offset( end_pos );
+              buffer.delete( ref start_iter, ref end_iter );
+              buffer.insert_text( ref start_iter, replace_str, replace_str.length );
+            }
+          }
+        } catch( RegexError e ) {
+          stdout.printf( "ERROR: %s\n", e.message );
+        }
+        return( false );
+      });
+    }
+  }
+
+  //-------------------------------------------------------------
   // Adds a new Markdown item at the given position in the content area
   protected override Widget create_pane() {
 
     _text = create_text( "mosaic-markdown" );
     _text.add_css_class( "markdown-text" );
+
+    _text.buffer.insert_text.connect( check_inserted_text );
 
     var click = new GestureClick();
     var motion = new EventControllerMotion();
