@@ -95,6 +95,16 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Returns true if the line containing the given match is within
+  // a Markdown link.
+  private bool within_markdown_link( string line, MatchInfo match ) {
+    int start_pos, end_pos;
+    match.fetch_pos( 0, out start_pos, out end_pos );
+    var line_start = line.slice( 0, start_pos );
+    return( Regex.match_simple( """\]\s*\(\s*$""", line_start ) );
+  }
+
+  //-------------------------------------------------------------
   // Checks the inserted text.  If the inserted text needs to be modified,
   // we will setup a second insertion after Idle which will delete and
   // replace the existing text.
@@ -111,12 +121,9 @@ public class NoteItemPaneMarkdown : NoteItemPane {
         try {
           MatchInfo match;
           var line = buffer.get_text( start_iter, end_iter, false );
-          stdout.printf( "line: %s\n", line );
           var re = new Regex( """(\[\[)?mosaicnote://show-note\?id=(\d+)(\]\])?""" );
-          if( re.match( line, 0, out match ) ) {
-            stdout.printf( "Found match!\n" );
+          if( re.match( line, 0, out match ) && !within_markdown_link( line, match ) ) {
             var note_id = int.parse( match.fetch( 2 ) );
-            stdout.printf( "  id: %d\n", note_id );
             var note = win.notebooks.find_note_by_id( note_id );
             if( note != null ) {
               int start_pos, end_pos;
@@ -128,9 +135,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
               buffer.insert_text( ref start_iter, replace_str, replace_str.length );
             }
           }
-        } catch( RegexError e ) {
-          stdout.printf( "ERROR: %s\n", e.message );
-        }
+        } catch( RegexError e ) {}
         return( false );
       });
     }
