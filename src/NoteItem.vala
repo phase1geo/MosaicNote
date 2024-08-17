@@ -26,9 +26,9 @@ public enum NoteItemType {
 	CODE,
 	IMAGE,
   UML,
+  MATH,
   TABLE,
   ASSETS,
-  MATH,
 	NUM;
 
   //-------------------------------------------------------------
@@ -40,9 +40,9 @@ public enum NoteItemType {
 			case CODE     :  return( "code" );
 			case IMAGE    :  return( "image" );
       case UML      :  return( "uml" );
+      case MATH     :  return( "math" );
       case TABLE    :  return( "table" );
       case ASSETS   :  return( "assets" );
-      case MATH     :  return( "math" );
 			default       :  assert_not_reached();
 		}
 	}
@@ -56,9 +56,9 @@ public enum NoteItemType {
       case CODE     :  return( _( "code" ) );
       case IMAGE    :  return( _( "image" ) );
       case UML      :  return( _( "uml" ) );
+      case MATH     :  return( _( "math" ) );
       case TABLE    :  return( _( "table" ) );
       case ASSETS   :  return( _( "assets" ) );
-      case MATH     :  return( _( "math" ) );
       default       :  assert_not_reached();
     }
   }
@@ -72,9 +72,9 @@ public enum NoteItemType {
 			case CODE     :  return( _( "Code" ) );
 			case IMAGE    :  return( _( "Image" ) );
       case UML      :  return( _( "UML Diagram" ) );
+      case MATH     :  return( _( "Math Formula" ) );
       case TABLE    :  return( _( "Table" ) );
       case ASSETS   :  return( _( "Files" ) );
-      case MATH     :  return( _( "Math" ) );
 			default       :  assert_not_reached();
 		}
 	}
@@ -88,9 +88,9 @@ public enum NoteItemType {
 			case "code"     :  return( CODE );
 			case "image"    :  return( IMAGE );
       case "uml"      :  return( UML );
+      case "math"     :  return( MATH );
       case "table"    :  return( TABLE );
       case "assets"   :  return( ASSETS );
-      case "math"     :  return( MATH );
 			default         :  return( NUM );
 		}
 	}
@@ -141,9 +141,9 @@ public enum NoteItemType {
 			case CODE     :  return( new NoteItemCode( note ) );
 			case IMAGE    :  return( new NoteItemImage( note ) );
       case UML      :  return( new NoteItemUML( note ) );
+      case MATH     :  return( new NoteItemMath( note ) );
       case TABLE    :  return( new NoteItemTable( note, 0, 0 ) );
       case ASSETS   :  return( new NoteItemAssets( note ) );
-      case MATH     :  return( new NoteItemMath( note ) );
 			default       :  assert_not_reached();
 		}
 	}
@@ -156,9 +156,9 @@ public enum NoteItemType {
       case CODE     :  return( new ToolbarCode() );
       case IMAGE    :  return( new ToolbarItem() );
       case UML      :  return( new ToolbarItem() );
+      case MATH     :  return( new ToolbarItem() );
       case TABLE    :  return( new ToolbarItem() );
       case ASSETS   :  return( new ToolbarItem() );
-      case MATH     :  return( new ToolbarItem() );
       default       :  assert_not_reached();
     }
   }

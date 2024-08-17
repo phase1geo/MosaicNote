@@ -469,4 +469,34 @@ public class Utils {
     return( width );
   }
 
+  //-------------------------------------------------------------
+  // Creates a temporary file and returns the path.
+  public static string? create_temp_filename( string ext ) {
+    try {
+      string filename = "";
+      var fd = FileUtils.open_tmp( "mnXXXXXX.%s".printf( ext ), out filename );
+      FileUtils.close( fd );
+      return( filename );
+    } catch( FileError e ) {}
+    return( null );
+  }
+
+  //-------------------------------------------------------------
+  // Writes the contents to the given file.
+  public static bool write_to_filename( string? filename, string contents ) {
+    if( filename != null ) {
+      try {
+        FileUtils.set_contents( filename, contents );
+        return( true );
+      } catch( FileError e ) {}
+    }
+    return( false );
+  }
+
+  //-------------------------------------------------------------
+  // Writes the given file contents to a temporary file.
+  public static bool write_to_tmp( string ext, string contents ) {
+    return( write_to_filename( create_temp_filename( ext ), contents ) );
+  }
+
 }

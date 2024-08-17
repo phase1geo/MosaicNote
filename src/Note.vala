@@ -380,6 +380,7 @@ public class Note : Object {
         	case NoteItemType.CODE     :  load_code_item( it );      break;
         	case NoteItemType.IMAGE    :  load_image_item( it );     break;
         	case NoteItemType.UML      :  load_uml_item( it );       break;
+        	case NoteItemType.MATH     :  load_math_item( it );      break;
         	case NoteItemType.TABLE    :  load_table_item( it );     break;
           case NoteItemType.ASSETS   :  load_assets_item( it );    break;
           default                    :  break;
@@ -413,6 +414,13 @@ public class Note : Object {
 	// Loads a UML item from XML data
 	private void load_uml_item( Xml.Node* node ) {
 		var item = new NoteItemUML.from_xml( this, node );
+		_items.append_val( item );
+	}
+
+	//-------------------------------------------------------------
+	// Loads a math formula from XML data
+	private void load_math_item( Xml.Node* node ) {
+		var item = new NoteItemMath.from_xml( this, node );
 		_items.append_val( item );
 	}
 

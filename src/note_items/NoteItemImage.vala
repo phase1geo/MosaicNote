@@ -52,17 +52,20 @@ public class NoteItemImage : NoteItem {
 		}
 	}
 
+  //-------------------------------------------------------------
 	// Default constructor
 	public NoteItemImage( Note note ) {
 		base( note, NoteItemType.IMAGE );
 	}
 
+  //-------------------------------------------------------------
 	// Constructor from XML format
 	public NoteItemImage.from_xml( Note note, Xml.Node* node ) {
 		base( note, NoteItemType.IMAGE );
 		load( node );
 	}
 
+  //-------------------------------------------------------------
 	// Copies the given note item to ourselves
   public override void copy( NoteItem item ) {
     base.copy( item );
@@ -75,17 +78,20 @@ public class NoteItemImage : NoteItem {
     }
   }
 
+  //-------------------------------------------------------------
   // Returns the Markdown code for this item
   public override string to_markdown( bool pandoc ) {
   	var file = File.new_for_uri( uri );
 	  return( format_for_width( "![%s](%s)".printf( description, uri ), file.get_path(), pandoc ) );
   }
 
+  //-------------------------------------------------------------
   // Returns the resource filename
   public override string get_resource_filename() {
     return( get_resource_path( Utils.get_extension( uri ) ) );
   }
 
+  //-------------------------------------------------------------
 	// Saves the content in XML format
 	public override Xml.Node* save() {
     Xml.Node* node = base.save();
@@ -94,6 +100,7 @@ public class NoteItemImage : NoteItem {
     return( node );
 	}
 
+  //-------------------------------------------------------------
 	// Loads the content from XML format
 	protected override void load( Xml.Node* node ) {
     base.load( node );

@@ -23,6 +23,21 @@ using Gee;
 
 public class NoteItemMath : NoteItem {
 
+  private string _description = "";
+
+  public string description {
+    get {
+      return( _description );
+    }
+    set {
+      if( _description != value ) {
+        _description = value;
+        modified = true;
+        changed();
+      }
+    }
+  }
+
   //-------------------------------------------------------------
 	// Default constructor
 	public NoteItemMath( Note note ) {
@@ -42,4 +57,21 @@ public class NoteItemMath : NoteItem {
 		return( content );
 	}
 
+  //-------------------------------------------------------------
+  // Saves the content in XML format
+  public override Xml.Node* save() {
+    Xml.Node* node = base.save();
+    node->set_prop( "description", description );
+    return( node );
+  }
+
+  //-------------------------------------------------------------
+  // Loads the content from XML format
+  protected override void load( Xml.Node* node ) {
+    base.load( node );
+    var d = node->get_prop( "description" );
+    if( d != null ) {
+      _description = d;
+    }
+  }
 }

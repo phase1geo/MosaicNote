@@ -30,8 +30,15 @@ public class NoteItemPaneMath : NoteItemPane {
 
   private WebKit.WebView _web;
   private GtkSource.View _text;
+  private Button         _help;
   private Gdk.Cursor     _cursor_pointer;
   private Gdk.Cursor     _cursor_text;
+
+  private NoteItemMath math_item {
+    get {
+      return( (NoteItemMath)item );
+    }
+  }
 
   //-------------------------------------------------------------
 	// Default constructor
@@ -51,7 +58,63 @@ public class NoteItemPaneMath : NoteItemPane {
   // Grabs the focus of the note item at the specified position.
   public override void grab_item_focus( TextCursorPlacement placement ) {
     place_cursor( _text, placement );
+    _text.visible = true;
     _text.grab_focus();
+  }
+
+  //-------------------------------------------------------------
+  // Called when our item box loses focus.
+  public override void clear_current() {
+    base.clear_current();
+    _text.visible = false;
+  }
+
+  //-------------------------------------------------------------
+  // Create custom header when the pane is selected.
+  protected override Widget create_header1() {
+
+    var entry = new EditableLabel( (math_item.description == "") ? _( "Description (optional)" ) : math_item.description ) {
+      halign = Align.FILL,
+      hexpand = true
+    };
+
+    entry.changed.connect(() => {
+      math_item.description = entry.text;
+    });
+
+    save.connect(() => {
+      math_item.description = entry.text;
+    });
+
+    _help = new Button.from_icon_name( "dialog-information-symbolic" ) {
+      halign = Align.END,
+      tooltip_text = _( "Open AsciiMath documentation in browser" )
+    };
+
+    _help.clicked.connect(() => {
+      Utils.open_url( "https://asciimath.org/#syntax" );
+    });
+
+    var box = new Box( Orientation.HORIZONTAL, 5 );
+    box.append( entry );
+    box.append( _help );
+
+    return( box );
+
+  }
+
+  //-------------------------------------------------------------
+  // Create custom header when the pane is not selected.
+  protected override Widget? create_header2() {
+
+    var label = new Label( Utils.make_title( math_item.description ) ) {
+      use_markup = true,
+      halign = Align.START,
+      hexpand = true
+    };
+
+    return( label );
+
   }
 
   //-------------------------------------------------------------
@@ -66,8 +129,8 @@ public class NoteItemPaneMath : NoteItemPane {
             loader: {load: ['input/asciimath', 'output/chtml', 'ui/menu']},
           };
         </script>
-        <script type=\"text/javascript\" id=\"MathJax-script\" async
-          src=\"https://cdn.jsdelivr.net/npm/mathjax@3/es5/startup.js\">
+        <script type='text/javascript' id='MathJax-script' async
+          src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/startup.js'>
         </script>
         </head>
         <body>
@@ -75,7 +138,6 @@ public class NoteItemPaneMath : NoteItemPane {
         </body>
       </html>
     """.printf( text );
-    stdout.printf( "html: %s\n", html );
     _web.load_html( html, null );
   }
 
@@ -99,57 +161,27 @@ public class NoteItemPaneMath : NoteItemPane {
       valign = Align.FILL,
       settings = web_settings
     };
-    _web.set_size_request( -1, 200 );
+    _web.set_size_request( -1, 100 );
 
-    _web.decide_policy.connect((decision, type) => {
-      stdout.printf( "type: %s\n", type.to_string() );
-      if( type == WebKit.PolicyDecisionType.NAVIGATION_ACTION ) {
-        var nav     = (WebKit.NavigationPolicyDecision)decision;
-        var action  = nav.get_navigation_action();
-        var request = action.get_request();
-        var uri     = request.uri;
-        stdout.printf( "In decide_policy, uri: %s\n", uri );
-//        Utils.open_url( uri );
-      }
-      decision.use();
-      return( false );
+    var web_click = new GestureClick();
+    _web.add_controller( web_click );
+
+    web_click.pressed.connect((n_press, x, y) => {
+      set_as_current();
+      _text.visible = true;
+      _text.grab_focus();
     });
 
-    _web.load_failed.connect ((load_event, uri, load_error) => {
-      if (load_error is WebKit.NetworkError.CANCELLED) {
-        stdout.printf( "HERE B\n" );
-          // Mostly initiated by JS redirects
-          return false;
-      } else if (load_error is WebKit.PolicyError.FRAME_LOAD_INTERRUPTED_BY_POLICY_CHANGE) {
-        stdout.printf( "HERE C\n" );
-          // A frame load is cancelled because of a download
-          return false;
-      } else if (load_error is WebKit.PolicyError.CANNOT_SHOW_URI) {
-        stdout.printf( "HERE D\n" );
-//          open_protocol (uri);
-      } else {
-        stdout.printf( "HERE E\n" );
-      }
-
-      return true;
-    });
-
-    _web.load_changed.connect((e) => {
-      stdout.printf( "In load_changed, e: %s\n", e.to_string() );
-    });
-
-    _web.resource_load_started.connect((resource, request) => {
-      stdout.printf( "resource_load_started, request: %s\n", request.uri );
-    });
-
-    // NOTE: If we switch things from a load_html to a load_uri, things work properly
-    _web.load_uri( "file:///home/trevorw/index.html" );
+    if( math_item.content != "" ) {
+      load_html( math_item.content );
+    }
 
     var box = new Box( Orientation.VERTICAL, 5 );
     box.append( _text );
     box.append( _web );
 
     handle_key_events( _text );
+    handle_key_events( _web );
 
     return( box );
 
