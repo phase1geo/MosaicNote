@@ -24,6 +24,7 @@ using Gee;
 
 public class NoteItemPaneTable : NoteItemPane {
 
+  private Label      _h2_label;
   private ColumnView _table;
   private int        _col_id = 0;
 #if !GTK412
@@ -40,10 +41,15 @@ public class NoteItemPaneTable : NoteItemPane {
   };
 
   private signal void auto_number_changed();
-
   private signal void column_title_changed( string id );
   private signal void column_type_changed( string id );
   private signal void column_justify_changed( string id );
+
+  public NoteItemTable table_item {
+    get {
+      return( (NoteItemTable)item );
+    }
+  }
 
 	// Default constructor
 	public NoteItemPaneTable( MainWindow win, NoteItem item, SpellChecker spell ) {
@@ -67,8 +73,6 @@ public class NoteItemPaneTable : NoteItemPane {
   // Adds the auto-number setting to the specified table settings
   // widgets.
   private void add_auto_number_setting( GLib.Menu menu, PopoverMenu popup_menu ) {
-
-    var table_item = (NoteItemTable)item;
 
     var autonum_label = new Label( _( "Auto-number rows" ) ) {
       halign = Align.START,
@@ -106,19 +110,19 @@ public class NoteItemPaneTable : NoteItemPane {
   // Create custom header when the pane is selected.
   protected override Widget create_header1() {
 
-    var table_item = (NoteItemTable)item;
-
     var entry = new EditableLabel( (table_item.description == "") ? _( "Description (optional)" ) : table_item.description ) {
       halign = Align.FILL,
       hexpand = true
     };
 
     entry.changed.connect(() => {
-      ((NoteItemTable)item).description = entry.text;
+      table_item.description = entry.text;
+      _h2_label.label = Utils.make_title( entry.text );
     });
 
     save.connect(() => {
-      ((NoteItemTable)item).description = entry.text;
+      table_item.description = entry.text;
+      _h2_label.label = Utils.make_title( entry.text );
     });
 
     var menu = new GLib.Menu();
@@ -148,11 +152,12 @@ public class NoteItemPaneTable : NoteItemPane {
   //-------------------------------------------------------------
   // Displays the secondary header when this note is not expanded.
   protected override Widget? create_header2() {
-    var table_item = (NoteItemTable)item;
-    var label = new Label( table_item.description ) {
-      halign = Align.START
+    _h2_label = new Label( table_item.description ) {
+      use_markup = true,
+      halign = Align.FILL,
+      justify = Justification.CENTER
     };
-    return( label );
+    return( _h2_label );
   }
 
 #if GTK412
@@ -187,7 +192,6 @@ public class NoteItemPaneTable : NoteItemPane {
   // when the user is adding a new column.
   private string add_cv_column( int index ) {
 
-    var table_item = (NoteItemTable)item;
     var table_col  = table_item.get_column( index );
     var factory    = new SignalListItemFactory();
     var col_id_int = _col_id++;
@@ -283,7 +287,6 @@ public class NoteItemPaneTable : NoteItemPane {
     };
 
     create.clicked.connect(() => {
-      var table_item = (NoteItemTable)item;
       for( int i=0; i<(int)col_sb.value; i++ ) {
         table_item.insert_column( i, _( "Column %d" ).printf( i ), Gtk.Justification.LEFT );
       }
@@ -326,8 +329,7 @@ public class NoteItemPaneTable : NoteItemPane {
   // Adds the UI for the table panel.
   protected override Widget create_pane() {
 
-    var table_item = (NoteItemTable)item;
-    var selector   = new SingleSelection( table_item.model );
+    var selector = new SingleSelection( table_item.model );
 
 #if !GTK412
     _col_map = new HashMap<string,ColumnViewColumn>();
@@ -367,7 +369,6 @@ public class NoteItemPaneTable : NoteItemPane {
   // Saves the given text value to the cell associated with the given
   // list item and column index.
   private void save_to_cell( ListItem li, int column, string val ) {
-    var table_item = (NoteItemTable)item; 
     var row = (int)li.position;
     table_item.set_cell( column, row, val );
   }
@@ -471,8 +472,6 @@ public class NoteItemPaneTable : NoteItemPane {
   // Sets up a date picker for a given column/row.
   private Box setup_date( int column, ListItem li ) {
 
-    var table_item = (NoteItemTable)item;
-
     var cal = new Calendar() {
       halign = Align.END
     };
@@ -527,8 +526,7 @@ public class NoteItemPaneTable : NoteItemPane {
   // Row factory setup function
   private void row_setup( int column, string col_id, Object obj ) {
 
-    var li         = (ListItem)obj;
-    var table_item = (NoteItemTable)item;
+    var li = (ListItem)obj;
 
     var box = new Box( Orientation.HORIZONTAL, 5 ) {
       margin_start  = 5,
@@ -688,7 +686,6 @@ public class NoteItemPaneTable : NoteItemPane {
   private void row_bind( int column, Object obj ) {
 
     var li = (ListItem)obj;
-    var table_item = (NoteItemTable)item;
 
     if( (column == 0) && table_item.auto_number ) {
       var lbl = (Label)li.child.get_first_child().get_first_child();
@@ -708,9 +705,8 @@ public class NoteItemPaneTable : NoteItemPane {
   // Displays the column formatting dialog window.
   private void show_column_format_dialog( string col_id ) {
 
-    var table_item = (NoteItemTable)item;
-    var index      = get_cv_column_index( col_id );
-    var column     = table_item.get_column( index );
+    var index  = get_cv_column_index( col_id );
+    var column = table_item.get_column( index );
 
     var grid = new Grid() {
       margin_start    = 10,
@@ -823,9 +819,8 @@ public class NoteItemPaneTable : NoteItemPane {
   // Inserts a new column at the specified index.
   private void action_insert_column_before( SimpleAction action, Variant? variant ) {
     if( variant != null ) {
-      var col_id     = variant.get_string();
-      var index      = get_cv_column_index( col_id );
-      var table_item = (NoteItemTable)item;
+      var col_id = variant.get_string();
+      var index  = get_cv_column_index( col_id );
       table_item.insert_column( index, "", Gtk.Justification.LEFT );
       col_id = add_cv_column( index );
       show_column_format_dialog( col_id );
@@ -836,9 +831,8 @@ public class NoteItemPaneTable : NoteItemPane {
   // Inserts a new column at the specified index.
   private void action_insert_column_after( SimpleAction action, Variant? variant ) {
     if( variant != null ) {
-      var col_id     = variant.get_string();
-      var index      = get_cv_column_index( col_id );
-      var table_item = (NoteItemTable)item;
+      var col_id = variant.get_string();
+      var index  = get_cv_column_index( col_id );
       table_item.insert_column( (index + 1), "", Gtk.Justification.LEFT );
       col_id = add_cv_column( index + 1 );
       show_column_format_dialog( col_id );
@@ -849,9 +843,8 @@ public class NoteItemPaneTable : NoteItemPane {
   // Removes the column at the specified index.
   private void action_delete_column( SimpleAction action, Variant? variant ) {
     if( variant != null ) {
-      var col_id     = variant.get_string();
-      var index      = get_cv_column_index( col_id );
-      var table_item = (NoteItemTable)item;
+      var col_id = variant.get_string();
+      var index  = get_cv_column_index( col_id );
       table_item.delete_column( index );
       remove_cv_column( index );
     }
@@ -861,8 +854,7 @@ public class NoteItemPaneTable : NoteItemPane {
   // Inserts a new row before the passed row position.
   private void action_insert_row( SimpleAction action, Variant? variant ) {
     if( variant != null ) {
-      var index      = variant.get_int32();
-      var table_item = (NoteItemTable)item;
+      var index = variant.get_int32();
       table_item.insert_row( index );
     }
   }
@@ -872,7 +864,6 @@ public class NoteItemPaneTable : NoteItemPane {
   private void action_delete_row( SimpleAction action, Variant? variant ) {
     if( variant != null ) {
       var index = variant.get_int32();
-      var table_item = (NoteItemTable)item;
       table_item.delete_row( index );
     }
   }

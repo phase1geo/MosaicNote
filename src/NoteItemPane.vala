@@ -182,7 +182,7 @@ public class NoteItemPane : Box {
 
     text.buffer.get_start_iter( out iter );
     text.get_iter_location( iter, out location );
-    text.set_size_request( -1, (location.height + 4) );
+    text.set_size_request( -1, (location.height + 8) );
 
   }
 
@@ -628,13 +628,13 @@ public class NoteItemPane : Box {
   //-------------------------------------------------------------
   // Adds an item above this item
   private void action_add_item_above() {
-    add_item( true, item.item_type );
+    add_item( true, NoteItemType.MARKDOWN );
   }
 
   //-------------------------------------------------------------
   // Adds an item below this item
   private void action_add_item_below() {
-    add_item( false, item.item_type );
+    add_item( false, NoteItemType.MARKDOWN );
   }
 
   //-------------------------------------------------------------

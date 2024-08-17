@@ -23,7 +23,14 @@ using Gtk;
 
 public class NoteItemPaneImage : NoteItemPane {
 
+  private Label   _h2_label;
   private Picture _image;
+
+  public NoteItemImage image_item {
+    get {
+      return( (NoteItemImage)item );
+    }
+  }
 
 	// Default constructor
 	public NoteItemPaneImage( MainWindow win, NoteItem item, SpellChecker spell ) {
@@ -73,19 +80,19 @@ public class NoteItemPaneImage : NoteItemPane {
   // Create custom header when the pane is selected.
   protected override Widget create_header1() {
 
-    var image_item = (NoteItemImage)item;
-
     var entry = new EditableLabel( (image_item.description == "") ? _( "Description (optional)" ) : image_item.description ) {
       halign = Align.FILL,
       hexpand = true
     };
 
     entry.changed.connect(() => {
-      ((NoteItemImage)item).description = entry.text;
+      image_item.description = entry.text;
+      _h2_label.label = Utils.make_title( entry.text );
     });
 
     save.connect(() => {
-      ((NoteItemImage)item).description = entry.text;
+      image_item.description = entry.text;
+      _h2_label.label = Utils.make_title( entry.text );
     });
 
     return( entry );
@@ -96,12 +103,13 @@ public class NoteItemPaneImage : NoteItemPane {
   // Create custom header when the pane is not selected.
   protected override Widget? create_header2() {
 
-    var label = new Label( ((NoteItemImage)item).description ) {
+    _h2_label = new Label( Utils.make_title( image_item.description ) ) {
+      use_markup = true,
       halign = Align.FILL,
       justify = Justification.CENTER
     };
 
-    return( label );
+    return( _h2_label );
 
   }
 

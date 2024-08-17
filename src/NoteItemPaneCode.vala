@@ -23,7 +23,14 @@ using Gtk;
 
 public class NoteItemPaneCode : NoteItemPane {
 
+  private Label          _h2_label;
   private GtkSource.View _text;
+
+  public NoteItemCode code_item {
+    get {
+      return( (NoteItemCode)item );
+    }
+  }
 
 	// Default constructor
 	public NoteItemPaneCode( MainWindow win, NoteItem item, SpellChecker spell ) {
@@ -57,19 +64,19 @@ public class NoteItemPaneCode : NoteItemPane {
   // Adds an optional description entry field for the code.
   protected override Widget create_header1() {
 
-    var code_item = (NoteItemCode)item;
-
     var entry = new EditableLabel( (code_item.description == "") ? _( "Description (Optional)" ) : code_item.description ) {
       halign = Align.FILL,
       hexpand = true
     };
 
     entry.changed.connect(() => {
-      ((NoteItemCode)item).description = entry.text;
+      code_item.description = entry.text;
+      _h2_label.label = Utils.make_title( entry.text );
     });
 
     save.connect(() => {
-      ((NoteItemCode)item).description = entry.text;
+      code_item.description = entry.text;
+      _h2_label.label = Utils.make_title( entry.text );
     });
 
     return( entry );
@@ -80,20 +87,19 @@ public class NoteItemPaneCode : NoteItemPane {
   // Creates header bar shown when the pane is not selected
   protected override Widget? create_header2() {
 
-    var label = new Label( ((NoteItemCode)item).description ) {
+    _h2_label = new Label( Utils.make_title( code_item.description ) ) {
+      use_markup = true,
       halign = Align.FILL,
       justify = Justification.CENTER
     };
 
-    return( label );
+    return( _h2_label );
 
   }
 
   //-------------------------------------------------------------
   // Creates the pane for this code item.
   protected override Widget create_pane() {
-
-    var code_item = (NoteItemCode)item;
 
     _text = create_text( code_item.lang );
     var buffer = (GtkSource.Buffer)_text.buffer;

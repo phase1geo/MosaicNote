@@ -185,7 +185,8 @@ public class NotesPanel : Box {
 			valign = Align.FILL,
       vexpand = true,
 			selection_mode = SelectionMode.BROWSE,
-      show_separators = true
+      show_separators = true,
+      activate_on_single_click = true
 		};
 
     _sorter = new NoteSorter();

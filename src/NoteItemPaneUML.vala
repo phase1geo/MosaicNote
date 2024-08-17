@@ -23,10 +23,17 @@ using Gtk;
 
 public class NoteItemPaneUML : NoteItemPane {
 
+  private Label          _h2_label;
   private GtkSource.View _text;
   private Picture        _image;
   private Stack          _stack;
   private Box            _hbbox;
+
+  public NoteItemUML uml_item {
+    get {
+      return( (NoteItemUML)item );
+    }
+  }
 
 	// Default constructor
 	public NoteItemPaneUML( MainWindow win, NoteItem item, SpellChecker spell ) {
@@ -54,19 +61,19 @@ public class NoteItemPaneUML : NoteItemPane {
   // Displays the header bar when the pane is selected
   protected override Widget create_header1() {
 
-    var uml_item = (NoteItemUML)item;
-
     var entry = new EditableLabel( (uml_item.description == "") ? _( "Description (optional)" ) : uml_item.description ) {
       halign = Align.FILL,
       hexpand = true
     };
 
     entry.changed.connect(() => {
-      ((NoteItemUML)item).description = entry.text;
+      uml_item.description = entry.text;
+      _h2_label.label = Utils.make_title( entry.text );
     });
 
     save.connect(() => {
-      ((NoteItemUML)item).description = entry.text;
+      uml_item.description = entry.text;
+      _h2_label.label = Utils.make_title( entry.text );
     });
 
     var help = new Button.from_icon_name( "dialog-information-symbolic" ) {
@@ -113,20 +120,19 @@ public class NoteItemPaneUML : NoteItemPane {
   // Creates the header bar shown when the pane is not selected.
   protected override Widget? create_header2() {
 
-    var label = new Label( ((NoteItemUML)item).description ) {
+    _h2_label = new Label( Utils.make_title( uml_item.description ) ) {
+      use_markup = true,
       halign = Align.FILL,
       justify = Justification.CENTER
     };
 
-    return( label );
+    return( _h2_label );
 
   }
 
   //-------------------------------------------------------------
   // Adds a new UML item at the given position in the content area
   protected override Widget create_pane() {
-
-    var uml_item = (NoteItemUML)item;
 
     var image_click = new GestureClick();
     var image_focus = new EventControllerFocus();
