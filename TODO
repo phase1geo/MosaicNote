@@ -1,5 +1,7 @@
 TODO:
 
+ ☐ Enhance export UI
+   Make sure that only the supported output formats are selectable by the user (to avoid errors)
  ☐ Add auto-completion when entering note links
    Not exactly sure how to currently implement this
  ☐ Add support for exporting a note item
@@ -17,6 +19,10 @@ TODO:
  ☐ Add support for saving a note as a template.
    ☐ Add support for create a new note based on a saved template.
    ☐ Add support for editing and deleting a note template
+ ☐ Add support for detecting all required external dependencies
+   ☐ pandoc
+   ☐ texlive
+   ☐ plantuml
 
 
 BUGS:
