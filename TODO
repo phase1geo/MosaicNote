@@ -32,6 +32,10 @@ Archive:
  ✔ Add the following command to meson.build after the .desktop app has been installed: @done (24-08-16 09:32) @project(TODO)
   gio mime x-scheme-handler/mosaicnote com.github.phase1geo.mosaic-note.desktop
  ✔ Add ability to paste note link into a note @done (24-08-16 09:28) @project(TODO)
+ ✔ Add support for math note item @done (24-08-17 01:17) @project(TODO)
+  Still trying to figure out what to do here.
+  I would like to use AsciiMath for the text input and generate a PNG file
+ ✔ Add ability to paste note link into a note @done (24-08-16 00:14) @project(TODO)
  ✔ Add button to copy a note link to the clipboard @done (24-08-14 22:36) @project(TODO)
  ✔ When a Markdown note item loses focus, the "More" button moves to the left instead of staying on the right @done (24-08-14 22:34) @project(BUGS)
  ✔ Add support for file/asset manager note item @ip @done (24-08-13 22:43) @project(TODO)
