@@ -21,8 +21,9 @@ TODO:
    ☐ Add support for editing and deleting a note template
  ☐ Add support for detecting all required external dependencies
    ☐ pandoc
-   ☐ texlive
+   ☐ texlive (needs pdflatex)
    ☐ plantuml
+   If external dependencies are not met: check dependencies, warn user, disable note items, allow app to be used without further issue.
 
 
 BUGS:
