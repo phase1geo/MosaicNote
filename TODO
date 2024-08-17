@@ -23,6 +23,7 @@ BUGS:
 
   ☐ We are currently unable to add a sub-notebook
   ☐ If a note needs to be displayed, but its notebook is hidden in the sidebar (because its parent is not expanded), expand its ancestors prior to selecting the notebook.
+  ☐ NotesPanel items require double-clicking to display note.  I think this should be displayed with a single click.
 
 ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
 Archive:
