@@ -598,6 +598,9 @@ public class NotePanel : Box {
   // Exports the given note
   private void export_note() {
 
+    // Make sure that everything is saved prior to exporting
+    save();
+
 #if GTK410
     var dialog = Utils.make_file_chooser( _( "Export" ), _( "Export" ) );
 

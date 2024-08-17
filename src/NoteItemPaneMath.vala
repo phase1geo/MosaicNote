@@ -30,9 +30,12 @@ public class NoteItemPaneMath : NoteItemPane {
 
   private WebKit.WebView _web;
   private GtkSource.View _text;
+  private Frame          _text_frame;
+  private Label          _h2_label;
   private Button         _help;
   private Gdk.Cursor     _cursor_pointer;
   private Gdk.Cursor     _cursor_text;
+  private string         _prev_content = "";
 
   private NoteItemMath math_item {
     get {
@@ -58,7 +61,7 @@ public class NoteItemPaneMath : NoteItemPane {
   // Grabs the focus of the note item at the specified position.
   public override void grab_item_focus( TextCursorPlacement placement ) {
     place_cursor( _text, placement );
-    _text.visible = true;
+    _text_frame.visible = true;
     _text.grab_focus();
   }
 
@@ -66,7 +69,7 @@ public class NoteItemPaneMath : NoteItemPane {
   // Called when our item box loses focus.
   public override void clear_current() {
     base.clear_current();
-    _text.visible = false;
+    _text_frame.visible = false;
   }
 
   //-------------------------------------------------------------
@@ -79,11 +82,17 @@ public class NoteItemPaneMath : NoteItemPane {
     };
 
     entry.changed.connect(() => {
-      math_item.description = entry.text;
+      if( entry.text != _( "Description (optional)" ) ) {
+        math_item.description = entry.text;
+        _h2_label.label = Utils.make_title( math_item.description );
+      }
     });
 
     save.connect(() => {
-      math_item.description = entry.text;
+      if( entry.text != _( "Description (optional)" ) ) {
+        math_item.description = entry.text;
+        _h2_label.label = Utils.make_title( math_item.description );
+      }
     });
 
     _help = new Button.from_icon_name( "dialog-information-symbolic" ) {
@@ -107,13 +116,14 @@ public class NoteItemPaneMath : NoteItemPane {
   // Create custom header when the pane is not selected.
   protected override Widget? create_header2() {
 
-    var label = new Label( Utils.make_title( math_item.description ) ) {
+    _h2_label = new Label( Utils.make_title( math_item.description ) ) {
       use_markup = true,
-      halign = Align.START,
-      hexpand = true
+      halign = Align.FILL,
+      hexpand = true,
+      justify = Justification.CENTER
     };
 
-    return( label );
+    return( _h2_label );
 
   }
 
@@ -134,7 +144,7 @@ public class NoteItemPaneMath : NoteItemPane {
         </script>
         </head>
         <body>
-          `%s`
+          <center>`%s`</center>
         </body>
       </html>
     """.printf( text );
@@ -145,11 +155,19 @@ public class NoteItemPaneMath : NoteItemPane {
   // Adds a new Markdown item at the given position in the content area
   protected override Widget create_pane() {
 
+    _prev_content = math_item.content;
+
     _text = create_text();
 
     _text.buffer.changed.connect(() => {
       load_html( _text.buffer.text );
     });
+
+    _text_frame = new Frame( _( "AsciiMath Input" ) ) {
+      child        = _text,
+      margin_start = 5,
+      margin_end   = 5
+    };
 
     var web_settings = new WebKit.Settings() {
       enable_javascript = true,
@@ -168,8 +186,24 @@ public class NoteItemPaneMath : NoteItemPane {
 
     web_click.pressed.connect((n_press, x, y) => {
       set_as_current();
-      _text.visible = true;
+      _text_frame.visible = true;
       _text.grab_focus();
+    });
+
+    save.connect(() => {
+      if( _text.buffer.text != _prev_content ) {
+        _prev_content = _text.buffer.text;
+        _web.get_snapshot.begin( WebKit.SnapshotRegion.FULL_DOCUMENT, WebKit.SnapshotOptions.TRANSPARENT_BACKGROUND, null, (obj, res) => {
+          try {
+            var texture = _web.get_snapshot.end( res );
+            var filename = math_item.get_resource_filename();
+            Utils.create_dir( math_item.get_resource_dir() );
+            texture.save_to_png( filename );
+          } catch( Error e ) {
+            stdout.printf( "ERROR:  %s\n", e.message );
+          }
+        });
+      }
     });
 
     if( math_item.content != "" ) {
@@ -177,7 +211,7 @@ public class NoteItemPaneMath : NoteItemPane {
     }
 
     var box = new Box( Orientation.VERTICAL, 5 );
-    box.append( _text );
+    box.append( _text_frame );
     box.append( _web );
 
     handle_key_events( _text );

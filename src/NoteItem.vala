@@ -307,7 +307,7 @@ public class NoteItem {
 
   //-------------------------------------------------------------
   // Returns the directory that contains the resource in the notebook associated with this note item's note.
-  protected string get_resource_dir() {
+  public string get_resource_dir() {
     return( Path.build_filename( note.notebook.notebook_directory( note.notebook.id ), "resources" ) );
   }
 

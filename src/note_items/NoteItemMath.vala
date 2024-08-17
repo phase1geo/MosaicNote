@@ -54,8 +54,18 @@ public class NoteItemMath : NoteItem {
   //-------------------------------------------------------------
 	// Converts the content to markdown text
 	public override string to_markdown( bool pandoc ) {
-		return( content );
+    if( (content != "") && FileUtils.test( get_resource_filename(), FileTest.EXISTS ) ) {
+  		return( "![%s](%s)".printf( _description, get_resource_filename() ) );
+    }
+    return( "" );
 	}
+
+  //-------------------------------------------------------------
+  // Returns the pathname to the resource containing the mathmatical
+  // image.
+  public override string get_resource_filename() {
+    return( get_resource_path( "png" ) );
+  }
 
   //-------------------------------------------------------------
   // Saves the content in XML format
