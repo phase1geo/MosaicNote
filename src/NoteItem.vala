@@ -28,6 +28,7 @@ public enum NoteItemType {
   UML,
   TABLE,
   ASSETS,
+  MATH,
 	NUM;
 
   //-------------------------------------------------------------
@@ -41,6 +42,7 @@ public enum NoteItemType {
       case UML      :  return( "uml" );
       case TABLE    :  return( "table" );
       case ASSETS   :  return( "assets" );
+      case MATH     :  return( "math" );
 			default       :  assert_not_reached();
 		}
 	}
@@ -56,6 +58,7 @@ public enum NoteItemType {
       case UML      :  return( _( "uml" ) );
       case TABLE    :  return( _( "table" ) );
       case ASSETS   :  return( _( "assets" ) );
+      case MATH     :  return( _( "math" ) );
       default       :  assert_not_reached();
     }
   }
@@ -71,6 +74,7 @@ public enum NoteItemType {
       case UML      :  return( _( "UML Diagram" ) );
       case TABLE    :  return( _( "Table" ) );
       case ASSETS   :  return( _( "Files" ) );
+      case MATH     :  return( _( "Math" ) );
 			default       :  assert_not_reached();
 		}
 	}
@@ -86,6 +90,7 @@ public enum NoteItemType {
       case "uml"      :  return( UML );
       case "table"    :  return( TABLE );
       case "assets"   :  return( ASSETS );
+      case "math"     :  return( MATH );
 			default         :  return( NUM );
 		}
 	}
@@ -107,11 +112,16 @@ public enum NoteItemType {
       return( TABLE );
     } else if( down == _( "assets" ) ) {
       return( ASSETS );
+    } else if( down == _( "math" ) ) {
+      return( MATH );
     } else {
       return( NUM );
     }
   }
 
+  //-------------------------------------------------------------
+  // Returns true if the note item can make use of the NoteItem.create_text()
+  // function call.
   public bool is_text() {
     return( (this == MARKDOWN) || (this == CODE) );
   }
@@ -133,6 +143,7 @@ public enum NoteItemType {
       case UML      :  return( new NoteItemUML( note ) );
       case TABLE    :  return( new NoteItemTable( note, 0, 0 ) );
       case ASSETS   :  return( new NoteItemAssets( note ) );
+      case MATH     :  return( new NoteItemMath( note ) );
 			default       :  assert_not_reached();
 		}
 	}
@@ -147,6 +158,7 @@ public enum NoteItemType {
       case UML      :  return( new ToolbarItem() );
       case TABLE    :  return( new ToolbarItem() );
       case ASSETS   :  return( new ToolbarItem() );
+      case MATH     :  return( new ToolbarItem() );
       default       :  assert_not_reached();
     }
   }
@@ -157,8 +169,9 @@ public enum NoteItemType {
 	public void initialize_text( GtkSource.View text ) {
 		switch( this ) {
 			case MARKDOWN :  initialize_markdown_text( text );  break;
-			case CODE     :  initialize_code_text( text );  break;
-			case UML      :  initialize_uml_text( text );  break;
+			case CODE     :  initialize_code_text( text );      break;
+			case UML      :  initialize_uml_text( text );       break;
+      case MATH     :  initialize_math_text( text );      break;
 			default       :  break;
 		}
 	}
@@ -194,6 +207,13 @@ public enum NoteItemType {
     text.tab_width = 3;
     text.monospace = true;
 	}
+
+  //-------------------------------------------------------------
+  // Initializes a text widget to be used for Math scripting.
+  private void initialize_math_text( GtkSource.View text ) {
+    text.wrap_mode = Gtk.WrapMode.NONE;
+    text.monospace = true;
+  }
 
 }
 

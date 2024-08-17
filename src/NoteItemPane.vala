@@ -416,16 +416,19 @@ public class NoteItemPane : Box {
   // language ID.  Note item panes that contain a text widget should
   // call this function to create and configure the text widget that
   // can be embedded in the pane.
-  protected GtkSource.View create_text( string lang_id ) {
+  protected GtkSource.View create_text( string? lang_id = null ) {
 
-    var lang_mgr = GtkSource.LanguageManager.get_default();
-    var lang     = lang_mgr.get_language( lang_id );
-
-    var buffer = new GtkSource.Buffer.with_language( lang ) {
+    var buffer = new GtkSource.Buffer( null ) {
       highlight_syntax = true,
       enable_undo      = true,
       text             = item.content
     };
+
+    if( lang_id != null ) {
+      var lang_mgr = GtkSource.LanguageManager.get_default();
+      var lang     = lang_mgr.get_language( lang_id );
+      buffer.set_language( lang );
+    }
 
     var focus = new EventControllerFocus();
     var text = new GtkSource.View.with_buffer( buffer ) {
