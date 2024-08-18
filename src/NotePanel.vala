@@ -296,12 +296,17 @@ public class NotePanel : Box {
       _note.tags.copy( _tags.tags );
     });
 
-    var copy_link = new Button.from_icon_name( "insert-link-symbolic" ) {
+    var copy_link = new Button.from_icon_name( _win.themes.dark_mode ? "copy-link-dark-symbolic" : "copy-link-light-symbolic" ) {
       has_frame = false,
       halign = Align.END,
       tooltip_text = _( "Copy note link" ),
       margin_start = 5
     };
+
+    _win.themes.theme_changed.connect((theme) => {
+      copy_link.icon_name = _win.themes.dark_mode ? "copy-link-dark-symbolic" : "copy-link-light-symbolic";
+    });
+
     copy_link.clicked.connect( copy_note_link );
 
     var export_types = new GLib.Menu();
