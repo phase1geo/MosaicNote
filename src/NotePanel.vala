@@ -22,6 +22,95 @@
 using Gtk;
 using Gee;
 
+public enum ExportType {
+  MARKDOWN,
+  HTML,
+  LATEX,
+  PDF,
+  EPUB,
+  DOCX,
+  PPTX,
+  ODT,
+  RTF,
+  TEXT,
+  JSON,
+  YAML,
+  NUM;
+
+  public string to_string() {
+    switch( this ) {
+      case MARKDOWN :  return( "markdown" );
+      case HTML     :  return( "html" );
+      case LATEX    :  return( "latex" );
+      case PDF      :  return( "pdf" );
+      case EPUB     :  return( "epub" );
+      case DOCX     :  return( "docx" );
+      case PPTX     :  return( "pptx" );
+      case ODT      :  return( "odt" );
+      case RTF      :  return( "rtf" );
+      case TEXT     :  return( "text" );
+      case JSON     :  return( "json" );
+      case YAML     :  return( "yaml" );
+      default       :  assert_not_reached();
+    }
+  }
+
+  public string label() {
+    switch( this ) {
+      case MARKDOWN :  return( _( "Markdown" ) );
+      case HTML     :  return( _( "HTML" ) );
+      case LATEX    :  return( _( "Latex" ) );
+      case PDF      :  return( _( "PDF" ) );
+      case EPUB     :  return( _( "EPub" ) );
+      case DOCX     :  return( _( "Microsoft Word" ) );
+      case PPTX     :  return( _( "Microsoft PowerPoint" ) );
+      case ODT      :  return( _( "ODT" ) );
+      case RTF      :  return( _( "Rich Text Format" ) );
+      case TEXT     :  return( _( "Plain Text" ) );
+      case JSON     :  return( _( "JSON" ) );
+      case YAML     :  return( _( "YAML" ) );
+      default       :  assert_not_reached();
+    }
+  }
+
+  public static ExportType parse( string val ) {
+    switch( val ) {
+      case "markdown" :  return( MARKDOWN );
+      case "html"     :  return( HTML );
+      case "latex"    :  return( LATEX );
+      case "pdf"      :  return( PDF );
+      case "epub"     :  return( EPUB );
+      case "docx"     :  return( DOCX );
+      case "pptx"     :  return( PPTX );
+      case "odt"      :  return( ODT );
+      case "rtf"      :  return( RTF );
+      case "text"     :  return( TEXT );
+      case "json"     :  return( JSON );
+      case "yaml"     :  return( YAML );
+      default         :  return( MARKDOWN );
+    }
+  }
+
+  public string extension() {
+    switch( this ) {
+      case MARKDOWN :  return( "md" );
+      case HTML     :  return( "html" );
+      case LATEX    :  return( "latex" );
+      case PDF      :  return( "pdf" );
+      case EPUB     :  return( "epub" );
+      case DOCX     :  return( "docx" );
+      case PPTX     :  return( "pptx" );
+      case ODT      :  return( "odt" );
+      case RTF      :  return( "rtf" );
+      case TEXT     :  return( "txt" );
+      case JSON     :  return( "json" );
+      case YAML     :  return( "yml" );
+      default       :  assert_not_reached();
+    }
+  }
+
+}
+
 public class NotePanel : Box {
 
   private Note? _note = null;
@@ -44,6 +133,10 @@ public class NotePanel : Box {
   private ListBox         _references;
   private bool            _ignore = false;
   private HashSet<string> _orig_link_titles;
+
+  private const GLib.ActionEntry[] action_entries = {
+    { "action_export_as", action_export_as, "i" },
+  };
 
   public SearchBox search {
     get {
@@ -106,6 +199,11 @@ public class NotePanel : Box {
     _win.themes.theme_changed.connect((theme) => {
       update_theme( theme );
     });
+
+    /* Set the stage for menu actions */
+    var actions = new SimpleActionGroup ();
+    actions.add_action_entries( action_entries, this );
+    insert_action_group( "note", actions );
 
   }
 
@@ -206,12 +304,21 @@ public class NotePanel : Box {
     };
     copy_link.clicked.connect( copy_note_link );
 
-    var export = new Button.from_icon_name( "document-export-symbolic" ) {
+    var export_types = new GLib.Menu();
+    for( int i=0; i<ExportType.NUM; i++ ) {
+      var etype = (ExportType)i;
+      export_types.append( etype.label(), "note.action_export_as(%d)".printf( i ) );
+    }
+    var export_menu = new GLib.Menu();
+    export_menu.append_section( _( "Export Note As" ), export_types );
+
+    var export = new MenuButton() {
+      icon_name = "document-export-symbolic",
       has_frame = false,
       halign = Align.END,
-      tooltip_text = _( "Export note" )
+      tooltip_text = _( "Export note" ),
+      menu_model = export_menu
     };
-    export.clicked.connect( export_note );
 
     _favorite = new Button.from_icon_name( "non-starred-symbolic" ) {
       has_frame = false,
@@ -596,13 +703,20 @@ public class NotePanel : Box {
 
   //-------------------------------------------------------------
   // Exports the given note
-  private void export_note() {
+  private void export_note( ExportType etype ) {
 
     // Make sure that everything is saved prior to exporting
     save();
 
 #if GTK410
     var dialog = Utils.make_file_chooser( _( "Export" ), _( "Export" ) );
+
+    var filter = new FileFilter();
+    filter.name = etype.label();
+    filter.add_suffix( etype.extension() );
+
+    dialog.default_filter = filter;
+    dialog.initial_name = "unnamed." + etype.extension();
 
     dialog.save.begin( _win, null, (obj, res) => {
       try {
@@ -630,4 +744,12 @@ public class NotePanel : Box {
 
   }
 
+  //-------------------------------------------------------------
+  // Export as the given variant.
+  private void action_export_as( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      var etype = (ExportType)variant.get_int32();
+      export_note( etype );
+    }
+  }
 }
