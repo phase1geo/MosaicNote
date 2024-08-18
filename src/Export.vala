@@ -15,7 +15,7 @@ public class Export {
     }
 
     // Write the note contents to a file
-    var md = note.to_markdown( extension != "md" );
+    var md = note.to_markdown( true, extension != "md" );
     try {
       FileUtils.set_contents( md_filename, md );
     } catch( FileError e ) {

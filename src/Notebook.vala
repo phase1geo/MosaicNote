@@ -197,6 +197,31 @@ public class Notebook : BaseNotebook {
   }
 
   //-------------------------------------------------------------
+  // Outputs all notes within the notebook as a Markdown string.
+  public string to_markdown( bool pandoc ) {
+    var str = "---\ntitle: '%s'\n---\n\n".printf( name );
+    for( int i=0; i<count(); i++ ) {
+      str += get_note( i ).to_markdown( false, pandoc ) + "\n\n---\n\n";
+    }
+    return( str );
+  }
+
+  //-------------------------------------------------------------
+  // Exports this notebook in the given directory.
+  public void export( string root_dir ) {
+    var dirname = Path.build_filename( root_dir, name );
+    if( Utils.create_dir( dirname ) ) {
+      for( int i=0; i<count(); i++ ) {
+        get_note( i ).export( dirname );
+      }
+      var resource_dir = Path.build_filename( dirname, "resources" );
+      if( Utils.create_dir( resource_dir ) ) {
+        // TODO - Get all of the resources in the resource directory and copy them to resource_dir
+      }
+    }
+  }
+
+  //-------------------------------------------------------------
   // Returns the directory where this notebook will be saved on disk.
   public string notebook_directory( int id ) {
   	return( Utils.user_location( GLib.Path.build_filename( "notebooks", "notebook-%d".printf( id ) ) ) );

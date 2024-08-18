@@ -200,7 +200,7 @@ public class Note : Object {
 
 	//-------------------------------------------------------------
   // Returns a string containing the content of the note in Markdown format
-  public string to_markdown( bool pandoc = false ) {
+  public string to_markdown( bool front_matter, bool pandoc = false ) {
     var mod_title = _title.replace( "'", "''" );
   	var str = "---\ntitle: '%s'\ntags: [%s]\n---\n\n".printf( mod_title, _tags.to_markdown() );
   	str += "# %s\n\n".printf( _title );
@@ -209,6 +209,13 @@ public class Note : Object {
   		str += "%s\n\n".printf( item.to_markdown( pandoc ) );
   	}
   	return( str );
+  }
+
+  //-------------------------------------------------------------
+  // Exports this note to the given directory.
+  public void export( string notebook_dir ) {
+    var filename = Path.build_filename( notebook_dir, title + ".md" );
+    FileUtils.set_contents( filename, to_markdown( true, false ) );
   }
 
 	//-------------------------------------------------------------

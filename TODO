@@ -1,7 +1,5 @@
 TODO:
 
- ☐ Enhance export UI
-   Make sure that only the supported output formats are selectable by the user (to avoid errors)
  ☐ Add auto-completion when entering note links
    Not exactly sure how to currently implement this
  ☐ Add support for exporting a note item
@@ -14,7 +12,7 @@ TODO:
    Note should do the file processing
  ☐ Add ability to import a directory full of Markdown notes into notebook(s)
    This could be used to import notes from another tool perhaps
- ☐ Add ability to export all notes into a series of directories
+ ☐ Add ability to export all notes into a series of directories @ip
    Similar in structure to how IA writer notes are handled (I forget the format)
  ☐ Add support for saving a note as a template.
    ☐ Add support for create a new note based on a saved template.
@@ -30,11 +28,13 @@ BUGS:
 
   ☐ We are currently unable to add a sub-notebook
   ☐ If a note needs to be displayed, but its notebook is hidden in the sidebar (because its parent is not expanded), expand its ancestors prior to selecting the notebook.
-  ☐ NotesPanel items require double-clicking to display note.  I think this should be displayed with a single click.
   ☐ Copy note link icon needs to be a unique icon (it looks like the "add link" icon in the Markdown toolbar)
 
 ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
 Archive:
+ ✔ NotesPanel items require double-clicking to display note.  I think this should be displayed with a single click. @done (24-08-17 23:42) @project(BUGS)
+ ✔ Enhance export UI @done (24-08-17 22:27) @project(TODO)
+  Make sure that only the supported output formats are selectable by the user (to avoid errors)
  ✔ Add support for math note item @done (24-08-17 01:20) @project(TODO)
   Still trying to figure out what to do here.
   I would like to use AsciiMath for the text input and generate a PNG file
