@@ -61,19 +61,21 @@ public class NoteItemPaneUML : NoteItemPane {
   // Displays the header bar when the pane is selected
   protected override Widget create_header1() {
 
-    var entry = new EditableLabel( (uml_item.description == "") ? _( "Description (optional)" ) : uml_item.description ) {
+    var entry = new EditableLabel( (uml_item.description == "") ? _( "Description (Optional)" ) : uml_item.description ) {
       halign = Align.FILL,
       hexpand = true
     };
 
     entry.changed.connect(() => {
-      uml_item.description = entry.text;
-      _h2_label.label = Utils.make_title( entry.text );
+      var text = (entry.text == _( "Description (Optional)" )) ? "" : entry.text;
+      uml_item.description = text;
+      _h2_label.label = Utils.make_title( text );
     });
 
     save.connect(() => {
-      uml_item.description = entry.text;
-      _h2_label.label = Utils.make_title( entry.text );
+      var text = (entry.text == _( "Description (Optional)" )) ? "" : entry.text;
+      uml_item.description = text;
+      _h2_label.label = Utils.make_title( text );
     });
 
     var help = new Button.from_icon_name( "dialog-information-symbolic" ) {

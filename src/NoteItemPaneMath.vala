@@ -76,23 +76,21 @@ public class NoteItemPaneMath : NoteItemPane {
   // Create custom header when the pane is selected.
   protected override Widget create_header1() {
 
-    var entry = new EditableLabel( (math_item.description == "") ? _( "Description (optional)" ) : math_item.description ) {
+    var entry = new EditableLabel( (math_item.description == "") ? _( "Description (Optional)" ) : math_item.description ) {
       halign = Align.FILL,
       hexpand = true
     };
 
     entry.changed.connect(() => {
-      if( entry.text != _( "Description (optional)" ) ) {
-        math_item.description = entry.text;
-        _h2_label.label = Utils.make_title( math_item.description );
-      }
+      var text = (entry.text == _( "Description (Optional)" )) ? "" : entry.text;
+      math_item.description = text;
+      _h2_label.label = Utils.make_title( text );
     });
 
     save.connect(() => {
-      if( entry.text != _( "Description (optional)" ) ) {
-        math_item.description = entry.text;
-        _h2_label.label = Utils.make_title( math_item.description );
-      }
+      var text = (entry.text == _( "Description (Optional)" )) ? "" : entry.text;
+      math_item.description = text;
+      _h2_label.label = Utils.make_title( text );
     });
 
     _help = new Button.from_icon_name( "dialog-information-symbolic" ) {

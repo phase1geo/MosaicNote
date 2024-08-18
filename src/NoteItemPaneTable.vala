@@ -110,19 +110,21 @@ public class NoteItemPaneTable : NoteItemPane {
   // Create custom header when the pane is selected.
   protected override Widget create_header1() {
 
-    var entry = new EditableLabel( (table_item.description == "") ? _( "Description (optional)" ) : table_item.description ) {
+    var entry = new EditableLabel( (table_item.description == "") ? _( "Description (Optional)" ) : table_item.description ) {
       halign = Align.FILL,
       hexpand = true
     };
 
     entry.changed.connect(() => {
-      table_item.description = entry.text;
-      _h2_label.label = Utils.make_title( entry.text );
+      var text = (entry.text == _( "Description (Optional)" )) ? "" : entry.text;
+      table_item.description = text;
+      _h2_label.label = Utils.make_title( text );
     });
 
     save.connect(() => {
-      table_item.description = entry.text;
-      _h2_label.label = Utils.make_title( entry.text );
+      var text = (entry.text == _( "Description (Optional)" )) ? "" : entry.text;
+      table_item.description = text;
+      _h2_label.label = Utils.make_title( text );
     });
 
     var menu = new GLib.Menu();

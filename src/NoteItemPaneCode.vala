@@ -70,13 +70,15 @@ public class NoteItemPaneCode : NoteItemPane {
     };
 
     entry.changed.connect(() => {
-      code_item.description = entry.text;
-      _h2_label.label = Utils.make_title( entry.text );
+      var text = (entry.text == _( "Description (Optional)" )) ? "" : entry.text;
+      code_item.description = text;
+      _h2_label.label = Utils.make_title( text );
     });
 
     save.connect(() => {
-      code_item.description = entry.text;
-      _h2_label.label = Utils.make_title( entry.text );
+      var text = (entry.text == _( "Description (Optional)" )) ? "" : entry.text;
+      code_item.description = text;
+      _h2_label.label = Utils.make_title( text );
     });
 
     return( entry );
