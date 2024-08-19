@@ -2,8 +2,6 @@ TODO:
 
  ☐ Add auto-completion when entering note links
    Not exactly sure how to currently implement this
- ☐ Add drag and drop support for organizing notebooks
- ☐ Add drag and drop support for reorganizing smart notebooks
  ☐ Add support for undo/redo
    Need to figure out what we will be able to undo/redo (it won't be everything)
  ☐ Add ability to import a note from Markdown format @ip
@@ -20,6 +18,9 @@ TODO:
    ☐ texlive (needs pdflatex)
    ☐ plantuml
    If external dependencies are not met: check dependencies, warn user, disable note items, allow app to be used without further issue.
+
+ ☐ Add drag and drop support for organizing notebooks
+ ☐ Add drag and drop support for reorganizing smart notebooks
 
 
 BUGS:
