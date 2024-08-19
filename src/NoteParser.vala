@@ -49,8 +49,12 @@ public class NoteParser {
       if( stripped != "" ) {
         if( stripped == "---" ) {
           if( in_yaml ) {
+            stdout.printf( "Parsing yaml:\n%s\n", yaml );
+            Yaml.Parser.set_input_string( yaml.data );
+            Yaml.Parser.
             // yaml.parse()
             in_yaml = false;
+            return( note );
             parse_markdown_code( note, lines[index+1:lines.length] );
             break;
           } else if( first ) {
@@ -66,6 +70,13 @@ public class NoteParser {
 
     return( note );
 
+  }
+
+  private void parse_yaml( Note note, string content ) {
+
+    Yaml.Parser parser = {};
+
+    parser.initialize();
   }
 
   //-------------------------------------------------------------

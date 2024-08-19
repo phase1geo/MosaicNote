@@ -88,7 +88,7 @@ public class Tags {
 	public string to_markdown() {
     string[] tags = {};
     for( int i=0; i<_tags.length; i++ ) {
-    	tags += _tags.index( i );
+    	tags += "\"" + _tags.index( i ) + "\"";
     }
     return( string.joinv( ",", tags ) );
 	}

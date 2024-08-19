@@ -43,8 +43,8 @@ You will need the following dependencies to build Journaler from source:
 * libgtksourceview-5-dev
 * libmarkdown2-dev
 * libenchant-2-dev
-<!-- * libsqlite3-dev -->
-<!-- * libwebkitgtk-6.0-dev -->
+* libyaml-dev
+* libwebkitgtk-6.0-dev
 
 To install, run `sudo ./app install` and then run the application from your application launcher or from
 the command-line with `./app run`.
