@@ -45,6 +45,8 @@ public class NoteItemPane : Box {
     { "action_add_item_above", action_add_item_above },
     { "action_add_item_below", action_add_item_below },
     { "action_delete_item",    action_delete_item },
+    { "action_export_item",    action_export_item, "i" },
+    { "action_copy_item_to_clipboard", action_copy_item_to_clipboard },
   };
 
   protected MainWindow win {
@@ -505,6 +507,14 @@ public class NoteItemPane : Box {
   }
 
   //-------------------------------------------------------------
+  // Allows the user to create a menu
+  protected virtual GLib.Menu? create_clipboard_menu() {
+    var menu = new GLib.Menu();
+    menu.append( _( "Copy To Clipboard" ), "item.action_copy_item_to_clipboard" );
+    return( menu );
+  }
+
+  //-------------------------------------------------------------
   // Adds a bar to the top of each section that will allow us to 
   // add UI elements to control the panel and provide an area for
   // panel data (if needed).
@@ -522,9 +532,24 @@ public class NoteItemPane : Box {
     var del_menu = new GLib.Menu();
     del_menu.append( _( "Delete Block" ), "item.action_delete_item" );
 
+    var export_menu = new GLib.Menu();
+    for( int i=0; i<ExportType.NUM; i++ ) {
+      var etype = (ExportType)i;
+      export_menu.append( etype.label(), "item.action_export_item(%d)".printf( i ) );
+    }
+    var exp_menu = new GLib.Menu();
+    exp_menu.append_submenu( _( "Export Item" ), export_menu );
+
+    var clip_menu = create_clipboard_menu();
+
     var menu = new GLib.Menu();
     menu.append_section( null, add_menu );
     menu.append_section( null, del_menu );
+    menu.append_section( null, exp_menu );
+
+    if( clip_menu != null ) {
+      menu.append_section( null, clip_menu );
+    }
 
     var more = new MenuButton() {
       halign = Align.END,
@@ -641,6 +666,35 @@ public class NoteItemPane : Box {
   // Removes the current item
   private void action_delete_item() {
     remove_item( true );
+  }
+
+  //-------------------------------------------------------------
+  // Exports the current item.
+  private void export_item( ExportType etype ) {
+    save();
+    Export.export_note_item( _win, etype, item );
+  }
+
+  //-------------------------------------------------------------
+  // Exports the current
+  private void action_export_item( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      var etype = (ExportType)variant.get_int32();
+      export_item( etype );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Copies the current item to the clipboard.
+  protected virtual void copy_to_clipboard( Gdk.Clipboard clipboard ) {
+    clipboard.set_text( item.content );
+  }
+
+  //-------------------------------------------------------------
+  // Copies the current item (as Markdown) to the clipboard.
+  private void action_copy_item_to_clipboard() {
+    save();
+    copy_to_clipboard( Gdk.Display.get_default().get_clipboard() );
   }
 
 }

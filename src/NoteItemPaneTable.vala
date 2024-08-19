@@ -870,4 +870,10 @@ public class NoteItemPaneTable : NoteItemPane {
     }
   }
 
+  //-------------------------------------------------------------
+  // Copies the table in Markdown format to the clipboard.
+  protected override void copy_to_clipboard( Gdk.Clipboard clipboard ) {
+    clipboard.set_text( item.to_markdown( false ) );
+  }
+
 }

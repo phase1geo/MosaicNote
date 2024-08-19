@@ -362,4 +362,10 @@ public class NoteItemPaneAssets : NoteItemPane {
     }
   }
 
+  //-------------------------------------------------------------
+  // We won't have a copy to clipboard menu option so return null.
+  protected override GLib.Menu? create_clipboard_menu() {
+    return( null );
+  }
+
 }

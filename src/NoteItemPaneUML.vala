@@ -222,4 +222,13 @@ public class NoteItemPaneUML : NoteItemPane {
 
   }
 
+  //-------------------------------------------------------------
+  // Copies the image to the clipboard.
+  protected override void copy_to_clipboard( Gdk.Clipboard clipboard ) {
+    try {
+      var texture = Gdk.Texture.from_file( _image.file );
+      clipboard.set_texture( texture );
+    } catch( Error e ) {}
+  }
+
 }

@@ -189,4 +189,13 @@ public class NoteItemPaneImage : NoteItemPane {
 
   }
 
+  //-------------------------------------------------------------
+  // Overrides the copy to clipboard functionality.
+  protected override void copy_to_clipboard( Gdk.Clipboard clipboard ) {
+    try {
+      var texture = Gdk.Texture.from_filename( image_item.get_resource_filename() );
+      clipboard.set_texture( texture );
+    } catch( Error e ) {}
+  }
+
 }

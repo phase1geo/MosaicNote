@@ -219,4 +219,16 @@ public class NoteItemPaneMath : NoteItemPane {
 
   }
 
+  //-------------------------------------------------------------
+  // Overrides the copy to clipboard functionality.
+  protected override void copy_to_clipboard( Gdk.Clipboard clipboard ) {
+    Idle.add(() => {
+      try {
+        var texture = Gdk.Texture.from_filename( math_item.get_resource_filename() );
+        clipboard.set_texture( texture );
+      } catch( Error e ) {}
+      return( false );
+    });
+  }
+
 }

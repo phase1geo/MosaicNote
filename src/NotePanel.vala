@@ -22,95 +22,6 @@
 using Gtk;
 using Gee;
 
-public enum ExportType {
-  MARKDOWN,
-  HTML,
-  LATEX,
-  PDF,
-  EPUB,
-  DOCX,
-  PPTX,
-  ODT,
-  RTF,
-  TEXT,
-  JSON,
-  YAML,
-  NUM;
-
-  public string to_string() {
-    switch( this ) {
-      case MARKDOWN :  return( "markdown" );
-      case HTML     :  return( "html" );
-      case LATEX    :  return( "latex" );
-      case PDF      :  return( "pdf" );
-      case EPUB     :  return( "epub" );
-      case DOCX     :  return( "docx" );
-      case PPTX     :  return( "pptx" );
-      case ODT      :  return( "odt" );
-      case RTF      :  return( "rtf" );
-      case TEXT     :  return( "text" );
-      case JSON     :  return( "json" );
-      case YAML     :  return( "yaml" );
-      default       :  assert_not_reached();
-    }
-  }
-
-  public string label() {
-    switch( this ) {
-      case MARKDOWN :  return( _( "Markdown" ) );
-      case HTML     :  return( _( "HTML" ) );
-      case LATEX    :  return( _( "Latex" ) );
-      case PDF      :  return( _( "PDF" ) );
-      case EPUB     :  return( _( "EPub" ) );
-      case DOCX     :  return( _( "Microsoft Word" ) );
-      case PPTX     :  return( _( "Microsoft PowerPoint" ) );
-      case ODT      :  return( _( "ODT" ) );
-      case RTF      :  return( _( "Rich Text Format" ) );
-      case TEXT     :  return( _( "Plain Text" ) );
-      case JSON     :  return( _( "JSON" ) );
-      case YAML     :  return( _( "YAML" ) );
-      default       :  assert_not_reached();
-    }
-  }
-
-  public static ExportType parse( string val ) {
-    switch( val ) {
-      case "markdown" :  return( MARKDOWN );
-      case "html"     :  return( HTML );
-      case "latex"    :  return( LATEX );
-      case "pdf"      :  return( PDF );
-      case "epub"     :  return( EPUB );
-      case "docx"     :  return( DOCX );
-      case "pptx"     :  return( PPTX );
-      case "odt"      :  return( ODT );
-      case "rtf"      :  return( RTF );
-      case "text"     :  return( TEXT );
-      case "json"     :  return( JSON );
-      case "yaml"     :  return( YAML );
-      default         :  return( MARKDOWN );
-    }
-  }
-
-  public string extension() {
-    switch( this ) {
-      case MARKDOWN :  return( "md" );
-      case HTML     :  return( "html" );
-      case LATEX    :  return( "latex" );
-      case PDF      :  return( "pdf" );
-      case EPUB     :  return( "epub" );
-      case DOCX     :  return( "docx" );
-      case PPTX     :  return( "pptx" );
-      case ODT      :  return( "odt" );
-      case RTF      :  return( "rtf" );
-      case TEXT     :  return( "txt" );
-      case JSON     :  return( "json" );
-      case YAML     :  return( "yml" );
-      default       :  assert_not_reached();
-    }
-  }
-
-}
-
 public class NotePanel : Box {
 
   private Note? _note = null;
@@ -709,44 +620,8 @@ public class NotePanel : Box {
   //-------------------------------------------------------------
   // Exports the given note
   private void export_note( ExportType etype ) {
-
-    // Make sure that everything is saved prior to exporting
     save();
-
-#if GTK410
-    var dialog = Utils.make_file_chooser( _( "Export" ), _( "Export" ) );
-
-    var filter = new FileFilter();
-    filter.name = etype.label();
-    filter.add_suffix( etype.extension() );
-
-    dialog.default_filter = filter;
-    dialog.initial_name = "unnamed." + etype.extension();
-
-    dialog.save.begin( _win, null, (obj, res) => {
-      try {
-        var file = dialog.save.end( res );
-        if( file != null ) {
-          Export.export( file.get_path(), _note );
-        }
-      } catch( Error e ) {}
-    });
-#else
-    var dialog = Utils.make_file_chooser( _( "Export" ), _win, FileChooserAction.SAVE, _( "Export" ) );
-
-    dialog.response.connect((id) => {
-      if( id == ResponseType.ACCEPT ) {
-        var file = dialog.get_file();
-        if( file != null ) {
-          Export.export( file.get_path(), _note );
-        }
-      }
-      dialog.destroy();
-    });
-
-    dialog.show();
-#endif
-
+    Export.export_note( _win, etype, _note );
   }
 
   //-------------------------------------------------------------
