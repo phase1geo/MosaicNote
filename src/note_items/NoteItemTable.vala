@@ -488,6 +488,7 @@ public class NoteItemTable : NoteItem {
 		string[] justs   = {};
 		if( _auto_number ) {
 			columns += "#";
+      justs   += ":--";
 		}
 		for( int i=0; i<_columns.length; i++ ) {
 			columns += _columns.index( i ).header;
