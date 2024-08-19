@@ -157,7 +157,7 @@ public class Export {
       } catch( Error e ) {}
     });
 #else
-    var dialog = Utils.make_file_chooser( _( "Export" ), _win, FileChooserAction.SAVE, _( "Export" ) );
+    var dialog = Utils.make_file_chooser( _( "Export" ), win, FileChooserAction.SAVE, _( "Export" ) );
 
     dialog.filter = filter;
     dialog.set_current_name( filename );
@@ -182,8 +182,8 @@ public class Export {
   private static bool do_export( ExportType export_type, string filename, string markdown, Gee.HashSet<string> needed_langs ) {
 
     var file_parts   = filename.split( "." );
-    var extension    = file_parts[file_parts.length];
-    var ext_filename = filename + ((extension == export_type.extension()) ? "" : export_type.extension());
+    var extension    = file_parts[file_parts.length-1];
+    var ext_filename = filename + ((extension == export_type.extension()) ? "" : ("." + export_type.extension()));
     var md_filename  = filename + ((extension == ".md") ? "" : ".md");
     var lang_dir     = "";
 

@@ -6,7 +6,7 @@ TODO:
  ☐ Add drag and drop support for reorganizing smart notebooks
  ☐ Add support for undo/redo
    Need to figure out what we will be able to undo/redo (it won't be everything)
- ☐ Add ability to import a note from Markdown format
+ ☐ Add ability to import a note from Markdown format @ip
    Note should do the file processing
  ☐ Add ability to import a directory full of Markdown notes into notebook(s)
    This could be used to import notes from another tool perhaps

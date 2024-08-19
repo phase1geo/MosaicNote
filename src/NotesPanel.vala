@@ -226,6 +226,19 @@ public class NotesPanel : Box {
       sensitive = false
 		};
 
+    var right_click = new GestureClick() {
+      button = Gdk.BUTTON_SECONDARY
+    };
+    _add.add_controller( right_click );
+
+    right_click.released.connect((n_press, x, y) => {
+      var nb    = bn_is_node() ? ((NotebookTree.Node)_bn).get_notebook() : (Notebook)_bn;
+      var index = nb.count();
+      Import.import_notes( _win, nb );
+      populate_with_notebook( _bn );
+      _list.select_row( _list.get_row_at_index( index ) );
+    });
+
 		_add.clicked.connect(() => {
       var nb = bn_is_node() ? ((NotebookTree.Node)_bn).get_notebook() : (Notebook)_bn;
 			var note = new Note( nb );

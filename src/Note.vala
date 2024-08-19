@@ -214,8 +214,10 @@ public class Note : Object {
   //-------------------------------------------------------------
   // Exports this note to the given directory.
   public void export( string notebook_dir ) {
-    var filename = Path.build_filename( notebook_dir, title + ".md" );
-    FileUtils.set_contents( filename, to_markdown( true, false ) );
+  	try {
+	    var filename = Path.build_filename( notebook_dir, title + ".md" );
+	    FileUtils.set_contents( filename, to_markdown( true, false ) );
+   } catch( FileError e ) {}
   }
 
 	//-------------------------------------------------------------
