@@ -335,6 +335,7 @@ public class NoteItem {
     var to_file = File.new_for_path( get_resource_path( Utils.get_extension( from_file.get_path() ), extra_id ) );
     try {
       if( link && (from_file.get_uri_scheme() == "file") ) {
+        FileUtils.remove( to_file.get_path() );
         return( to_file.make_symbolic_link( from_file.get_path() ) );
       } else {
         return( from_file.copy( to_file, FileCopyFlags.OVERWRITE ) );
