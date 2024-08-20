@@ -60,6 +60,45 @@ public enum TableColumnType {
 	}
 
 	//-------------------------------------------------------------
+	// Generates the Markdown syntax based on this type and the string
+	// value.
+	public string to_markdown( string val ) {
+		switch( this ) {
+			case TEXT :
+			  return( val );
+			case CHECKBOX :
+			  return( (val == "true") ? "[x]" : "[ ]" );
+			case DATE :
+			  return( val );  // The date will already be in YYYY/MM/DD format
+			default :
+			  assert_not_reached();
+		}
+	}
+
+	//-------------------------------------------------------------
+	// Parses the given value in Markdown format and returns the
+	// string value.
+	public string from_markdown( string val ) {
+		switch( this ) {
+			case TEXT     :  return( val );
+			case CHECKBOX :
+			  if( val.has_prefix( "[" ) && val.has_suffix( "]" ) ) {
+			  	var inner = val.slice( val.index_of_nth_char( 1 ), val.index_of_nth_char( val.char_count() - 1 ) ).strip();
+			  	return( (inner == "") ? "false" : "true" );
+			  }
+			  return( "false" );
+			case DATE :
+			  Date date = {};
+			  date.set_parse( val );
+			  if( date.valid() ) {
+          return( "%d/%d/%d".printf( date.get_year(), date.get_month(), date.get_day() ) );
+			  }
+			  return( "" );
+      default : assert_not_reached();
+		}
+	}
+
+	//-------------------------------------------------------------
 	// Returns true if this column type should be auto-expanded to
 	// take up an equal share of available space.
 	public bool is_expandable() {
@@ -265,10 +304,11 @@ public class NoteItemTableRow : Object {
 
 	//-------------------------------------------------------------
 	// Returns the markdown for this row
-	public string to_markdown() {
+	public string to_markdown( Array<NoteItemTableColumn> columns ) {
   	string[] cells = {};
 		for( int i=0; i<_values.length; i++ ) {
-			cells += _values.index( i );
+			var col = columns.index( i );
+			cells += col.data_type.to_markdown( _values.index( i ) );
  		}
  		return( "| " + string.joinv( "|", cells ) + " |" );
  	}
@@ -503,11 +543,11 @@ public class NoteItemTable : NoteItem {
 		var str = create_markdown_header();
 		if( _auto_number ) {
 			for( int i=0; i<rows(); i++ ) {
-				str += "| %d %s\n".printf( (i + 1), get_row( i ).to_markdown() );
+				str += "| %d %s\n".printf( (i + 1), get_row( i ).to_markdown( _columns ) );
 			}
 		} else {
 			for( int i=0; i<rows(); i++ ) {
-				str += get_row( i ).to_markdown() + "\n";
+				str += get_row( i ).to_markdown( _columns ) + "\n";
 			}
 		}
 		return( str );

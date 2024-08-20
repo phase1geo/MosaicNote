@@ -23,13 +23,19 @@ public class NoteParser {
 
   private Regex _image_re;
   private Regex _check_re;
+  private Regex _title_re;
+  private Regex _tag_block_re;
+  private Regex _tag_list_re;
 
   //-------------------------------------------------------------
   // Default constructor
   public NoteParser() {
     try {
-      _image_re = new Regex( """^!\[(.*?)\]\s*\((.*?)\)$""" );
-      _check_re = new Regex( """^\[[ xX]?\]$""" );
+      _image_re     = new Regex( """^!\[(.*?)\]\s*\((.*?)\)$""" );
+      _check_re     = new Regex( """^\[[ xX]?\]$""" );
+      _title_re     = new Regex( """^title\s*:\s*(.*)$""" );
+      _tag_block_re = new Regex( """^tags\s*:\s*\[(.*?)\]$""" ); 
+      _tag_list_re  = new Regex( """^tags\s*:$""" );
     } catch( RegexError e ) {}
   }
 
@@ -39,8 +45,8 @@ public class NoteParser {
 
     var first   = true;
     var index   = 0;
+    var start_index = 0;
     var in_yaml = false;
-    var yaml    = "";
     var lines   = markdown.split( "\n" );
     var note    = new Note( notebook );
 
@@ -49,19 +55,13 @@ public class NoteParser {
       if( stripped != "" ) {
         if( stripped == "---" ) {
           if( in_yaml ) {
-            stdout.printf( "Parsing yaml:\n%s\n", yaml );
-            Yaml.Parser.set_input_string( yaml.data );
-            Yaml.Parser.
-            // yaml.parse()
-            in_yaml = false;
-            return( note );
+            parse_yaml( note, lines[start_index:index] );
             parse_markdown_code( note, lines[index+1:lines.length] );
             break;
           } else if( first ) {
+            start_index = index + 1;
             in_yaml = true;
           }
-        } else if( in_yaml ) {
-          yaml += line + "\n";
         }
         first = false;
       }
@@ -72,11 +72,52 @@ public class NoteParser {
 
   }
 
-  private void parse_yaml( Note note, string content ) {
+  //-------------------------------------------------------------
+  // Parses the frontend matter with the Yaml parser
+  private void parse_yaml( Note note, string[] lines ) {
 
-    Yaml.Parser parser = {};
+    MatchInfo match;
 
-    parser.initialize();
+    var index   = 0;
+    var in_tags = false;
+
+    foreach( var line in lines ) {
+      var stripped = line.strip();
+      if( _title_re.match( stripped, 0, out match ) ) {
+        note.title = dequote( match.fetch( 1 ) );
+      } else if( _tag_block_re.match( stripped, 0, out match ) ) {
+        parse_yaml_tag_block( note, match.fetch( 1 ) );
+      } else if( _tag_list_re.match( stripped, 0, out match ) ) {
+        in_tags = true;
+      } else if( in_tags && line.has_prefix( "-" ) ) {
+        var tag = line.substring( line.index_of_nth_char( 1 ) );
+        note.tags.add_tag( dequote( tag.strip() ) );
+      } else {
+        in_tags = false;
+      }
+      index++;
+    }
+
+  }
+
+  //-------------------------------------------------------------
+  // Removes double-quotes from the given string (if it exists).
+  private string dequote( string str ) {
+    var stripped = str.strip();
+    if( (stripped.has_prefix( "\"" ) && stripped.has_suffix( "\"" )) ||
+        (stripped.has_prefix( "'" )  && stripped.has_suffix( "'" )) ) {
+      return( stripped.slice( stripped.index_of_nth_char( 1 ), stripped.index_of_nth_char( stripped.char_count() - 1 ) ) );
+    }
+    return( stripped );
+  }
+
+  //-------------------------------------------------------------
+  // Parses the YAML tag block list.
+  private void parse_yaml_tag_block( Note note, string content ) {
+    var tags = content.split( "," );
+    foreach( var tag in tags ) {
+      note.tags.add_tag( dequote( tag ) );
+    }
   }
 
   //-------------------------------------------------------------
@@ -89,9 +130,13 @@ public class NoteParser {
     var index         = 0;
     var start_index   = 0;
 
+    stdout.printf( "code num lines: %u\n", lines.length );
+
     foreach( var line in lines ) {
       var stripped = line.strip();
+      stdout.printf( "%d code line: (%s)\n", index, stripped );
       if( stripped.has_prefix( "```" ) ) {
+        stdout.printf( "  Found code block!" );
         if( in_code_block ) {
           var code_item = new NoteItemCode( note ) {
             lang    = language,
@@ -101,11 +146,13 @@ public class NoteParser {
           language = "";
           code     = "";
           start_index = index + 1;
+          in_code_block = false;
         } else {
           if( start_index != index ) {
             parse_markdown_image( note, lines[start_index:index-1] );
           }
           language = stripped.substring( stripped.index_of_nth_char( 3 ) );
+          in_code_block = true;
         }
       } else if( in_code_block ) {
         code += line + "\n";
@@ -117,6 +164,19 @@ public class NoteParser {
       parse_markdown_image( note, lines[start_index:index-1] );
     }
 
+  }
+
+  //-------------------------------------------------------------
+  // Repairs the given URI if it is not valid.
+  private string fix_uri( string uri ) {
+    try {
+      if( !Uri.is_valid( uri, UriFlags.PARSE_RELAXED ) ) {
+        return( "file://" + uri );
+      }
+      return( uri );
+    } catch( UriError e ) {
+      return( "file://" + uri );
+    }
   }
 
   //-------------------------------------------------------------
@@ -134,7 +194,7 @@ public class NoteParser {
           parse_markdown_table( note, lines[start_index:index-1] );
         }
         var image_item = new NoteItemImage( note ) {
-          uri = match.fetch( 2 ),
+          uri = fix_uri( match.fetch( 2 ) ),
           description = match.fetch( 1 )
         };
         note.add_note_item( note.size(), image_item );
@@ -218,8 +278,8 @@ public class NoteParser {
     var row_index = item.rows();
     item.insert_row( row_index );
     foreach( var col in columns ) {
-      var stripped = col.strip();
-      item.set_cell( col_index, row_index, stripped );
+      var val = item.get_column( col_index ).data_type.from_markdown( col.strip() );
+      item.set_cell( col_index, row_index, val );
       col_index++;
     }
   }
@@ -238,8 +298,8 @@ public class NoteParser {
     foreach( var line in lines ) {
       var stripped = line.strip();
       if( stripped.has_prefix( "|" ) ) {
-        if( start_index != index ) {
-          parse_markdown_markdown( note, lines[start_index:index-1] );
+        if( (start_index != index) && (table_item == null) ) {
+          parse_markdown_markdown( note, lines[start_index:index] );
         }
         var columns = stripped.split( "|" );
         if( in_header ) {
@@ -258,6 +318,7 @@ public class NoteParser {
         } else {
           parse_markdown_table_row( table_item, columns[1:columns.length-2] );
         }
+        start_index = index + 1;
       } else if( table_item != null ) {
         note.add_note_item( note.size(), table_item );
         table_item  = null;
@@ -268,7 +329,7 @@ public class NoteParser {
     }
 
     if( start_index != index ) {
-      parse_markdown_markdown( note, lines[start_index:index-1] );
+      parse_markdown_markdown( note, lines[start_index:index] );
     }
 
   }
@@ -281,10 +342,13 @@ public class NoteParser {
   // assign it to a new Markdown item content value and add the item
   // to the note.
   private void parse_markdown_markdown( Note note, string[] lines ) {
-    var markdown_item = new NoteItemMarkdown( note ) {
-      content = string.joinv( "\n", lines )
-    };
-    note.add_note_item( note.size(), markdown_item );
+    var text = string.joinv( "\n", lines ).strip();
+    if( text != "" ) {
+      var markdown_item = new NoteItemMarkdown( note ) {
+        content = string.joinv( "\n", lines ).strip()
+      };
+      note.add_note_item( note.size(), markdown_item );
+    }
   }
 
 }

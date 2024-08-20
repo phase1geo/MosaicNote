@@ -62,7 +62,8 @@ e = executable('com.github.phase1geo.mosaic-note',
     gresource,
     dependencies: core_deps,
     vala_args: [
-        meson.project_source_root() + '/vapi/libmarkdown.vapi'
+        meson.project_source_root() + '/vapi/libmarkdown.vapi',
+        # meson.project_source_root() + '/vapi/yaml-0.1.vapi'
     ],
     install : true
 )
