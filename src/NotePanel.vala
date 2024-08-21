@@ -55,6 +55,12 @@ public class NotePanel : Box {
     }
   }
 
+  public NoteItemPanes items {
+    get {
+      return( _content );
+    }
+  }
+
   public signal void tag_added( string name, int note_id );
   public signal void tag_removed( string name, int note_id );
   public signal void note_saved( Note note, HashSet<string>? orig_link_titles );

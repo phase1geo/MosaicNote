@@ -93,6 +93,9 @@ public class MainWindow : Gtk.ApplicationWindow {
   private Paned           _notes_pw;
   private Paned           _sidebar_pw;
   private ToggleButton    _search_mb;
+  private UndoBuffer      _undo;
+  private Button          _undo_btn;
+  private Button          _redo_btn;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_save",           action_save },
@@ -103,6 +106,8 @@ public class MainWindow : Gtk.ApplicationWindow {
     { "action_next_panels",    action_next_panels },
     { "action_prev_panels",    action_prev_panels },
     { "action_set_panel_mode", action_set_panel_mode, "i" },
+    { "action_undo",           action_undo },
+    { "action_redo",           action_redo },
   };
 
   private bool on_elementary = Gtk.Settings.get_default().gtk_icon_theme_name == "elementary";
@@ -176,6 +181,9 @@ public class MainWindow : Gtk.ApplicationWindow {
     _settings   = settings;
     _panel_mode = PanelMode.parse( settings.get_string( "panel-mode" ) );
 
+    _undo = new UndoBuffer( this );
+    _undo.buffer_changed.connect( do_buffer_changed );
+
     var window_w = settings.get_int( "window-w" );
     var window_h = settings.get_int( "window-h" );
 
@@ -206,7 +214,21 @@ public class MainWindow : Gtk.ApplicationWindow {
     _history         = new NoteHistory();
 
     /* Create title toolbar */
+    _undo_btn = new Button.from_icon_name( "edit-undo-symbolic" ) {
+      tooltip_markup = Utils.tooltip_with_accel( _( "Undo" ), "<Control>z" ),
+      sensitive = false
+    };
+    _undo_btn.clicked.connect( action_undo );
+
+    _redo_btn = new Button.from_icon_name( "edit-redo-symbolic" ) {
+      tooltip_markup = Utils.tooltip_with_accel( _( "Redo" ), "<Control><Shift>z" ),
+      sensitive = false
+    };
+    _redo_btn.clicked.connect( action_redo );
+
     header.pack_start( create_panel_layout() );
+    header.pack_start( _undo_btn );
+    header.pack_start( _redo_btn );
     header.pack_end( create_miscellaneous() );
     header.pack_end( create_search() );
 
@@ -394,6 +416,8 @@ public class MainWindow : Gtk.ApplicationWindow {
     app.set_accels_for_action( "win.action_search",      { "<Control>f" } );
     app.set_accels_for_action( "win.action_next_panels", { "<Control>b" } );
     app.set_accels_for_action( "win.action_prev_panels", { "<Control><Shift>b" } );
+    app.set_accels_for_action( "win.action_undo",        { "<Control>z" } );
+    app.set_accels_for_action( "win.action_redo",        { "<Control><Shift>z" } );
 
   }
 
@@ -540,11 +564,33 @@ public class MainWindow : Gtk.ApplicationWindow {
   }
 
   //-------------------------------------------------------------
-  // sow the previous panel arrangement.
+  // Show the previous panel arrangement.
   private void action_prev_panels() {
     _panel_mode = _panel_mode.previous_mode();
     _settings.set_string( "panel-mode", _panel_mode.to_string() );
     arrange_panels();
+  }
+
+  //-------------------------------------------------------------
+  // Undoes the last undoable action.
+  private void action_undo() {
+    _undo.undo();
+  }
+
+  //-------------------------------------------------------------
+  // Redoes the action last undone.
+  private void action_redo() {
+    _undo.redo();
+  }
+
+  //-------------------------------------------------------------
+  // Called whenever the undo buffer changes state.  Updates the
+  // state of the undo and redo buffer buttons.
+  public void do_buffer_changed( UndoBuffer buf ) {
+    _undo_btn.set_sensitive( buf.undoable() );
+    _undo_btn.set_tooltip_markup( Utils.tooltip_with_accel( buf.undo_tooltip(), "<Control>z" ) );
+    _redo_btn.set_sensitive( buf.redoable() );
+    _redo_btn.set_tooltip_markup( Utils.tooltip_with_accel( buf.redo_tooltip(), "<Control><Shift>z" ) );
   }
 
   //-------------------------------------------------------------

@@ -44,8 +44,11 @@ sources += files(
     'ToolbarCode.vala',
     'ToolbarItem.vala',
     'ToolbarMarkdown.vala',
+    'UndoBuffer.vala',
+    'UndoItem.vala',
     'Utils.vala'
 )
 
 subdir('filters')
 subdir('note_items')
+subdir('undo')
