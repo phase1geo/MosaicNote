@@ -69,7 +69,7 @@ public class NoteItemPane : Box {
 
   public signal void add_item( bool above, NoteItemType? type );
   public signal void remove_item( bool forward, bool record_undo );
-  public signal void move_item( bool up );
+  public signal void move_item( bool up, bool record_undo );
   public signal void set_as_current( string msg = "" );
   public signal void note_link_clicked( string link );
 
@@ -307,7 +307,7 @@ public class NoteItemPane : Box {
         case Gdk.Key.Up :
           if( prev_pane != null ) {
             if( control ) {
-              move_item( true );
+              move_item( true, true );
               return( true );
             } else if( !handled_up() ) {
               var text = get_text();
@@ -326,7 +326,7 @@ public class NoteItemPane : Box {
         case Gdk.Key.Down :
           if( next_pane != null ) {
             if( control ) {
-              move_item( false );
+              move_item( false, true );
               return( true );
             } else if( !handled_down() ) {
               var text = get_text();

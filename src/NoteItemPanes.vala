@@ -164,7 +164,7 @@ public class NoteItemPanes : Box {
       }
     });
 
-    pane.move_item.connect((up) => {
+    pane.move_item.connect((up, record_undo) => {
       var index = Utils.get_child_index( this, pane );
       var prev  = get_pane( index - 1 );
       var curr  = get_pane( index );
@@ -174,7 +174,9 @@ public class NoteItemPanes : Box {
         curr.next_pane = prev;
         prev.prev_pane = curr;
         prev.next_pane = next;
-        next.prev_pane = curr;
+        if( next != null ) {
+          next.prev_pane = curr;
+        }
         _note.move_item( index, (index - 1) );
         reorder_child_after( get_pane( index ), get_pane( index - 2 ) );
       } else {
@@ -182,9 +184,14 @@ public class NoteItemPanes : Box {
         curr.next_pane = next.next_pane;
         next.prev_pane = prev;
         next.next_pane = curr;
-        prev.next_pane = next;
+        if( prev != null ) {
+          prev.next_pane = next;
+        }
         _note.move_item( index, (index + 1) );
         reorder_child_after( get_pane( index ), get_pane( index + 1 ) );
+      }
+      if( record_undo ) {
+        _win.undo.add_item( new UndoNoteItemMove( _note, index, up ) );
       }
     });
 
