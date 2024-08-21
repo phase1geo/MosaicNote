@@ -121,6 +121,7 @@ public class NoteItemPanes : Box {
     var new_item = type.create( _note );
     _note.add_note_item( (uint)pos, new_item );
     add_item( new_item, pos );
+    _win.undo.add_item( new UndoNoteItemAdd( _note, ((pos == -1) ? (_size - 1) : pos) ) );
   }
 
   //-------------------------------------------------------------

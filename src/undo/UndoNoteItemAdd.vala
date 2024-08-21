@@ -21,15 +21,15 @@
 
 using GLib;
 
-public class UndoNoteItemDelete : UndoItem {
+public class UndoNoteItemAdd : UndoItem {
 
   private Note     _note;
   private NoteItem _item;
   private int      _index;
 
   /* Default constructor */
-  public UndoNoteItemDelete( Note note, int index ) {
-    base( _( "Delete Block" ) );
+  public UndoNoteItemAdd( Note note, int index ) {
+    base( _( "Add Block" ) );
     _note  = note;
     _item  = note.get_item( index );
     _index = index;
@@ -37,14 +37,14 @@ public class UndoNoteItemDelete : UndoItem {
 
   /* Causes the stored item to be put into the before state */
   public override void undo( MainWindow win ) {
-    _note.add_note_item( _index, _item );
-    win.note.items.add_item( _item, _index );
+    var pane = win.note.items.get_pane( _index );
+    pane.remove_item( true, false );
   }
 
   /* Causes the stored item to be put into the after state */
   public override void redo( MainWindow win ) {
-    var pane = win.note.items.get_pane( _index );
-    pane.remove_item( true, false );
+    _note.add_note_item( _index, _item );
+    win.note.items.add_item( _item, _index );
   }
 
 }
