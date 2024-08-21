@@ -35,6 +35,7 @@ public class NoteItemPanes : Box {
 
   public signal void item_selected( NoteItemPane pane );
   public signal void note_link_clicked( string link );
+  public signal void see( int y, int height );
 
   public signal void save();
 
@@ -156,9 +157,13 @@ public class NoteItemPanes : Box {
       _size--;
       _note.delete_note_item( index );
       if( (forward || (index == 0)) && (get_pane( index ) != null) ) {
-        get_pane( index ).grab_item_focus( TextCursorPlacement.NO_CHANGE );
+        var next_pane = get_pane( index );
+        show_pane( next_pane );
+        next_pane.grab_item_focus( TextCursorPlacement.NO_CHANGE );
       } else if( (!forward || (index == (size - 1))) && (get_pane( index - 1 ) != null) ) {
-        get_pane( index - 1 ).grab_item_focus( TextCursorPlacement.NO_CHANGE );
+        var prev_pane = get_pane( index - 1 );
+        show_pane( prev_pane );
+        prev_pane.grab_item_focus( TextCursorPlacement.NO_CHANGE );
       } else {
         add_new_item( NoteItemType.MARKDOWN, -1 );
       }
@@ -190,6 +195,7 @@ public class NoteItemPanes : Box {
         _note.move_item( index, (index + 1) );
         reorder_child_after( get_pane( index ), get_pane( index + 1 ) );
       }
+      show_pane( curr );
       if( record_undo ) {
         _win.undo.add_item( new UndoNoteItemMove( _note, index, up ) );
       }
@@ -241,6 +247,9 @@ public class NoteItemPanes : Box {
     }
 
     _size++;
+
+    // Make sure that the pane is within view
+    show_pane( pane );
 
     // Make sure that the new pane has the focus
     if( !_note.locked ) {
@@ -294,6 +303,23 @@ public class NoteItemPanes : Box {
   // Returns the item at the given position
   public NoteItemPane? get_pane( int pos ) {
     return( (NoteItemPane)Utils.get_child_at_index( this, pos ) );
+  }
+
+  //-------------------------------------------------------------
+  // Makes sure that the given pane is within view.
+  public void show_pane( NoteItemPane pane ) {
+
+    Timeout.add( 100, () => {
+      Allocation child_alloc, parent_alloc;
+
+      get_allocation( out parent_alloc );
+      pane.get_allocation( out child_alloc );
+
+      see( (child_alloc.y + parent_alloc.y), child_alloc.height );
+
+      return( false );
+    });
+
   }
 
 }

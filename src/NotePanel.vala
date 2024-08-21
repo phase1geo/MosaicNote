@@ -381,6 +381,15 @@ public class NotePanel : Box {
       child = cbox
     };
 
+    _content.see.connect((y, height) => {
+      var dy  = (double)y;
+      var dh  = (double)height;
+      var adj = sw.vadjustment;
+      if( (adj.value > dy) || ((dy + dh) >= (adj.value + adj.page_size)) ) {
+        adj.value = dy;
+      }
+    });
+
     var box = new Box( Orientation.VERTICAL, 5 );
     box.append( tbox );
     box.append( hbox );
