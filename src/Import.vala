@@ -23,15 +23,19 @@ using Gtk;
 
 public class Import {
 
+  public delegate void ImportCallback( Note? first_note );
+
   //-------------------------------------------------------------
   // Exports the given note using the specified export type.
-  public static void import_notes( MainWindow win, Notebook notebook ) {
-    import_dialog( win, notebook );
+  public static void import_notes( MainWindow win, Notebook notebook, ImportCallback? callback ) {
+    import_dialog( win, notebook, callback );
   }
 
   //-------------------------------------------------------------
   // Displays a dialog to the user prompting to specify an output name.
-  private static void import_dialog( MainWindow win, Notebook notebook ) {
+  private static void import_dialog( MainWindow win, Notebook notebook, ImportCallback? callback ) {
+
+    Note? first_note = null;
 
     var filter = new FileFilter() {
       name = _( "Markdown" )
@@ -49,7 +53,13 @@ public class Import {
         if( files != null ) {
           for( int i=0; i<files.get_n_items(); i++ ) {
             var file = (File)files.get_item( i );
-            do_import( notebook, file.get_path() );
+            var note = do_import( notebook, file.get_path() );
+            if( i == 0 ) {
+              first_note = note;
+            }
+          }
+          if( callback != null ) {
+            callback( first_note );
           }
         }
       } catch( Error e ) {}
@@ -66,7 +76,13 @@ public class Import {
         if( files != null ) {
           for( int i=0; i<files.get_n_items(); i++ ) {
             var file = (File)files.get_item( i );
-            do_import( notebook, file.get_path() );
+            var note = do_import( notebook, file.get_path() );
+            if( i == 0 ) {
+              first_note = note;
+            }
+          }
+          if( callback != null ) {
+            callback( first_note );
           }
         }
       }
@@ -79,8 +95,8 @@ public class Import {
   }
 
   //-------------------------------------------------------------
-  // Performs the export operation.
-  private static bool do_import( Notebook notebook, string filename ) {
+  // Performs the export operation.  Returns the note that was imported.
+  private static Note? do_import( Notebook notebook, string filename ) {
 
     string contents = "";
 
@@ -91,11 +107,11 @@ public class Import {
         if( note != null ) {
           notebook.add_note( note );
         }
+        return( note );
       }
-      return( true );
     } catch( FileError e ) {}
 
-    return( false );
+    return( null );
 
   }
 

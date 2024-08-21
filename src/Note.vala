@@ -126,7 +126,8 @@ public class Note : Object {
 
 	//-------------------------------------------------------------
 	// Default constructor
-	public Note( Notebook nb ) {
+	public Note( Notebook nb, bool add_initial_item = true ) {
+
 		_nb       = nb;
 		_id       = current_id++;
 		_title    = "";
@@ -139,8 +140,11 @@ public class Note : Object {
     _items    = new Array<NoteItem>();
     _referred = new HashSet<int>();
 
-    var item = new NoteItemMarkdown( this );
-    add_note_item( 0, item );
+    if( add_initial_item ) {
+	    var item = new NoteItemMarkdown( this );
+	    add_note_item( 0, item );
+	  }
+
 	}
 
 	//-------------------------------------------------------------
@@ -203,7 +207,6 @@ public class Note : Object {
   public string to_markdown( bool front_matter, bool pandoc = false ) {
     var mod_title = _title.replace( "'", "''" );
   	var str = "---\ntitle: '%s'\ntags: [%s]\n---\n\n".printf( mod_title, _tags.to_markdown() );
-  	str += "# %s\n\n".printf( _title );
   	for( int i=0; i<_items.length; i++ ) {
   		var item = _items.index( i );
   		str += "%s\n\n".printf( item.to_markdown( pandoc ) );

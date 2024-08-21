@@ -48,7 +48,7 @@ public class NoteParser {
     var start_index = 0;
     var in_yaml = false;
     var lines   = markdown.split( "\n" );
-    var note    = new Note( notebook );
+    var note    = new Note( notebook, false );
 
     foreach( var line in lines ) {
       var stripped = line.strip();

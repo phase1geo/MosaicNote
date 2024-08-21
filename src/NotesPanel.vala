@@ -232,11 +232,14 @@ public class NotesPanel : Box {
     _add.add_controller( right_click );
 
     right_click.released.connect((n_press, x, y) => {
-      var nb    = bn_is_node() ? ((NotebookTree.Node)_bn).get_notebook() : (Notebook)_bn;
-      var index = nb.count();
-      Import.import_notes( _win, nb );
-      populate_with_notebook( _bn );
-      _list.select_row( _list.get_row_at_index( index ) );
+      var nb = bn_is_node() ? ((NotebookTree.Node)_bn).get_notebook() : (Notebook)_bn;
+      Import.import_notes( _win, nb, (first_note) => {
+        if( first_note != null ) {
+          populate_with_notebook( _bn );
+          _list.select_row( _list.get_row_at_index( get_index_of( first_note.id ) ) );
+        }
+      });
+
     });
 
 		_add.clicked.connect(() => {
@@ -244,7 +247,7 @@ public class NotesPanel : Box {
 			var note = new Note( nb );
 			nb.add_note( note );
       populate_with_notebook( _bn );
-      _list.select_row( _list.get_row_at_index( nb.count() - 1 ) );
+      _list.select_row( _list.get_row_at_index( get_index_of( note.id ) ) );
 		});
 
     var actions = new SimpleActionGroup();
@@ -281,6 +284,19 @@ public class NotesPanel : Box {
     insert_action_group( "notes", actions );
 
 	}
+
+  //-------------------------------------------------------------
+  // Returns the index of the note with the given ID in the sorted
+  // list model.
+  private int get_index_of( int note_id ) {
+    for( int i=0; i<_model.get_n_items(); i++ ) {
+      var note = (Note)_model.get_item( i );
+      if( note.id == note.id ) {
+        return( i );
+      }
+    }
+    return( -1 );
+  }
 
   //-------------------------------------------------------------
   // Creates the sorting menu actions.
