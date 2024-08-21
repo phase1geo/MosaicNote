@@ -213,6 +213,7 @@ public class NoteItemPanes : Box {
         _current_item = Utils.get_child_index( this, pane );
         item_selected( pane );
       }
+      show_pane( pane );
     });
 
     pane.note_link_clicked.connect((link) => {
