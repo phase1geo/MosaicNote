@@ -145,9 +145,12 @@ public class NoteItemPanes : Box {
       // pane.set_as_current( "pane.add_item (%s)".printf( item.content ) );
     });
 
-    pane.remove_item.connect((forward) => {
+    pane.remove_item.connect((forward, record_undo) => {
       var index = Utils.get_child_index( this, pane );
       var size  = _size;
+      if( record_undo ) {
+        _win.undo.add_item( new UndoNoteItemDelete( _note, index ) );
+      }
       remove( pane );
       _size--;
       _note.delete_note_item( index );

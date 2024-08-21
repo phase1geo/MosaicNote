@@ -68,7 +68,7 @@ public class NoteItemPane : Box {
   public NoteItemPane? next_pane { get; set; default = null; }
 
   public signal void add_item( bool above, NoteItemType? type );
-  public signal void remove_item( bool forward );
+  public signal void remove_item( bool forward, bool record_undo );
   public signal void move_item( bool up );
   public signal void set_as_current( string msg = "" );
   public signal void note_link_clicked( string link );
@@ -250,7 +250,8 @@ public class NoteItemPane : Box {
     prev_pane.grab_item_focus( TextCursorPlacement.NO_CHANGE );
 
     // Remove the current item
-    remove_item( false );
+    remove_item( false, true );  // TODO - I'm not sure that we want to record this remove as we will probably want
+                                 //        to record the split operation as a whole
 
     return( true );
 
@@ -293,13 +294,13 @@ public class NoteItemPane : Box {
           break;
         case Gdk.Key.BackSpace :
           if( control ) {
-            remove_item( false );
+            remove_item( false, true );
             return( true );
           }
           break;
         case Gdk.Key.Delete :
           if( control ) {
-            remove_item( true );
+            remove_item( true, true );
             return( true );
           }
           break;
@@ -665,7 +666,7 @@ public class NoteItemPane : Box {
   //-------------------------------------------------------------
   // Removes the current item
   private void action_delete_item() {
-    remove_item( true );
+    remove_item( true, true );
   }
 
   //-------------------------------------------------------------

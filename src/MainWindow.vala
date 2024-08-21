@@ -172,6 +172,12 @@ public class MainWindow : Gtk.ApplicationWindow {
     }
   }
 
+  public UndoBuffer undo {
+    get {
+      return( _undo );
+    }
+  }
+
   //-------------------------------------------------------------
   // Create the main window UI
   public MainWindow( Gtk.Application app, GLib.Settings settings ) {

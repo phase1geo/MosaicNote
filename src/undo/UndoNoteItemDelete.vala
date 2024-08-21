@@ -29,7 +29,7 @@ public class UndoNoteItemDelete : UndoItem {
 
   /* Default constructor */
   public UndoNoteItemDelete( Note note, int index ) {
-    base( _( "Note Deletion" ) );
+    base( _( "Delete Block" ) );
     _note  = note;
     _item  = note.get_item( index );
     _index = index;
@@ -43,8 +43,8 @@ public class UndoNoteItemDelete : UndoItem {
 
   /* Causes the stored item to be put into the after state */
   public override void redo( MainWindow win ) {
-    _note.delete_note_item( _index );
-    // TODO - win.note.items.remove_item( _item, _index );
+    var pane = win.note.items.get_pane( _index );
+    pane.remove_item( true, false );
   }
 
 }
