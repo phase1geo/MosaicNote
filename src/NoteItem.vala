@@ -331,7 +331,6 @@ public class NoteItem {
   // Saves the given resource into the resource directory
   protected bool save_as_resource( File from_file, bool link, int? extra_id = null ) {
     Utils.create_dir( get_resource_dir() );
-    stdout.printf( "path: %s, ext: %s\n", from_file.get_path(), Utils.get_extension( from_file.get_path() ) );
     var to_file = File.new_for_path( get_resource_path( Utils.get_extension( from_file.get_path() ), extra_id ) );
     try {
       if( link && (from_file.get_uri_scheme() == "file") ) {

@@ -30,7 +30,6 @@ public class NoteItemImage : NoteItem {
 	  }
 	  set {
 	  	if( _uri != value ) {
-	  		stdout.printf( "value-uri: (%s)\n", value );
         var file = File.new_for_uri( value );
         save_as_resource( file, true );
 	  		_uri     = value;

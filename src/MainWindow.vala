@@ -366,7 +366,6 @@ public class MainWindow : Gtk.ApplicationWindow {
   public bool show_note( int id ) {
     var note = _notebooks.find_note_by_id( id );
     if( note != null ) {
-      stdout.printf( "Notebook: %s, note title: %s\n", note.notebook.name, note.title );
       _sidebar.select_notebook( note.notebook );
       _notes.select_note( note.id, true );
       return( true );

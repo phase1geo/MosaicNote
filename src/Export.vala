@@ -184,7 +184,7 @@ public class Export {
     var file_parts   = filename.split( "." );
     var extension    = file_parts[file_parts.length-1];
     var ext_filename = filename + ((extension == export_type.extension()) ? "" : ("." + export_type.extension()));
-    var md_filename  = filename + ((extension == ".md") ? "" : ".md");
+    var md_filename  = filename + ((extension == "md") ? "" : ".md");
     var lang_dir     = "";
 
     // Write the note contents to a file

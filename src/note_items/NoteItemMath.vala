@@ -55,7 +55,7 @@ public class NoteItemMath : NoteItem {
 	// Converts the content to markdown text
 	public override string to_markdown( bool pandoc ) {
     if( (content != "") && FileUtils.test( get_resource_filename(), FileTest.EXISTS ) ) {
-  		return( "![%s](%s)".printf( _description, get_resource_filename() ) );
+  		return( "![%s](file://%s)".printf( _description, get_resource_filename() ) );
     }
     return( "" );
 	}

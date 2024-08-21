@@ -253,14 +253,17 @@ public class NotesPanel : Box {
     var sort_menu = create_sort_menu( actions );
 
     _sort = new MenuButton() {
-      has_frame    = false,
-      icon_name    = "view-sort-descending-symbolic",
-      halign       = Align.END,
-      hexpand      = true,
-      menu_model   = sort_menu,
-      sensitive    = false,
-      tooltip_text = _( "Change sort order" ),
-      direction    = ArrowType.UP
+      has_frame     = false,
+      icon_name     = "view-sort-descending-symbolic",
+      halign        = Align.END,
+      hexpand       = true,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 5,
+      menu_model    = sort_menu,
+      sensitive     = false,
+      tooltip_text  = _( "Change sort order" ),
+      direction     = ArrowType.UP
     };
 
 		var bbox = new Box( Orientation.HORIZONTAL, 5 ) {

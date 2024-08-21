@@ -130,13 +130,9 @@ public class NoteParser {
     var index         = 0;
     var start_index   = 0;
 
-    stdout.printf( "code num lines: %u\n", lines.length );
-
     foreach( var line in lines ) {
       var stripped = line.strip();
-      stdout.printf( "%d code line: (%s)\n", index, stripped );
       if( stripped.has_prefix( "```" ) ) {
-        stdout.printf( "  Found code block!" );
         if( in_code_block ) {
           var code_item = new NoteItemCode( note ) {
             lang    = language,
