@@ -541,6 +541,9 @@ public class Sidebar : Box {
 		  if( nb.count() == 0 ) {
 		  	expander.margin_top = 6;
 		  	expander.margin_bottom = 6;
+#if GTK410
+        expander.hide_expander = true;
+#endif
 		  	count.visible = false;
 		  }
 		}
@@ -557,11 +560,9 @@ public class Sidebar : Box {
     	  	store.append( node.get_node( i ) );
 	      }
       }
-      if( _adding ) {
-        var new_notebook = new HiddenNotebook();
-        store.append( new_notebook );
-        _adding = false;
-      }
+      var new_notebook = new HiddenNotebook();
+      store.append( new_notebook );
+      _adding = false;
 	    return( (store.get_n_items() == 0) ? null : store );
 		}
   	return( null );

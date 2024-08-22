@@ -17,14 +17,23 @@ TODO:
    ☐ plantuml
    If external dependencies are not met: check dependencies, warn user, disable note items, allow app to be used without further issue.
 
- ☐ Add drag and drop support for organizing notebooks
- ☐ Add drag and drop support for reorganizing smart notebooks
-
-
 BUGS:
 
   ☐ We are currently unable to add a sub-notebook
   ☐ If a note needs to be displayed, but its notebook is hidden in the sidebar (because its parent is not expanded), expand its ancestors prior to selecting the notebook.
+
+IDEAS:
+
+ ☐ Add support for galleries
+   ☐ Image
+   ☐ Code
+   ☐ Diagrams
+   ☐ Math Formulas
+   These galleries would be subdirectories under a general "Galleries" Library folder.  They would display their data with a special gallery viewer (instead of the note viewer).  Galleries could be searched within (displaying only the matching entries in the gallery), copied to the clipboard, exported or shown within their note from this view.
+
+ ☐ Add drag and drop support for organizing notebooks
+ ☐ Add drag and drop support for reorganizing smart notebooks
+
 
 ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
 Archive:
