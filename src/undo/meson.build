@@ -3,5 +3,6 @@ sources += files(
     'UndoNoteItemDelete.vala',
     'UndoNoteItemMove.vala',
     'UndoNoteTagAdd.vala',
-    'UndoNoteTagDelete.vala'
+    'UndoNoteTagDelete.vala',
+    'UndoNoteTitleChange.vala'
 )

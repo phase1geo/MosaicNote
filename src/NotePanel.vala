@@ -61,6 +61,12 @@ public class NotePanel : Box {
     }
   }
 
+  public Entry title {
+    get {
+      return( _title );
+    }
+  }
+
   public NoteItemPanes items {
     get {
       return( _content );
@@ -353,6 +359,7 @@ public class NotePanel : Box {
 
     _title.activate.connect(() => {
       if( _note != null ) {
+        _win.undo.add_item( new UndoNoteTitleChange( _note ) );
         _note.title = _title.text;
         note_saved( _note, null );
       }
