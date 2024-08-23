@@ -31,7 +31,7 @@ public class TextBundle {
 
   //-------------------------------------------------------------
   // Imports a TextBundle of the given name.
-  public void import( string filename ) {
+  public void import( Notebook notebook, string filename ) {
 
     var directory_path = filename;
 
@@ -45,7 +45,8 @@ public class TextBundle {
         string name = info.get_name();
         if( info.get_file_type() == FileType.REGULAR ) {
           if( name.has_prefix( "test." ) && (name.has_suffix( ".markdown" ) || name.has_suffix( ".md" )) ) {
-            import_markdown( name );
+            import_markdown( notebook, name );
+            break;
           }
         }
       }
@@ -56,9 +57,26 @@ public class TextBundle {
 
   }
 
-  private void import_markdown( string filename ) {
+  //-------------------------------------------------------------
+  // Import the Markdown file.
+  private void import_markdown( Notebook notebook, string filename ) {
 
-    // TODO
+    try {
+
+      string contents;
+      FileUtils.get_contents( filename, out contents );
+
+      var parser = new NoteParser();
+      var note   = parser.parse_markdown( notebook, contents );
+      notebook.add_note( note );
+
+      // Display the newly imported note
+      _win.show_note( note.id );
+
+    } catch( FileError e ) {
+
+    }
+
 
   }
 

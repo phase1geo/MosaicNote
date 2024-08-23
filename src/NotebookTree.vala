@@ -574,8 +574,17 @@ public class NotebookTree {
   //-------------------------------------------------------------
   // Create the first two notebooks
   private void create_default_notebooks() {
+
   	_inbox = new Notebook( _( "Inbox" ) );
+    _inbox.changed.connect(() => {
+      set_modified();
+    });
+
   	_trash = new Notebook( _( "Trash" ) );
+    _trash.changed.connect(() => {
+      set_modified();
+    });
+
   }
 
   //-------------------------------------------------------------

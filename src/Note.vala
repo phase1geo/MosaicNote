@@ -158,6 +158,31 @@ public class Note : Object {
 		load( node );
 	}
 
+  //-------------------------------------------------------------
+  // Sets the title, but does not change the status of the modified
+  // indicator.
+  public void initialize_title( string init_title ) {
+    _title = init_title;
+  }
+
+  //-------------------------------------------------------------
+  // Sets the creation date to the given value, but does not change
+  // the status of the modified indicator.
+  public void initialize_created( DateTime? dt ) {
+    if( dt != null ) {
+      _created = dt;
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Sets the creation date to the given value, but does not change
+  // the status of the modified indicator.
+  public void initialize_updated( DateTime? dt ) {
+    if( dt != null ) {
+      _updated = dt;
+    }
+  }
+
 	//-------------------------------------------------------------
 	// Updates the viewed timestamp
 	public void reviewed() {
@@ -178,8 +203,9 @@ public class Note : Object {
 
 	//-------------------------------------------------------------
 	// Adds the given note item to this list of items at the given position.
-	public void add_note_item( uint pos, NoteItem item ) {
+	public void add_note_item( uint pos, NoteItem item, bool set_modified = true ) {
 		_items.insert_val( pos, item );
+    _modified |= set_modified;
 	}
 
 	//-------------------------------------------------------------
@@ -206,7 +232,9 @@ public class Note : Object {
   // Returns a string containing the content of the note in Markdown format
   public string to_markdown( NotebookTree notebooks, bool front_matter, bool pandoc = false ) {
     var mod_title = _title.replace( "'", "''" );
-  	var str = "---\ntitle: '%s'\ntags: [%s]\n---\n\n".printf( mod_title, _tags.to_markdown() );
+  	var str = "---\ntitle: '%s'\ncreated: '%s'\nupdated: '%s'\ntags: [%s]\n---\n\n".printf(
+      mod_title, _created.to_string(), _updated.to_string(), _tags.to_markdown()
+    );
   	for( int i=0; i<_items.length; i++ ) {
   		var item = _items.index( i );
   		str += "%s\n\n".printf( item.to_markdown( notebooks, pandoc ) );
@@ -219,7 +247,9 @@ public class Note : Object {
   public void export( NotebookTree notebooks, string notebook_dir, string assets_dir ) {
   	try {
 	    var filename = Path.build_filename( notebook_dir, title + ".md" );
-  	  var str = "---\ntitle: '%s'\ntags: [%s]\n---\n\n".printf( _title, _tags.to_markdown() );
+  	  var str = "---\ntitle: '%s'\ncreated: '%s'\nupdated: '%s'\ntags: [%s]\n---\n\n".printf(
+        _title, _created.to_string(), _updated.to_string(), _tags.to_markdown()
+      );
   	  for( int i=0; i<_items.length; i++ ) {
   		  var item = _items.index( i );
   		  str += "%s\n\n".printf( item.export( notebooks, assets_dir ) );

@@ -24,6 +24,8 @@ public class NoteParser {
   private Regex _image_re;
   private Regex _check_re;
   private Regex _title_re;
+  private Regex _created_re;
+  private Regex _updated_re;
   private Regex _tag_block_re;
   private Regex _tag_list_re;
 
@@ -34,6 +36,8 @@ public class NoteParser {
       _image_re     = new Regex( """^!\[(.*?)\]\s*\((.*?)\)$""" );
       _check_re     = new Regex( """^\[[ xX]?\]$""" );
       _title_re     = new Regex( """^title\s*:\s*(.*)$""" );
+      _created_re   = new Regex( """^created\s*:\s*(.*)$""" );
+      _updated_re   = new Regex( """^updated\s*:\s*(.*)$""" );
       _tag_block_re = new Regex( """^tags\s*:\s*\[(.*?)\]$""" ); 
       _tag_list_re  = new Regex( """^tags\s*:$""" );
     } catch( RegexError e ) {}
@@ -84,7 +88,13 @@ public class NoteParser {
     foreach( var line in lines ) {
       var stripped = line.strip();
       if( _title_re.match( stripped, 0, out match ) ) {
-        note.title = dequote( match.fetch( 1 ) );
+        note.initialize_title( dequote( match.fetch( 1 ) ) );
+      } else if( _created_re.match( stripped, 0, out match ) ) {
+        var created = new DateTime.from_iso8601( dequote( match.fetch( 1 ) ), null );
+        note.initialize_created( created );
+      } else if( _updated_re.match( stripped, 0, out match ) ) {
+        var updated = new DateTime.from_iso8601( dequote( match.fetch( 1 ) ), null );
+        note.initialize_updated( updated );
       } else if( _tag_block_re.match( stripped, 0, out match ) ) {
         parse_yaml_tag_block( note, match.fetch( 1 ) );
       } else if( _tag_list_re.match( stripped, 0, out match ) ) {
@@ -106,8 +116,10 @@ public class NoteParser {
     var stripped = str.strip();
     if( (stripped.has_prefix( "\"" ) && stripped.has_suffix( "\"" )) ||
         (stripped.has_prefix( "'" )  && stripped.has_suffix( "'" )) ) {
-      return( stripped.slice( stripped.index_of_nth_char( 1 ), stripped.index_of_nth_char( stripped.char_count() - 1 ) ) );
+      stripped = stripped.slice( stripped.index_of_nth_char( 1 ), stripped.index_of_nth_char( stripped.char_count() - 1 ) );
     }
+    stripped = stripped.replace( "''", "'" );
+    stripped = stripped.replace( "\"\"", "\"" );
     return( stripped );
   }
 
@@ -138,7 +150,7 @@ public class NoteParser {
             lang    = language,
             content = code
           };
-          note.add_note_item( note.size(), code_item );
+          note.add_note_item( note.size(), code_item, false );
           language = "";
           code     = "";
           start_index = index + 1;
@@ -193,7 +205,7 @@ public class NoteParser {
           uri = fix_uri( match.fetch( 2 ) ),
           description = match.fetch( 1 )
         };
-        note.add_note_item( note.size(), image_item );
+        note.add_note_item( note.size(), image_item, false );
         start_index = index + 1;
       }
       index++;
@@ -316,7 +328,7 @@ public class NoteParser {
         }
         start_index = index + 1;
       } else if( table_item != null ) {
-        note.add_note_item( note.size(), table_item );
+        note.add_note_item( note.size(), table_item, false );
         table_item  = null;
         in_header   = true;
         start_index = index;
@@ -343,7 +355,7 @@ public class NoteParser {
       var markdown_item = new NoteItemMarkdown( note ) {
         content = string.joinv( "\n", lines ).strip()
       };
-      note.add_note_item( note.size(), markdown_item );
+      note.add_note_item( note.size(), markdown_item, false );
     }
   }
 

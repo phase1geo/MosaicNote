@@ -276,7 +276,9 @@ public class MainWindow : Gtk.ApplicationWindow {
     });
 
     _note.note_saved.connect((note, orig_link_titles) => {
-      update_note_links( note, orig_link_titles );
+      if( orig_link_titles != null ) {
+        update_note_links( note, orig_link_titles );
+      }
       _notes.update_notes();
       _smart_notebooks.handle_note( note );
     });

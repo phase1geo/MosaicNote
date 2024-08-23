@@ -510,6 +510,8 @@ public class Sidebar : Box {
 		var row      = (TreeListRow)item.get_item();
 		var nb       = (BaseNotebook)row.get_item();
 
+    stdout.printf( "In bind_tree, nb: %s\n", nb.name );
+
     if( nb == _selected_notebook ) {
       _list_view.model.select_item( row.get_position(), true );
     }
@@ -541,11 +543,14 @@ public class Sidebar : Box {
 		  if( nb.count() == 0 ) {
 		  	expander.margin_top = 6;
 		  	expander.margin_bottom = 6;
-#if GTK410
-        expander.hide_expander = true;
-#endif
 		  	count.visible = false;
 		  }
+#if GTK410
+      var node = (nb as NotebookTree.Node);
+      if( (node != null) && (node.size() == 0) ) {
+        expander.hide_expander = true;
+      }
+#endif
 		}
 
 	}
