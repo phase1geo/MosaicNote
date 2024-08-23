@@ -124,9 +124,12 @@ public class TagBox : Box {
       tag_widget.destroy();
     });
 
+    stdout.printf( "Updating tags (%d)\n", _tags.size() );
+
     for( int i=0; i<_tags.size(); i++ ) {
 
       var tag        = _tags.get_tag( i );
+      stdout.printf( "  tag: %s\n", tag );
       var tag_motion = new EventControllerMotion();
       var tag_key    = new EventControllerKey();
       var tag_button = new Entry() {

@@ -49,6 +49,12 @@ public class NotePanel : Box {
     { "action_export_as", action_export_as, "i" },
   };
 
+  public TagBox tags {
+    get {
+      return( _tags );
+    }
+  }
+
   public SearchBox search {
     get {
       return( _search );
@@ -204,9 +210,11 @@ public class NotePanel : Box {
 
     _tags = new TagBox( _win );
     _tags.added.connect((tag) => {
+      _win.undo.add_item( new UndoNoteTagAdd( _note, tag ) );
       tag_added( tag, _note.id );
     });
     _tags.removed.connect((tag) => {
+      _win.undo.add_item( new UndoNoteTagDelete( _note, tag ) );
       tag_removed( tag, _note.id );
     });
     _tags.changed.connect(() => {

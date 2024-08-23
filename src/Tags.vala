@@ -73,6 +73,7 @@ public class Tags {
 	public void delete_tag( string tag ) {
 		for( int i=0; i<_tags.length; i++ ) {
 			if( tag == _tags.index( i ) ) {
+        stdout.printf( "Removing tag: %s at index: %d\n", tag, i );
 				_tags.remove_index( i );
 				return;
 			}
