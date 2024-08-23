@@ -40,6 +40,7 @@ sources += files(
     'TagBox.vala',
     'TagEntry.vala',
     'Tags.vala',
+    'TextBundle.vala',
     'Themes.vala',
     'ToolbarCode.vala',
     'ToolbarItem.vala',

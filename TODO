@@ -2,12 +2,14 @@ TODO:
 
  ☐ Add auto-completion when entering note links
    Not exactly sure how to currently implement this
- ☐ Add support for undo/redo
+ ☐ Add support for undo/redo @ip
    Need to figure out what we will be able to undo/redo (it won't be everything)
+   See Undo-Actions.minder for a full breakdown of the tasks associated with this todo
  ☐ Add ability to import a directory full of Markdown notes into notebook(s)
    This could be used to import notes from another tool perhaps
+   Use TextBundle format
  ☐ Add ability to export all notes into a series of directories @ip
-   Similar in structure to how IA writer notes are handled (I forget the format)
+   Similar in structure to how IA writer notes are handled (TextBundle)
  ☐ Add support for saving a note as a template.
    ☐ Add support for create a new note based on a saved template.
    ☐ Add support for editing and deleting a note template
