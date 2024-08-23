@@ -288,9 +288,36 @@ public class NoteItem {
 
   //-------------------------------------------------------------
 	// Returns the markdown text for this item
-	public virtual string to_markdown( bool pandoc ) {
+	public virtual string to_markdown( NotebookTree? notebooks, bool pandoc ) {
 		return( "" );
 	}
+
+  //-------------------------------------------------------------
+  // Returns the markdown text for this item converting any
+  // file references to relative references and copy those
+  // references assets to the "assets" directory.
+  public virtual string export( NotebookTree? notebooks, string assets_dir ) {
+    return( "" );
+  }
+
+  //-------------------------------------------------------------
+  // Copies the given filename asset to the specified directory within
+  // dirname.  This may be used by the export function.
+  protected virtual string copy_asset( string assets_dir, string filename ) {
+    if( FileUtils.test( filename, FileTest.EXISTS ) ) {
+      var basename = Path.get_basename( filename );
+      var asset    = Path.build_filename( assets_dir, Path.get_basename( filename ) );
+      try {
+        var from_file = File.new_for_uri( filename );
+        var to_file   = File.new_for_path( asset );
+        to_file.copy( from_file, FileCopyFlags.NONE );
+        return( Path.build_filename( Path.get_basename( assets_dir ), basename ) );
+      } catch( Error e ) {}
+    } else {
+      return( filename );
+    }
+    return( "" );
+  }
 
   //-------------------------------------------------------------
 	// If we are generating for pandoc, adjusts the given markdown image text

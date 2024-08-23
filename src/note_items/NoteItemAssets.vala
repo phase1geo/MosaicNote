@@ -128,13 +128,19 @@ public class NoteItemAssets : NoteItem {
 
   //-------------------------------------------------------------
   // Returns the Markdown version of this item
-  public override string to_markdown( bool pandoc ) {
+  public override string to_markdown( NotebookTree? notebooks, bool pandoc ) {
     string[] str = {};
     for( int i=0; i<_assets.length; i++ ) {
       var asset = _assets.index( i );
     	str += "- [%s](%s)".printf( Filename.display_basename( asset.orig_path ), asset.orig_path );
   	}
   	return( string.joinv( "\n", str ) );
+  }
+
+  //-------------------------------------------------------------
+  // Returns the Markdown version of this item.
+  public override string export( NotebookTree? notebooks, string assets_dir ) {
+    return( to_markdown( notebooks, false ) );
   }
 
   //-------------------------------------------------------------

@@ -80,9 +80,17 @@ public class NoteItemImage : NoteItem {
 
   //-------------------------------------------------------------
   // Returns the Markdown code for this item
-  public override string to_markdown( bool pandoc ) {
+  public override string to_markdown( NotebookTree? notebooks, bool pandoc ) {
   	var file = File.new_for_uri( uri );
 	  return( format_for_width( "![%s](%s)".printf( description, uri ), file.get_path(), pandoc ) );
+  }
+
+  //-------------------------------------------------------------
+  // Returns the Markdown code for this item and copies the asset
+  // to the specified assets directory.
+  public override string export( NotebookTree? notebooks, string assets_dir ) {
+    var asset = copy_asset( assets_dir, uri );
+  	return( "![%s](%s)".printf( description, asset ) );
   }
 
   //-------------------------------------------------------------

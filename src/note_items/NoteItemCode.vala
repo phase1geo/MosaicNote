@@ -75,12 +75,18 @@ public class NoteItemCode : NoteItem {
 
   //-------------------------------------------------------------
   // Returns the Markdown version of this item
-  public override string to_markdown( bool pandoc ) {
+  public override string to_markdown( NotebookTree? notebooks, bool pandoc ) {
   	var str = "```%s\n%s\n```".printf( _lang, content );
   	if( description != "" ) {
   		str += "\n<center>%s</center>".printf( description );
   	}
   	return( str );
+  }
+
+  //-------------------------------------------------------------
+  // Exports the code block and returns the associated Markdown.
+  public override string export( NotebookTree? notebooks, string assets_dir ) {
+  	return( to_markdown( notebooks, false ) );
   }
 
   //-------------------------------------------------------------

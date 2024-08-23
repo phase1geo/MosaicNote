@@ -38,29 +38,43 @@ public class NoteItemUML : NoteItem {
 
 	public signal void diagram_updated( string? filename );
 
+	//-------------------------------------------------------------
 	// Default constructor
 	public NoteItemUML( Note note ) {
 		base( note, NoteItemType.UML );
 		changed.connect( update_diagram );
 	}
 
+	//-------------------------------------------------------------
+	// Constructor from XML data.
 	public NoteItemUML.from_xml( Note note, Xml.Node* node ) {
 		base( note, NoteItemType.UML );
 		load( node );
 		changed.connect( update_diagram );
 	}
 
+	//-------------------------------------------------------------
 	// Returns the Markdown version of this item
-	public override string to_markdown( bool pandoc ) {
-		var filename = Utils.user_location( "test.png" );
+	public override string to_markdown( NotebookTree? notebooks, bool pandoc ) {
+		var filename = get_resource_filename();
 	  return( format_for_width( "![%s](file://%s)".printf( description, filename ), filename, pandoc ) );
 	}
 
+	//-------------------------------------------------------------
+	// Exports the asset to the assets directory and returns the
+	// Markdown string.
+	public override string export( NotebookTree? notebooks, string assets_dir ) {
+    var asset = copy_asset( assets_dir, get_resource_filename() );
+  	return( "![%s](%s)".printf( description, asset ) );
+	}
+
+	//-------------------------------------------------------------
   // Returns the resource filename
   public override string get_resource_filename() {
     return( get_resource_path( "png" ) );
   }
 
+	//-------------------------------------------------------------
 	// Updates the UML diagram
 	public void update_diagram() {
 

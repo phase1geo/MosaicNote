@@ -23,6 +23,7 @@ using Gtk;
 
 public enum ExportType {
   MARKDOWN,
+  TEXTBUNDLE,
   HTML,
   LATEX,
   PDF,
@@ -38,73 +39,77 @@ public enum ExportType {
 
   public string to_string() {
     switch( this ) {
-      case MARKDOWN :  return( "markdown" );
-      case HTML     :  return( "html" );
-      case LATEX    :  return( "latex" );
-      case PDF      :  return( "pdf" );
-      case EPUB     :  return( "epub" );
-      case DOCX     :  return( "docx" );
-      case PPTX     :  return( "pptx" );
-      case ODT      :  return( "odt" );
-      case RTF      :  return( "rtf" );
-      case TEXT     :  return( "text" );
-      case JSON     :  return( "json" );
-      case YAML     :  return( "yaml" );
-      default       :  assert_not_reached();
+      case MARKDOWN   :  return( "markdown" );
+      case TEXTBUNDLE :  return( "textbundle" );
+      case HTML       :  return( "html" );
+      case LATEX      :  return( "latex" );
+      case PDF        :  return( "pdf" );
+      case EPUB       :  return( "epub" );
+      case DOCX       :  return( "docx" );
+      case PPTX       :  return( "pptx" );
+      case ODT        :  return( "odt" );
+      case RTF        :  return( "rtf" );
+      case TEXT       :  return( "text" );
+      case JSON       :  return( "json" );
+      case YAML       :  return( "yaml" );
+      default         :  assert_not_reached();
     }
   }
 
   public string label() {
     switch( this ) {
-      case MARKDOWN :  return( _( "Markdown" ) );
-      case HTML     :  return( _( "HTML" ) );
-      case LATEX    :  return( _( "Latex" ) );
-      case PDF      :  return( _( "PDF" ) );
-      case EPUB     :  return( _( "EPub" ) );
-      case DOCX     :  return( _( "Microsoft Word" ) );
-      case PPTX     :  return( _( "Microsoft PowerPoint" ) );
-      case ODT      :  return( _( "ODT" ) );
-      case RTF      :  return( _( "Rich Text Format" ) );
-      case TEXT     :  return( _( "Plain Text" ) );
-      case JSON     :  return( _( "JSON" ) );
-      case YAML     :  return( _( "YAML" ) );
-      default       :  assert_not_reached();
+      case MARKDOWN   :  return( _( "Markdown" ) );
+      case TEXTBUNDLE :  return( _( "TextBundle" ) );
+      case HTML       :  return( _( "HTML" ) );
+      case LATEX      :  return( _( "Latex" ) );
+      case PDF        :  return( _( "PDF" ) );
+      case EPUB       :  return( _( "EPub" ) );
+      case DOCX       :  return( _( "Microsoft Word" ) );
+      case PPTX       :  return( _( "Microsoft PowerPoint" ) );
+      case ODT        :  return( _( "ODT" ) );
+      case RTF        :  return( _( "Rich Text Format" ) );
+      case TEXT       :  return( _( "Plain Text" ) );
+      case JSON       :  return( _( "JSON" ) );
+      case YAML       :  return( _( "YAML" ) );
+      default         :  assert_not_reached();
     }
   }
 
   public static ExportType parse( string val ) {
     switch( val ) {
-      case "markdown" :  return( MARKDOWN );
-      case "html"     :  return( HTML );
-      case "latex"    :  return( LATEX );
-      case "pdf"      :  return( PDF );
-      case "epub"     :  return( EPUB );
-      case "docx"     :  return( DOCX );
-      case "pptx"     :  return( PPTX );
-      case "odt"      :  return( ODT );
-      case "rtf"      :  return( RTF );
-      case "text"     :  return( TEXT );
-      case "json"     :  return( JSON );
-      case "yaml"     :  return( YAML );
-      default         :  return( MARKDOWN );
+      case "markdown"   :  return( MARKDOWN );
+      case "textbundle" :  return( TEXTBUNDLE );
+      case "html"       :  return( HTML );
+      case "latex"      :  return( LATEX );
+      case "pdf"        :  return( PDF );
+      case "epub"       :  return( EPUB );
+      case "docx"       :  return( DOCX );
+      case "pptx"       :  return( PPTX );
+      case "odt"        :  return( ODT );
+      case "rtf"        :  return( RTF );
+      case "text"       :  return( TEXT );
+      case "json"       :  return( JSON );
+      case "yaml"       :  return( YAML );
+      default           :  return( MARKDOWN );
     }
   }
 
   public string extension() {
     switch( this ) {
-      case MARKDOWN :  return( "md" );
-      case HTML     :  return( "html" );
-      case LATEX    :  return( "latex" );
-      case PDF      :  return( "pdf" );
-      case EPUB     :  return( "epub" );
-      case DOCX     :  return( "docx" );
-      case PPTX     :  return( "pptx" );
-      case ODT      :  return( "odt" );
-      case RTF      :  return( "rtf" );
-      case TEXT     :  return( "txt" );
-      case JSON     :  return( "json" );
-      case YAML     :  return( "yml" );
-      default       :  assert_not_reached();
+      case MARKDOWN   :  return( "md" );
+      case TEXTBUNDLE :  return( "textbundle" );
+      case HTML       :  return( "html" );
+      case LATEX      :  return( "latex" );
+      case PDF        :  return( "pdf" );
+      case EPUB       :  return( "epub" );
+      case DOCX       :  return( "docx" );
+      case PPTX       :  return( "pptx" );
+      case ODT        :  return( "odt" );
+      case RTF        :  return( "rtf" );
+      case TEXT       :  return( "txt" );
+      case JSON       :  return( "json" );
+      case YAML       :  return( "yml" );
+      default         :  assert_not_reached();
     }
   }
 
@@ -113,9 +118,41 @@ public enum ExportType {
 public class Export {
 
   //-------------------------------------------------------------
+  // Exports the given notebook to a user-selected directory.
+  public static void export_notebook( MainWindow win, Notebook notebook ) {
+
+#if GTK410
+    var dialog = Utils.make_file_chooser( _( "Export" ), _( "Export" ) );
+
+    dialog.select_folder.begin( win, null, (obj, res) => {
+      try {
+        var file = dialog.save.end( res );
+        if( file != null ) {
+          notebook.export( win.notebooks, file.get_path() );
+        }
+      } catch( Error e ) {}
+    });
+#else
+    var dialog = Utils.make_file_chooser( _( "Export" ), win, FileChooserAction.SELECT_FOLDER, _( "Export" ) );
+
+    dialog.response.connect((id) => {
+      if( id == ResponseType.ACCEPT ) {
+        var file = dialog.get_file();
+        if( file != null ) {
+          notebook.export( win.notebooks, file.get_path() );
+        }
+      }
+      dialog.destroy();
+    });
+
+    dialog.show();
+#endif
+  }
+
+  //-------------------------------------------------------------
   // Exports the given note using the specified export type.
   public static void export_note( MainWindow win, ExportType export_type, Note note ) {
-    var markdown = note.to_markdown( true, (export_type != ExportType.MARKDOWN) );
+    var markdown = note.to_markdown( win.notebooks, true, (export_type != ExportType.MARKDOWN) );
     var langs    = new Gee.HashSet<string>();
     note.get_needed_languages( langs );
     export_dialog( win, export_type, markdown, langs );
@@ -124,7 +161,7 @@ public class Export {
   //-------------------------------------------------------------
   // Exports the given note item using the specified export type.
   public static void export_note_item( MainWindow win, ExportType export_type, NoteItem item ) {
-    var markdown = item.to_markdown( true );
+    var markdown = item.to_markdown( win.notebooks, true );
     var langs    = new Gee.HashSet<string>();
     if( item.item_type == NoteItemType.CODE ) {
       langs.add( ((NoteItemCode)item).lang );

@@ -550,6 +550,7 @@ public class Sidebar : Box {
 
 	}
 
+  //-------------------------------------------------------------
 	// Create expander tree
 	public ListModel? add_tree_node( Object obj ) {
 		if( (obj != null) && ((obj as NotebookTree.Node) != null) ) {
