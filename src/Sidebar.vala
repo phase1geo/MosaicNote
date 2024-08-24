@@ -510,7 +510,7 @@ public class Sidebar : Box {
 		var row      = (TreeListRow)item.get_item();
 		var nb       = (BaseNotebook)row.get_item();
 
-    stdout.printf( "In bind_tree, nb: %s\n", nb.name );
+    // stdout.printf( "In bind_tree, nb: %s\n", nb.name );
 
     if( nb == _selected_notebook ) {
       _list_view.model.select_item( row.get_position(), true );

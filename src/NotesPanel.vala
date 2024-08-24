@@ -216,6 +216,12 @@ public class NotesPanel : Box {
       }
   	});
 
+    var sw = new ScrolledWindow() {
+      hscrollbar_policy = PolicyType.NEVER,
+      vscrollbar_policy = PolicyType.AUTOMATIC,
+      child = _list
+    };
+
 		_add = new Button.from_icon_name( "list-add-symbolic" ) {
       has_frame = false,
       margin_start = 5,
@@ -276,7 +282,7 @@ public class NotesPanel : Box {
 		bbox.append( _add );
     bbox.append( _sort );
 
-		append( _list );
+		append( sw );
 		append( bbox );
 
     /* Set the stage for menu actions */
