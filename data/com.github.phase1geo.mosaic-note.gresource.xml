@@ -4,11 +4,8 @@
     <file alias="Application.css" compressed="true">Application.css</file>
     <file alias="shortcuts.ui" compressed="true">com.github.phase1geo.mosaic-note.shortcuts.ui</file>
     <file alias="mosaic-note-logo.svg">icons/128/com.github.phase1geo.mosaic-note.svg</file>
-    <file alias="document-export-symbolic.svg">icons/scalable/document-export-symbolic.svg</file>
     <file alias="tag-symbolic.svg">icons/scalable/tag-symbolic.svg</file>
     <file alias="panel-layout-light-symbolic.svg">icons/scalable/panel-layout-light-symbolic.svg</file>
     <file alias="panel-layout-dark-symbolic.svg">icons/scalable/panel-layout-dark-symbolic.svg</file>
-    <file alias="copy-link-light-symbolic.svg">icons/scalable/copy-link-light-symbolic.svg</file>
-    <file alias="copy-link-dark-symbolic.svg">icons/scalable/copy-link-dark-symbolic.svg</file>
   </gresource>
 </gresources>

@@ -44,8 +44,8 @@ core_deps = [
     dependency('glib-2.0'),
     meson.get_compiler('vala').find_library('posix'),
     meson.get_compiler('c').find_library('m', required : false),
-    meson.get_compiler('c').find_library('markdown', required : true),
-    meson.get_compiler('c').find_library('yaml', required : true),
+    # meson.get_compiler('c').find_library('markdown', required : true),
+    # meson.get_compiler('c').find_library('yaml', required : true),
     dependency('gee-0.8'),
     dependency('granite-7'),
     dependency('gtk4'),
@@ -61,10 +61,10 @@ e = executable('com.github.phase1geo.mosaic-note',
     config_file,
     gresource,
     dependencies: core_deps,
-    vala_args: [
-        meson.project_source_root() + '/vapi/libmarkdown.vapi',
-        # meson.project_source_root() + '/vapi/yaml-0.1.vapi'
-    ],
+    # vala_args: [
+    #     meson.project_source_root() + '/vapi/libmarkdown.vapi',
+    #     meson.project_source_root() + '/vapi/yaml-0.1.vapi'
+    # ],
     install : true
 )
 

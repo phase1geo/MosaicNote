@@ -409,6 +409,7 @@ public class NotesPanel : Box {
   //-------------------------------------------------------------
 	// Populates the notes list from the given notebook
   public void populate_with_notebook( BaseNotebook? bn ) {
+    if( (_bn == bn) && ((bn as SmartNotebook) == null) ) return;
     _bn = bn;
     if( bn != null ) {
       _model.set_model( bn.get_model() );

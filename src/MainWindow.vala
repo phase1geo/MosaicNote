@@ -295,6 +295,10 @@ public class MainWindow : Gtk.ApplicationWindow {
       _notes.update_notes();
     });
 
+    _note.favorite_changed.connect((note) => {
+      _smart_notebooks.handle_note( note );
+    });
+
     _note.note_saved.connect((note, orig_link_titles) => {
       if( orig_link_titles != null ) {
         update_note_links( note, orig_link_titles );

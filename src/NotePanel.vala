@@ -46,6 +46,7 @@ public class NotePanel : Box {
   private HashSet<string> _orig_link_titles;
 
   private const GLib.ActionEntry[] action_entries = {
+    { "action_copy_note_link", action_copy_note_link },
     { "action_export_as", action_export_as, "i" },
   };
 
@@ -75,6 +76,7 @@ public class NotePanel : Box {
 
   public signal void tag_added( string name, int note_id );
   public signal void tag_removed( string name, int note_id );
+  public signal void favorite_changed( Note note );
   public signal void note_saved( Note note, HashSet<string>? orig_link_titles );
   public signal void note_link_clicked( string link, Note note );
   public signal void search_hidden();
@@ -194,6 +196,56 @@ public class NotePanel : Box {
   // Creates the note UI
   private Widget create_note_ui() {
 
+    _tags = new TagBox( _win );
+    _tags.added.connect((tag) => {
+      _win.undo.add_item( new UndoNoteTagAdd( _note, tag ) );
+      tag_added( tag, _note.id );
+    });
+    _tags.removed.connect((tag) => {
+      _win.undo.add_item( new UndoNoteTagDelete( _note, tag ) );
+      tag_removed( tag, _note.id );
+    });
+    _tags.changed.connect(() => {
+      _note.tags.copy( _tags.tags );
+    });
+
+    _favorite = new Button.from_icon_name( "non-starred-symbolic" ) {
+      has_frame = false,
+      halign = Align.END,
+      tooltip_text = _( "Add To Favorites" ),
+      margin_start = 5
+    };
+    _favorite.clicked.connect(() => {
+      if( _favorite.icon_name == "non-starred-symbolic" ) {
+        _favorite.icon_name = "starred-symbolic";
+        _favorite.tooltip_text = _( "Remove From Favorites" );
+        _note.favorite = true;
+      } else {
+        _favorite.icon_name = "non-starred-symbolic";
+        _favorite.tooltip_text = _( "Add To Favorites" );
+        _note.favorite = false;
+      }
+      favorite_changed( _note );
+    });
+
+    var export_menu = new GLib.Menu();
+    for( int i=0; i<ExportType.NUM; i++ ) {
+      var etype = (ExportType)i;
+      export_menu.append( etype.label(), "note.action_export_as(%d)".printf( i ) );
+    }
+
+    var more_menu = new GLib.Menu();
+    more_menu.append( _( "Copy Note Link" ), "note.action_copy_note_link" );
+    more_menu.append_submenu( _( "Export Note As" ), export_menu );
+    // more_menu.append( _( "Lock note" ), "note.action_lock" );
+
+    var more = new MenuButton() {
+      has_frame  = false,
+      icon_name  = "open-menu-symbolic",
+      margin_end = 5,
+      menu_model = more_menu
+    };
+
     _hist_prev = new Button.from_icon_name( "go-previous-symbolic" ) {
       sensitive = false,
       has_frame = false,
@@ -214,81 +266,12 @@ public class NotePanel : Box {
       _win.history.go_forward();
     });
 
-    _tags = new TagBox( _win );
-    _tags.added.connect((tag) => {
-      _win.undo.add_item( new UndoNoteTagAdd( _note, tag ) );
-      tag_added( tag, _note.id );
-    });
-    _tags.removed.connect((tag) => {
-      _win.undo.add_item( new UndoNoteTagDelete( _note, tag ) );
-      tag_removed( tag, _note.id );
-    });
-    _tags.changed.connect(() => {
-      _note.tags.copy( _tags.tags );
-    });
-
-    var copy_link = new Button.from_icon_name( _win.themes.dark_mode ? "copy-link-dark-symbolic" : "copy-link-light-symbolic" ) {
-      has_frame = false,
-      halign = Align.END,
-      tooltip_text = _( "Copy note link" ),
-      margin_start = 5
-    };
-
-    _win.themes.theme_changed.connect((theme) => {
-      copy_link.icon_name = _win.themes.dark_mode ? "copy-link-dark-symbolic" : "copy-link-light-symbolic";
-    });
-
-    copy_link.clicked.connect( copy_note_link );
-
-    var export_types = new GLib.Menu();
-    for( int i=0; i<ExportType.NUM; i++ ) {
-      var etype = (ExportType)i;
-      export_types.append( etype.label(), "note.action_export_as(%d)".printf( i ) );
-    }
-    var export_menu = new GLib.Menu();
-    export_menu.append_section( _( "Export Note As" ), export_types );
-
-    var export = new MenuButton() {
-      icon_name = "document-export-symbolic",
-      has_frame = false,
-      halign = Align.END,
-      tooltip_text = _( "Export note" ),
-      menu_model = export_menu
-    };
-
-    _favorite = new Button.from_icon_name( "non-starred-symbolic" ) {
-      has_frame = false,
-      halign = Align.END,
-      tooltip_text = _( "Add to Favorites" ),
-    };
-    _favorite.clicked.connect(() => {
-      if( _favorite.icon_name == "non-starred-symbolic" ) {
-        _favorite.icon_name = "starred-symbolic";
-        _note.favorite = true;
-      } else {
-        _favorite.icon_name = "non-starred-symbolic";
-        _note.favorite = false;
-      }
-    });
-
-    _locked = new Button.from_icon_name( "changes-allow-symbolic" ) {
-      has_frame = false,
-      halign = Align.END,
-      tooltip_text = _( "Lock Note" ),
-      margin_end = 5
-    };
-    _locked.clicked.connect(() => {
-      set_locked( !_note.locked );
-    });
-
     var tbox = new Box( Orientation.HORIZONTAL, 5 ) {
       halign = Align.FILL
     };
     tbox.append( _tags );
-    tbox.append( copy_link );
-    tbox.append( export );
     tbox.append( _favorite );
-    tbox.append( _locked );
+    tbox.append( more );
     tbox.append( _hist_prev );
     tbox.append( _hist_next );
 
@@ -492,7 +475,7 @@ public class NotePanel : Box {
   // sensitivity of the UI to allow/disallow note data changes.
   private void set_locked( bool lock ) {
 
-    _locked.icon_name = lock ? "changes-prevent-symbolic" : "changes-allow-symbolic";
+    // _locked.icon_name = lock ? "changes-prevent-symbolic" : "changes-allow-symbolic";
     _note.locked      = lock;
 
     // Lock down UI
@@ -642,7 +625,7 @@ public class NotePanel : Box {
   //-------------------------------------------------------------
   // Copies a Markdown link to open this note from a different
   // application.
-  private void copy_note_link() {
+  private void action_copy_note_link() {
     var uri = "mosaicnote://show-note?id=%d".printf( _note.id );
     Gdk.Display.get_default().get_clipboard().set_text( uri );
   }
