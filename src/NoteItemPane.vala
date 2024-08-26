@@ -35,6 +35,8 @@ public enum TextCursorPlacement {
 // related to panes containing text.
 public class NoteItemPane : Box {
 
+  private const double control_opacity = 0.1;
+
   private MainWindow   _win;
   private NoteItem     _item;
   private SpellChecker _spell;
@@ -529,7 +531,6 @@ public class NoteItemPane : Box {
 
     var lbox = new Box( Orientation.VERTICAL, 5 ) {
       margin_start  = 5,
-      margin_end    = 5,
       margin_top    = 5,
       margin_bottom = 5
     };
@@ -542,7 +543,7 @@ public class NoteItemPane : Box {
       expand.opacity = 1.0;
     });
     lbox_motion.leave.connect(() => {
-      expand.opacity = 0.0;
+      expand.opacity = control_opacity;
     });
 
     var add_menu = new GLib.Menu();
@@ -573,13 +574,19 @@ public class NoteItemPane : Box {
 
     var more = new MenuButton() {
       halign = Align.END,
+      has_frame = false,
+      opacity = 0.0,
       icon_name = "view-more-horizontal-symbolic",
-      menu_model = menu,
-      opacity = 0.0
+      menu_model = menu
     };
 
+    more.notify["active"].connect(() => {
+      if( !more.active ) {
+        more.opacity = control_opacity;
+      }
+    });
+
     var rbox = new Box( Orientation.VERTICAL, 5 ) {
-      margin_start  = 5,
       margin_end    = 5,
       margin_top    = 5,
       margin_bottom = 5
@@ -593,7 +600,9 @@ public class NoteItemPane : Box {
       more.opacity = 1.0;
     });
     rbox_motion.leave.connect(() => {
-      more.opacity = 0.0;
+      if( !more.active ) {
+        more.opacity = control_opacity;
+      }
     });
 
     _header1 = create_header1();
@@ -615,7 +624,6 @@ public class NoteItemPane : Box {
       margin_top    = 5,
       margin_bottom = 5
     };
-
     box.append( _stack );
 
     var sep = new Separator( Orientation.HORIZONTAL );
@@ -641,6 +649,20 @@ public class NoteItemPane : Box {
     var cbox = new Box( Orientation.VERTICAL, 5 );
     cbox.append( header );
     cbox.append( pane );
+
+    var cbox_motion = new EventControllerMotion();
+    cbox.add_controller( cbox_motion );
+
+    cbox_motion.enter.connect((x, y) => {
+      expand.opacity = control_opacity;
+      if( !more.active ) {
+        more.opacity = control_opacity;
+      }
+    });
+    cbox_motion.leave.connect(() => {
+      expand.opacity = 0.0;
+      more.opacity   = 0.0;
+    });
 
     append( lbox );
     append( cbox );

@@ -80,6 +80,7 @@ public class NoteItemPaneUML : NoteItemPane {
 
     var help = new Button.from_icon_name( "dialog-information-symbolic" ) {
       halign = Align.END,
+      has_frame = false,
       tooltip_text = _( "Open UML documentation in browser" )
     };
 
@@ -89,6 +90,7 @@ public class NoteItemPaneUML : NoteItemPane {
 
     var show = new Button.from_icon_name( _( "preferences-color-symbolic" ) ) {
       halign = Align.END,
+      has_frame = false,
       tooltip_text = _( "Generate diagram" )
     };
 

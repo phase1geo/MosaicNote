@@ -95,6 +95,7 @@ public class NoteItemPaneMath : NoteItemPane {
 
     _help = new Button.from_icon_name( "dialog-information-symbolic" ) {
       halign = Align.END,
+      has_frame = false,
       tooltip_text = _( "Open AsciiMath documentation in browser" )
     };
 
