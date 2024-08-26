@@ -244,18 +244,15 @@ public class Note : Object {
 
   //-------------------------------------------------------------
   // Exports this note to the given directory.
-  public void export( NotebookTree notebooks, string notebook_dir, string assets_dir ) {
-  	try {
-	    var filename = Path.build_filename( notebook_dir, title + ".md" );
-  	  var str = "---\ntitle: '%s'\ncreated: '%s'\nupdated: '%s'\ntags: [%s]\n---\n\n".printf(
+  public void export( NotebookTree notebooks, string filename, string assets_dir ) throws FileError {
+  	var str = "---\ntitle: '%s'\ncreated: '%s'\nupdated: '%s'\ntags: [%s]\n---\n\n".printf(
         _title, _created.to_string(), _updated.to_string(), _tags.to_markdown()
       );
-  	  for( int i=0; i<_items.length; i++ ) {
-  		  var item = _items.index( i );
-  		  str += "%s\n\n".printf( item.export( notebooks, assets_dir ) );
-    	}
-	    FileUtils.set_contents( filename, to_markdown( notebooks, true, false ) );
-   } catch( FileError e ) {}
+  	for( int i=0; i<_items.length; i++ ) {
+  		var item = _items.index( i );
+  	  str += "%s\n\n".printf( item.export( notebooks, assets_dir ) );
+    }
+	  FileUtils.set_contents( filename, to_markdown( notebooks, true, false ) );
   }
 
 	//-------------------------------------------------------------

@@ -83,9 +83,44 @@ public class TextBundle {
   //=============================================================
 
   //-------------------------------------------------------------
-  // Exports
-  public void export( string filename ) {
-    // TODO
+  // Exports the given note in TextBundle format.
+  public void export( Note note, string dirname ) throws Error {
+    
+    var assets_dir = Path.build_filename( dirname, "assets" );
+    
+    Utils.create_dir( assets_dir );
+    
+    export_info( note, dirname );
+    export_markdown( note, dirname, assets_dir );
+    
+  }
+  
+  //-------------------------------------------------------------
+  // Exports TextBundle info.json file contents to the specified
+  // directory.
+  private void export_info( Note note, string dirname ) throws Error {
+    
+    var filename = Path.build_filename( dirname, "info.json" );
+    
+    var contents = """
+    """.printf( FOOBAR );
+    
+    try {
+      FileUtils.set_content( filename, contents );
+    } catch( Error e ) {
+      throw FOOBAR
+    }
+    
   }
 
+  //-------------------------------------------------------------
+  // Exports the note im Markdown format, adding note assets
+  // to the given assets directory.
+  private void export_markdown( Note note, string dirname, string assets_dir ) {
+    
+    var filename = Path.build_filename( dirname, "text.md" );
+    note.export( _win.notebooks, filename, assets_dir );
+    
+  }
+  
 }
