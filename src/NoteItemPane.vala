@@ -84,7 +84,7 @@ public class NoteItemPane : Box {
 	public NoteItemPane( MainWindow win, NoteItem item, SpellChecker spell ) {
 
     Object(
-      orientation: Orientation.VERTICAL,
+      orientation: Orientation.HORIZONTAL,
       spacing: 0,
       // margin_top: 5,
       // margin_bottom: 5,
@@ -523,8 +523,27 @@ public class NoteItemPane : Box {
 
     var expand = new Button.with_label( item.expanded ? "\u23f7" : "\u23f5" ) {
       has_frame = false,
-      halign = Align.START
+      halign = Align.START,
+      opacity = 0.0
     };
+
+    var lbox = new Box( Orientation.VERTICAL, 5 ) {
+      margin_start  = 5,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 5
+    };
+    lbox.append( expand );
+
+    var lbox_motion = new EventControllerMotion();
+    lbox.add_controller( lbox_motion );
+
+    lbox_motion.enter.connect((x, y) => {
+      expand.opacity = 1.0;
+    });
+    lbox_motion.leave.connect(() => {
+      expand.opacity = 0.0;
+    });
 
     var add_menu = new GLib.Menu();
     add_menu.append( _( "Add Block Above" ), "item.action_add_item_above" );
@@ -555,8 +574,27 @@ public class NoteItemPane : Box {
     var more = new MenuButton() {
       halign = Align.END,
       icon_name = "view-more-horizontal-symbolic",
-      menu_model = menu
+      menu_model = menu,
+      opacity = 0.0
     };
+
+    var rbox = new Box( Orientation.VERTICAL, 5 ) {
+      margin_start  = 5,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 5
+    };
+    rbox.append( more );
+
+    var rbox_motion = new EventControllerMotion();
+    rbox.add_controller( rbox_motion );
+
+    rbox_motion.enter.connect((x, y) => {
+      more.opacity = 1.0;
+    });
+    rbox_motion.leave.connect(() => {
+      more.opacity = 0.0;
+    });
 
     _header1 = create_header1();
 
@@ -578,9 +616,7 @@ public class NoteItemPane : Box {
       margin_bottom = 5
     };
 
-    box.append( expand );
     box.append( _stack );
-    box.append( more );
 
     var sep = new Separator( Orientation.HORIZONTAL );
 
@@ -602,8 +638,13 @@ public class NoteItemPane : Box {
       _stack.visible_child_name = item.expanded ? "selected" : "unselected";
     });
 
-    append( header );
-    append( pane );
+    var cbox = new Box( Orientation.VERTICAL, 5 );
+    cbox.append( header );
+    cbox.append( pane );
+
+    append( lbox );
+    append( cbox );
+    append( rbox );
 
   }
 
