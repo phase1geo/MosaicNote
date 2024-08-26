@@ -257,6 +257,26 @@ public class MainWindow : Gtk.ApplicationWindow {
       }
     });
 
+    _notes.note_added.connect((note) => {
+      smart_notebooks.handle_note( note );
+      full_tags.add_note_tags( note );
+    });
+
+    _notes.note_deleted.connect((note) => {
+      smart_notebooks.remove_note( note );
+      full_tags.delete_note_tags( note );
+    });
+
+    _notes.note_moved.connect((from_notebook, note) => {
+      if( note.notebook == notebooks.trash ) {
+        smart_notebooks.remove_note( note );
+        full_tags.delete_note_tags( note );
+      } else if( from_notebook == notebooks.trash ) {
+        smart_notebooks.handle_note( note );
+        full_tags.add_note_tags( note );
+      }
+    });
+
     _notes.note_selected.connect((note) => {
       if( _ignore ) {
         _ignore = false;

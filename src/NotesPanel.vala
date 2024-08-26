@@ -172,6 +172,9 @@ public class NotesPanel : Box {
     { "action_set_sort_direction", action_set_sort_direction, "i" },
   };
 
+  public signal void note_added( Note note );
+  public signal void note_deleted( Note note );
+  public signal void note_moved( Notebook from_notebook, Note note );
 	public signal void note_selected( Note? note );
 
 	// Default constructor
@@ -239,10 +242,11 @@ public class NotesPanel : Box {
 
     right_click.released.connect((n_press, x, y) => {
       var nb = bn_is_node() ? ((NotebookTree.Node)_bn).get_notebook() : (Notebook)_bn;
-      Import.import_notes( _win, nb, (first_note) => {
-        if( first_note != null ) {
-          populate_with_notebook( _bn );
-          _list.select_row( _list.get_row_at_index( get_index_of( first_note.id ) ) );
+      Import.import_notes( _win, nb, (note, last) => {
+        if( note != null ) {
+          nb.add_note( note );
+          _win.undo.add_item( new UndoNoteAdd( note ) );
+          note_added( note );
         }
       });
 
@@ -252,8 +256,8 @@ public class NotesPanel : Box {
       var nb = bn_is_node() ? ((NotebookTree.Node)_bn).get_notebook() : (Notebook)_bn;
 			var note = new Note( nb );
 			nb.add_note( note );
-      populate_with_notebook( _bn );
-      _list.select_row( _list.get_row_at_index( get_index_of( note.id ) ) );
+      _win.undo.add_item( new UndoNoteAdd( note ) );
+      note_added( note );
 		});
 
     var actions = new SimpleActionGroup();
@@ -434,13 +438,10 @@ public class NotesPanel : Box {
   //-------------------------------------------------------------
   // Selects the row with the given note ID.
   public void select_note( int note_id, bool show_note ) {
-    for( int i=0; i<_model.get_n_items(); i++ ) {
-      var note = (Note)_model.get_object( i );
-      if( note.id == note_id ) {
-        _ignore = !show_note;
-        _list.select_row( _list.get_row_at_index( i ) );
-        return;
-      }
+    var index = get_index_of( note_id );
+    if( index != -1 ) {
+      _ignore = !show_note;
+      _list.select_row( _list.get_row_at_index( index ) );
     }
   }
 
@@ -478,18 +479,52 @@ public class NotesPanel : Box {
     box.add_controller( drag );
 
     drag.prepare.connect((d) => {
-
       var val = Value( Type.OBJECT );
       val.set_object( note );
-
       var cp = new Gdk.ContentProvider.for_value( val );
-
       return( cp );
+    });
 
+    drag.drag_end.connect((d, del_data) => {
+      try {
+        var val = Value( Type.OBJECT );
+        if( d.content.get_value( ref val ) ) {
+          var nb = bn_is_node() ? ((NotebookTree.Node)_bn).get_notebook() : (Notebook)_bn;
+          note_moved( nb, (Note)val.get_object() );
+        }
+      } catch( Error e ) {}
     });
 
     return( box );
 
+  }
+
+  //-------------------------------------------------------------
+  // Adds the given note to the notebook and notes panel.
+  public void add_note( Note note ) {
+    if( note.notebook == _win.notebooks.trash ) {
+      note.notebook.move_note( note );
+      note_added( note );
+    } else {
+      note.notebook.add_note( note );
+      note_added( note );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Deletes the given note.  If move_to_trash is true, it will
+  // move the note to the trash notebook; otherwise, it will be
+  // permanently removed.
+  public void delete_note( Note note, bool move_to_trash ) {
+    var index = get_index_of( note.id );
+    if( index != -1 ) {
+      if( (note.notebook == _win.notebooks.trash) || !move_to_trash ) {
+        note.notebook.delete_note( note );
+      } else {
+        _win.notebooks.trash.move_note( note );
+      }
+      note_deleted( note );
+    }
   }
 
   //-------------------------------------------------------------
@@ -498,15 +533,10 @@ public class NotesPanel : Box {
   private void action_delete() {
     var row = _list.get_selected_row();
     if( row != null ) {
+      _win.note.save();
       var note = (Note)_model.get_item( row.get_index() );
-      _win.smart_notebooks.remove_note( note );
-      _win.full_tags.delete_note_tags( note );
-      if( note.notebook == _win.notebooks.trash ) {
-        note.notebook.delete_note( note );
-      } else {
-        _win.notebooks.trash.move_note( note );
-      }
-      populate_with_notebook( _bn );
+      _win.undo.add_item( new UndoNoteDelete( note ) );
+      delete_note( note, true );
     }
   }
 

@@ -578,7 +578,7 @@ public class NotePanel : Box {
     if( _note != null ) {
 
       _created_box.visible = true;
-      _created.label = note.created.format( "%b%e, %Y" );
+      _created.label = "%s | #%d".printf( note.created.format( "%b %e, %Y" ), note.id );
       _title.text    = note.title;
       _tags.clear_tags();
       _tags.add_tags( note.tags );

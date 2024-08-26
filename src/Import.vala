@@ -23,7 +23,7 @@ using Gtk;
 
 public class Import {
 
-  public delegate void ImportCallback( Note? first_note );
+  public delegate void ImportCallback( Note? note, bool last );
 
   //-------------------------------------------------------------
   // Exports the given note using the specified export type.
@@ -35,31 +35,24 @@ public class Import {
   // Displays a dialog to the user prompting to specify an output name.
   private static void import_dialog( MainWindow win, Notebook notebook, ImportCallback? callback ) {
 
-    Note? first_note = null;
-
-    var filter = new FileFilter() {
+    var md_filter = new FileFilter() {
       name = _( "Markdown" )
     };
-    filter.add_suffix( "md" );
+    md_filter.add_suffix( "md" );
 
 #if GTK410
     var dialog = Utils.make_file_chooser( _( "Import" ), _( "Import" ) );
 
-    dialog.default_filter = filter;
+    dialog.default_filter = md_filter;
 
     dialog.open_multiple.begin( win, null, (obj, res) => {
       try {
         var files = dialog.open_multiple.end( res );
         if( files != null ) {
+          var last_index = files.get_n_items() - 1;
           for( int i=0; i<files.get_n_items(); i++ ) {
             var file = (File)files.get_item( i );
-            var note = do_import( notebook, file.get_path() );
-            if( i == 0 ) {
-              first_note = note;
-            }
-          }
-          if( callback != null ) {
-            callback( first_note );
+            do_import( notebook, file.get_path(), callback, (i == last_index) );
           }
         }
       } catch( Error e ) {}
@@ -67,22 +60,17 @@ public class Import {
 #else
     var dialog = Utils.make_file_chooser( _( "Import" ), win, FileChooserAction.OPEN, _( "Import" ) );
 
-    dialog.filter = filter;
+    dialog.filter = md_filter;
     dialog.select_multiple = true;
 
     dialog.response.connect((id) => {
       if( id == ResponseType.ACCEPT ) {
         var files = dialog.get_files();
         if( files != null ) {
+          var last_index = files.get_n_items() - 1;
           for( int i=0; i<files.get_n_items(); i++ ) {
             var file = (File)files.get_item( i );
-            var note = do_import( notebook, file.get_path() );
-            if( i == 0 ) {
-              first_note = note;
-            }
-          }
-          if( callback != null ) {
-            callback( first_note );
+            do_import( notebook, file.get_path(), callback, (i == last_index) );
           }
         }
       }
@@ -96,7 +84,7 @@ public class Import {
 
   //-------------------------------------------------------------
   // Performs the export operation.  Returns the note that was imported.
-  private static Note? do_import( Notebook notebook, string filename ) {
+  private static void do_import( Notebook notebook, string filename, ImportCallback callback, bool last ) {
 
     string contents = "";
 
@@ -104,14 +92,9 @@ public class Import {
       if( FileUtils.get_contents( filename, out contents ) ) {
         var parser = new NoteParser();
         var note   = parser.parse_markdown( notebook, contents );
-        if( note != null ) {
-          notebook.add_note( note );
-        }
-        return( note );
+        callback( note, last );
       }
     } catch( FileError e ) {}
-
-    return( null );
 
   }
 
