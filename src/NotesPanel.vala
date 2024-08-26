@@ -531,9 +531,9 @@ public class NotesPanel : Box {
   // Deletes the currently selected note and moves it to the trash
   // (unless the currently displayed notebook is the trash).
   private void action_delete() {
+    _win.note.save();
     var row = _list.get_selected_row();
     if( row != null ) {
-      _win.note.save();
       var note = (Note)_model.get_item( row.get_index() );
       _win.undo.add_item( new UndoNoteDelete( note ) );
       delete_note( note, true );
