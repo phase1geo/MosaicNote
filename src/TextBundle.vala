@@ -84,7 +84,7 @@ public class TextBundle {
 
   //-------------------------------------------------------------
   // Exports the given note in TextBundle format.
-  public void export( Note note, string dirname ) throws Error {
+  public void export( Note note, string dirname ) throws FileError {
     
     var assets_dir = Path.build_filename( dirname, "assets" );
     
@@ -98,25 +98,27 @@ public class TextBundle {
   //-------------------------------------------------------------
   // Exports TextBundle info.json file contents to the specified
   // directory.
-  private void export_info( Note note, string dirname ) throws Error {
+  private void export_info( Note note, string dirname ) throws FileError {
     
     var filename = Path.build_filename( dirname, "info.json" );
     
     var contents = """
-    """.printf( FOOBAR );
-    
-    try {
-      FileUtils.set_content( filename, contents );
-    } catch( Error e ) {
-      throw FOOBAR
+    {
+      "version":              2,
+      "type":                 "net.daringfireball.markdown",
+      "transient":            true,
+      "creatorIdentifier":    "com.github.phase1geo.mosaic-note"
     }
+    """;
+    
+    FileUtils.set_contents( filename, contents );
     
   }
 
   //-------------------------------------------------------------
   // Exports the note im Markdown format, adding note assets
   // to the given assets directory.
-  private void export_markdown( Note note, string dirname, string assets_dir ) {
+  private void export_markdown( Note note, string dirname, string assets_dir ) throws FileError {
     
     var filename = Path.build_filename( dirname, "text.md" );
     note.export( _win.notebooks, filename, assets_dir );

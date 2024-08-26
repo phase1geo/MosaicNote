@@ -212,9 +212,11 @@ public class Notebook : BaseNotebook {
     var dirname    = Path.build_filename( root_dir, name );
     var assets_dir = Path.build_filename( dirname, "assets" );
     if( Utils.create_dir( dirname ) && Utils.create_dir( assets_dir ) ) {
-      for( int i=0; i<count(); i++ ) {
-        get_note( i ).export( notebooks, dirname, assets_dir );
-      }
+      try {
+        for( int i=0; i<count(); i++ ) {
+          get_note( i ).export( notebooks, dirname, assets_dir );
+        }
+      } catch( FileError e ) {}
     }
   }
 
