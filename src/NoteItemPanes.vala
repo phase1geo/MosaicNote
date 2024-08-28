@@ -165,7 +165,7 @@ public class NoteItemPanes : Box {
         show_pane( prev_pane );
         prev_pane.grab_item_focus( TextCursorPlacement.NO_CHANGE );
       } else {
-        add_new_item( NoteItemType.MARKDOWN, -1 );
+        add_new_item( NoteItemType.MARKDOWN, 0 );
       }
     });
 
@@ -291,6 +291,7 @@ public class NoteItemPanes : Box {
   public void populate( Note note ) {
 
     _note = note;
+    _size = 0;
 
     Utils.clear_box( this );
 
