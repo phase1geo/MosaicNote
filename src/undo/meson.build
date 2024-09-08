@@ -1,11 +1,11 @@
 sources += files(
+    'UndoItemAdd.vala',
+    'UndoItemDelete.vala',
+    'UndoItemDescChange.vala',
+    'UndoItemMove.vala',
     'UndoNoteAdd.vala',
     'UndoNoteDelete.vala',
-    'UndoNoteItemAdd.vala',
-    'UndoNoteItemDelete.vala',
-    'UndoNoteItemDescChange.vala',
-    'UndoNoteItemMove.vala',
-    'UndoNoteTagAdd.vala',
-    'UndoNoteTagDelete.vala',
-    'UndoNoteTitleChange.vala'
+    'UndoTagAdd.vala',
+    'UndoTagDelete.vala',
+    'UndoTitleChange.vala'
 )

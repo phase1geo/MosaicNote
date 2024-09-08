@@ -21,13 +21,13 @@
 
 using GLib;
 
-public class UndoNoteItemDescChange : UndoItem {
+public class UndoItemDescChange : UndoItem {
 
   private NoteItem _item;
   private string   _text;
 
   /* Default constructor */
-  public UndoNoteItemDescChange( NoteItem item, string text ) {
+  public UndoItemDescChange( NoteItem item, string text ) {
     base( _( "Change Item Description" ) );
     _item  = item;
     _text  = text;

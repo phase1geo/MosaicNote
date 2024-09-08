@@ -122,7 +122,7 @@ public class NoteItemPanes : Box {
     var new_item = type.create( _note );
     _note.add_note_item( (uint)pos, new_item );
     add_item( new_item, pos );
-    _win.undo.add_item( new UndoNoteItemAdd( _note, ((pos == -1) ? (_size - 1) : pos) ) );
+    _win.undo.add_item( new UndoItemAdd( _note, ((pos == -1) ? (_size - 1) : pos) ) );
   }
 
   //-------------------------------------------------------------
@@ -151,7 +151,7 @@ public class NoteItemPanes : Box {
       var index = Utils.get_child_index( this, pane );
       var size  = _size;
       if( record_undo ) {
-        _win.undo.add_item( new UndoNoteItemDelete( _note, index ) );
+        _win.undo.add_item( new UndoItemDelete( _note, index ) );
       }
       remove( pane );
       _size--;
@@ -197,7 +197,7 @@ public class NoteItemPanes : Box {
       }
       show_pane( curr );
       if( record_undo ) {
-        _win.undo.add_item( new UndoNoteItemMove( _note, index, up ) );
+        _win.undo.add_item( new UndoItemMove( _note, index, up ) );
       }
     });
 

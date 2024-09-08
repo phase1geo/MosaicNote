@@ -21,30 +21,30 @@
 
 using GLib;
 
-public class UndoNoteItemDelete : UndoItem {
+public class UndoTagDelete : UndoItem {
 
-  private Note     _note;
-  private NoteItem _item;
-  private int      _index;
+  private Note   _note;
+  private string _tag;
 
   /* Default constructor */
-  public UndoNoteItemDelete( Note note, int index ) {
-    base( _( "Delete Block" ) );
-    _note  = note;
-    _item  = note.get_item( index );
-    _index = index;
+  public UndoTagDelete( Note note, string tag ) {
+    base( _( "Remove Tag" ) );
+    _note = note;
+    _tag  = tag;
   }
 
   /* Causes the stored item to be put into the before state */
   public override void undo( MainWindow win ) {
-    _note.add_note_item( _index, _item );
-    win.note.items.add_item( _item, _index );
+    _note.tags.add_tag( _tag );
+    win.note.tags.add_tags( _note.tags );
+    win.note.tag_added( _tag, _note.id );
   }
 
   /* Causes the stored item to be put into the after state */
   public override void redo( MainWindow win ) {
-    var pane = win.note.items.get_pane( _index );
-    pane.remove_item( true, false );
+    _note.tags.delete_tag( _tag );
+    win.note.tags.add_tags( _note.tags );
+    win.note.tag_removed( _tag, _note.id );
   }
 
 }

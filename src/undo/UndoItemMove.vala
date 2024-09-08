@@ -21,7 +21,7 @@
 
 using GLib;
 
-public class UndoNoteItemMove : UndoItem {
+public class UndoItemMove : UndoItem {
 
   private Note     _note;
   private NoteItem _item;
@@ -29,7 +29,7 @@ public class UndoNoteItemMove : UndoItem {
   private bool     _move_up;
 
   /* Default constructor */
-  public UndoNoteItemMove( Note note, int index, bool move_up ) {
+  public UndoItemMove( Note note, int index, bool move_up ) {
     base( _( "Move Block" ) );
     _note    = note;
     _item    = note.get_item( index );

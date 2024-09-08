@@ -91,7 +91,7 @@ public class NoteItemPaneImage : NoteItemPane {
       if( !entry.editing ) {
         var text = (entry.text == default_text) ? "" : entry.text;
         if( image_item.description != text ) {
-          win.undo.add_item( new UndoNoteItemDescChange( item, image_item.description ) );
+          win.undo.add_item( new UndoItemDescChange( item, image_item.description ) );
           image_item.description = text;
           _h2_label.label = Utils.make_title( text );
         }
@@ -101,7 +101,7 @@ public class NoteItemPaneImage : NoteItemPane {
     save.connect(() => {
       var text = (entry.text == default_text) ? "" : entry.text;
       if( image_item.description != text ) {
-        win.undo.add_item( new UndoNoteItemDescChange( item, image_item.description ) );
+        win.undo.add_item( new UndoItemDescChange( item, image_item.description ) );
         image_item.description = text;
         _h2_label.label = Utils.make_title( text );
       }

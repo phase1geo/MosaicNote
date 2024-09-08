@@ -87,7 +87,7 @@ public class NoteItemPaneMath : NoteItemPane {
       if( !entry.editing ) {
         var text = (entry.text == default_text) ? "" : entry.text;
         if( math_item.description != text ) {
-          win.undo.add_item( new UndoNoteItemDescChange( item, math_item.description ) );
+          win.undo.add_item( new UndoItemDescChange( item, math_item.description ) );
           math_item.description = text;
           _h2_label.label = Utils.make_title( text );
         }
@@ -97,7 +97,7 @@ public class NoteItemPaneMath : NoteItemPane {
     save.connect(() => {
       var text = (entry.text == default_text) ? "" : entry.text;
       if( math_item.description != text ) {
-        win.undo.add_item( new UndoNoteItemDescChange( item, math_item.description ) );
+        win.undo.add_item( new UndoItemDescChange( item, math_item.description ) );
         math_item.description = text;
         _h2_label.label = Utils.make_title( text );
       }

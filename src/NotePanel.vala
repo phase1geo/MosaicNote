@@ -198,11 +198,11 @@ public class NotePanel : Box {
 
     _tags = new TagBox( _win );
     _tags.added.connect((tag) => {
-      _win.undo.add_item( new UndoNoteTagAdd( _note, tag ) );
+      _win.undo.add_item( new UndoTagAdd( _note, tag ) );
       tag_added( tag, _note.id );
     });
     _tags.removed.connect((tag) => {
-      _win.undo.add_item( new UndoNoteTagDelete( _note, tag ) );
+      _win.undo.add_item( new UndoTagDelete( _note, tag ) );
       tag_removed( tag, _note.id );
     });
     _tags.changed.connect(() => {
@@ -342,7 +342,7 @@ public class NotePanel : Box {
 
     _title.activate.connect(() => {
       if( _note != null ) {
-        _win.undo.add_item( new UndoNoteTitleChange( _note ) );
+        _win.undo.add_item( new UndoTitleChange( _note ) );
         _note.title = _title.text;
         note_saved( _note, null );
       }
