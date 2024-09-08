@@ -110,21 +110,39 @@ public class NoteItemPaneTable : NoteItemPane {
   // Create custom header when the pane is selected.
   protected override Widget create_header1() {
 
-    var entry = new EditableLabel( (table_item.description == "") ? _( "Description (Optional)" ) : table_item.description ) {
+    var default_text = _( "Description (Optional)" );
+
+    var entry = new EditableLabel( (table_item.description == "") ? default_text : table_item.description ) {
       halign = Align.FILL,
       hexpand = true
     };
 
-    entry.changed.connect(() => {
-      var text = (entry.text == _( "Description (Optional)" )) ? "" : entry.text;
-      table_item.description = text;
-      _h2_label.label = Utils.make_title( text );
+    entry.notify["editing"].connect(() => {
+      if( !entry.editing ) {
+        var text = (entry.text == default_text) ? "" : entry.text;
+        if( table_item.description != text ) {
+          win.undo.add_item( new UndoNoteItemDescChange( item, table_item.description ) );
+          table_item.description = text;
+          _h2_label.label = Utils.make_title( text );
+        }
+      }
     });
 
     save.connect(() => {
-      var text = (entry.text == _( "Description (Optional)" )) ? "" : entry.text;
-      table_item.description = text;
-      _h2_label.label = Utils.make_title( text );
+      var text = (entry.text == default_text) ? "" : entry.text;
+      if( table_item.description != text ) {
+        win.undo.add_item( new UndoNoteItemDescChange( item, table_item.description ) );
+        table_item.description = text;
+        _h2_label.label = Utils.make_title( text );
+      }
+    });
+
+    table_item.notify["description"].connect(() => {
+      var text = (table_item.description == "") ? default_text : table_item.description;
+      if( entry.text != text ) {
+        entry.text = text;
+        _h2_label.label = Utils.make_title( text );
+      }
     });
 
     var menu = new GLib.Menu();

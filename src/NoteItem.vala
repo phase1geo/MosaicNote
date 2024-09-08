@@ -217,7 +217,7 @@ public enum NoteItemType {
 
 }
 
-public class NoteItem {
+public class NoteItem : Object {
 
   public static int current_id = 0;
   public static int current_resource_id = 0;
@@ -261,6 +261,7 @@ public class NoteItem {
   //-------------------------------------------------------------
 	// Default constructor
 	public NoteItem( Note note, NoteItemType type ) {
+    Object();
 		this.id        = current_id++;
 		this.note      = note;
     this.item_type = type;
@@ -269,6 +270,7 @@ public class NoteItem {
   //-------------------------------------------------------------
 	// Constructor from XML input
 	public NoteItem.from_xml( Xml.Node* node ) {
+    Object();
 		load( node );
 	}
 

@@ -64,21 +64,39 @@ public class NoteItemPaneCode : NoteItemPane {
   // Adds an optional description entry field for the code.
   protected override Widget create_header1() {
 
-    var entry = new EditableLabel( (code_item.description == "") ? _( "Description (Optional)" ) : code_item.description ) {
+    var default_text = _( "Description (Optional)" );
+
+    var entry = new EditableLabel( (code_item.description == "") ? default_text : code_item.description ) {
       halign = Align.FILL,
       hexpand = true
     };
 
-    entry.changed.connect(() => {
-      var text = (entry.text == _( "Description (Optional)" )) ? "" : entry.text;
-      code_item.description = text;
-      _h2_label.label = Utils.make_title( text );
+    entry.notify["editing"].connect(() => {
+      if( !entry.editing ) {
+        var text = (entry.text == default_text) ? "" : entry.text;
+        if( code_item.description != text ) {
+          win.undo.add_item( new UndoNoteItemDescChange( item, code_item.description ) );
+          code_item.description = text;
+          _h2_label.label = Utils.make_title( text );
+        }
+      }
     });
 
     save.connect(() => {
-      var text = (entry.text == _( "Description (Optional)" )) ? "" : entry.text;
-      code_item.description = text;
-      _h2_label.label = Utils.make_title( text );
+      var text = (entry.text == default_text) ? "" : entry.text;
+      if( code_item.description != text ) {
+        win.undo.add_item( new UndoNoteItemDescChange( item, code_item.description ) );
+        code_item.description = text;
+        _h2_label.label = Utils.make_title( text );
+      }
+    });
+
+    code_item.notify["description"].connect(() => {
+      var text = (code_item.description == "") ? default_text : code_item.description;
+      if( entry.text != text ) {
+        entry.text = text;
+        _h2_label.label = Utils.make_title( text );
+      }
     });
 
     return( entry );
