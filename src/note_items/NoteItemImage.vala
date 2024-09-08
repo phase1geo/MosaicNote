@@ -31,10 +31,11 @@ public class NoteItemImage : NoteItem {
 	  set {
 	  	if( _uri != value ) {
         var file = File.new_for_uri( value );
-        save_as_resource( file, true );
-	  		_uri     = value;
-	  		modified = true;
-	  		changed();
+        if( save_as_resource( file, true ) ) {
+          _uri     = value;
+          modified = true;
+          changed();
+        }
 	  	}
 	  }
 	}

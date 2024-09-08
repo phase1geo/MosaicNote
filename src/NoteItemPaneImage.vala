@@ -43,36 +43,21 @@ public class NoteItemPaneImage : NoteItemPane {
   }
 
   // Displays a dialog to request
-  private void image_dialog( NoteItemImage item, Picture image ) {
+  private void image_dialog( NoteItemImage item ) {
 
-#if GTK410
     var dialog = Utils.make_file_chooser( _( "Select Image" ), _( "Select" ) );
 
     dialog.open.begin( win, null, (obj, res) => {
       try {
         var file = dialog.open.end( res );
         if( file != null ) {
-          item.uri = file.get_uri();
-          image.file = file;
+          if( file.get_uri() != item.uri ) {
+            win.undo.add_item( new UndoItemImageChange( image_item ) );
+            item.uri = file.get_uri();
+          }
         }
       } catch( Error e ) {}
     });
-#else
-    var dialog = Utils.make_file_chooser( _( "Select Image" ), win, FileChooserAction.OPEN, _( "Select" ) );
-
-    dialog.response.connect((id) => {
-      if( id == ResponseType.ACCEPT ) {
-        var file = dialog.get_file();
-        if( file != null ) {
-          item.uri = file.get_uri();
-          image.file = file;
-        }
-      }
-      dialog.destroy();
-    });
-
-    dialog.show();
-#endif
 
   }
 
@@ -160,7 +145,7 @@ public class NoteItemPaneImage : NoteItemPane {
     _image.add_controller( image_drop );
 
     if( image_item.uri == "" ) {
-      image_dialog( image_item, _image );
+      image_dialog( image_item );
     } else {
       _image.file = File.new_for_path( image_item.get_resource_filename() );
     }
@@ -174,7 +159,7 @@ public class NoteItemPaneImage : NoteItemPane {
       if( n_press == 1 ) {
         _image.grab_focus();
       } else if( n_press == 2 ) {
-        image_dialog( image_item, _image );
+        image_dialog( image_item );
       }
     });
 
@@ -192,13 +177,22 @@ public class NoteItemPaneImage : NoteItemPane {
     image_drop.drop.connect((val, x, y) => {
       var file = (val as GLib.File);
       if( file != null ) {
-        var filename = file.get_path();
-        if( GLib.ContentType.guess( filename, null, null ).contains( "image" ) ) {
-          _image.file = file;
-          return( true );
-        }
+        uint8[] contents = {};
+        try {
+          if( file.load_contents( null, out contents, null ) && GLib.ContentType.guess( null, contents, null ).contains( "image" ) ) {
+            if( image_item.uri != file.get_uri() ) {
+              win.undo.add_item( new UndoItemImageChange( image_item ) );
+              image_item.uri = file.get_uri();
+            }
+            return( true );
+          }
+        } catch( Error e ) {}
       }
       return( false );
+    });
+
+    image_item.notify["uri"].connect(() => {
+      _image.file = File.new_for_path( image_item.get_resource_filename() );
     });
 
     handle_key_events( _image );
