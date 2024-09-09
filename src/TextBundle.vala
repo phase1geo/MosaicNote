@@ -77,28 +77,57 @@ public class TextBundle {
 
     }
 
-
   }
 
   //=============================================================
 
   //-------------------------------------------------------------
   // Exports the given note in TextBundle format.
-  public void export( Note note, string dirname ) throws FileError {
-    
-    var assets_dir = Path.build_filename( dirname, "assets" );
-    
-    Utils.create_dir( assets_dir );
-    
-    export_info( note, dirname );
-    export_markdown( note, dirname, assets_dir );
-    
+  public void export_note( Note note, string dirname ) throws FileError {
+    try {
+      var tmp_dir    = DirUtils.make_tmp( "tbXXXXXX" );
+      var assets_dir = Path.build_filename( tmp_dir, "assets" );
+
+      Utils.create_dir( assets_dir );
+      
+      export_info( tmp_dir );
+      export_markdown_note( note, tmp_dir, assets_dir );
+
+      move_directory( tmp_dir, dirname );
+    } catch( FileError e ) {}
+  }
+
+  //-------------------------------------------------------------
+  // Exports the given note item in TextBundle format.
+  public void export_note_item( NoteItem item, string dirname ) throws FileError {
+    try {
+      var tmp_dir    = DirUtils.make_tmp( "tbXXXXXX" );
+      var assets_dir = Path.build_filename( tmp_dir, "assets" );
+
+      Utils.create_dir( assets_dir );
+
+      export_info( tmp_dir );
+      export_markdown_item( item, tmp_dir, assets_dir );
+
+      move_directory( tmp_dir, dirname );
+    } catch( FileError e ) {}
+  }
+
+  //-------------------------------------------------------------
+  // Moves the temporary directory to the user-selected directory
+  // name.
+  private void move_directory( string from_dir, string to_dir ) {
+    try {
+      var src = File.new_for_path( from_dir );
+      var dst = File.new_for_path( to_dir );
+      src.move( dst, FileCopyFlags.NONE );
+    } catch( Error e ) {}
   }
   
   //-------------------------------------------------------------
   // Exports TextBundle info.json file contents to the specified
   // directory.
-  private void export_info( Note note, string dirname ) throws FileError {
+  private void export_info( string dirname ) throws FileError {
     
     var filename = Path.build_filename( dirname, "info.json" );
     
@@ -118,11 +147,23 @@ public class TextBundle {
   //-------------------------------------------------------------
   // Exports the note im Markdown format, adding note assets
   // to the given assets directory.
-  private void export_markdown( Note note, string dirname, string assets_dir ) throws FileError {
+  private void export_markdown_note( Note note, string dirname, string assets_dir ) throws FileError {
     
     var filename = Path.build_filename( dirname, "text.md" );
     note.export( _win.notebooks, filename, assets_dir );
     
+  }
+
+  //-------------------------------------------------------------
+  // Exports the note item in Markdown format, adding item assets
+  // to the given assets directory.
+  private void export_markdown_item( NoteItem item, string dirname, string assets_dir ) throws FileError {
+
+    var filename = Path.build_filename( dirname, "text.md" );
+    var markdown = item.export( _win.notebooks, assets_dir );
+
+    FileUtils.set_contents( filename, markdown );
+
   }
   
 }

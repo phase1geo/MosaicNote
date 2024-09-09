@@ -310,11 +310,13 @@ public class NoteItem : Object {
       var basename = Path.get_basename( filename );
       var asset    = Path.build_filename( assets_dir, Path.get_basename( filename ) );
       try {
-        var from_file = File.new_for_uri( filename );
+        var from_file = File.new_for_path( filename );
         var to_file   = File.new_for_path( asset );
-        to_file.copy( from_file, FileCopyFlags.NONE );
+        from_file.copy( to_file, FileCopyFlags.NONE );
         return( Path.build_filename( Path.get_basename( assets_dir ), basename ) );
-      } catch( Error e ) {}
+      } catch( Error e ) {
+        stdout.printf( "ERROR: %s here\n", e.message );
+      }
     } else {
       return( filename );
     }

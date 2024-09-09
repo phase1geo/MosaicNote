@@ -161,40 +161,36 @@ public class Export {
     dialog.default_filter = filter;
     dialog.initial_name = filename;
 
-    if( export_type == ExportType.TEXTBUNDLE ) {
-
-    } else {
-      dialog.save.begin( win, null, (obj, res) => {
-        try {
-          var file = dialog.save.end( res );
-          if( file != null ) {
-            stdout.printf( "path: %s\n", file.get_path() );
-            if( export_type == ExportType.TEXTBUNDLE ) {
-              var tb = new TextBundle( win );
-              if( note != null ) {
-                tb.export_note( note, file.get_path() );
-              } else if( item != null ) {
-                tb.export_note_item( item, file.get_path() );
+    dialog.save.begin( win, null, (obj, res) => {
+      try {
+        var file = dialog.save.end( res );
+        if( file != null ) {
+          if( export_type == ExportType.TEXTBUNDLE ) {
+            var tb = new TextBundle( win );
+            if( note != null ) {
+              tb.export_note( note, file.get_path() );
+            } else if( item != null ) {
+              tb.export_note_item( item, file.get_path() );
+            }
+          } else {
+            var langs    = new Gee.HashSet<string>();
+            var markdown = "";
+            if( note != null ) {
+              markdown = note.to_markdown( win.notebooks, true, (export_type != ExportType.MARKDOWN) );
+              note.get_needed_languages( langs );
+              do_export( win, export_type, file.get_path(), markdown, langs );
+            } else if( item != null ) {
+              markdown = item.to_markdown( win.notebooks, true );
+              if( item.item_type == NoteItemType.CODE ) {
+                langs.add( ((NoteItemCode)item).lang );
               }
-            } else {
-              var langs    = new Gee.HashSet<string>();
-              var markdown = "";
-              if( note != null ) {
-                markdown = note.to_markdown( win.notebooks, true, (export_type != ExportType.MARKDOWN) );
-                note.get_needed_languages( langs );
-                do_export( win, export_type, file.get_path(), markdown, langs );
-              } else if( item != null ) {
-                markdown = item.to_markdown( win.notebooks, true );
-                if( item.item_type == NoteItemType.CODE ) {
-                  langs.add( ((NoteItemCode)item).lang );
-                }
-                do_export( win, export_type, file.get_path(), markdown, langs );
-              }
+              do_export( win, export_type, file.get_path(), markdown, langs );
             }
           }
-        } catch( Error e ) {
-        } catch( FileError e ) {
         }
+      } catch( Error e ) {
+      } catch( FileError e ) {
+      }
     });
 
   }

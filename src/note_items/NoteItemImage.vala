@@ -90,7 +90,7 @@ public class NoteItemImage : NoteItem {
   // Returns the Markdown code for this item and copies the asset
   // to the specified assets directory.
   public override string export( NotebookTree? notebooks, string assets_dir ) {
-    var asset = copy_asset( assets_dir, uri );
+    var asset = copy_asset( assets_dir, get_resource_filename() );
   	return( "![%s](%s)".printf( description, asset ) );
   }
 

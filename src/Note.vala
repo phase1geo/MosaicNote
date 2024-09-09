@@ -252,7 +252,7 @@ public class Note : Object {
   		var item = _items.index( i );
   	  str += "%s\n\n".printf( item.export( notebooks, assets_dir ) );
     }
-	  FileUtils.set_contents( filename, to_markdown( notebooks, true, false ) );
+	  FileUtils.set_contents( filename, str );
   }
 
 	//-------------------------------------------------------------
