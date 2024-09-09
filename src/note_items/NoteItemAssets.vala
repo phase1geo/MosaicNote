@@ -108,6 +108,15 @@ public class NoteItemAssets : NoteItem {
   }
 
   //-------------------------------------------------------------
+  // Adds an existing asset to the list of assets.  This should only
+  // be called by undo/redo code.
+  public void insert_existing_asset( int index, NoteItemAsset asset ) {
+    _assets.insert_val( index, asset );
+    modified = true;
+    changed();
+  }
+
+  //-------------------------------------------------------------
   // Removes the asset at the given index.
   public void remove_asset( int index ) {
     _assets.remove_index( index );

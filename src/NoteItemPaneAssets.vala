@@ -67,7 +67,7 @@ public class NoteItemPaneAssets : NoteItemPane {
 
   //-------------------------------------------------------------
   // Adds the given asset to the listbox.
-  private void add_asset( string uri, bool add_to_item, int insert_index = -1 ) {
+  public void add_asset( string uri, bool add_to_item, int insert_index = -1 ) {
 
     var label = new Label( Filename.display_basename( uri ) ) {
       halign = Align.START,
@@ -93,10 +93,16 @@ public class NoteItemPaneAssets : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Removes the asset at the given index.
+  public void remove_asset( int index ) {
+    var row = _listbox.get_row_at_index( index );
+    _listbox.remove( row );
+  }
+
+  //-------------------------------------------------------------
   // Displays a dialog to request
   private void show_file_dialog() {
 
-#if GTK410
     var dialog = Utils.make_file_chooser( _( "Select File" ), _( "Select" ) );
 
     dialog.open.begin( win, null, (obj, res) => {
@@ -104,24 +110,10 @@ public class NoteItemPaneAssets : NoteItemPane {
         var file = dialog.open.end( res );
         if( file != null ) {
           add_asset( file.get_uri(), true );
+          win.undo.add_item( new UndoItemAssetsAdd( this, assets_item, (assets_item.size() - 1) ) );
         }
       } catch( Error e ) {}
     });
-#else
-    var dialog = Utils.make_file_chooser( _( "Select File" ), win, FileChooserAction.OPEN, _( "Select" ) );
-
-    dialog.response.connect((id) => {
-      if( id == ResponseType.ACCEPT ) {
-        var file = dialog.get_file();
-        if( file != null ) {
-          add_asset( file.get_uri(), true );
-        }
-      }
-      dialog.destroy();
-    });
-
-    dialog.show();
-#endif
 
   }
 
@@ -223,7 +215,9 @@ public class NoteItemPaneAssets : NoteItemPane {
       var row = _listbox.get_selected_row();
       if( row != null ) {
         if( (keyval == Gdk.Key.Delete) || (keyval == Gdk.Key.BackSpace) ) {
-          assets_item.remove_asset( row.get_index() );
+          var index = row.get_index();
+          win.undo.add_item( new UndoItemAssetsRemove( this, assets_item, index ) );
+          assets_item.remove_asset( index );
           _listbox.remove( row );
           return( true );
         }
@@ -270,6 +264,7 @@ public class NoteItemPaneAssets : NoteItemPane {
           add_asset( file.get_uri(), true, index );
           _listbox.drag_unhighlight_row();
           _listbox.select_row( _listbox.get_row_at_index( index ) );
+          win.undo.add_item( new UndoItemAssetsAdd( this, assets_item, index ) );
           return( true );
         }
       }
@@ -314,6 +309,7 @@ public class NoteItemPaneAssets : NoteItemPane {
       if( file != null ) {
         add_asset( file.get_uri(), true );
         _listbox.select_row( _listbox.get_row_at_index( assets_item.size() - 1 ) );
+        win.undo.add_item( new UndoItemAssetsAdd( this, assets_item, (assets_item.size() - 1) ) );
         return( true );
       }
       return( false );
@@ -356,9 +352,9 @@ public class NoteItemPaneAssets : NoteItemPane {
   private void action_remove_file( SimpleAction action, Variant? variant ) {
     if( variant != null ) {
       var index = variant.get_int32();
-      var row   = _listbox.get_row_at_index( index );
+      win.undo.add_item( new UndoItemAssetsRemove( this, assets_item, index ) );
       assets_item.remove_asset( index );
-      _listbox.remove( row );
+      remove_asset( index );
     }
   }
 
