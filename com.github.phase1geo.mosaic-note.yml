@@ -20,6 +20,7 @@ finish-args:
   - '--device=dri'
   - '--socket=fallback-x11'
   - '--socket=wayland'
+  - '--env=JAVA_HOME=/app/jre'
 
 # This section is where you list all the source code required to build your app.
 # If we had external dependencies that weren't included in our SDK, we would list
@@ -41,12 +42,60 @@ modules:
       - /bin
       - /include
       - /lib/pkgconfig
+
   - name: gtksourceview
     buildsystem: meson
     sources:
       - type: git
         url: https://gitlab.gnome.org/GNOME/gtksourceview.git
         tag: '5.4.1'
+
+  # Install pandoc
+  - name: pandoc
+    sources:
+      - type: archive
+        archive-type: tar-gzip
+        url: https://github.com/jgm/pandoc/releases/download/3.1.3/pandoc-3.1.3-linux-amd64.tar.gz
+        sha256: 74bc434908e4d858b3edbfd6271d2e9e499477837e5df1d630df4e62f113803d
+    buildsystem: simple
+    build-commands:
+      - pwd
+    post-install:
+      - install -m 755 bin/pandoc /app/bin/pandoc
+
+  # Install openjdk to run plantuml
+  - name: openjdk
+    sources:
+      - type: archive
+        archive-type: tar-gzip
+        url: https://download.java.net/java/GA/jdk22.0.2/c9ecb94cd31b495da20a27d4581645e8/9/GPL/openjdk-22.0.2_linux-x64_bin.tar.gz
+        sha256: 41536f115668308ecf4eba92aaf6acaeb0936225828b741efd83b6173ba82963
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/jre
+      - cp -r * /app/jre/
+
+  # Install plantuml JAR
+  - name: plantuml
+    sources:
+      - type: file
+        url: https://github.com/plantuml/plantuml/releases/download/v1.2024.6/plantuml-1.2024.6.jar
+        sha256: 5a8dc3b37fe133a4744e55be80caf6080a70350aba716d95400a0f0cbd79e846
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/share/plantuml
+      - cp -r plantuml-1.2024.6.jar /app/share/plantuml/plantuml.jar
+
+  # Install plantuml script
+  - name: plantuml-script
+    sources:
+      - type: file
+        url: https://raw.githubusercontent.com/phase1geo/MosaicNote/main/scripts/plantuml
+        sha256: b560633d699d83680b9331d2c3fbd79a9f81c7633b1580dbf3d6d5ebf6001310
+    buildsystem: simple
+    build-commands:
+      - install -m 755 plantuml /app/bin/plantuml
+
   - name: mosaic-note
     buildsystem: meson
     sources:

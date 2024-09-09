@@ -26,15 +26,12 @@ public enum ExportType {
   TEXTBUNDLE,
   HTML,
   LATEX,
-  PDF,
   EPUB,
   DOCX,
   PPTX,
   ODT,
   RTF,
   TEXT,
-  JSON,
-  YAML,
   NUM;
 
   public string to_string() {
@@ -43,15 +40,12 @@ public enum ExportType {
       case TEXTBUNDLE :  return( "textbundle" );
       case HTML       :  return( "html" );
       case LATEX      :  return( "latex" );
-      case PDF        :  return( "pdf" );
       case EPUB       :  return( "epub" );
       case DOCX       :  return( "docx" );
       case PPTX       :  return( "pptx" );
       case ODT        :  return( "odt" );
       case RTF        :  return( "rtf" );
       case TEXT       :  return( "text" );
-      case JSON       :  return( "json" );
-      case YAML       :  return( "yaml" );
       default         :  assert_not_reached();
     }
   }
@@ -62,15 +56,12 @@ public enum ExportType {
       case TEXTBUNDLE :  return( _( "TextBundle" ) );
       case HTML       :  return( _( "HTML" ) );
       case LATEX      :  return( _( "Latex" ) );
-      case PDF        :  return( _( "PDF" ) );
       case EPUB       :  return( _( "EPub" ) );
       case DOCX       :  return( _( "Microsoft Word" ) );
       case PPTX       :  return( _( "Microsoft PowerPoint" ) );
       case ODT        :  return( _( "ODT" ) );
       case RTF        :  return( _( "Rich Text Format" ) );
       case TEXT       :  return( _( "Plain Text" ) );
-      case JSON       :  return( _( "JSON" ) );
-      case YAML       :  return( _( "YAML" ) );
       default         :  assert_not_reached();
     }
   }
@@ -81,15 +72,12 @@ public enum ExportType {
       case "textbundle" :  return( TEXTBUNDLE );
       case "html"       :  return( HTML );
       case "latex"      :  return( LATEX );
-      case "pdf"        :  return( PDF );
       case "epub"       :  return( EPUB );
       case "docx"       :  return( DOCX );
       case "pptx"       :  return( PPTX );
       case "odt"        :  return( ODT );
       case "rtf"        :  return( RTF );
       case "text"       :  return( TEXT );
-      case "json"       :  return( JSON );
-      case "yaml"       :  return( YAML );
       default           :  return( MARKDOWN );
     }
   }
@@ -100,15 +88,12 @@ public enum ExportType {
       case TEXTBUNDLE :  return( "textbundle" );
       case HTML       :  return( "html" );
       case LATEX      :  return( "latex" );
-      case PDF        :  return( "pdf" );
       case EPUB       :  return( "epub" );
       case DOCX       :  return( "docx" );
       case PPTX       :  return( "pptx" );
       case ODT        :  return( "odt" );
       case RTF        :  return( "rtf" );
       case TEXT       :  return( "txt" );
-      case JSON       :  return( "json" );
-      case YAML       :  return( "yml" );
       default         :  assert_not_reached();
     }
   }
@@ -151,27 +136,19 @@ public class Export {
 
   //-------------------------------------------------------------
   // Exports the given note using the specified export type.
-  public static void export_note( MainWindow win, ExportType export_type, Note note ) {
-    var markdown = note.to_markdown( win.notebooks, true, (export_type != ExportType.MARKDOWN) );
-    var langs    = new Gee.HashSet<string>();
-    note.get_needed_languages( langs );
-    export_dialog( win, export_type, markdown, langs );
+  public static void export_note( MainWindow win, ExportType export_type, Note note, int item_index = -1 ) {
+    export_dialog( win, export_type, note, null );
   }
 
   //-------------------------------------------------------------
   // Exports the given note item using the specified export type.
   public static void export_note_item( MainWindow win, ExportType export_type, NoteItem item ) {
-    var markdown = item.to_markdown( win.notebooks, true );
-    var langs    = new Gee.HashSet<string>();
-    if( item.item_type == NoteItemType.CODE ) {
-      langs.add( ((NoteItemCode)item).lang );
-    }
-    export_dialog( win, export_type, markdown, langs );
+    export_dialog( win, export_type, null, item );
   }
 
   //-------------------------------------------------------------
   // Displays a dialog to the user prompting to specify an output name.
-  private static void export_dialog( MainWindow win, ExportType export_type, string markdown, Gee.HashSet<string> needed_langs ) {
+  private static void export_dialog( MainWindow win, ExportType export_type, Note? note, NoteItem? item ) {
 
     var filter = new FileFilter();
     filter.name = export_type.label();
@@ -179,44 +156,52 @@ public class Export {
 
     var filename = "unnamed." + export_type.extension();
 
-#if GTK410
     var dialog = Utils.make_file_chooser( _( "Export" ), _( "Export" ) );
 
     dialog.default_filter = filter;
     dialog.initial_name = filename;
 
-    dialog.save.begin( win, null, (obj, res) => {
-      try {
-        var file = dialog.save.end( res );
-        if( file != null ) {
-          do_export( export_type, file.get_path(), markdown, needed_langs );
+    if( export_type == ExportType.TEXTBUNDLE ) {
+
+    } else {
+      dialog.save.begin( win, null, (obj, res) => {
+        try {
+          var file = dialog.save.end( res );
+          if( file != null ) {
+            stdout.printf( "path: %s\n", file.get_path() );
+            if( export_type == ExportType.TEXTBUNDLE ) {
+              var tb = new TextBundle( win );
+              if( note != null ) {
+                tb.export_note( note, file.get_path() );
+              } else if( item != null ) {
+                tb.export_note_item( item, file.get_path() );
+              }
+            } else {
+              var langs    = new Gee.HashSet<string>();
+              var markdown = "";
+              if( note != null ) {
+                markdown = note.to_markdown( win.notebooks, true, (export_type != ExportType.MARKDOWN) );
+                note.get_needed_languages( langs );
+                do_export( win, export_type, file.get_path(), markdown, langs );
+              } else if( item != null ) {
+                markdown = item.to_markdown( win.notebooks, true );
+                if( item.item_type == NoteItemType.CODE ) {
+                  langs.add( ((NoteItemCode)item).lang );
+                }
+                do_export( win, export_type, file.get_path(), markdown, langs );
+              }
+            }
+          }
+        } catch( Error e ) {
+        } catch( FileError e ) {
         }
-      } catch( Error e ) {}
     });
-#else
-    var dialog = Utils.make_file_chooser( _( "Export" ), win, FileChooserAction.SAVE, _( "Export" ) );
-
-    dialog.filter = filter;
-    dialog.set_current_name( filename );
-
-    dialog.response.connect((id) => {
-      if( id == ResponseType.ACCEPT ) {
-        var file = dialog.get_file();
-        if( file != null ) {
-          do_export( export_type, file.get_path(), markdown, needed_langs );
-        }
-      }
-      dialog.destroy();
-    });
-
-    dialog.show();
-#endif
 
   }
 
   //-------------------------------------------------------------
   // Performs the export operation.
-  private static bool do_export( ExportType export_type, string filename, string markdown, Gee.HashSet<string> needed_langs ) {
+  private static bool do_export( MainWindow win, ExportType export_type, string filename, string markdown, Gee.HashSet<string> needed_langs ) {
 
     var file_parts   = filename.split( "." );
     var extension    = file_parts[file_parts.length-1];
@@ -263,7 +248,8 @@ public class Export {
         });
       }
 
-      command += "--self-contained";
+      command += "--embed-resources";
+      command += "--standalone";
       command += "-o";
       command += ext_filename;
       command += md_filename;

@@ -39,6 +39,10 @@ if gtk4_dep.version().version_compare('>=4.12.0')
   add_project_arguments(['--define=GTK412'], language: 'vala')
 endif
 
+# Check externally used programs
+pandoc   = find_program('pandoc',   required: true)
+plantuml = find_program('plantuml', required: true)
+
 core_deps = [
     dependency('gobject-2.0'),
     dependency('glib-2.0'),

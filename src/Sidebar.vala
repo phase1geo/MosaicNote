@@ -289,7 +289,7 @@ public class Sidebar : Box {
   // Sets up the sidebar widgets.
 	private void setup_tree( Object obj ) {
 
-		var item  = (ListItem)obj;
+		var item = (ListItem)obj;
 
     var label = new Label( null ) {
     	halign = Align.START,
@@ -545,13 +545,26 @@ public class Sidebar : Box {
 		  	expander.margin_bottom = 6;
 		  	count.visible = false;
 		  }
-#if GTK410
       var node = (nb as NotebookTree.Node);
-      if( (node != null) && (node.size() == 0) ) {
-        expander.hide_expander = true;
-      }
+      if( node != null ) {
+        if( node.size() == 0 ) {
+#if GTK410
+          expander.hide_expander = true;
 #endif
+        } else {
+          row.expanded = node.expanded;
+        }
+      }
 		}
+
+    row.notify["expanded"].connect(() => {
+      if( row.expandable ) {
+        var node = (nb as NotebookTree.Node);
+        if( node != null ) {
+          node.expanded = row.expanded;
+        }
+      }
+    });
 
 	}
 
