@@ -480,10 +480,11 @@ public class NoteItemTable : NoteItem {
 
 	//-------------------------------------------------------------
 	// Inserts and empty blank column at the given index.
-	public void insert_column( int index, string col_header, Gtk.Justification col_justify ) {
+	public void insert_column( int index, string col_header, Gtk.Justification col_justify, TableColumnType col_type ) {
 		var col = new NoteItemTableColumn() {
-			header  = col_header,
-			justify = col_justify
+			header    = col_header,
+			justify   = col_justify,
+      data_type = col_type
 		};
 		_columns.insert_val( index, col );
 		col.changed.connect( handle_change );

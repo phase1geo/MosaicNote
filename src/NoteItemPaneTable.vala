@@ -210,7 +210,7 @@ public class NoteItemPaneTable : NoteItemPane {
   //-------------------------------------------------------------
   // Adds a new ColumnView column this will need to be called
   // when the user is adding a new column.
-  private string add_cv_column( int index ) {
+  public string add_cv_column( int index ) {
 
     var table_col  = table_item.get_column( index );
     var factory    = new SignalListItemFactory();
@@ -308,7 +308,7 @@ public class NoteItemPaneTable : NoteItemPane {
 
     create.clicked.connect(() => {
       for( int i=0; i<(int)col_sb.value; i++ ) {
-        table_item.insert_column( i, _( "Column %d" ).printf( i ), Gtk.Justification.LEFT );
+        table_item.insert_column( i, _( "Column %d" ).printf( i ), Gtk.Justification.LEFT, TableColumnType.TEXT );
       }
       for( int i=0; i<(int)row_sb.value; i++ ) {
         table_item.insert_row( i );
@@ -841,9 +841,10 @@ public class NoteItemPaneTable : NoteItemPane {
     if( variant != null ) {
       var col_id = variant.get_string();
       var index  = get_cv_column_index( col_id );
-      table_item.insert_column( index, "", Gtk.Justification.LEFT );
+      table_item.insert_column( index, "", Gtk.Justification.LEFT, TableColumnType.TEXT );
       col_id = add_cv_column( index );
       show_column_format_dialog( col_id );
+      win.undo.add_item( new UndoItemTableInsCol( table_item, index ) );
     }
   }
 
@@ -853,9 +854,10 @@ public class NoteItemPaneTable : NoteItemPane {
     if( variant != null ) {
       var col_id = variant.get_string();
       var index  = get_cv_column_index( col_id );
-      table_item.insert_column( (index + 1), "", Gtk.Justification.LEFT );
+      table_item.insert_column( (index + 1), "", Gtk.Justification.LEFT, TableColumnType.TEXT );
       col_id = add_cv_column( index + 1 );
       show_column_format_dialog( col_id );
+      win.undo.add_item( new UndoItemTableInsCol( table_item, (index + 1) ) );
     }
   }
 
