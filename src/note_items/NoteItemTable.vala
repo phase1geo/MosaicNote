@@ -528,9 +528,9 @@ public class NoteItemTable : NoteItem {
 
 	//-------------------------------------------------------------
 	// Inserts a blank row at the given index.
-	public void insert_row( int index ) {
-		var row = new NoteItemTableRow( (int)_columns.length );
-		_rows.insert( index, row );
+	public void insert_row( int index, NoteItemTableRow? row = null ) {
+		var new_row = row ?? new NoteItemTableRow( (int)_columns.length );
+		_rows.insert( index, new_row );
 		handle_change();
 	}
 

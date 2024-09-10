@@ -888,6 +888,7 @@ public class NoteItemPaneTable : NoteItemPane {
     if( variant != null ) {
       var index = variant.get_int32();
       table_item.insert_row( index );
+      win.undo.add_item( new UndoItemTableInsRow( table_item, index ) );
     }
   }
 
@@ -896,6 +897,7 @@ public class NoteItemPaneTable : NoteItemPane {
   private void action_delete_row( SimpleAction action, Variant? variant ) {
     if( variant != null ) {
       var index = variant.get_int32();
+      win.undo.add_item( new UndoItemTableDelRow( table_item, index ) );
       table_item.delete_row( index );
     }
   }
