@@ -272,7 +272,7 @@ public class NoteItemPaneTable : NoteItemPane {
 
   //-------------------------------------------------------------
   // Removes the ColumnView column at the given index.
-  private void remove_cv_column( int index ) {
+  public void remove_cv_column( int index ) {
     var columns = (GLib.ListStore)_table.columns;
     var column  = (ColumnViewColumn)columns.get_item( index );
     if( column != null ) {
@@ -723,7 +723,7 @@ public class NoteItemPaneTable : NoteItemPane {
 
   //-------------------------------------------------------------
   // Displays the column formatting dialog window.
-  private void show_column_format_dialog( string col_id ) {
+  private void show_column_format_dialog( string col_id, bool after_add ) {
 
     var index  = get_cv_column_index( col_id );
     var column = table_item.get_column( index );
@@ -822,6 +822,16 @@ public class NoteItemPaneTable : NoteItemPane {
       child = grid
     };
 
+    dialog.close_request.connect(() => {
+      if( after_add ) {
+        Idle.add(() => {
+          win.undo.add_item( new UndoItemTableInsCol( this, table_item, index ) );
+          return( false );
+        });
+      }
+      return( false );
+    });
+
     dialog.present();
 
   }
@@ -831,7 +841,7 @@ public class NoteItemPaneTable : NoteItemPane {
   private void action_format_column( SimpleAction action, Variant? variant ) {
     if( variant != null ) {
       var col_id = variant.get_string();
-      show_column_format_dialog( col_id );
+      show_column_format_dialog( col_id, false );
     }
   }
 
@@ -843,8 +853,8 @@ public class NoteItemPaneTable : NoteItemPane {
       var index  = get_cv_column_index( col_id );
       table_item.insert_column( index, "", Gtk.Justification.LEFT, TableColumnType.TEXT );
       col_id = add_cv_column( index );
-      show_column_format_dialog( col_id );
-      win.undo.add_item( new UndoItemTableInsCol( table_item, index ) );
+      show_column_format_dialog( col_id, true );
+      win.undo.add_item( new UndoItemTableInsCol( this, table_item, index ) );
     }
   }
 
@@ -856,8 +866,7 @@ public class NoteItemPaneTable : NoteItemPane {
       var index  = get_cv_column_index( col_id );
       table_item.insert_column( (index + 1), "", Gtk.Justification.LEFT, TableColumnType.TEXT );
       col_id = add_cv_column( index + 1 );
-      show_column_format_dialog( col_id );
-      win.undo.add_item( new UndoItemTableInsCol( table_item, (index + 1) ) );
+      show_column_format_dialog( col_id, true );
     }
   }
 
@@ -867,6 +876,7 @@ public class NoteItemPaneTable : NoteItemPane {
     if( variant != null ) {
       var col_id = variant.get_string();
       var index  = get_cv_column_index( col_id );
+      win.undo.add_item( new UndoItemTableDelCol( this, table_item, index ) );
       table_item.delete_column( index );
       remove_cv_column( index );
     }

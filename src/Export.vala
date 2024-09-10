@@ -188,9 +188,7 @@ public class Export {
             }
           }
         }
-      } catch( Error e ) {
-      } catch( FileError e ) {
-      }
+      } catch( Error e ) {}
     });
 
   }

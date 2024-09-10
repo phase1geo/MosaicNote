@@ -476,6 +476,25 @@ public class NoteItemTable : NoteItem {
 	// value.
 	public void set_cell( int column, int row, string val ) {
 		get_row( row ).set_value( column, val );
+		handle_change();
+	}
+
+	//-------------------------------------------------------------
+	// Gets the data for every row in the column.
+	public void get_column_data( int column, Array<string> data ) {
+		for( int i=0; i<rows(); i++ ) {
+			var row = get_row( i );
+			data.append_val( row.get_value( column ) );
+		}
+	}
+
+	//-------------------------------------------------------------
+	// Sets the column data to the given data.
+	public void set_column_data( int column, Array<string> data ) {
+		for( int i=0; ((i < rows()) && (i < data.length)); i++ ) {
+		  get_row( i ).set_value( column, data.index( i ) );
+		}
+		handle_change();
 	}
 
 	//-------------------------------------------------------------

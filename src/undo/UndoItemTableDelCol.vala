@@ -21,7 +21,7 @@
 
 using GLib;
 
-public class UndoItemTableInsCol : UndoItem {
+public class UndoItemTableDelCol : UndoItem {
 
   private NoteItemPaneTable _pane;
   private NoteItemTable     _item;
@@ -29,15 +29,19 @@ public class UndoItemTableInsCol : UndoItem {
   private string            _header;
   private Gtk.Justification _justify;
   private TableColumnType   _type;
+  private Array<string>     _data;
 
   /* Default constructor */
-  public UndoItemTableInsCol( NoteItemPaneTable pane, NoteItemTable item, int index ) {
+  public UndoItemTableDelCol( NoteItemPaneTable pane, NoteItemTable item, int index ) {
 
-    base( _( "Insert Table Column" ) );
+    base( _( "Delete Table Column" ) );
 
     _pane  = pane;
     _item  = item;
     _index = index;
+    _data  = new Array<string>();
+
+    item.get_column_data( index, _data );
 
     var col  = item.get_column( index );
     _header  = col.header;
@@ -48,14 +52,15 @@ public class UndoItemTableInsCol : UndoItem {
 
   /* Causes the stored item to be put into the before state */
   public override void undo( MainWindow win ) {
-    _item.delete_column( _index );
-    _pane.remove_cv_column( _index );
+    _item.insert_column( _index, _header, _justify, _type );
+    _item.set_column_data( _index, _data );
+    _pane.add_cv_column( _index );
   }
 
   /* Causes the stored item to be put into the after state */
   public override void redo( MainWindow win ) {
-    _item.insert_column( _index, _header, _justify, _type );
-    _pane.add_cv_column( _index );
+    _item.delete_column( _index );
+    _pane.remove_cv_column( _index );
   }
 
 }
