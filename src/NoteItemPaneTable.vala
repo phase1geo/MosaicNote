@@ -41,9 +41,9 @@ public class NoteItemPaneTable : NoteItemPane {
   };
 
   private signal void auto_number_changed();
-  private signal void column_title_changed( string id );
-  private signal void column_type_changed( string id );
-  private signal void column_justify_changed( string id );
+  public signal void column_title_changed( string id );
+  public signal void column_type_changed( string id );
+  public signal void column_justify_changed( string id );
 
   public NoteItemTable table_item {
     get {
@@ -727,6 +727,7 @@ public class NoteItemPaneTable : NoteItemPane {
 
     var index  = get_cv_column_index( col_id );
     var column = table_item.get_column( index );
+    var undo   = new UndoItemTableColFormat( this, table_item, col_id, index );
 
     var grid = new Grid() {
       margin_start    = 10,
@@ -828,6 +829,8 @@ public class NoteItemPaneTable : NoteItemPane {
           win.undo.add_item( new UndoItemTableInsCol( this, table_item, index ) );
           return( false );
         });
+      } else if( undo.changed( column ) ) {
+        win.undo.add_item( undo );
       }
       return( false );
     });
