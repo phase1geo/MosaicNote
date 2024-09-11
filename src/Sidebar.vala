@@ -103,6 +103,7 @@ public class Sidebar : Box {
     });
 
     _win.notebooks.changed.connect(() => {
+      stdout.printf( "In notebooks.changed\n" );
       update_notes_panel( selection.selected );
       populate_tree();
     });
@@ -607,6 +608,7 @@ public class Sidebar : Box {
       _win.full_tags.delete_note_tags( note );
       _win.smart_notebooks.remove_note( note );
     }
+    _win.undo.add_item( new UndoNoteMove( note ) );
     notebook.move_note( note );
   }
 

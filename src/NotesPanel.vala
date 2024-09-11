@@ -172,6 +172,12 @@ public class NotesPanel : Box {
     { "action_set_sort_direction", action_set_sort_direction, "i" },
   };
 
+  public BaseNotebook? current {
+    get {
+      return( _bn );
+    }
+  }
+
   public signal void note_added( Note note );
   public signal void note_deleted( Note note );
   public signal void note_moved( Notebook from_notebook, Note note );
@@ -408,8 +414,8 @@ public class NotesPanel : Box {
 
   //-------------------------------------------------------------
 	// Populates the notes list from the given notebook
-  public void populate_with_notebook( BaseNotebook? bn ) {
-    if( (_bn == bn) && ((bn as SmartNotebook) == null) ) return;
+  public void populate_with_notebook( BaseNotebook? bn, bool force = false ) {
+    if( ((_bn == bn) && ((bn as SmartNotebook) == null)) || force ) return;
     _bn = bn;
     if( bn != null ) {
       _model.set_model( bn.get_model() );

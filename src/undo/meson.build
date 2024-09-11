@@ -13,6 +13,7 @@ sources += files(
     'UndoItemTableInsRow.vala',
     'UndoNoteAdd.vala',
     'UndoNoteDelete.vala',
+    'UndoNoteMove.vala',
     'UndoTagAdd.vala',
     'UndoTagDelete.vala',
     'UndoTitleChange.vala'
