@@ -204,6 +204,7 @@ public class Sidebar : Box {
       }
 		}
 
+    _store.append( _win.notebooks.templates );
     _store.append( _win.notebooks.trash );
 
 		var notebooks = new LabelNotebook( _( "Notebooks" ) );
@@ -260,10 +261,17 @@ public class Sidebar : Box {
   }
 
   //-------------------------------------------------------------
-  // Returns true if the given base notebook is a trash notebook.
+  // Returns true if the given base notebook is the trash notebook.
   private bool nb_is_trash( BaseNotebook nb ) {
     var notebook = (nb as Notebook);
     return( (notebook != null) && (notebook == _win.notebooks.trash) );
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if the given base notebook is the templates notebook.
+  private bool nb_is_templates( BaseNotebook nb ) {
+    var notebook = (nb as Notebook);
+    return( (notebook != null) && (notebook == _win.notebooks.templates) );
   }
 
   //-------------------------------------------------------------
@@ -325,7 +333,7 @@ public class Sidebar : Box {
     drop.accept.connect((d) => {
       var row = (TreeListRow)item.get_item();
       var nb  = (BaseNotebook)row.get_item();
-      return( nb_is_node( nb ) || nb_is_inbox( nb ) || nb_is_trash( nb ) ||
+      return( nb_is_node( nb ) || nb_is_inbox( nb ) || nb_is_trash( nb ) || nb_is_templates( nb ) ||
               nb_is_smart( nb, SmartNotebookType.FAVORITE ) || nb_is_tag( nb ) );
     });
 
@@ -346,6 +354,9 @@ public class Sidebar : Box {
           var notebook = (Notebook)nb;
           move_note_to_notebook( note, notebook );
           return( true );
+        } else if( nb_is_templates( nb ) ) {
+          var notebook = (Notebook)nb;
+          move_note_to_notebook( note, notebook );
         } else if( nb_is_smart( nb, SmartNotebookType.FAVORITE ) && !note_in_trash( note ) ) {
           note.favorite = true;
           _win.smart_notebooks.handle_note( note );
@@ -602,8 +613,13 @@ public class Sidebar : Box {
       _win.full_tags.delete_note_tags( note );
       _win.smart_notebooks.remove_note( note );
     }
-    _win.undo.add_item( new UndoNoteMove( note ) );
-    notebook.move_note( note );
+    if( note.notebook == _win.notebooks.templates ) {
+      // TODO - Add undo for note copy/duplicate
+      notebook.copy_note( note );
+    } else {
+      _win.undo.add_item( new UndoNoteMove( note ) );
+      notebook.move_note( note );
+    }
   }
 
   //-------------------------------------------------------------

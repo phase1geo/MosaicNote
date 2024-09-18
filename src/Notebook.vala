@@ -120,6 +120,15 @@ public class Notebook : BaseNotebook {
   }
 
   //-------------------------------------------------------------
+  // Copies the given note to this notebook.
+  public void copy_note( Note note ) {
+    var new_note = new Note.copy( this, note );
+    _notes.append( new_note );
+    _modified = true;
+    changed();
+  }
+
+  //-------------------------------------------------------------
   // Moves the specified note to this notebook from its previous
   // notebook.
   public void move_note( Note note ) {

@@ -359,6 +359,7 @@ public class NotebookTree {
 
 	private Notebook    _inbox;
 	private Notebook    _trash;
+  private Notebook    _templates;
 	private Array<Node> _nodes;
 	private bool        _modified = false;
 
@@ -373,6 +374,12 @@ public class NotebookTree {
 			return( _trash );
 		}
 	}
+
+  public Notebook templates {
+    get {
+      return( _templates );
+    }
+  }
 
 	public signal void changed();
 
@@ -547,6 +554,7 @@ public class NotebookTree {
     root->set_prop( "resource-id", NoteItem.current_resource_id.to_string() );
 	  root->set_prop( "inbox-id", _inbox.id.to_string() );
 	  root->set_prop( "trash-id", _trash.id.to_string() );
+    root->set_prop( "templates-id", _templates.id.to_string() );
 
 	  for( int i=0; i<_nodes.length; i++ ) {
 	  	root->add_child( _nodes.index( i ).save() );
@@ -560,6 +568,7 @@ public class NotebookTree {
 	  // Save the inbox and trash
 		_inbox.save();
 		_trash.save();
+    _templates.save();
 
 	  _modified = false;
 
@@ -584,6 +593,11 @@ public class NotebookTree {
 
   	_trash = new Notebook( _( "Trash" ) );
     _trash.changed.connect(() => {
+      set_modified();
+    });
+
+    _templates = new Notebook( _( "Templates" ) );
+    _templates.changed.connect(() => {
       set_modified();
     });
 
@@ -637,6 +651,12 @@ public class NotebookTree {
     _trash.changed.connect(() => {
     	set_modified();
   	});
+
+    var tp_id = root->get_prop( "templates-id" );
+    _templates = new Notebook.from_xml( ((tp_id != null) ? int.parse( tp_id ) : -1), _( "Templates" ) );
+    _templates.changed.connect(() => {
+      set_modified();
+    });
 
     for( Xml.Node* it = root->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "node") ) {

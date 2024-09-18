@@ -420,7 +420,7 @@ public class NotesPanel : Box {
     if( bn != null ) {
       _model.set_model( bn.get_model() );
       _list.bind_model( _model, create_note );
-      var sensitive = bn_is_node() || (bn_is_notebook() && (_win.notebooks.inbox == (Notebook)_bn));
+      var sensitive = bn_is_node() || (bn_is_notebook() && ((_win.notebooks.inbox == (Notebook)_bn) || (_win.notebooks.templates == (Notebook)_bn)));
       _add.sensitive  = sensitive;
       _sort.sensitive = sensitive;
     } else {

@@ -159,6 +159,34 @@ public class Note : Object {
 	}
 
   //-------------------------------------------------------------
+  // Copies the given note to this note and sets the notebook
+  // to the specified notebook.
+  public Note.copy( Notebook nb, Note note ) {
+
+    _nb       = nb;
+    _id       = current_id++;
+    _title    = note.title;
+    _created  = new DateTime.now_local();
+    _updated  = new DateTime.now_local();
+    _viewed   = new DateTime.now_local();
+    _locked   = note.locked;
+    _favorite = note.favorite;
+    _tags     = new Tags();
+    _items    = new Array<NoteItem>();
+    _referred = new HashSet<int>();
+
+    _tags.copy( note.tags );
+
+    for( int i=0; i<note.size(); i++ ) {
+      var other_item = note.get_item( i );
+      var new_item   = other_item.item_type.create( this );
+      new_item.copy( other_item );
+      _items.append_val( new_item );
+    }
+
+  }
+
+  //-------------------------------------------------------------
   // Sets the title, but does not change the status of the modified
   // indicator.
   public void initialize_title( string init_title ) {
