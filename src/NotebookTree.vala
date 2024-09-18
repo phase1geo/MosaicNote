@@ -189,6 +189,7 @@ public class NotebookTree {
 		public Notebook get_notebook() {
 			if( _notebook == null ) {
 				_notebook = new Notebook.from_xml( id );
+        _notebook.changed.connect( node_changed );
 			}
 			return( _notebook );
 		}
@@ -344,6 +345,7 @@ public class NotebookTree {
 			for( Xml.Node* it = node->children; it != null; it = it->next ) {
 				if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "node") ) {
 					var n = new Node.from_xml( it, this );
+          n.changed.connect( node_changed );
 					_children.append_val( n );
 				}
 			}

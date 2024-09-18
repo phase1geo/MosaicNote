@@ -520,9 +520,7 @@ public class Sidebar : Box {
 		if( (nb as LabelNotebook) != null ) {
 			item.selectable   = false;
 			item.activatable  = false;
-#if GTK410
 			item.focusable    = false;
-#endif
 			label.label       = Utils.make_title( nb.name );
 			label.use_markup  = true;
 			label.margin_start = 5;
@@ -532,9 +530,7 @@ public class Sidebar : Box {
     } else if( ((nb as HiddenNotebook) != null) || ((nb as HiddenSmartNotebook) != null) ) {
       item.selectable  = false;
       item.activatable = false;
-#if GTK410
       item.focusable = false;
-#endif
       stack.visible_child_name = "rename";
       stack.visible = false;
 		} else {
@@ -549,9 +545,7 @@ public class Sidebar : Box {
       var node = (nb as NotebookTree.Node);
       if( node != null ) {
         if( node.size() == 0 ) {
-#if GTK410
           expander.hide_expander = true;
-#endif
         } else {
           row.expanded = node.expanded;
         }
