@@ -323,6 +323,15 @@ public class MainWindow : Gtk.ApplicationWindow {
       _search_mb.active = false;
     });
 
+    _note.save_as_template.connect((note) => {
+      var new_note = new Note.copy( _notebooks.templates, note );
+      var found = _notebooks.templates.find_note_by_title( note.title );
+      if( found != null ) {
+        _notebooks.templates.delete_note( found );
+      }
+      _notebooks.templates.add_note( new_note );
+    });
+
     _history.goto_note.connect((note) => {
       _sidebar.select_notebook( note.notebook );
       _notes.select_note( note.id, true );

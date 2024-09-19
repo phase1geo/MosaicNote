@@ -46,8 +46,9 @@ public class NotePanel : Box {
   private HashSet<string> _orig_link_titles;
 
   private const GLib.ActionEntry[] action_entries = {
-    { "action_copy_note_link", action_copy_note_link },
-    { "action_export_as", action_export_as, "i" },
+    { "action_copy_note_link",   action_copy_note_link },
+    { "action_save_as_template", action_save_as_template },
+    { "action_export_as",        action_export_as, "i" },
   };
 
   public TagBox tags {
@@ -82,6 +83,7 @@ public class NotePanel : Box {
   public signal void search_hidden();
 
   public signal void save();
+  public signal void save_as_template( Note note );
 
   //-------------------------------------------------------------
 	// Default constructor
@@ -236,6 +238,7 @@ public class NotePanel : Box {
 
     var more_menu = new GLib.Menu();
     more_menu.append( _( "Copy Note Link" ), "note.action_copy_note_link" );
+    more_menu.append( _( "Save Note As Template" ), "note.action_save_as_template" );
     more_menu.append_submenu( _( "Export Note As" ), export_menu );
     // more_menu.append( _( "Lock note" ), "note.action_lock" );
 
@@ -628,6 +631,13 @@ public class NotePanel : Box {
   private void action_copy_note_link() {
     var uri = "mosaicnote://show-note?id=%d".printf( _note.id );
     Gdk.Display.get_default().get_clipboard().set_text( uri );
+  }
+
+  //-------------------------------------------------------------
+  // Saves this note as a template.
+  private void action_save_as_template() {
+    save();
+    save_as_template( _note );
   }
 
   //-------------------------------------------------------------
