@@ -322,12 +322,24 @@ public class Sidebar : Box {
       button = Gdk.BUTTON_SECONDARY
     };
     var box = new Box( Orientation.HORIZONTAL, 5 );
+    box.add_css_class( "row-border" );
     box.add_controller( click );
     box.append( label );
     box.append( count );
 
     var drop = new DropTarget( Type.OBJECT, Gdk.DragAction.MOVE );
     box.add_controller( drop );
+
+    drop.enter.connect((x, y) => {
+      box.add_css_class( "drop-area" );
+      box.remove_css_class( "row-border" );
+      return( Gdk.DragAction.MOVE );
+    });
+
+    drop.leave.connect(() => {
+      box.remove_css_class( "drop-area" );
+      box.add_css_class( "row-border" );
+    });
 
     drop.accept.connect((d) => {
       var row = (TreeListRow)item.get_item();
@@ -368,6 +380,8 @@ public class Sidebar : Box {
           return( false );
         }
       }
+      box.remove_css_class( "drop-area" );
+      box.add_css_class( "row-border" );
       return( false );
     });
 

@@ -41,6 +41,10 @@
    border-color: #888;
 }
 
+.row-border {
+   padding: 1px;
+}
+
 .drop-area {
   border-style: dashed;
   border-width: 1px;
