@@ -166,12 +166,15 @@ public class NotesPanel : Box {
   private bool          _ignore      = false;
   private MenuButton    _sort;
   private NoteSorter    _sorter;
+  private SimpleActionGroup _actions;
 
   private const GLib.ActionEntry[] action_entries = {
-    { "action_duplicate_note",     action_duplicate_note, "i" },
-    { "action_delete_note",        action_delete_note, "i" },
-    { "action_set_sort_type",      action_set_sort_type, "i" },
-    { "action_set_sort_direction", action_set_sort_direction, "i" },
+    { "action_duplicate_note",         action_duplicate_note, "i" },
+    { "action_delete_note",            action_delete_note, "i" },
+    { "action_add_note_from_template", action_add_note_from_template, "i" },
+    { "action_import_note",            action_import_note },
+    { "action_set_sort_type",          action_set_sort_type, "i" },
+    { "action_set_sort_direction",     action_set_sort_direction, "i" },
   };
 
   public BaseNotebook? current {
@@ -233,6 +236,8 @@ public class NotesPanel : Box {
       child = _list
     };
 
+    _actions = new SimpleActionGroup();
+
 		_add = new Button.from_icon_name( "list-add-symbolic" ) {
       has_frame = false,
       margin_start = 5,
@@ -248,16 +253,25 @@ public class NotesPanel : Box {
     };
     _add.add_controller( right_click );
 
-    right_click.released.connect((n_press, x, y) => {
-      var nb = bn_is_node() ? ((NotebookTree.Node)_bn).get_notebook() : (Notebook)_bn;
-      Import.import_notes( _win, nb, (note, last) => {
-        if( note != null ) {
-          nb.add_note( note );
-          _win.undo.add_item( new UndoNoteAdd( note ) );
-          note_added( note );
-        }
-      });
+    var templates_menu = new GLib.Menu();
 
+    var add_menu = new GLib.Menu();
+    add_menu.append_submenu( _( "Add Note From Template" ), templates_menu );
+    add_menu.append( _( "Import Note" ), "notes.action_import_note" );
+
+    var popover = new PopoverMenu.from_model( null ) {
+      menu_model = add_menu,
+      position   = PositionType.TOP
+    };
+    popover.set_parent( _add );
+
+    right_click.released.connect((n_press, x, y) => {
+      templates_menu.remove_all();
+      for( int i=0; i<_win.notebooks.templates.count(); i++ ) {
+        var note = _win.notebooks.templates.get_note( i );
+        templates_menu.append( note.title, "notes.action_add_note_from_template(%d)".printf( i ) );
+      }
+      popover.popup();
     });
 
 		_add.clicked.connect(() => {
@@ -268,10 +282,8 @@ public class NotesPanel : Box {
       note_added( note );
 		});
 
-    var actions = new SimpleActionGroup();
-
     // Create sorting menu
-    var sort_menu = create_sort_menu( actions );
+    var sort_menu = create_sort_menu( _actions );
 
     _sort = new MenuButton() {
       has_frame     = false,
@@ -298,8 +310,8 @@ public class NotesPanel : Box {
 		append( bbox );
 
     /* Set the stage for menu actions */
-    actions.add_action_entries( action_entries, this );
-    insert_action_group( "notes", actions );
+    _actions.add_action_entries( action_entries, this );
+    insert_action_group( "notes", _actions );
 
 	}
 
@@ -603,6 +615,34 @@ public class NotesPanel : Box {
         delete_note( note, true );
       }
     }
+  }
+
+  //-------------------------------------------------------------
+  // Adds a new note from an existing template.
+  private void action_add_note_from_template( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      var index = variant.get_int32();
+      var note  = _win.notebooks.templates.get_note( index );
+      if( note != null ) {
+        var nb = bn_is_node() ? ((NotebookTree.Node)_bn).get_notebook() : (Notebook)_bn;
+        nb.add_note( note );
+        _win.undo.add_item( new UndoNoteAdd( note ) );
+        note_added( note );
+      }
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Imports a note from the filesystem.
+  private void action_import_note() {
+    var nb = bn_is_node() ? ((NotebookTree.Node)_bn).get_notebook() : (Notebook)_bn;
+    Import.import_notes( _win, nb, (note, last) => {
+      if( note != null ) {
+        nb.add_note( note );
+        _win.undo.add_item( new UndoNoteAdd( note ) );
+        note_added( note );
+      }
+    });
   }
 
   //-------------------------------------------------------------
