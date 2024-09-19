@@ -103,7 +103,6 @@ public class Sidebar : Box {
     });
 
     _win.notebooks.changed.connect(() => {
-      stdout.printf( "In notebooks.changed\n" );
       update_notes_panel( selection.selected );
       populate_tree();
     });
@@ -522,8 +521,6 @@ public class Sidebar : Box {
 		var row      = (TreeListRow)item.get_item();
 		var nb       = (BaseNotebook)row.get_item();
 
-    // stdout.printf( "In bind_tree, nb: %s\n", nb.name );
-
     if( nb == _selected_notebook ) {
       _list_view.model.select_item( row.get_position(), true );
     }
@@ -613,9 +610,10 @@ public class Sidebar : Box {
       _win.full_tags.delete_note_tags( note );
       _win.smart_notebooks.remove_note( note );
     }
-    if( note.notebook == _win.notebooks.templates ) {
-      // TODO - Add undo for note copy/duplicate
-      notebook.copy_note( note );
+    if( (note.notebook == _win.notebooks.templates) && (notebook != _win.notebooks.trash) ) {
+      var new_note = new Note.copy( notebook, note );
+      notebook.add_note( new_note );
+      _win.undo.add_item( new UndoNoteAdd( new_note ) );
     } else {
       _win.undo.add_item( new UndoNoteMove( note ) );
       notebook.move_note( note );

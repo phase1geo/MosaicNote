@@ -168,6 +168,8 @@ public class NotesPanel : Box {
   private NoteSorter    _sorter;
 
   private const GLib.ActionEntry[] action_entries = {
+    { "action_duplicate_note",     action_duplicate_note, "i" },
+    { "action_delete_note",        action_delete_note, "i" },
     { "action_set_sort_type",      action_set_sort_type, "i" },
     { "action_set_sort_direction", action_set_sort_direction, "i" },
   };
@@ -307,7 +309,7 @@ public class NotesPanel : Box {
   private int get_index_of( int note_id ) {
     for( int i=0; i<_model.get_n_items(); i++ ) {
       var note = (Note)_model.get_item( i );
-      if( note.id == note.id ) {
+      if( note.id == note_id ) {
         return( i );
       }
     }
@@ -502,6 +504,31 @@ public class NotesPanel : Box {
       } catch( Error e ) {}
     });
 
+    var right = new GestureClick() {
+      button = Gdk.BUTTON_SECONDARY
+    };
+    box.add_controller( right );
+
+    var edit_menu = new GLib.Menu();
+    edit_menu.append( _( "Duplicate Note" ), "notes.action_duplicate_note(%d)".printf( note.id ) );
+
+    var del_menu = new GLib.Menu();
+    del_menu.append( _( "Delete Note" ), "notes.action_delete_note(%d)".printf( note.id ) );
+
+    var menu = new GLib.Menu();
+    menu.append_section( null, edit_menu );
+    menu.append_section( null, del_menu );
+
+    var popover = new PopoverMenu.from_model( null ) {
+      has_arrow = false,
+      menu_model = menu
+    };
+    popover.set_parent( box );
+
+    right.pressed.connect((n_press, x, y) => {
+      popover.popup();
+    });
+
     return( box );
 
   }
@@ -544,6 +571,37 @@ public class NotesPanel : Box {
       var note = (Note)_model.get_item( row.get_index() );
       _win.undo.add_item( new UndoNoteDelete( note ) );
       delete_note( note, true );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Duplicates the note with the passed in ID.
+  private void action_duplicate_note( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      var id    = variant.get_int32();
+      var index = get_index_of( id );
+      if( index != -1 ) {
+        var note     = (Note)_model.get_item( index );
+        var nb       = bn_is_node() ? ((NotebookTree.Node)_bn).get_notebook() : (Notebook)_bn;
+        var new_note = new Note.copy( nb, note );
+        nb.add_note( new_note );
+        _win.undo.add_item( new UndoNoteAdd( note ) );
+        note_added( note );
+      }
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Deletes the note with the passed in ID.
+  private void action_delete_note( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      var id    = variant.get_int32();
+      var index = get_index_of( id );
+      if( index != -1 ) {
+        var note = (Note)_model.get_item( index );
+        _win.undo.add_item( new UndoNoteDelete( note ) );
+        delete_note( note, true );
+      }
     }
   }
 
