@@ -96,6 +96,24 @@ public enum NoteItemType {
 	}
 
   //-------------------------------------------------------------
+  // Parses the character to determine what type of a
+  // note item should be created.  This should only be called
+  // from within the Markdown note item text parser.
+  public static NoteItemType parse_char( unichar ch ) {
+    switch( ch ) {
+      case '#' :  return( MARKDOWN );
+      case '`' :  return( CODE );
+      case '!' :  return( IMAGE );
+      case '@' :  return( UML );
+      case '%' :  return( MATH );
+      case '|' :  return( TABLE );
+      case '[' :  return( ASSETS );
+      default  :  return( NUM );
+    }
+
+  }
+
+  //-------------------------------------------------------------
   // Parses the string value (created from search_string()) and
   // returns the enumerated value.
   public static NoteItemType parse_search( string str ) {

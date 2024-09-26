@@ -169,6 +169,10 @@ public class NoteItemPanes : Box {
       }
     });
 
+    pane.change_item.connect((type) => {
+      set_current_item_to_type( type );
+    });
+
     pane.move_item.connect((up, record_undo) => {
       var index = Utils.get_child_index( this, pane );
       var prev  = get_pane( index - 1 );

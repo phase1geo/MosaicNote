@@ -105,13 +105,53 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   }
 
   //-------------------------------------------------------------
-  // Checks the inserted text.  If the inserted text needs to be modified,
-  // we will setup a second insertion after Idle which will delete and
-  // replace the existing text.
-  private void check_inserted_text( ref TextIter iter, string str, int strlen ) {
-    var buffer = (GtkSource.Buffer)_text.buffer;
-    var offset = iter.get_offset();
+  // Checks the given text string to see if it contains the value
+  // necessary for inserting a new block.
+  private bool check_for_block_change( TextBuffer buffer, ref TextIter iter, string str ) {
+    var settings = MosaicNote.settings;
+    if( iter.starts_line() && iter.ends_line() ) {
+      var new_type = NoteItemType.parse_char( str.get_char( 0 ) );
+      if( new_type == NoteItemType.MARKDOWN ) {
+        if( settings.get_boolean( "split-markdown-by-header" ) ) {
+          if( buffer.text != "" ) {
+            TextIter start_iter;
+            split_item();
+            var next_buf = next_pane.get_text().buffer;
+            next_buf.get_iter_at_offset( out start_iter, 0 );
+            next_buf.insert( ref start_iter, str, str.length );
+            Signal.stop_emission_by_name( buffer, "insert_text" );
+            return( true );
+          }
+        }
+      } else if( (new_type != NoteItemType.NUM) && settings.get_boolean( "enable-markdown-block-char" ) ) {
+        if( buffer.text == "" ) {
+          change_item( new_type );
+          buffer.text = str;
+          Signal.stop_emission_by_name( buffer, "insert_text" );
+          return( true );;
+        } else {
+          var is_end = iter.is_end();
+          split_item();
+          if( is_end ) {
+            next_pane.remove_item( false, false );
+          }
+          add_item( false, new_type );
+          return( true );
+        }
+      }
+    }
+    return( false );
+  }
+
+  //-------------------------------------------------------------
+  // Checks the given text string to see if it contains a note link
+  // URI.  Converts it to a clickable note link.
+  private bool check_for_note_link( TextBuffer buffer, ref TextIter iter, string str ) {
+
     if( str.contains( "mosaicnote://show-note?id=" ) ) {
+
+      var offset = iter.get_offset();
+
       Idle.add(() => {
         TextIter start_iter;
         buffer.get_iter_at_offset( out start_iter, offset );
@@ -138,6 +178,69 @@ public class NoteItemPaneMarkdown : NoteItemPane {
         } catch( RegexError e ) {}
         return( false );
       });
+
+      return( true );
+
+    }
+
+    return( false );
+
+  }
+
+  //-------------------------------------------------------------
+  // Checks to see if we need to insert a new Markdown list item
+  private bool check_for_markdown_list( TextBuffer buffer, ref TextIter iter, string str ) {
+
+    if( str == "\n" ) {
+      var start_iter = iter;
+      var end_iter   = iter;
+      start_iter.set_line_offset( 0 );
+      try {
+        MatchInfo match;
+        var re = new Regex("""^(\s*)(([*+-])|(\d+)\.)(\s+)""");
+        var line = buffer.get_text( start_iter, end_iter, false );
+        if( re.match( line, 0, out match ) ) {
+          if( match.fetch( 0 ) == line ) {
+            start_iter.forward_chars( match.fetch( 1 ).char_count() );
+            buffer.delete( ref start_iter, ref end_iter );
+            return( true );
+          } else {
+            var leading  = match.fetch( 1 );
+            var ul       = match.fetch( 3 );
+            var ol       = match.fetch( 4 );
+            var trailing = match.fetch( 5 );
+            var ins_text = "\n" + leading;
+            if( ul != "" ) {
+              ins_text += ul;
+            } else {
+              var num = int.parse( ol ) + 1;
+              ins_text += num.to_string() + ".";
+            }
+            ins_text += trailing;
+            buffer.insert( ref iter, ins_text, ins_text.length );
+            return( true );
+          }
+        }
+      } catch( RegexError e ) {}
+    }
+
+    return( false );
+
+  }
+
+  //-------------------------------------------------------------
+  // Checks the inserted text.  If the inserted text needs to be modified,
+  // we will setup a second insertion after Idle which will delete and
+  // replace the existing text.
+  private void check_inserted_text( ref TextIter iter, string str, int strlen ) {
+    var buffer = (GtkSource.Buffer)_text.buffer;
+    if( check_for_block_change( buffer, ref iter, str ) ||
+        check_for_markdown_list( buffer, ref iter, str ) ) {
+      Signal.stop_emission_by_name( buffer, "insert_text" );
+      return;
+    }
+    if( check_for_note_link( buffer, ref iter, str ) ) {
+      return;
     }
   }
 

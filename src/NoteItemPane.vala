@@ -71,6 +71,7 @@ public class NoteItemPane : Box {
 
   public signal void add_item( bool above, NoteItemType? type );
   public signal void remove_item( bool forward, bool record_undo );
+  public signal void change_item( NoteItemType type );
   public signal void move_item( bool up, bool record_undo );
   public signal void set_as_current( string msg = "" );
   public signal void note_link_clicked( string link );
@@ -192,7 +193,9 @@ public class NoteItemPane : Box {
 
   //-------------------------------------------------------------
   // Split the current item into two items at the insertion point.
-  private void split_item() {
+  protected void split_item() {
+
+    TextIter start_iter, cursor_iter;
 
     // Get the current text widget and figure out the location of
     // the insertion cursor.
@@ -203,18 +206,22 @@ public class NoteItemPane : Box {
     // the insertion cursor, and remove the text after the insertion
     // cursor from the original item.
     item.content = text.buffer.text;
-    var first    = item.content.substring( 0, cursor ); 
-    var last     = item.content.substring( cursor );
+    var first    = item.content.substring( 0, cursor ).chomp(); 
+    var last     = item.content.substring( cursor ).chug();
 
     // Update the original text pane
+    text.buffer.get_iter_at_offset( out start_iter, 0 );
+    text.buffer.get_iter_at_offset( out cursor_iter, cursor );
     item.content = first;
-    text.buffer.text = first;
+    text.buffer.delete( ref start_iter, ref cursor_iter );
+    text.buffer.insert( ref start_iter, first, first.length );
     add_item( false, item.item_type );
 
     // Update the added text pane
     text = next_pane.get_text();
     next_pane.item.content = last;
-    text.buffer.text = last;
+    text.buffer.get_iter_at_offset( out start_iter, 0 );
+    text.buffer.insert( ref start_iter, last, last.length );
 
     // Adjust the insertion cursor to the beginning of the new text
     next_pane.grab_item_focus( TextCursorPlacement.START );

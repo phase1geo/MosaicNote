@@ -84,5 +84,13 @@
       <default>true</default>
       <summary>If true, the Tags section will be displayed in the sidebar.</summary>
     </key>
+    <key name="split-markdown-by-header" type="b">
+      <default>true</default>
+      <summary>If true, a note block will be split when a pound (#) character is inserted on a line</summary>
+    </key>
+    <key name="enable-markdown-block-char" type="b">
+      <default>true</default>
+      <summary>If true, a note block will be split when a block indentifier character is inserted on a new line</summary>
+    </key>
   </schema>
 </schemalist>
