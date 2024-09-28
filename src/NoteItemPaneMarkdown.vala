@@ -189,39 +189,90 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
   //-------------------------------------------------------------
   // Checks to see if we need to insert a new Markdown list item
-  private bool check_for_markdown_list( TextBuffer buffer, ref TextIter iter, string str ) {
+  private bool check_for_markdown_list( TextBuffer buffer, ref TextIter iter, string? str ) {
 
-    if( str == "\n" ) {
+    if( (str == "\n") || (str == "\t") || (str == null) ) {
+
       var start_iter = iter;
       var end_iter   = iter;
       start_iter.set_line_offset( 0 );
+      end_iter.forward_to_line_end();
+
       try {
+
         MatchInfo match;
-        var re = new Regex("""^(\s*)(([*+-])|(\d+)\.)(\s+)""");
+        var re   = new Regex("""^(\s*)(([*+-])|(\d+)\.)(\s+)""");
         var line = buffer.get_text( start_iter, end_iter, false );
+
+        stdout.printf( "Checking line: (%s)\n", line );
+
         if( re.match( line, 0, out match ) ) {
-          if( match.fetch( 0 ) == line ) {
-            start_iter.forward_chars( match.fetch( 1 ).char_count() );
-            buffer.delete( ref start_iter, ref end_iter );
-            return( true );
-          } else {
-            var leading  = match.fetch( 1 );
-            var ul       = match.fetch( 3 );
-            var ol       = match.fetch( 4 );
-            var trailing = match.fetch( 5 );
-            var ins_text = "\n" + leading;
-            if( ul != "" ) {
-              ins_text += ul;
-            } else {
-              var num = int.parse( ol ) + 1;
-              ins_text += num.to_string() + ".";
-            }
-            ins_text += trailing;
-            buffer.insert( ref iter, ins_text, ins_text.length );
+
+          // If we using this function just to see if the given iter line
+          // contains a list item, return the status of that now.
+          if( str == null ) {
             return( true );
           }
+
+          // If the user is inserting a newline character, either add a new
+          // list item or delete the current list item
+          if( str == "\n" ) {
+
+            // If we have only the list item on the line, clear the list item
+            if( match.fetch( 0 ) == line ) {
+              start_iter.forward_chars( match.fetch( 1 ).char_count() );
+              buffer.delete( ref start_iter, ref end_iter );
+              return( true );
+
+            // Otherwise, create the list item on the new line  
+            } else {
+              var leading  = match.fetch( 1 );
+              var ul       = match.fetch( 3 );
+              var ol       = match.fetch( 4 );
+              var trailing = match.fetch( 5 );
+              var ins_text = "\n" + leading;
+              if( ul != "" ) {
+                ins_text += ul;
+              } else {
+                var num = int.parse( ol ) + 1;
+                ins_text += num.to_string() + ".";
+              }
+              ins_text += trailing;
+              buffer.insert( ref iter, ins_text, ins_text.length );
+              return( true );
+            }
+
+          // Otherwise, if the user is inserting a Tab character, so we
+          // need to indent the current line
+          } else {
+            var prev_line = iter;
+            prev_line.backward_line();
+            if( check_for_markdown_list( buffer, ref prev_line, null ) ) {
+              var leading  = match.fetch( 1 );
+              var item     = match.fetch( 2 );
+              var ul       = match.fetch( 3 );
+              var ins_text = string.nfill( _text.tab_width, ' ' ) + leading;  // TODO - We might want to make the leading spaces configurable
+              if( ul != "" ) {
+                switch( ul ) {
+                  case "-" :  ins_text += "*";  break;
+                  case "*" :  ins_text += "+";  break;
+                  default  :  ins_text += "-";  break;
+                }
+              } else {
+                ins_text += "-";
+              }
+              var del_end  = start_iter;
+              del_end.forward_chars( leading.char_count() + item.char_count() );
+              buffer.delete( ref start_iter, ref del_end );
+              buffer.insert( ref start_iter, ins_text, ins_text.length ); 
+              return( true );
+            }
+          }
+
         }
+
       } catch( RegexError e ) {}
+
     }
 
     return( false );
