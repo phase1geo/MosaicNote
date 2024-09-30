@@ -32,13 +32,21 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   private Gdk.Cursor     _cursor_pointer;
   private Gdk.Cursor     _cursor_text;
   private Regex          _list_re;
+  private int            _last_checked_line = -1;
+
+  private const GLib.ActionEntry[] action_entries = {
+    { "action_toggle_task", action_toggle_task }
+  };
 
   //-------------------------------------------------------------
 	// Default constructor
 	public NoteItemPaneMarkdown( MainWindow win, NoteItem item, SpellChecker spell ) {
+
     base( win, item, spell );
+
     _cursor_pointer = new Gdk.Cursor.from_name( "pointer", null );
     _cursor_text    = new Gdk.Cursor.from_name( "text", null );
+
     try {
       // 1 = leading whitespace
       // 2 = unordered/ordered list item and/or task
@@ -51,6 +59,12 @@ public class NoteItemPaneMarkdown : NoteItemPane {
       // 9 = trailing whitespace
       _list_re = new Regex("""^(\s*)((([*+-])(\s*)(\[.\]))|(\d+)\.|(\[.\]))(\s+)""");
     } catch( RegexError e ) {}
+
+    /* Set the stage for menu actions */
+    var actions = new SimpleActionGroup();
+    actions.add_action_entries( action_entries, this );
+    insert_action_group( "markdown", actions );
+
   }
 
   //-------------------------------------------------------------
@@ -342,6 +356,26 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Returns true if the current line has a task can be toggled.
+  private void handle_cursor_moved() {
+
+    MatchInfo match;
+    TextIter  cursor;
+    var buffer = (GtkSource.Buffer)_text.buffer;
+    var line   = "";
+
+    buffer.get_iter_at_mark( out cursor, buffer.get_insert() );
+
+    if( cursor.get_line() != _last_checked_line ) {
+      var enabled = get_markdown_list_item( buffer, ref cursor, out line, out match ) &&
+                    ((match.fetch( 6 ) != "") || (match.fetch( 8 ) != ""));
+      action_set_enabled( "markdown.action_toggle_task", enabled );
+      _last_checked_line = cursor.get_line();
+    }
+
+  }
+
+  //-------------------------------------------------------------
   // Toggles the task on the current line if one exists.
   private bool toggle_task() {
 
@@ -397,10 +431,16 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   // Adds a new Markdown item at the given position in the content area
   protected override Widget create_pane() {
 
+    var extra = new GLib.Menu();
+    extra.append( _( "Toggle Task" ), "markdown.action_toggle_task" );
+
     _text = create_text( "mosaic-markdown" );
     _text.add_css_class( "markdown-text" );
+    _text.extra_menu = extra;
 
-    _text.buffer.insert_text.connect( check_inserted_text );
+    var buffer = (GtkSource.Buffer)_text.buffer;
+    buffer.insert_text.connect( check_inserted_text );
+    buffer.cursor_moved.connect( handle_cursor_moved );
 
     var click  = new GestureClick();
     var motion = new EventControllerMotion();
@@ -460,6 +500,12 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
     return( _text );
 
+  }
+
+  //-------------------------------------------------------------
+  // Toggles the current task
+  private void action_toggle_task() {
+    toggle_task();
   }
 
 }
