@@ -72,8 +72,15 @@ public class NoteItemPanes : Box {
   //-------------------------------------------------------------
   // Adding an extra menu for the given text widget.
   private void populate_extra_menu( TextView view ) {
+
     var extra = new GLib.Menu();
     view.extra_menu = extra;
+
+    var pane = get_pane( _current_item );
+    if( pane != null ) {
+      pane.populate_extra_menu();
+    }
+
   }
 
   //-------------------------------------------------------------

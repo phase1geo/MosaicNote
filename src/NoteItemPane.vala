@@ -165,6 +165,11 @@ public class NoteItemPane : Box {
   }
 
   //-------------------------------------------------------------
+  // Call to populate the extra menu of a text widget which
+  // has spell checking enabled.
+  public virtual void populate_extra_menu() {}
+
+  //-------------------------------------------------------------
   // Grabs the focus of the note item at the specified position.
   public virtual void grab_item_focus( TextCursorPlacement placement ) {}
 

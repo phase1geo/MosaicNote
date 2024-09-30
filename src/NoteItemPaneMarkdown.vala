@@ -63,7 +63,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     /* Set the stage for menu actions */
     var actions = new SimpleActionGroup();
     actions.add_action_entries( action_entries, this );
-    insert_action_group( "markdown", actions );
+    insert_action_group( "markdown%d".printf( item.id ), actions );
 
   }
 
@@ -78,6 +78,20 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   public override void grab_item_focus( TextCursorPlacement placement ) {
     place_cursor( _text, placement );
     _text.grab_focus();
+  }
+
+  //-------------------------------------------------------------
+  // Populates the extra menu of the text widget.
+  public override void populate_extra_menu() {
+
+    var task = new GLib.Menu();
+    task.append( _( "Toggle Task" ), "markdown.action_toggle_task" );
+
+    var extra = new GLib.Menu();
+    extra.append_section( null, task );
+
+    _text.extra_menu = extra;
+
   }
 
   //-------------------------------------------------------------
@@ -431,12 +445,8 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   // Adds a new Markdown item at the given position in the content area
   protected override Widget create_pane() {
 
-    var extra = new GLib.Menu();
-    extra.append( _( "Toggle Task" ), "markdown.action_toggle_task" );
-
     _text = create_text( "mosaic-markdown" );
     _text.add_css_class( "markdown-text" );
-    _text.extra_menu = extra;
 
     var buffer = (GtkSource.Buffer)_text.buffer;
     buffer.insert_text.connect( check_inserted_text );
