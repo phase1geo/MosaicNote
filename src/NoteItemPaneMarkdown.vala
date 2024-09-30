@@ -31,6 +31,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   private GtkSource.View _text;
   private Gdk.Cursor     _cursor_pointer;
   private Gdk.Cursor     _cursor_text;
+  private Regex          _list_re;
 
   //-------------------------------------------------------------
 	// Default constructor
@@ -38,6 +39,18 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     base( win, item, spell );
     _cursor_pointer = new Gdk.Cursor.from_name( "pointer", null );
     _cursor_text    = new Gdk.Cursor.from_name( "text", null );
+    try {
+      // 1 = leading whitespace
+      // 2 = unordered/ordered list item and/or task
+      // 3 = unordered list item with optional task
+      // 4 = unordered list item
+      // 5 = whitespace between list item and task
+      // 6 = task following unordered list item
+      // 7 = ordered list item number
+      // 8 = standalone task
+      // 9 = trailing whitespace
+      _list_re = new Regex("""^(\s*)((([*+-])(\s*)(\[.\]))|(\d+)\.|(\[.\]))(\s+)""");
+    } catch( RegexError e ) {}
   }
 
   //-------------------------------------------------------------
@@ -188,91 +201,176 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Returns true if the given line contains a Markdown list item
+  // and/or task.  Populates the given MatchInfo structure with
+  // the matching details.
+  private bool get_markdown_list_item( TextBuffer buffer, ref TextIter iter, out string line, out MatchInfo match ) {
+
+    var start_iter = iter;
+    var end_iter   = iter;
+    start_iter.set_line_offset( 0 );
+    end_iter.forward_to_line_end();
+
+    line = buffer.get_text( start_iter, end_iter, false );
+
+    return( _list_re.match( line, 0, out match ) );
+
+  }
+
+  //-------------------------------------------------------------
   // Checks to see if we need to insert a new Markdown list item
-  private bool check_for_markdown_list( TextBuffer buffer, ref TextIter iter, string? str ) {
+  private bool check_for_markdown_list( TextBuffer buffer, ref TextIter iter, string str ) {
 
-    if( (str == "\n") || (str == "\t") || (str == null) ) {
+    if( (str == "\n") || (str == "\t") ) {
 
-      var start_iter = iter;
-      var end_iter   = iter;
-      start_iter.set_line_offset( 0 );
-      end_iter.forward_to_line_end();
+      MatchInfo match;
+      string line;
 
-      try {
+      if( get_markdown_list_item( buffer, ref iter, out line, out match ) ) {
 
-        MatchInfo match;
-        var re   = new Regex("""^(\s*)(([*+-])|(\d+)\.)(\s+)""");
-        var line = buffer.get_text( start_iter, end_iter, false );
+        var start_iter = iter;
+        var end_iter   = iter;
+        start_iter.set_line_offset( 0 );
+        end_iter.forward_to_line_end();
 
-        stdout.printf( "Checking line: (%s)\n", line );
+        // If the user is inserting a newline character, either add a new
+        // list item or delete the current list item
+        if( str == "\n" ) {
 
-        if( re.match( line, 0, out match ) ) {
+          // If we have only the list item on the line, clear the list item
+          if( match.fetch( 0 ) == line ) {
+            start_iter.forward_chars( match.fetch( 1 ).char_count() );
+            buffer.delete( ref start_iter, ref end_iter );
+            return( true );
 
-          // If we using this function just to see if the given iter line
-          // contains a list item, return the status of that now.
-          if( str == null ) {
+          // Otherwise, create the list item on the new line  
+          } else {
+            var ins_text = "\n" + match.fetch( 1 );
+            if( match.fetch( 3 ) != "" ) {
+              ins_text += match.fetch( 3 );
+            } else if( match.fetch( 8 ) != "" ) {
+              ins_text += "[ ]";  // New tasks should be unfinished
+            } else {
+              var num = int.parse( match.fetch( 7 ) ) + 1;
+              ins_text += num.to_string() + ".";
+            }
+            ins_text += match.fetch( 9 );
+            buffer.insert( ref iter, ins_text, ins_text.length );
             return( true );
           }
 
-          // If the user is inserting a newline character, either add a new
-          // list item or delete the current list item
-          if( str == "\n" ) {
+        // Otherwise, if the user is inserting a Tab character, so we
+        // need to indent the current line
+        } else {
 
-            // If we have only the list item on the line, clear the list item
-            if( match.fetch( 0 ) == line ) {
-              start_iter.forward_chars( match.fetch( 1 ).char_count() );
-              buffer.delete( ref start_iter, ref end_iter );
-              return( true );
+          var start_fill = string.nfill( _text.tab_width, ' ' );
 
-            // Otherwise, create the list item on the new line  
-            } else {
-              var leading  = match.fetch( 1 );
-              var ul       = match.fetch( 3 );
-              var ol       = match.fetch( 4 );
-              var trailing = match.fetch( 5 );
-              var ins_text = "\n" + leading;
-              if( ul != "" ) {
-                ins_text += ul;
-              } else {
-                var num = int.parse( ol ) + 1;
-                ins_text += num.to_string() + ".";
+          if( match.fetch( 8 ) != "" ) {
+            buffer.insert( ref start_iter, start_fill, start_fill.length ); 
+            return( true );
+          }
+
+          MatchInfo prev_match;
+          string prev_line = "";
+          var prev_iter = iter;
+          prev_iter.backward_line();
+
+          if( get_markdown_list_item( buffer, ref prev_iter, out prev_line, out prev_match ) ) {
+
+            // If the current and previous lines are at the same level, we need
+            // to change the current line to indent
+            if( prev_match.fetch( 1 ).length == match.fetch( 1 ).length ) {
+              var ins_text = start_fill + match.fetch( 1 );
+              switch( prev_match.fetch( 4 ) ) {
+                case "-" :  ins_text += "*";  break;
+                case "*" :  ins_text += "+";  break;
+                default  :  ins_text += "-";  break;
               }
-              ins_text += trailing;
-              buffer.insert( ref iter, ins_text, ins_text.length );
-              return( true );
-            }
-
-          // Otherwise, if the user is inserting a Tab character, so we
-          // need to indent the current line
-          } else {
-            var prev_line = iter;
-            prev_line.backward_line();
-            if( check_for_markdown_list( buffer, ref prev_line, null ) ) {
-              var leading  = match.fetch( 1 );
-              var item     = match.fetch( 2 );
-              var ul       = match.fetch( 3 );
-              var ins_text = string.nfill( _text.tab_width, ' ' ) + leading;  // TODO - We might want to make the leading spaces configurable
-              if( ul != "" ) {
-                switch( ul ) {
-                  case "-" :  ins_text += "*";  break;
-                  case "*" :  ins_text += "+";  break;
-                  default  :  ins_text += "-";  break;
-                }
-              } else {
-                ins_text += "-";
+              if( match.fetch( 6 ) != "" ) {
+                ins_text += match.fetch( 5 ) + match.fetch( 6 );
               }
-              var del_end  = start_iter;
-              del_end.forward_chars( leading.char_count() + item.char_count() );
+              ins_text += match.fetch( 9 );
+              var del_end = start_iter;
+              del_end.forward_chars( match.fetch( 0 ).char_count() );
               buffer.delete( ref start_iter, ref del_end );
-              buffer.insert( ref start_iter, ins_text, ins_text.length ); 
+              buffer.insert( ref start_iter, ins_text, ins_text.length );
+              return( true );
+
+            // If the previous and current lines will be at the same level of
+            // indentation, make the current line match the previous line
+            } else if( prev_match.fetch( 1 ).length == (match.fetch( 1 ).length + start_fill.length) ) {
+              var ins_text = prev_match.fetch( 1 );
+              if( prev_match.fetch( 2 ) != "" ) {
+                ins_text += prev_match.fetch( 4 );
+              } else {
+                var num = int.parse( prev_match.fetch( 7 ) ) + 1;
+                ins_text += num.to_string() + ". ";
+              } 
+              ins_text += match.fetch( 5 ) + match.fetch( 6 ) + match.fetch( 9 );
+              var del_end = start_iter;
+              del_end.forward_chars( match.fetch( 0 ).char_count() );
+              buffer.delete( ref start_iter, ref del_end );
+              buffer.insert( ref start_iter, ins_text, ins_text.length );
+              return( true );
+
+            // Otherwise, just go ahead and insert the start_fill
+            } else {
+              buffer.insert( ref start_iter, start_fill, start_fill.length ); 
               return( true );
             }
+
           }
 
         }
 
-      } catch( RegexError e ) {}
+      }
 
+    }
+
+    return( false );
+
+  }
+
+  //-------------------------------------------------------------
+  // Takes the given task string and returns the toggled version
+  // of that task.
+  private string get_toggled_task( string task ) {
+    switch( task ) {
+      case "[ ]" :  return( "[x]" );
+      default    :  return( "[ ]" );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Toggles the task on the current line if one exists.
+  private bool toggle_task() {
+
+    MatchInfo match;
+    TextIter  cursor;
+    var buffer = (GtkSource.Buffer)_text.buffer;
+    var line   = "";
+
+    buffer.get_iter_at_mark( out cursor, buffer.get_insert() );
+
+    if( get_markdown_list_item( buffer, ref cursor, out line, out match ) ) {
+      int start_pos, end_pos;
+      var start_iter = cursor;
+      var end_iter   = cursor;
+      var task       = "";
+      if( match.fetch( 6 ) != "" ) {
+        match.fetch_pos( 6, out start_pos, out end_pos );
+        task = get_toggled_task( match.fetch( 6 ) );
+      } else if( match.fetch( 8 ) != "" ) {
+        match.fetch_pos( 8, out start_pos, out end_pos );
+        task = get_toggled_task( match.fetch( 8 ) );
+      } else {
+        return( false );
+      }
+      buffer.get_iter_at_line_offset( out start_iter, cursor.get_line(), start_pos );
+      buffer.get_iter_at_line_offset( out end_iter, cursor.get_line(), end_pos );
+      buffer.delete( ref start_iter, ref end_iter );
+      buffer.insert( ref start_iter, task, task.length );
+      return( true );
     }
 
     return( false );
@@ -304,10 +402,12 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
     _text.buffer.insert_text.connect( check_inserted_text );
 
-    var click = new GestureClick();
+    var click  = new GestureClick();
     var motion = new EventControllerMotion();
+    var key    = new EventControllerKey();
     _text.add_controller( click );
     _text.add_controller( motion );
+    _text.add_controller( key );
 
     motion.motion.connect((x, y) => {
       TextIter iter;
@@ -341,6 +441,19 @@ public class NoteItemPaneMarkdown : NoteItemPane {
           }
         }
       }
+    });
+
+    key.key_pressed.connect((keyval, keycode, state) => {
+      var control = (bool)(state & Gdk.ModifierType.CONTROL_MASK);
+      switch( keyval ) {
+        case Gdk.Key.d :
+          if( control ) {
+            toggle_task();
+            return( true );
+          }
+          break;
+      }
+      return( false );
     });
 
     handle_key_events( _text );
