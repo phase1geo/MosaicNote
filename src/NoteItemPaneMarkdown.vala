@@ -63,7 +63,17 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     /* Set the stage for menu actions */
     var actions = new SimpleActionGroup();
     actions.add_action_entries( action_entries, this );
-    insert_action_group( "markdown%d".printf( item.id ), actions );
+    insert_action_group( "markdown", actions );
+
+    add_keyboard_shortcuts( win.application );
+
+  }
+
+  //-------------------------------------------------------------
+  // Adds keyboard shortcuts for the menu actions
+  private void add_keyboard_shortcuts( Gtk.Application app ) {
+
+    app.set_accels_for_action( "markdown.action_toggle_task", { "<Control>d" } );
 
   }
 
