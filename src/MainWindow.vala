@@ -80,6 +80,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private NotebookTree    _notebooks;
   private SmartNotebooks  _smart_notebooks;
   private FullTags        _full_tags;
+  private Galleries       _galleries;
   private Themes          _themes;
   private SmartParser     _parser;
   private NoteHistory     _history;
@@ -139,6 +140,12 @@ public class MainWindow : Gtk.ApplicationWindow {
   public SmartNotebooks smart_notebooks {
     get {
       return( _smart_notebooks );
+    }
+  }
+
+  public Galleries galleries {
+    get {
+      return( _galleries );
     }
   }
 
@@ -215,6 +222,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     _notebooks       = new NotebookTree();
     _full_tags       = new FullTags( _notebooks );
     _smart_notebooks = new SmartNotebooks( _notebooks );
+    _galleries       = new Galleries( _notebooks );
     _themes          = new Themes();
     _parser          = new SmartParser( _notebooks );
     _history         = new NoteHistory();

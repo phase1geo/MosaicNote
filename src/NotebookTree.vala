@@ -274,6 +274,23 @@ public class NotebookTree {
 		}
 
 		//-------------------------------------------------------------
+		// Recursively searches for a note item with the given ID.  If
+		// it is found, return it; otherwise, returns null.
+		public NoteItem? find_note_item( int id ) {
+			var item = get_notebook().find_note_item( id );
+			if( item != null ) {
+				return( item );
+			}
+			for( int i=0; i<_children.length; i++ ) {
+				item = _children.index( i ).find_note_item( id );
+				if( item != null ) {
+					return( item );
+				}
+			}
+			return( null );
+		}
+
+		//-------------------------------------------------------------
 		// Finds a note with the given title.  Returns the note if one is
 		// found; otherwise, returns null.
 		public Note? find_note_by_title( string title ) {
@@ -505,6 +522,19 @@ public class NotebookTree {
 	}
 
 	//-------------------------------------------------------------
+	// Searches the notebooks for a note item that matches the given
+	// ID.
+	public NoteItem? find_note_item( int id ) {
+		for( int i=0; i<_nodes.length; i++ ) {
+			var item = _nodes.index( i ).find_note_item( id );
+			if( item != null ) {
+				return( item );
+			}
+		}
+		return( null );
+	}
+
+	//-------------------------------------------------------------
 	// Searches the notebooks for a note that matches the given ID
 	public Note? find_note_by_title( string title ) {
 		for( int i=0; i<_nodes.length; i++ ) {
@@ -515,7 +545,6 @@ public class NotebookTree {
 		}
 		return( null );
 	}
-
 
 	//-------------------------------------------------------------
 	// Searches the tree of notebooks for notes that contain the given tag

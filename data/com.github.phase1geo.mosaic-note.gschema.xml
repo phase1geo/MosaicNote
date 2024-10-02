@@ -80,6 +80,10 @@
       <default>false</default>
       <summary>This values is not recommended for MosaicNote non-developers</summary>
     </key>
+    <key name="sidebar-show-galleries" type="b">
+      <default>true</default>
+      <summary>If true, the Galleries section will be displayed in the sidebar.</summary>
+    </key>
     <key name="sidebar-show-tags" type="b">
       <default>true</default>
       <summary>If true, the Tags section will be displayed in the sidebar.</summary>

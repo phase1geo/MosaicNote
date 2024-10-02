@@ -152,6 +152,12 @@ public enum NoteItemType {
   }
 
   //-------------------------------------------------------------
+  // Returns true if this note item type has an associated gallery.
+  public bool has_gallery() {
+    return( (this == CODE) || (this == IMAGE) || (this == UML) || (this == MATH) );
+  }
+
+  //-------------------------------------------------------------
   // Creates a note item object for the given note.
 	public NoteItem create( Note note ) {
 		switch( this ) {

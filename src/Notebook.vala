@@ -153,6 +153,23 @@ public class Notebook : BaseNotebook {
   }
 
   //-------------------------------------------------------------
+  // Searches the list of notes for one that contains a note item
+  // that matches the given ID.  If it is found, return it;
+  // otherwise, return null.
+  public NoteItem? find_note_item( int id ) {
+    for( int i=0; i<count(); i++ ) {
+      var note = get_note( i );
+      for( int j=0; j<note.size(); j++ ) {
+        var item = note.get_item( j );
+        if( item.id == id ) {
+          return( item );
+        }
+      }
+    }
+    return( null );
+  }
+
+  //-------------------------------------------------------------
   // Searches the list of notes for one that matches the given title.
   // If it is found, return it; otherwise, return null.
   public Note? find_note_by_title( string title ) {

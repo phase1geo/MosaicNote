@@ -21,8 +21,8 @@
 
 public class BaseNotebook : Object {
 
-	private string _name     = "";
-  private bool   _modified = false;
+	protected string _name     = "";
+  private   bool   _modified = false;
 
 	public signal void changed();
 

@@ -232,6 +232,18 @@ public class Sidebar : Box {
     _smart_add_pos = (int)_store.get_n_items();
     _store.append( new_smart );
 
+    if( MosaicNote.settings.get_boolean( "sidebar-show-galleries" ) ) {
+
+      var galleries = new LabelNotebook( _( "Galleries" ) );
+      _store.append( galleries );
+
+      for( int i=0; i<_win.galleries.size(); i++ ) {
+        var gallery = _win.galleries.get_gallery( i );
+        _store.append( gallery );
+      }
+
+    }
+
     if( MosaicNote.settings.get_boolean( "sidebar-show-tags" ) ) {
 
     	var tags = new LabelNotebook( _( "Tags" ) );
