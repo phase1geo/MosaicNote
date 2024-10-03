@@ -114,6 +114,9 @@ public class Sidebar : Box {
       update_notes_panel( selection.selected );
       populate_tree();
     });
+    _win.galleries.changed.connect(() => {
+      populate_tree();
+    });
 
 		_list_view = new ListView( selection, factory ) {
 			single_click_activate = false

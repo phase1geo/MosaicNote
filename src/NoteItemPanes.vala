@@ -33,6 +33,7 @@ public class NoteItemPanes : Box {
   private int          _size         = 0;
   private SpellChecker _spell;
 
+  public signal void item_removed( NoteItemPane pane );
   public signal void item_selected( NoteItemPane pane );
   public signal void note_link_clicked( string link );
   public signal void see( int y, int height );
@@ -160,6 +161,7 @@ public class NoteItemPanes : Box {
       if( record_undo ) {
         _win.undo.add_item( new UndoItemDelete( _note, index ) );
       }
+      item_removed( pane );
       remove( pane );
       _size--;
       _note.delete_note_item( index );

@@ -23,11 +23,19 @@ public class Galleries {
 
   private Array<Gallery> _galleries;
 
+  public signal void changed();
+
   //-------------------------------------------------------------
   // Default constructor
   public Galleries( NotebookTree notebooks ) {
     _galleries = new Array<Gallery>();
     load( notebooks );
+  }
+
+  //-------------------------------------------------------------
+  // Called when one of the galleries is modified.
+  public void set_modified() {
+    changed();
   }
 
   //-------------------------------------------------------------
@@ -99,6 +107,7 @@ public class Galleries {
       var item_type = (NoteItemType)i;
       if( item_type.has_gallery() ) {
         var gallery = new Gallery( notebooks, item_type );
+        gallery.changed.connect( set_modified );
         _galleries.append_val( gallery );
       }
     }
@@ -124,6 +133,7 @@ public class Galleries {
     for( Xml.Node* it = root->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "gallery") ) {
         var gallery = new Gallery.from_xml( notebooks, it );
+        gallery.changed.connect( set_modified );
         _galleries.append_val( gallery );
       }
     }

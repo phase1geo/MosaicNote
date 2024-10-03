@@ -81,6 +81,7 @@ public class NotePanel : Box {
   public signal void note_saved( Note note, HashSet<string>? orig_link_titles );
   public signal void note_link_clicked( string link, Note note );
   public signal void search_hidden();
+  public signal void note_item_removed( NoteItem item );
 
   public signal void save();
   public signal void save_as_template( Note note );
@@ -359,6 +360,9 @@ public class NotePanel : Box {
       valign = Align.START,
       vexpand = true,
     };
+    _content.item_removed.connect((pane) => {
+      note_item_removed( pane.item );
+    });
     _content.item_selected.connect((pane) => {
       set_toolbar_for_pane( pane );
     });

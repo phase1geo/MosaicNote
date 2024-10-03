@@ -48,6 +48,7 @@ public class Gallery : BaseNotebook {
   //-------------------------------------------------------------
   // Returns the number of tracked items in this gallery
   public override int count() {
+    stdout.printf( "In gallery.count, name: %s, size: %d\n", _item_type.label(), _item_id.size );
     return( _item_id.size );
   }
 
@@ -68,26 +69,39 @@ public class Gallery : BaseNotebook {
   // Called before the given note is deleted.  Removes any
   // matching note items within the note from our tracked list.
   public void remove_note( Note note ) {
+    var modified = false;
     for( int i=0; i<note.size(); i++ ) {
       var item = note.get_item( i );
-      _item_id.remove( item.id );
+      if( _item_id.remove( item.id ) ) {
+        modified = true;
+      }
+    }
+    if( modified ) {
+      changed();
     }
   }
 
   //-------------------------------------------------------------
   // Removes a specific note item from our list
   public void remove_note_item( NoteItem item ) {
-    _item_id.remove( item.id );
+    if( _item_id.remove( item.id ) ) {
+      changed();
+    }
   }
 
   //-------------------------------------------------------------
   // Handles any changes to the the note items within a given note.
   public void handle_note( Note note ) {
+    var modified = false;
     for( int i=0; i<note.size(); i++ ) {
       var item = note.get_item( i );
       if( item.item_type == _item_type ) {
         _item_id.add( item.id );
+        modified = true;
       }
+    }
+    if( modified ) {
+      changed();
     }
   }
 

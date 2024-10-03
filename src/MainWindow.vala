@@ -272,6 +272,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _notes.note_deleted.connect((note) => {
       smart_notebooks.remove_note( note );
+      galleries.remove_note( note );
       full_tags.delete_note_tags( note );
     });
 
@@ -312,7 +313,8 @@ public class MainWindow : Gtk.ApplicationWindow {
         update_note_links( note, orig_link_titles );
       }
       _notes.update_notes();
-      _smart_notebooks.handle_note( note );
+      smart_notebooks.handle_note( note );
+      galleries.handle_note( note );
     });
 
     _note.note_link_clicked.connect((link, start_note) => {
@@ -338,6 +340,10 @@ public class MainWindow : Gtk.ApplicationWindow {
         _notebooks.templates.delete_note( found );
       }
       _notebooks.templates.add_note( new_note );
+    });
+
+    _note.note_item_removed.connect((item) => {
+      galleries.remove_note_item( item );
     });
 
     _history.goto_note.connect((note) => {
@@ -547,6 +553,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     _notebooks.save_notebooks();
     _full_tags.save();
     _smart_notebooks.save();
+    _galleries.save();
   }
 
   //-------------------------------------------------------------
