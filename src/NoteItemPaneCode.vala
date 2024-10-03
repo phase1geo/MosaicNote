@@ -33,7 +33,7 @@ public class NoteItemPaneCode : NoteItemPane {
   }
 
 	// Default constructor
-	public NoteItemPaneCode( MainWindow win, NoteItem item, SpellChecker spell ) {
+	public NoteItemPaneCode( MainWindow win, NoteItem item, SpellChecker? spell ) {
     base( win, item, spell );
   }
 

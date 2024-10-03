@@ -48,7 +48,6 @@ public class Gallery : BaseNotebook {
   //-------------------------------------------------------------
   // Returns the number of tracked items in this gallery
   public override int count() {
-    stdout.printf( "In gallery.count, name: %s, size: %d\n", _item_type.label(), _item_id.size );
     return( _item_id.size );
   }
 

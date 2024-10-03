@@ -45,7 +45,7 @@ public class NoteItemPaneMath : NoteItemPane {
 
   //-------------------------------------------------------------
 	// Default constructor
-	public NoteItemPaneMath( MainWindow win, NoteItem item, SpellChecker spell ) {
+	public NoteItemPaneMath( MainWindow win, NoteItem item, SpellChecker? spell ) {
     base( win, item, spell );
     _cursor_pointer = new Gdk.Cursor.from_name( "pointer", null );
     _cursor_text    = new Gdk.Cursor.from_name( "text", null );

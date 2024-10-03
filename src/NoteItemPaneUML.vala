@@ -36,7 +36,7 @@ public class NoteItemPaneUML : NoteItemPane {
   }
 
 	// Default constructor
-	public NoteItemPaneUML( MainWindow win, NoteItem item, SpellChecker spell ) {
+	public NoteItemPaneUML( MainWindow win, NoteItem item, SpellChecker? spell ) {
     base( win, item, spell );
   }
 

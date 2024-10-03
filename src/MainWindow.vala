@@ -93,6 +93,8 @@ public class MainWindow : Gtk.ApplicationWindow {
   private NotePanel       _note;
   private Paned           _notes_pw;
   private Paned           _sidebar_pw;
+  private GalleryView     _gallery_view;
+  private Stack           _view_stack;
   private ToggleButton    _search_mb;
   private UndoBuffer      _undo;
   private Button          _undo_btn;
@@ -253,14 +255,21 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _sidebar.notebook_selected.connect((nb) => {
       if( nb != null ) {
-        var node = (nb as NotebookTree.Node);
-        _ignore = true;
-        _notes.populate_with_notebook( nb );
-        _notes.select_row( 0 );
-        if( node != null ) {
-          MosaicNote.settings.set_int( "last-notebook", node.get_notebook().id );
+        if( (nb as Gallery) != null ) {
+          _view_stack.visible_child_name = "gallery";
+          _gallery_view.populate( (Gallery)nb );
+        } else {
+          _view_stack.visible_child_name = "notes";
+          var node = (nb as NotebookTree.Node);
+          _ignore = true;
+          _notes.populate_with_notebook( nb );
+          _notes.select_row( 0 );
+          if( node != null ) {
+            MosaicNote.settings.set_int( "last-notebook", node.get_notebook().id );
+          }
         }
       } else {
+        _view_stack.visible_child_name = "notes";
         _notes.populate_with_notebook( nb );
       }
     });
@@ -360,9 +369,16 @@ public class MainWindow : Gtk.ApplicationWindow {
       position           = settings.get_int( "notes-width" )
     };
 
+    _gallery_view = new GalleryView( this );
+
+    _view_stack = new Stack();
+    _view_stack.add_named( _notes_pw,     "notes" );
+    _view_stack.add_named( _gallery_view, "gallery" );
+    _view_stack.visible_child_name = "notes";
+
     _sidebar_pw = new Paned( Orientation.HORIZONTAL ) {
       start_child        = _sidebar,
-      end_child          = _notes_pw,
+      end_child          = _view_stack,
       resize_start_child = false,
       resize_end_child   = true,
       shrink_start_child = false,

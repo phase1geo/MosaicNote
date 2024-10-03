@@ -33,7 +33,7 @@ public class NoteItemPaneImage : NoteItemPane {
   }
 
 	// Default constructor
-	public NoteItemPaneImage( MainWindow win, NoteItem item, SpellChecker spell ) {
+	public NoteItemPaneImage( MainWindow win, NoteItem item, SpellChecker? spell ) {
     base( win, item, spell );
   }
 

@@ -37,11 +37,11 @@ public class NoteItemPane : Box {
 
   private const double control_opacity = 0.1;
 
-  private MainWindow   _win;
-  private NoteItem     _item;
-  private SpellChecker _spell;
-  private Stack        _stack;
-  private Widget       _header1;
+  private MainWindow    _win;
+  private NoteItem      _item;
+  private SpellChecker? _spell;
+  private Stack         _stack;
+  private Widget        _header1;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_add_item_above", action_add_item_above },
@@ -84,7 +84,7 @@ public class NoteItemPane : Box {
 
   //-------------------------------------------------------------
 	// Default constructor
-	public NoteItemPane( MainWindow win, NoteItem item, SpellChecker spell ) {
+	public NoteItemPane( MainWindow win, NoteItem item, SpellChecker? spell ) {
 
     Object(
       orientation: Orientation.HORIZONTAL,
@@ -148,7 +148,7 @@ public class NoteItemPane : Box {
   private void set_spellchecker() {
 
     var text = get_text();
-    if( text == null ) {
+    if( (text == null) || (_spell == null) ) {
       return;
     }
 

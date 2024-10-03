@@ -8,6 +8,7 @@ sources += files(
     'FullTags.vala',
     'Galleries.vala',
     'Gallery.vala',
+    'GalleryView.vala',
     'Import.vala',
     'MainWindow.vala',
     'MarkdownFuncs.vala',
