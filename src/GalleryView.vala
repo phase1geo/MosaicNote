@@ -73,6 +73,8 @@ public class GalleryView : Box {
       default                 :  return( null );
     }
 
+    pane.set_size_request( -1, 400 );
+
     return( pane );
 
   }
