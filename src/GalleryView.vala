@@ -23,8 +23,9 @@ using Gtk;
 
 public class GalleryView : Box {
 
-  private MainWindow _win;
-  private FlowBox    _flowbox;
+  private MainWindow  _win;
+  private SearchEntry _search;
+  private FlowBox     _flowbox;
 
   public signal void show_note( Note note );
 
@@ -35,6 +36,16 @@ public class GalleryView : Box {
     Object( orientation: Orientation.VERTICAL, spacing: 5 );
 
     _win = win;
+
+    _search = new SearchEntry() {
+      halign  = Align.CENTER,
+      hexpand = true,
+      width_chars = 50,
+      placeholder_text = _( "Search Gallery" ),
+      margin_top = 5
+    };
+
+    _search.search_changed.connect( do_search );
 
     _flowbox = new FlowBox() {
       valign                = Align.START,
@@ -61,6 +72,7 @@ public class GalleryView : Box {
       vexpand           = true
     };
 
+    append( _search );
     append( sw );
 
   }
@@ -101,6 +113,24 @@ public class GalleryView : Box {
       if( item != null ) {
         _flowbox.append( item );
       }
+    }
+
+  }
+
+  //-------------------------------------------------------------
+  // Perform search.
+  private void do_search() {
+
+    /* If the search field is empty, show all of the icons by category again */
+    if( _search.text == "" ) {
+      _flowbox.invalidate_filter();
+    
+    /* Otherwise, show only the currently matching icons */
+    } else {
+      _flowbox.set_filter_func((item) => {
+        var gallery_item = (GalleryItem)item.child;
+        return( (_search.text == "") || gallery_item.item.search( _search.text ) );
+      });
     }
 
   }
