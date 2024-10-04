@@ -371,6 +371,11 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _gallery_view = new GalleryView( this );
 
+    _gallery_view.show_note.connect((note) => {
+      _sidebar.select_notebook( note.notebook );
+      _notes.select_note( note.id, true );
+    });
+
     _view_stack = new Stack();
     _view_stack.add_named( _notes_pw,     "notes" );
     _view_stack.add_named( _gallery_view, "gallery" );

@@ -8,6 +8,7 @@ sources += files(
     'FullTags.vala',
     'Galleries.vala',
     'Gallery.vala',
+    'GalleryItem.vala',
     'GalleryView.vala',
     'Import.vala',
     'MainWindow.vala',
@@ -54,5 +55,6 @@ sources += files(
 )
 
 subdir('filters')
+subdir('gallery_items')
 subdir('note_items')
 subdir('undo')

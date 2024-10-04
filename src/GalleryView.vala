@@ -26,6 +26,8 @@ public class GalleryView : Box {
   private MainWindow _win;
   private FlowBox    _flowbox;
 
+  public signal void show_note( Note note );
+
   //-------------------------------------------------------------
   // Default constructor
   public GalleryView( MainWindow win ) {
@@ -35,10 +37,13 @@ public class GalleryView : Box {
     _win = win;
 
     _flowbox = new FlowBox() {
-      homogeneous    = true,
-      row_spacing    = 10,
-      column_spacing = 10,
-      max_children_per_line = 2
+      valign                = Align.START,
+      vexpand               = true,
+      homogeneous           = true,
+      row_spacing           = 10,
+      column_spacing        = 10,
+      max_children_per_line = 2,
+      selection_mode        = SelectionMode.NONE
     };
 
     var box = new Box( Orientation.VERTICAL, 0 ) {
@@ -62,18 +67,20 @@ public class GalleryView : Box {
 
   //-------------------------------------------------------------
   // Creates a pane to display the given note item within.
-  private NoteItemPane? make_pane( NoteItem item ) {
+  private GalleryItem? make_pane( NoteItem item ) {
 
-    NoteItemPane pane;
+    GalleryItem pane;
     switch( item.item_type ) {
-      case NoteItemType.CODE  :  pane = new NoteItemPaneCode( _win, item, null );   break;
-      case NoteItemType.IMAGE :  pane = new NoteItemPaneImage( _win, item, null );  break;
-      case NoteItemType.UML   :  pane = new NoteItemPaneUML( _win, item, null );    break;
-      case NoteItemType.MATH  :  pane = new NoteItemPaneMath( _win, item, null );   break;
+      case NoteItemType.CODE  :  pane = new GalleryItemCode( _win, item );   break;
+      case NoteItemType.IMAGE :  pane = new GalleryItemImage( _win, item );  break;
+      case NoteItemType.UML   :  pane = new GalleryItemUML( _win, item );    break;
+      case NoteItemType.MATH  :  pane = new GalleryItemMath( _win, item );   break;
       default                 :  return( null );
     }
 
-    pane.set_size_request( -1, 400 );
+    pane.show_note.connect((note) => {
+      show_note( note );
+    });
 
     return( pane );
 
