@@ -45,6 +45,17 @@ public class GalleryView : Box {
       margin_top = 5
     };
 
+    var key = new EventControllerKey();
+    _search.add_controller( key );
+
+    key.key_pressed.connect((keyval, keycode, state) => {
+      if( keyval == Gdk.Key.Escape ) {
+        _search.text = "";
+        return( true );
+      }
+      return( false );
+    });
+
     _search.search_changed.connect( do_search );
 
     _flowbox = new FlowBox() {
