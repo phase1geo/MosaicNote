@@ -60,6 +60,10 @@ public class GalleryItemMath : GalleryItem {
       use_markup = true
     };
 
+    highlight_match.connect((pattern) => {
+      highlight_label( label, math_item.description, pattern );
+    });
+
     return( label );
 
   }
@@ -73,6 +77,9 @@ public class GalleryItemMath : GalleryItem {
       return( image );
     } else {
       var label = new Label( math_item.content );
+      highlight_match.connect((pattern) => {
+        highlight_label( label, math_item.content, pattern );
+      });
       return( label );
     }
 

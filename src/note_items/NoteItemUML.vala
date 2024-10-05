@@ -54,6 +54,13 @@ public class NoteItemUML : NoteItem {
 	}
 
 	//-------------------------------------------------------------
+	// Searches the description and content fields for the given
+	// search pattern.
+	public override bool search( string pattern ) {
+		return( description.contains( pattern ) || base.search( pattern ) );
+	}
+
+	//-------------------------------------------------------------
 	// Returns the Markdown version of this item
 	public override string to_markdown( NotebookTree? notebooks, bool pandoc ) {
 		var filename = get_resource_filename();

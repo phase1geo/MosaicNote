@@ -60,6 +60,10 @@ public class GalleryItemImage : GalleryItem {
       use_markup = true
     };
 
+    highlight_match.connect((pattern) => {
+      highlight_label( label, image_item.description, pattern );
+    });
+
     return( label );
 
   }

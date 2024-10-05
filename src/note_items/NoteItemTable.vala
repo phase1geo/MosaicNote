@@ -420,13 +420,16 @@ public class NoteItemTable : NoteItem {
 
   //-------------------------------------------------------------
 	// Used for string searching
-	public override bool search( string str ) {
+	public override bool search( string pattern ) {
+		if( description.contains( pattern ) ) {
+			return( true );
+		}
 		bool[] check_cols = {};
 		for( int i=0; i<columns(); i++ ) {
       check_cols += (_columns.index( i ).data_type == TableColumnType.TEXT);
 		}
 		for( int i=0; i<rows(); i++ ) {
-			if( get_row( i ).search( str, check_cols ) ) {
+			if( get_row( i ).search( pattern, check_cols ) ) {
 				return( true );
 			}
 		}

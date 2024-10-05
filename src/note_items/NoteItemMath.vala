@@ -52,6 +52,13 @@ public class NoteItemMath : NoteItem {
 	}
 
   //-------------------------------------------------------------
+  // Searches the description and math expression for the given
+  // search string.
+  public override bool search( string pattern ) {
+    return( description.contains( pattern ) || base.search( pattern ) );
+  }
+
+  //-------------------------------------------------------------
 	// Converts the content to markdown text
 	public override string to_markdown( NotebookTree? notebooks, bool pandoc ) {
     if( (content != "") && FileUtils.test( get_resource_filename(), FileTest.EXISTS ) ) {

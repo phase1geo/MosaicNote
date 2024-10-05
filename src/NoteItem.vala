@@ -308,8 +308,8 @@ public class NoteItem : Object {
 
   //-------------------------------------------------------------
 	// Used for string searching
-	public virtual bool search( string str ) {
-    return( content.contains( str ) );
+	public virtual bool search( string pattern ) {
+    return( content.contains( pattern ) );
 	}
 
   //-------------------------------------------------------------

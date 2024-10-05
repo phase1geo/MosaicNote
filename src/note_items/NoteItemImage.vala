@@ -80,6 +80,12 @@ public class NoteItemImage : NoteItem {
   }
 
   //-------------------------------------------------------------
+  // Searches the image description for the given search pattern.
+  public override bool search( string pattern ) {
+    return( _description.contains( pattern ) );
+  }
+
+  //-------------------------------------------------------------
   // Returns the Markdown code for this item
   public override string to_markdown( NotebookTree? notebooks, bool pandoc ) {
   	var file = File.new_for_uri( uri );

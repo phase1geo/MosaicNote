@@ -60,6 +60,10 @@ public class GalleryItemUML : GalleryItem {
       use_markup = true
     };
 
+    highlight_match.connect((pattern) => {
+      highlight_label( label, uml_item.description, pattern );
+    });
+
     return( label );
 
   }
