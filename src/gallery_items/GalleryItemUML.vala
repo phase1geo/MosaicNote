@@ -73,6 +73,7 @@ public class GalleryItemUML : GalleryItem {
       return( image );
     } else {
       var text = create_text_pane( uml_item.content, "plantuml" );
+      text.add_css_class( "code-text" );
       return( text );
     }
 

@@ -74,6 +74,12 @@ public class NoteItemCode : NoteItem {
   }
 
   //-------------------------------------------------------------
+  // Performs search of either the description or the code itself.
+	public override bool search( string str ) {
+		return( _description.contains( str ) || base.search( str ) );
+	}
+
+  //-------------------------------------------------------------
   // Returns the Markdown version of this item
   public override string to_markdown( NotebookTree? notebooks, bool pandoc ) {
   	var str = "```%s\n%s\n```".printf( _lang, content );

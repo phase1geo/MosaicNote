@@ -28,8 +28,9 @@ public class GalleryItem : Box {
   private Stack      _stack;
 
   private const GLib.ActionEntry[] action_entries = {
-    { "action_view_note", action_view_note },
-    { "action_copy_pane", action_copy_pane, "i" },
+    { "action_view_note",   action_view_note },
+    { "action_copy_pane",   action_copy_pane, "i" },
+    { "action_export_pane", action_export_pane, "i" },
   };
 
   public MainWindow win {
@@ -108,9 +109,18 @@ public class GalleryItem : Box {
       copy_menu.append( _( "Copy %s" ).printf( pane_label( i ) ), "gpane.action_copy_pane(%d)".printf( i ) );
     }
 
+    var export_menu = new GLib.Menu();
+    for( int i=0; i<ExportType.NUM; i++ ) {
+      var etype = (ExportType)i;
+      export_menu.append( etype.label(), "gpane.action_export_pane(%d)".printf( i ) );
+    }
+    var exp_menu = new GLib.Menu();
+    exp_menu.append_submenu( _( "Export Item" ), export_menu );
+
     var menu = new GLib.Menu();
     menu.append_section( null, view_menu );
     menu.append_section( null, copy_menu );
+    menu.append_section( null, exp_menu );
 
     var menu_button = new MenuButton() {
       halign     = Align.END,
@@ -317,8 +327,17 @@ public class GalleryItem : Box {
   // Copies the specified pane to the clipboard.
   private void action_copy_pane( SimpleAction action, Variant? variant ) {
     if( variant != null ) {
-      int pane_index = variant.get_int32();
+      var pane_index = variant.get_int32();
       copy_pane_to_clipboard( pane_index );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Exports the specified pane to the clipboard.
+  private void action_export_pane( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      var etype = (ExportType)variant.get_int32();
+      Export.export_note_item( _win, etype, item );
     }
   }
 

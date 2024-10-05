@@ -65,6 +65,7 @@ public class GalleryItemCode : GalleryItem {
   protected override Widget? create_pane( int pane ) {
 
     var text = create_text_pane( code_item.content, code_item.lang );
+    text.add_css_class( "code-text" );
 
     return( text );
 
