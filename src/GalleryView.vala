@@ -129,7 +129,11 @@ public class GalleryView : Box {
     } else {
       _flowbox.set_filter_func((item) => {
         var gallery_item = (GalleryItem)item.child;
-        return( (_search.text == "") || gallery_item.item.search( _search.text ) );
+        if( (_search.text == "") || gallery_item.item.search( _search.text ) ) {
+          gallery_item.highlight_match( _search.text );
+          return( true );
+        }
+        return( false );
       });
     }
 

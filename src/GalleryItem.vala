@@ -46,6 +46,7 @@ public class GalleryItem : Box {
   }
 
   public signal void show_note( Note note );
+  public signal void highlight_match( string pattern );
 
   //-------------------------------------------------------------
   // Default constructor
@@ -201,6 +202,29 @@ public class GalleryItem : Box {
       text             = content
     };
 
+    buffer.create_tag( "highlight", "background", "yellow", null );
+
+    highlight_match.connect((pattern) => {
+
+      TextIter start, end;
+
+      // Clear highlights
+      buffer.get_start_iter( out start );
+      buffer.get_end_iter( out end );
+      buffer.remove_tag_by_name( "highlight", start, end );
+
+      // Add highlight if we get a match
+      var str        = buffer.text;
+      var start_byte = str.index_of( pattern );
+      if( start_byte != -1 ) {
+        var start_pos = str.slice( 0, start_byte ).char_count();
+        buffer.get_iter_at_offset( out start, start_pos );
+        buffer.get_iter_at_offset( out end,   (start_pos + pattern.char_count()) );
+        buffer.apply_tag_by_name( "highlight", start, end );
+      }
+
+    });
+
     if( lang_id != null ) {
       var lang_mgr = GtkSource.LanguageManager.get_default();
       var lang     = lang_mgr.get_language( lang_id );
@@ -276,6 +300,28 @@ public class GalleryItem : Box {
 
   }
 
+  //-------------------------------------------------------------
+  // Highlights a given label if its label contains the given string.
+  protected void highlight_label( Label label, string str, string pattern ) {
+    var start  = str.index_of( pattern );
+    var markup = str;
+    if( start != -1 ) {
+      var end    = pattern.length + start;
+      var first  = str.slice( 0, start );
+      var middle = str.slice( start, end );
+      var last   = str.substring( end );
+      markup = first + "<span background='yellow'>" + middle + "</span>" + last;
+    }
+    label.label = Utils.make_title( markup );
+  }
+
+  //-------------------------------------------------------------
+  // Highlights text that matches the specified pattern.
+  protected void highlight_text( TextView text, string pattern ) {
+
+    var str = text.buffer.text;
+
+  }
 
   //-------------------------------------------------------------
   // Generates the header that will be displayed above the pane.

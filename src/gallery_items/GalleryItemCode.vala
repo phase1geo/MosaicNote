@@ -56,6 +56,10 @@ public class GalleryItemCode : GalleryItem {
       use_markup = true
     };
 
+    highlight_match.connect((pattern) => {
+      highlight_label( label, code_item.description, pattern );
+    });
+
     return( label );
 
   }
