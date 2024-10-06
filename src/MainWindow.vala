@@ -81,6 +81,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private SmartNotebooks  _smart_notebooks;
   private FullTags        _full_tags;
   private Galleries       _galleries;
+  private ImageView       _image_viewer;
   private Themes          _themes;
   private SmartParser     _parser;
   private NoteHistory     _history;
@@ -370,15 +371,26 @@ public class MainWindow : Gtk.ApplicationWindow {
     };
 
     _gallery_view = new GalleryView( this );
+    _image_viewer = new ImageView( this );
 
     _gallery_view.show_note.connect((note) => {
       _sidebar.select_notebook( note.notebook );
       _notes.select_note( note.id, true );
     });
 
+    _gallery_view.show_images.connect((images, index) => {
+      _image_viewer.populate( images, index );
+      _view_stack.visible_child_name = "imageview";
+    });
+
+    _image_viewer.viewer_closed.connect(() => {
+      _view_stack.visible_child_name = "gallery";
+    });
+
     _view_stack = new Stack();
     _view_stack.add_named( _notes_pw,     "notes" );
     _view_stack.add_named( _gallery_view, "gallery" );
+    _view_stack.add_named( _image_viewer, "imageview" );
     _view_stack.visible_child_name = "notes";
 
     _sidebar_pw = new Paned( Orientation.HORIZONTAL ) {

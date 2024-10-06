@@ -46,6 +46,7 @@ public class GalleryItem : Box {
   }
 
   public signal void show_note( Note note );
+  public signal void show_image();
   public signal void highlight_match( string pattern );
 
   //-------------------------------------------------------------
@@ -277,6 +278,8 @@ public class GalleryItem : Box {
       actions = Gdk.DragAction.COPY
     };
 
+    var image_click = new GestureClick();
+
     var image = new Picture() {
       halign        = Align.FILL,
       valign        = Align.FILL,
@@ -288,12 +291,19 @@ public class GalleryItem : Box {
     };
 
     image.add_controller( image_drag );
+    image.add_controller( image_click );
 
     image_drag.prepare.connect((d) => {
       var val = Value( typeof(GLib.File) );
       val = image.file;
       var cp = new Gdk.ContentProvider.for_value( val );
       return( cp );
+    });
+
+    image_click.pressed.connect((n_press, x, y) => {
+      if( n_press == 1 ) {
+        show_image();
+      }
     });
 
     return( image );

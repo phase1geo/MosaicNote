@@ -10,6 +10,7 @@ sources += files(
     'Gallery.vala',
     'GalleryItem.vala',
     'GalleryView.vala',
+    'ImageView.vala',
     'Import.vala',
     'MainWindow.vala',
     'MarkdownFuncs.vala',

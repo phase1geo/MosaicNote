@@ -27,7 +27,10 @@ public class GalleryView : Box {
   private SearchEntry _search;
   private FlowBox     _flowbox;
 
+  private Array<NoteItem> _items;
+
   public signal void show_note( Note note );
+  public signal void show_images( Array<NoteItem> images, int index );
 
   //-------------------------------------------------------------
   // Default constructor
@@ -90,7 +93,9 @@ public class GalleryView : Box {
 
   //-------------------------------------------------------------
   // Creates a pane to display the given note item within.
-  private GalleryItem? make_pane( NoteItem item ) {
+  private GalleryItem? make_pane( int index ) {
+
+    var item = _items.index( index );
 
     GalleryItem pane;
     switch( item.item_type ) {
@@ -105,6 +110,10 @@ public class GalleryView : Box {
       show_note( note );
     });
 
+    pane.show_image.connect(() => {
+      show_images( _items, index );
+    });
+
     return( pane );
 
   }
@@ -114,13 +123,13 @@ public class GalleryView : Box {
   // each stored note item.
   public void populate( Gallery gallery ) {
 
-    var items = new Array<NoteItem>();
-    gallery.get_note_items( items );
+    _items = new Array<NoteItem>();
+    gallery.get_note_items( _items );
 
     _flowbox.remove_all();
 
-    for( int i=0; i<items.length; i++ ) {
-      var item = make_pane( items.index( i ) );
+    for( int i=0; i<_items.length; i++ ) {
+      var item = make_pane( i );
       if( item != null ) {
         _flowbox.append( item );
       }
