@@ -83,6 +83,19 @@ public class NoteItemPaneImage : NoteItemPane {
       }
     });
 
+    var open = new Button.from_icon_name( "image-x-generic-symbolic" ) {
+      halign       = Align.END,
+      tooltip_text = _( "Change Image" )
+    };
+
+    open.clicked.connect(() => {
+      image_dialog( image_item );
+    });
+
+    var box = new Box( Orientation.HORIZONTAL, 5 );
+    box.append( entry );
+    box.append( open );
+
     save.connect(() => {
       var text = (entry.text == default_text) ? "" : entry.text;
       if( image_item.description != text ) {
@@ -100,7 +113,7 @@ public class NoteItemPaneImage : NoteItemPane {
       }
     });
 
-    return( entry );
+    return( box );
 
   }
 
@@ -159,7 +172,7 @@ public class NoteItemPaneImage : NoteItemPane {
       if( n_press == 1 ) {
         _image.grab_focus();
       } else if( n_press == 2 ) {
-        image_dialog( image_item );
+        show_image();
       }
     });
 

@@ -75,6 +75,7 @@ public class NoteItemPane : Box {
   public signal void move_item( bool up, bool record_undo );
   public signal void set_as_current( string msg = "" );
   public signal void note_link_clicked( string link );
+  public signal void show_image();
 
   //-------------------------------------------------------------
   // Saves all of the item data to the store item in preparation

@@ -37,6 +37,7 @@ public class NoteItemPanes : Box {
   public signal void item_selected( NoteItemPane pane );
   public signal void note_link_clicked( string link );
   public signal void see( int y, int height );
+  public signal void show_images( Array<NoteItem> items, int index );
 
   public signal void save();
 
@@ -231,6 +232,11 @@ public class NoteItemPanes : Box {
 
     pane.note_link_clicked.connect((link) => {
       note_link_clicked( link );
+    });
+
+    pane.show_image.connect(() => {
+      // FOOBAR - Get all of the note items within this note of the matching type
+      show_images( _current_item );
     });
 
     save.connect(() => {
