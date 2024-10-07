@@ -235,8 +235,9 @@ public class NoteItemPanes : Box {
     });
 
     pane.show_image.connect(() => {
-      // FOOBAR - Get all of the note items within this note of the matching type
-      show_images( _current_item );
+      var items = new Array<NoteItem>();
+      items.append_val( item );
+      show_images( items, _current_item );
     });
 
     save.connect(() => {

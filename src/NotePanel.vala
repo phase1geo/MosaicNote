@@ -29,6 +29,7 @@ public class NotePanel : Box {
   private MainWindow _win;
   private Stack      _stack;
   private SearchBox  _search;
+  private ImageView  _image_viewer;
 
   private TagBox          _tags;
   private DropDown        _item_selector;
@@ -112,9 +113,15 @@ public class NotePanel : Box {
       valign       = Align.FILL
     };
 
+    _image_viewer = new ImageView( win );
+    _image_viewer.viewer_closed.connect(() => {
+      _stack.visible_child_name = "note";
+    });
+
     _stack.add_named( create_blank_ui(),  "blank" );
     _stack.add_named( create_note_ui(),   "note" );
     _stack.add_named( create_search_ui(), "search" );
+    _stack.add_named( _image_viewer,      "imageview" );
     _stack.visible_child_name = "blank";
 
     append( _stack );
@@ -368,6 +375,10 @@ public class NotePanel : Box {
     });
     _content.note_link_clicked.connect((link) => {
       note_link_clicked( link, _note );
+    });
+    _content.show_images.connect((items, index) => {
+      _image_viewer.populate( items, index );
+      _stack.visible_child_name = "imageview";
     });
 
     var references = create_references();
