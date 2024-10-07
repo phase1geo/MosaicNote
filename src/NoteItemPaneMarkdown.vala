@@ -72,9 +72,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   //-------------------------------------------------------------
   // Adds keyboard shortcuts for the menu actions
   private void add_keyboard_shortcuts( Gtk.Application app ) {
-
     app.set_accels_for_action( "markdown.action_toggle_task", { "<Control>d" } );
-
   }
 
   //-------------------------------------------------------------
@@ -449,6 +447,99 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     if( check_for_note_link( buffer, ref iter, str ) ) {
       return;
     }
+  }
+
+  //-------------------------------------------------------------
+  // Adds an optional description entry field for the code.
+  protected override Widget create_header1() {
+
+    var bold = new Button() {
+      has_frame = false,
+      tooltip_markup = Utils.tooltip_with_accel( _( "Bold" ), "<Control>b" ),
+      child = create_label( " <b>B</b> " )
+    };
+    bold.clicked.connect( insert_bold );
+
+    var italics = new Button() {
+      has_frame = false,
+      tooltip_markup = Utils.tooltip_with_accel( _( "Italic" ), "<Control>i" ),
+      child = create_label( " <i>I</i> " )
+    };
+    italics.clicked.connect( insert_italics );
+
+    var strike = new Button() {
+      has_frame = false,
+      tooltip_text = _( "Strikethrough" ),
+      child = create_label( " <s>S</s>" )
+    };
+    strike.clicked.connect( insert_strike );
+
+    var code = new Button() {
+      has_frame = false,
+      tooltip_text = _( "Code Block" ),
+      child = create_label( "{ }" )
+    };
+    code.clicked.connect( insert_code );
+
+    var link = new Button.from_icon_name( "insert-link-symbolic" ) {
+      has_frame = false,
+      tooltip_text = _( "Add Link" )
+    };
+    link.clicked.connect( insert_link );
+
+    var box = new Box( Orientation.HORIZONTAL, 5 );
+    box.append( bold );
+    box.append( italics );
+    box.append( strike );
+    box.append( code );
+    box.append( link );
+
+    return( box );
+
+  }
+
+  //-------------------------------------------------------------
+  // Creates a button label.
+  private Widget create_label( string markup ) {
+    var lbl = new Label( "<span size=\"large\">" + markup + "</span>" ) {
+      use_markup = true
+    };
+    return( lbl );
+  }
+
+  //-------------------------------------------------------------
+  // Adds bold Markdown syntax around currently selected code.
+  private void insert_bold() {
+    MarkdownFuncs.insert_bold_text( _text, _text.buffer );
+    _text.grab_focus();
+  }
+
+  //-------------------------------------------------------------
+  // Adds italic Markdown syntax around currently selected code.
+  private void insert_italics() {
+    MarkdownFuncs.insert_italicize_text( _text, _text.buffer );
+    _text.grab_focus();
+  }
+
+  //-------------------------------------------------------------
+  // Adds strikethrough Markdown syntax around currently selected code.
+  private void insert_strike() {
+    MarkdownFuncs.insert_strikethrough_text( _text, _text.buffer );
+    _text.grab_focus();
+  }
+
+  //-------------------------------------------------------------
+  // Adds code Markdown syntax around currently selected code.
+  private void insert_code() {
+    MarkdownFuncs.insert_code_text( _text, _text.buffer );
+    _text.grab_focus();
+  }
+
+  //-------------------------------------------------------------
+  // Adds link Markdown syntax around currently selected code.
+  private void insert_link() {
+    MarkdownFuncs.insert_link_text( _text, _text.buffer );
+    _text.grab_focus();
   }
 
   //-------------------------------------------------------------

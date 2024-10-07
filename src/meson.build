@@ -47,9 +47,6 @@ sources += files(
     'Tags.vala',
     'TextBundle.vala',
     'Themes.vala',
-    'ToolbarCode.vala',
-    'ToolbarItem.vala',
-    'ToolbarMarkdown.vala',
     'UndoBuffer.vala',
     'UndoItem.vala',
     'Utils.vala'

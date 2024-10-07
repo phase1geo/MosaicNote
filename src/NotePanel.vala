@@ -309,21 +309,6 @@ public class NotePanel : Box {
       _content.set_current_item_to_type( (NoteItemType)_item_selector.get_selected() );
     });
 
-    // Create the toolbar stack for each item type
-    _toolbar_stack = new Stack() {
-      halign = Align.FILL,
-      hexpand = true
-    };
-
-    _toolbar_stack.add_named( new ToolbarItem(), "none" );
-
-    for( int i=0; i<NoteItemType.NUM; i++ ) {
-      var type = (NoteItemType)i;
-      var toolbar = type.create_toolbar();
-      _toolbar_stack.add_named( toolbar, type.to_string() );
-    }
-    _toolbar_stack.visible_child_name = "none";
-
     var created_lbl = new Label( _( "Created:" ) );
     _created = new Label( "" );
     _created_box = new Box( Orientation.HORIZONTAL, 5 ) {
@@ -369,9 +354,6 @@ public class NotePanel : Box {
     };
     _content.item_removed.connect((pane) => {
       note_item_removed( pane.item );
-    });
-    _content.item_selected.connect((pane) => {
-      set_toolbar_for_pane( pane );
     });
     _content.note_link_clicked.connect((link) => {
       note_link_clicked( link, _note );
@@ -620,24 +602,6 @@ public class NotePanel : Box {
   public void update_tags() {
     _tags.clear_tags();
     _tags.add_tags( _note.tags );
-  }
-
-  //-------------------------------------------------------------
-  // Displays the associated toolbar for the specified pane.  If pane
-  // is null, displays the default (blank) toolbar.
-  private void set_toolbar_for_pane( NoteItemPane? pane ) {
-    if( pane != null ) {
-      var toolbar = (ToolbarItem)_toolbar_stack.get_child_by_name( pane.item.item_type.to_string() );
-      _item_selector.sensitive = true;
-      toolbar.text = pane.get_text();
-      toolbar.item = pane.item;
-      _ignore = (_item_selector.selected != pane.item.item_type);
-      _item_selector.selected = pane.item.item_type;
-      _toolbar_stack.visible_child_name = pane.item.item_type.to_string();
-    } else {
-      _item_selector.sensitive = false;
-      _toolbar_stack.visible_child_name = "none";
-    }
   }
 
   //-------------------------------------------------------------

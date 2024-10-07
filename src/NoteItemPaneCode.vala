@@ -23,6 +23,8 @@ using Gtk;
 
 public class NoteItemPaneCode : NoteItemPane {
 
+  private static string[] _supported_langs = {};
+
   private Label          _h2_label;
   private GtkSource.View _text;
 
@@ -32,22 +34,34 @@ public class NoteItemPaneCode : NoteItemPane {
     }
   }
 
+  //-------------------------------------------------------------
 	// Default constructor
 	public NoteItemPaneCode( MainWindow win, NoteItem item, SpellChecker? spell ) {
     base( win, item, spell );
+    if( _supported_langs.length == 0 ) {
+      var lang_mgr = GtkSource.LanguageManager.get_default();
+      foreach( var lang in lang_mgr.get_language_ids() ) {
+        if( lang != "mosaic-markdown" ) {
+          _supported_langs += lang;
+        }
+      }
+    }
   }
 
+  //-------------------------------------------------------------
   // Returns the text associated with this panel item
   public override GtkSource.View? get_text() {
     return( _text );
   }
 
+  //-------------------------------------------------------------
   // Grabs the focus of the note item at the specified position.
   public override void grab_item_focus( TextCursorPlacement placement ) {
     place_cursor( _text, placement );
     _text.grab_focus();
   }
 
+  //-------------------------------------------------------------
   // Returns any CSS data that this pane requires
   public static string get_css_data() {
     var font_size = MosaicNote.settings.get_int( "editor-font-size" );
@@ -65,6 +79,21 @@ public class NoteItemPaneCode : NoteItemPane {
   protected override Widget create_header1() {
 
     var default_text = _( "Description (Optional)" );
+
+    var strlist = new StringList( _supported_langs );
+    var strexpr = new PropertyExpression( typeof(StringObject), null, "string" );
+    var lang_dd = new DropDown( strlist, strexpr ) {
+      enable_search = true,
+      search_match_mode = StringFilterMatchMode.SUBSTRING
+    };
+
+    lang_dd.notify["selected"].connect(() => {
+      var mgr  = GtkSource.LanguageManager.get_default();
+      var lang = mgr.get_language( _supported_langs[lang_dd.selected] );
+      var buffer = (GtkSource.Buffer)_text.buffer;
+      buffer.set_language( lang );
+      code_item.lang = _supported_langs[lang_dd.selected];
+    });
 
     var entry = new EditableLabel( (code_item.description == "") ? default_text : code_item.description ) {
       halign = Align.FILL,
@@ -99,7 +128,11 @@ public class NoteItemPaneCode : NoteItemPane {
       }
     });
 
-    return( entry );
+    var box = new Box( Orientation.HORIZONTAL, 5 );
+    box.append( lang_dd );
+    box.append( entry );
+
+    return( box );
 
   }
 

@@ -173,21 +173,6 @@ public enum NoteItemType {
 	}
 
   //-------------------------------------------------------------
-  // Returns the toolbar object to use for the note item.
-  public ToolbarItem create_toolbar() {
-    switch( this ) {
-      case MARKDOWN :  return( new ToolbarMarkdown() );
-      case CODE     :  return( new ToolbarCode() );
-      case IMAGE    :  return( new ToolbarItem() );
-      case UML      :  return( new ToolbarItem() );
-      case MATH     :  return( new ToolbarItem() );
-      case TABLE    :  return( new ToolbarItem() );
-      case ASSETS   :  return( new ToolbarItem() );
-      default       :  assert_not_reached();
-    }
-  }
-
-  //-------------------------------------------------------------
   // Initializes the given text widget options based on the
   // note type.
 	public void initialize_text( GtkSource.View text ) {
