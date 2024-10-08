@@ -618,7 +618,27 @@ public class NoteItemPane : Box {
       }
     });
 
+    string[] item_types = {};
+    for( int i=0; i<NoteItemType.NUM; i++ ) {
+      var itype = (NoteItemType)i;
+      item_types += itype.label();
+    }
+
+    var item_type = new DropDown.from_strings( item_types ) {
+      halign     = Align.START,
+      show_arrow = true,
+      selected   = (int)item.item_type
+    };
+
+    item_type.notify["selected"].connect(() => {
+      change_item( (NoteItemType)item_type.selected );
+    });
+
     _header1 = create_header1();
+
+    var h1_box = new Box( Orientation.HORIZONTAL, 5 );
+    h1_box.append( item_type );
+    h1_box.append( _header1 );
 
     var header2 = create_header2();
     click_to_current( header2 );
@@ -627,7 +647,7 @@ public class NoteItemPane : Box {
       halign = Align.FILL,
       hexpand = true
     };
-    _stack.add_named( _header1, "selected" );
+    _stack.add_named( h1_box,  "selected" );
     _stack.add_named( header2, "unselected" );
 
     var box = new Box( Orientation.HORIZONTAL, 5 ) {

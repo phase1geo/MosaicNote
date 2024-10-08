@@ -32,12 +32,9 @@ public class NotePanel : Box {
   private ImageView  _image_viewer;
 
   private TagBox          _tags;
-  private DropDown        _item_selector;
   private Button          _favorite;
   private Button          _locked;
   private Entry           _title;
-  private Box             _created_box;
-  private Label           _created;
   private NoteItemPanes   _content;
   private Button          _hist_prev;
   private Button          _hist_next;
@@ -287,43 +284,6 @@ public class NotePanel : Box {
 
     handle_nonitem_focus( tbox );
 
-    string[] item_types = {};
-    for( int i=0; i<NoteItemType.NUM; i++ ) {
-      var type = (NoteItemType)i;
-      item_types += type.label();
-    }
-
-    _item_selector = new DropDown.from_strings( item_types ) {
-      halign = Align.START,
-      show_arrow = true,
-      selected = 0,
-      sensitive = false
-    };
-
-    _item_selector.notify["selected"].connect(() => {
-      if( _ignore ) {
-        _ignore = false;
-        return;
-      }
-      _content.set_current_item_to_type( (NoteItemType)_item_selector.get_selected() );
-    });
-
-    var created_lbl = new Label( _( "Created:" ) );
-    _created = new Label( "" );
-    _created_box = new Box( Orientation.HORIZONTAL, 5 ) {
-      halign = Align.END,
-      hexpand = true,
-      visible = false
-    };
-    _created_box.append( created_lbl );
-    _created_box.append( _created );
-
-    var hbox = new Box( Orientation.HORIZONTAL, 10 ) {
-      halign = Align.FILL
-    };
-    hbox.append( _item_selector );
-    hbox.append( _created_box );
-
     _title = new Entry() {
       has_frame = false,
       placeholder_text = _( "Title (Optional)" ),
@@ -388,7 +348,6 @@ public class NotePanel : Box {
 
     var box = new Box( Orientation.VERTICAL, 5 );
     box.append( tbox );
-    box.append( hbox );
     box.append( separator1 );
     box.append( sw );
 
@@ -480,7 +439,6 @@ public class NotePanel : Box {
     _tags.sensitive          = !lock;
     _title.parent.sensitive  = !lock;  // Covers title and content areas
     _favorite.sensitive      = !lock;
-    _item_selector.sensitive = !lock;
 
   }
 
@@ -530,7 +488,6 @@ public class NotePanel : Box {
     w.add_controller( focus );
 
     focus.enter.connect(() => {
-      _item_selector.sensitive = false;
       _content.clear_current_item();
     });
 
@@ -556,8 +513,6 @@ public class NotePanel : Box {
 
     if( _note != null ) {
 
-      _created_box.visible = true;
-      _created.label = "%s | #%d".printf( note.created.format( "%b %e, %Y" ), note.id );
       _title.text    = note.title;
       _tags.clear_tags();
       _tags.add_tags( note.tags );
