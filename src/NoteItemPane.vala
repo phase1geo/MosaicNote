@@ -712,6 +712,8 @@ public class NoteItemPane : Box {
     append( cbox );
     append( rbox );
 
+    click_to_current( this );
+
   }
 
   //-------------------------------------------------------------
@@ -719,7 +721,7 @@ public class NoteItemPane : Box {
   // become the current pane when it is clicked.
   protected void click_to_current( Widget widget ) {
     var click = new GestureClick();
-    click.pressed.connect((n_press, x, y) => {
+    click.released.connect((n_press, x, y) => {
       if( !has_css_class( "active-item" ) ) {
         set_as_current();
         grab_item_focus( TextCursorPlacement.NO_CHANGE );
