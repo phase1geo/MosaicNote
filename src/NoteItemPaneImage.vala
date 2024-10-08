@@ -85,6 +85,7 @@ public class NoteItemPaneImage : NoteItemPane {
 
     var open = new Button.from_icon_name( "image-x-generic-symbolic" ) {
       halign       = Align.END,
+      has_frame    = false,
       tooltip_text = _( "Change Image" )
     };
 

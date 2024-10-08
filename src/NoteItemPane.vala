@@ -107,7 +107,7 @@ public class NoteItemPane : Box {
     // If we are being set as the current item, make sure that we are drawn as the current item
     set_as_current.connect((msg) => {
       add_css_class( "active-item" );
-      _stack.visible_child_name = "selected";
+      _stack.visible_child_name = item.expanded ? "selected" : "unselected";
       _stack.visible = true;
     });
 
@@ -640,33 +640,42 @@ public class NoteItemPane : Box {
     h1_box.append( item_type );
     h1_box.append( _header1 );
 
+    var type_label = new Label( Utils.make_title( item.item_type.label() ) ) {
+      use_markup = true,
+      visible    = !item.expanded
+    };
+
     var header2 = create_header2();
     click_to_current( header2 );
+
+    var h2_box_h = new Box( Orientation.HORIZONTAL, 5 );
+    h2_box_h.append( type_label );
+    h2_box_h.append( header2 );
+
+    var sep = new Separator( Orientation.HORIZONTAL ) {
+      opacity = item.expanded ? 1.0 : 0.0
+    };
+
+    var h2_box = new Box( Orientation.VERTICAL, 5 );
+    h2_box.append( sep );
+    h2_box.append( h2_box_h );
 
     _stack = new Stack() {
       halign = Align.FILL,
       hexpand = true
     };
-    _stack.add_named( h1_box,  "selected" );
-    _stack.add_named( header2, "unselected" );
+    _stack.add_named( h1_box, "selected" );
+    _stack.add_named( h2_box, "unselected" );
+    _stack.visible_child_name = item.expanded ? "selected" : "unselected";
 
-    var box = new Box( Orientation.HORIZONTAL, 5 ) {
+    var header = new Box( Orientation.HORIZONTAL, 5 ) {
       halign        = Align.FILL,
       margin_start  = 5,
       margin_end    = 5,
       margin_top    = 5,
       margin_bottom = 5
     };
-    box.append( _stack );
-
-    var sep = new Separator( Orientation.HORIZONTAL );
-
-    var header = new Box( Orientation.VERTICAL, 0 ) {
-      halign = Align.FILL
-    };
-
-    header.append( sep );
-    header.append( box );
+    header.append( _stack );
 
     var pane = create_pane();
     click_to_current( pane );
@@ -675,6 +684,8 @@ public class NoteItemPane : Box {
     expand.clicked.connect(() => {
       item.expanded = !item.expanded;
       pane.visible  = item.expanded;
+      sep.opacity   = item.expanded ? 1.0 : 0.0;
+      type_label.visible = !item.expanded;
       expand.label  = item.expanded ? "\u23f7" : "\u23f5";
       _stack.visible_child_name = item.expanded ? "selected" : "unselected";
     });

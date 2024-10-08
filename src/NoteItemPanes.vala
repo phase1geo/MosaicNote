@@ -319,6 +319,11 @@ public class NoteItemPanes : Box {
       add_item( _note.get_item( i ) );
     }
 
+    // Make sure that the first item has the focus
+    if( _note.size() > 0 ) {
+      get_pane( 0 ).grab_item_focus( TextCursorPlacement.START );
+    }
+
   }
 
   //-------------------------------------------------------------
