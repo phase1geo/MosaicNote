@@ -33,7 +33,6 @@ public class NotePanel : Box {
 
   private TagBox          _tags;
   private DropDown        _item_selector;
-  private Stack           _toolbar_stack;
   private Button          _favorite;
   private Button          _locked;
   private Entry           _title;
@@ -323,7 +322,6 @@ public class NotePanel : Box {
       halign = Align.FILL
     };
     hbox.append( _item_selector );
-    hbox.append( _toolbar_stack );
     hbox.append( _created_box );
 
     _title = new Entry() {
@@ -483,7 +481,6 @@ public class NotePanel : Box {
     _title.parent.sensitive  = !lock;  // Covers title and content areas
     _favorite.sensitive      = !lock;
     _item_selector.sensitive = !lock;
-    _toolbar_stack.sensitive = !lock;
 
   }
 
@@ -535,7 +532,6 @@ public class NotePanel : Box {
     focus.enter.connect(() => {
       _item_selector.sensitive = false;
       _content.clear_current_item();
-      _toolbar_stack.visible_child_name = "none";
     });
 
   }
