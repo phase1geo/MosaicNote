@@ -55,6 +55,9 @@ public class MarkdownFuncs {
         <snippet _name="md-strike" _description="Insert strikethrough text" trigger="%md-strike%">
           <text languages="markdown"><![CDATA[~~${1}~~$0]]></text>
         </snippet>
+        <snippet _name="md-hilite" _description="Insert highlighted text" trigger="%md-hilite%">
+          <text languages="markdown"><![CDATA[==${1}==$0]]></text>
+        </snippet>
         <snippet _name="md-monospace" _description="Insert monospaced text" trigger="%md-mono%">
           <text languages="markdown"><![CDATA[`${1}`$0]]></text>
         </snippet>
@@ -343,9 +346,16 @@ public class MarkdownFuncs {
     add_text_markup( view, buffer, "_", "_", "%md-italic%" );
   }
 
-  /* Adds Markdown strikethrough syntax around selected text */
+  //-------------------------------------------------------------
+  // Adds Markdown strikethrough syntax around selected text
   public static void insert_strikethrough_text( GtkSource.View view, TextBuffer buffer ) {
     add_text_markup( view, buffer, "~~", "~~", "%md-strike%" );
+  }
+
+  //-------------------------------------------------------------
+  // Adds Markdown highlight syntax around selected text
+  public static void insert_highlight_text( GtkSource.View view, TextBuffer buffer ) {
+    add_text_markup( view, buffer, "==", "==", "%md-hilite%" );
   }
 
   /* Adds Markdown code syntax around selected text */

@@ -31,28 +31,29 @@
   </metadata>
 
   <styles>
-    <style id="header"  name="Header"  map-to="def:heading"/>
-    <style id="header1" name="Header1" map-to="def:heading"/>
-    <style id="header2" name="Header2" map-to="def:heading"/>
-    <style id="header3" name="Header3" map-to="def:heading"/>
-    <style id="header4" name="Header4" map-to="def:heading"/>
-    <style id="header5" name="Header5" map-to="def:heading"/>
-    <style id="header6" name="Header6" map-to="def:heading"/>
-    <style id="horizontal-rule" name="Horizontal Rule" map-to="def:thematic-break"/>
-    <style id="list-marker" name="List Marker" map-to="def:list-marker"/>
-    <style id="code-span" name="Code Span" map-to="def:inline-code"/>
-    <style id="code-block" name="Code Block" map-to="def:preformatted-section"/>
+    <style id="header"            name="Header"            map-to="def:heading"/>
+    <style id="header1"           name="Header1"           map-to="def:heading"/>
+    <style id="header2"           name="Header2"           map-to="def:heading"/>
+    <style id="header3"           name="Header3"           map-to="def:heading"/>
+    <style id="header4"           name="Header4"           map-to="def:heading"/>
+    <style id="header5"           name="Header5"           map-to="def:heading"/>
+    <style id="header6"           name="Header6"           map-to="def:heading"/>
+    <style id="horizontal-rule"   name="Horizontal Rule"   map-to="def:thematic-break"/>
+    <style id="list-marker"       name="List Marker"       map-to="def:list-marker"/>
+    <style id="code-span"         name="Code Span"         map-to="def:inline-code"/>
+    <style id="code-block"        name="Code Block"        map-to="def:preformatted-section"/>
     <style id="blockquote-marker" name="Blockquote Marker" map-to="def:shebang"/>
-    <style id="url" name="URL" map-to="def:link-destination"/>
-    <style id="link-text" name="Link Text" map-to="def:link-text"/>
-    <style id="label" name="Label" map-to="def:preprocessor"/>
-    <style id="attribute-value" name="Attribute Value" map-to="def:constant"/>
-    <style id="image-marker" name="Image Marker" map-to="def:link-symbol"/>
-    <style id="emphasis" name="Emphasis" map-to="def:emphasis"/>
-    <style id="strong-emphasis" name="Strong Emphasis" map-to="def:strong-emphasis"/>
-    <style id="strikethrough" name="Strikethrough" map-to="def:deletion"/>
-    <style id="backslash-escape" name="Backslash Escape" map-to="def:special-char"/>
-    <style id="line-break" name="Line Break" map-to="def:note"/>
+    <style id="url"               name="URL"               map-to="def:link-destination"/>
+    <style id="link-text"         name="Link Text"         map-to="def:link-text"/>
+    <style id="label"             name="Label"             map-to="def:preprocessor"/>
+    <style id="attribute-value"   name="Attribute Value"   map-to="def:constant"/>
+    <style id="image-marker"      name="Image Marker"      map-to="def:link-symbol"/>
+    <style id="emphasis"          name="Emphasis"          map-to="def:emphasis"/>
+    <style id="strong-emphasis"   name="Strong Emphasis"   map-to="def:strong-emphasis"/>
+    <style id="strikethrough"     name="Strikethrough"     map-to="def:deletion"/>
+    <style id="highlight"         name="Highlight"         map-to="def:note"/>
+    <style id="backslash-escape"  name="Backslash Escape"  map-to="def:special-char"/>
+    <style id="line-break"        name="Line Break"        map-to="def:note"/>
   </styles>
 
   <definitions>
@@ -214,6 +215,7 @@
         <context ref="underscores-strong-emphasis"/>
         <context ref="asterisks-strong-emphasis"/>
         <context ref="strikethrough"/>
+        <context ref="highlight"/>
         <context ref="backslash-escape"/>
         <context ref="line-break"/>
       </include>
@@ -398,6 +400,17 @@
       </include>
     </context>
 
+    <!-- Examples:
+         Lorem ==highlight== sit amet.
+    -->
+    <context id="highlight">
+      <match>==([^= \t].*?(?&lt;!\\|\=| |\t))==</match>
+
+      <include>
+        <context sub-pattern="1" style-ref="highlight"/>
+      </include>
+    </context>
+
     <context id="backslash-escape" style-ref="backslash-escape">
       <match>\\[\\`*_{}\[\]()#+-.!]</match>
     </context>
@@ -441,6 +454,7 @@
         <context ref="underscores-strong-emphasis"/>
         <context ref="asterisks-strong-emphasis"/>
         <context ref="strikethrough"/>
+        <context ref="highlight"/>
         <context ref="backslash-escape"/>
         <context ref="line-break"/>
       </include>

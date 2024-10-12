@@ -243,7 +243,7 @@ public class Export {
       }
 
       command += "-f";
-      command += "commonmark";
+      command += "markdown+mark";
       command += "--embed-resources";
       command += "--standalone";
       command += "-o";
