@@ -243,6 +243,9 @@ public class Export {
       }
 
       command += "-f";
+
+      // Added extensions:
+      // +mark = Adds support for highlighting text surrounded by "=="
       command += "markdown+mark";
       command += "--embed-resources";
       command += "--standalone";

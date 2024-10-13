@@ -502,8 +502,8 @@ public class MainWindow : Gtk.ApplicationWindow {
     app.set_accels_for_action( "win.action_shortcuts",   { "<Control>question" } );
     app.set_accels_for_action( "win.action_preferences", { "<Control>comma" } );
     app.set_accels_for_action( "win.action_search",      { "<Control>f" } );
-    app.set_accels_for_action( "win.action_next_panels", { "<Control>b" } );
-    app.set_accels_for_action( "win.action_prev_panels", { "<Control><Shift>b" } );
+    app.set_accels_for_action( "win.action_next_panels", { "<Control>k" } );
+    app.set_accels_for_action( "win.action_prev_panels", { "<Control><Shift>k" } );
     app.set_accels_for_action( "win.action_undo",        { "<Control>z" } );
     app.set_accels_for_action( "win.action_redo",        { "<Control><Shift>z" } );
 

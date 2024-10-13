@@ -35,7 +35,11 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   private int            _last_checked_line = -1;
 
   private const GLib.ActionEntry[] action_entries = {
-    { "action_toggle_task", action_toggle_task }
+    { "action_bold_text",      action_bold_text },
+    { "action_italicize_text", action_italicize_text },
+    { "action_strike_text",    action_strike_text },
+    { "action_highlight_text", action_highlight_text },
+    { "action_toggle_task",    action_toggle_task },
   };
 
   //-------------------------------------------------------------
@@ -60,11 +64,6 @@ public class NoteItemPaneMarkdown : NoteItemPane {
       _list_re = new Regex("""^(\s*)((([*+-])(\s*)(\[.\]))|(\d+)\.|(\[.\]))(\s+)""");
     } catch( RegexError e ) {}
 
-    /* Set the stage for menu actions */
-    var actions = new SimpleActionGroup();
-    actions.add_action_entries( action_entries, this );
-    insert_action_group( "markdown", actions );
-
     add_keyboard_shortcuts( win.application );
 
   }
@@ -72,7 +71,11 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   //-------------------------------------------------------------
   // Adds keyboard shortcuts for the menu actions
   private void add_keyboard_shortcuts( Gtk.Application app ) {
-    app.set_accels_for_action( "markdown.action_toggle_task", { "<Control>d" } );
+    app.set_accels_for_action( "markdown.action_bold_text",      { "<Control>b" } );
+    app.set_accels_for_action( "markdown.action_italicize_text", { "<Control>i" } );
+    app.set_accels_for_action( "markdown.action_strike_text",    { "<Control>asciitilde" } );
+    app.set_accels_for_action( "markdown.action_highlight_text", { "<Control>equal" } );
+    app.set_accels_for_action( "markdown.action_toggle_task",    { "<Control>d" } );
   }
 
   //-------------------------------------------------------------
@@ -92,10 +95,17 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   // Populates the extra menu of the text widget.
   public override void populate_extra_menu() {
 
+    var markup = new GLib.Menu();
+    markup.append( _( "Bold" ),          "markdown.action_bold_text" );
+    markup.append( _( "Italicize" ),     "markdown.action_italicize_text" );
+    markup.append( _( "Strikethrough" ), "markdown.action_strike_text" );
+    markup.append( _( "Highlight" ),     "markdown.action_highlight_text" );
+
     var task = new GLib.Menu();
     task.append( _( "Toggle Task" ), "markdown.action_toggle_task" );
 
     var extra = new GLib.Menu();
+    extra.append_section( null, markup );
     extra.append_section( null, task );
 
     _text.extra_menu = extra;
@@ -469,7 +479,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
     var strike = new Button() {
       has_frame = false,
-      tooltip_text = _( "Strikethrough" ),
+      tooltip_markup = Utils.tooltip_with_accel( _( "Strikethrough" ), "<Control>asciitilde" ),
       child = create_label( " <s>S</s>" )
     };
     strike.clicked.connect( insert_strike );
@@ -480,6 +490,13 @@ public class NoteItemPaneMarkdown : NoteItemPane {
       child = create_label( "{ }" )
     };
     code.clicked.connect( insert_code );
+
+    var hilite = new Button() {
+      has_frame = false,
+      tooltip_markup = Utils.tooltip_with_accel( _( "Highlight" ), "<Control>equal" ),
+      child = create_label( "<span background='#ffff00'> <b>H</b> </span>" )
+    };
+    hilite.clicked.connect( insert_highlight );
 
     var link = new Button.from_icon_name( "insert-link-symbolic" ) {
       has_frame = false,
@@ -492,6 +509,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     box.append( italics );
     box.append( strike );
     box.append( code );
+    box.append( hilite );
     box.append( link );
 
     return( box );
@@ -532,6 +550,13 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   // Adds code Markdown syntax around currently selected code.
   private void insert_code() {
     MarkdownFuncs.insert_code_text( _text, _text.buffer );
+    _text.grab_focus();
+  }
+
+  //-------------------------------------------------------------
+  // Adds code highlighting syntax around currently selected text.
+  private void insert_highlight() {
+    MarkdownFuncs.insert_highlight_text( _text, _text.buffer );
     _text.grab_focus();
   }
 
@@ -596,10 +621,45 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
     key.key_pressed.connect((keyval, keycode, state) => {
       var control = (bool)(state & Gdk.ModifierType.CONTROL_MASK);
+      var shift   = (bool)(state & Gdk.ModifierType.SHIFT_MASK);
       switch( keyval ) {
         case Gdk.Key.d :
           if( control ) {
             toggle_task();
+            return( true );
+          }
+          break;
+        case Gdk.Key.b :
+          if( control ) {
+            insert_bold();
+            return( true );
+          }
+          break;
+        case Gdk.Key.i :
+          if( control ) {
+            insert_italics();
+            return( true );
+          }
+          break;
+        case Gdk.Key.asciitilde :
+          if( control ) {
+            insert_strike();
+            return( true );
+          }
+          break;
+        case Gdk.Key.equal :
+          if( control ) {
+            insert_highlight();
+            return( true );
+          }
+          break;
+        case Gdk.Key.z :
+          if( control ) {
+            if( shift ) {
+              buffer.redo();
+            } else {
+              buffer.undo();
+            }
             return( true );
           }
           break;
@@ -609,8 +669,37 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
     handle_key_events( _text );
 
+    /* Set the stage for menu actions */
+    var actions = new SimpleActionGroup();
+    actions.add_action_entries( action_entries, _text );
+    insert_action_group( "markdown", actions );
+
     return( _text );
 
+  }
+
+  //-------------------------------------------------------------
+  // Emboldens selected text.
+  private void action_bold_text() {
+    insert_bold();
+  }
+
+  //-------------------------------------------------------------
+  // Italicizes selected text.
+  private void action_italicize_text() {
+    insert_italics();
+  }
+
+  //-------------------------------------------------------------
+  // Strikes through selected text.
+  private void action_strike_text() {
+    insert_strike();
+  }
+
+  //-------------------------------------------------------------
+  // Highlights selected text.
+  private void action_highlight_text() {
+    insert_highlight();
   }
 
   //-------------------------------------------------------------

@@ -600,7 +600,7 @@ public class MarkdownFuncs {
   public static void clear_markup( TextBuffer buffer ) {
 
     /* Remove the markup */
-    remove_markup( buffer, "(^#+\\s+|^\\s*(>\\s*)+|`+|\\*+|_{1,2}|~{2}|^-\\s+|^[0-9]+\\.\\s+|\\[[ xX]\\]\\s+|^\\s*[=-]+|!?\\[(.*?)\\]\\s*\\((.*?)\\))" );
+    remove_markup( buffer, "(^#+\\s+|^\\s*(>\\s*)+|`+|\\*+|_{1,2}|~{2}|={2}|^-\\s+|^[0-9]+\\.\\s+|\\[[ xX]\\]\\s+|^\\s*[=-]+|!?\\[(.*?)\\]\\s*\\((.*?)\\))" );
 
     /* Deselect text */
     TextIter cursor;
