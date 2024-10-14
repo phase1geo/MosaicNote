@@ -60,9 +60,11 @@ public class UndoBuffer : Object {
     if( undoable() ) {
       UndoItem item = _undo_buffer.index( _undo_buffer.length - 1 );
       item.undo( _win );
-      _undo_buffer.remove_index( _undo_buffer.length - 1 );
-      _redo_buffer.append_val( item );
-      buffer_changed( this );
+      if( item.undo_done( _win ) ) {
+        _undo_buffer.remove_index( _undo_buffer.length - 1 );
+        _redo_buffer.append_val( item );
+        buffer_changed( this );
+      }
     }
     output( "AFTER UNDO" );
   }
@@ -72,9 +74,11 @@ public class UndoBuffer : Object {
     if( redoable() ) {
       UndoItem item = _redo_buffer.index( _redo_buffer.length - 1 );
       item.redo( _win );
-      _redo_buffer.remove_index( _redo_buffer.length - 1 );
-      _undo_buffer.append_val( item );
-      buffer_changed( this );
+      if( item.redo_done( _win ) ) {
+        _redo_buffer.remove_index( _redo_buffer.length - 1 );
+        _undo_buffer.append_val( item );
+        buffer_changed( this );
+      }
     }
     output( "AFTER REDO" );
   }
@@ -93,11 +97,21 @@ public class UndoBuffer : Object {
 
   /* Adds a new undo item to the undo buffer.  Clears the redo buffer. */
   public void add_item( UndoItem item ) {
-    item.id = _current_id++;
-    _undo_buffer.append_val( item );
-    _redo_buffer.remove_range( 0, _redo_buffer.length );
-    buffer_changed( this );
-    output( "ITEM ADDED" );
+    if( !mergeable( item ) ) {
+      item.id = _current_id++;
+      _undo_buffer.append_val( item );
+      _redo_buffer.remove_range( 0, _redo_buffer.length );
+      buffer_changed( this );
+      output( "ITEM ADDED" );
+    }
+  }
+
+  private bool mergeable( UndoItem item ) {
+    if( _undo_buffer.length > 0 ) {
+      var last_undo = _undo_buffer.index( _undo_buffer.length - 1 );
+      return( last_undo.mergeable( item ) );
+    }
+    return( false );
   }
 
   /*

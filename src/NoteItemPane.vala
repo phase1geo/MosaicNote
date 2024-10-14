@@ -68,6 +68,7 @@ public class NoteItemPane : Box {
   }
   public NoteItemPane? prev_pane { get; set; default = null; }
   public NoteItemPane? next_pane { get; set; default = null; }
+  public bool          ignore_text_change { get; set; default = false; }
 
   public signal void add_item( bool above, NoteItemType? type );
   public signal void remove_item( bool forward, bool record_undo );
@@ -441,6 +442,13 @@ public class NoteItemPane : Box {
       enable_undo      = true,
       text             = item.content
     };
+
+    buffer.changed.connect(() => {
+      if( !ignore_text_change ) {
+        win.undo.add_item( new UndoTextChanges( item ) );
+      }
+      ignore_text_change = false;
+    });
 
     if( lang_id != null ) {
       var lang_mgr = GtkSource.LanguageManager.get_default();

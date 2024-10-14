@@ -292,6 +292,17 @@ public class NoteItem : Object {
   }
 
   //-------------------------------------------------------------
+  // Returns the index location of this item within its note.
+  public int index() {
+    for( int i=0; i<note.size(); i++ ) {
+      if( note.get_item( i ) == this ) {
+        return( i );
+      }
+    }
+    return( -1 );
+  }
+
+  //-------------------------------------------------------------
 	// Used for string searching
 	public virtual bool search( string pattern ) {
     return( content.contains( pattern ) );

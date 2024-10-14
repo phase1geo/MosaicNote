@@ -31,6 +31,21 @@ public class UndoItem : GLib.Object {
     this.name = name;
   }
 
+  /* Allows the undo item to determine if it should be removed from the undo buffer */
+  public virtual bool undo_done( MainWindow win ) {
+    return( true );
+  }
+
+  /* Allows the redo item to determine if it should be removed from the redo buffer */
+  public virtual bool redo_done( MainWindow win ) {
+    return( true );
+  }
+
+  /* Allows the item to specify if it should be added to the end of the undo buffer */
+  public virtual bool mergeable( UndoItem item ) {
+    return( false );
+  }
+
   /* Causes the stored item to be put into the before state */
   public virtual void undo( MainWindow win ) {}
 

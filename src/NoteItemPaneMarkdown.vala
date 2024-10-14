@@ -653,16 +653,6 @@ public class NoteItemPaneMarkdown : NoteItemPane {
             return( true );
           }
           break;
-        case Gdk.Key.z :
-          if( control ) {
-            if( shift ) {
-              buffer.redo();
-            } else {
-              buffer.undo();
-            }
-            return( true );
-          }
-          break;
       }
       return( false );
     });

@@ -16,5 +16,6 @@ sources += files(
     'UndoNoteMove.vala',
     'UndoTagAdd.vala',
     'UndoTagDelete.vala',
+    'UndoTextChanges.vala',
     'UndoTitleChange.vala'
 )
