@@ -106,7 +106,6 @@ public class Export {
   // Exports the given notebook to a user-selected directory.
   public static void export_notebook( MainWindow win, Notebook notebook ) {
 
-#if GTK410
     var dialog = Utils.make_file_chooser( _( "Export" ), _( "Export" ) );
 
     dialog.select_folder.begin( win, null, (obj, res) => {
@@ -117,21 +116,7 @@ public class Export {
         }
       } catch( Error e ) {}
     });
-#else
-    var dialog = Utils.make_file_chooser( _( "Export" ), win, FileChooserAction.SELECT_FOLDER, _( "Export" ) );
 
-    dialog.response.connect((id) => {
-      if( id == ResponseType.ACCEPT ) {
-        var file = dialog.get_file();
-        if( file != null ) {
-          notebook.export( win.notebooks, file.get_path() );
-        }
-      }
-      dialog.destroy();
-    });
-
-    dialog.show();
-#endif
   }
 
   //-------------------------------------------------------------

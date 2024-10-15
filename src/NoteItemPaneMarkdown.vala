@@ -39,6 +39,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     { "action_italicize_text", action_italicize_text },
     { "action_strike_text",    action_strike_text },
     { "action_highlight_text", action_highlight_text },
+    { "action_link_text",      action_link_text },
     { "action_toggle_task",    action_toggle_task },
   };
 
@@ -73,8 +74,9 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   private void add_keyboard_shortcuts( Gtk.Application app ) {
     app.set_accels_for_action( "markdown.action_bold_text",      { "<Control>b" } );
     app.set_accels_for_action( "markdown.action_italicize_text", { "<Control>i" } );
-    app.set_accels_for_action( "markdown.action_strike_text",    { "<Control>asciitilde" } );
-    app.set_accels_for_action( "markdown.action_highlight_text", { "<Control>equal" } );
+    app.set_accels_for_action( "markdown.action_strike_text",    { "<Control>minus" } );
+    app.set_accels_for_action( "markdown.action_highlight_text", { "<Control>h" } );
+    app.set_accels_for_action( "markdown.action_link_text",      { "<Control>l" } );
     app.set_accels_for_action( "markdown.action_toggle_task",    { "<Control>d" } );
   }
 
@@ -100,6 +102,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     markup.append( _( "Italicize" ),     "markdown.action_italicize_text" );
     markup.append( _( "Strikethrough" ), "markdown.action_strike_text" );
     markup.append( _( "Highlight" ),     "markdown.action_highlight_text" );
+    markup.append( _( "Add Link" ),      "markdown.action_link_text" );
 
     var task = new GLib.Menu();
     task.append( _( "Toggle Task" ), "markdown.action_toggle_task" );
@@ -479,7 +482,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
     var strike = new Button() {
       has_frame = false,
-      tooltip_markup = Utils.tooltip_with_accel( _( "Strikethrough" ), "<Control>asciitilde" ),
+      tooltip_markup = Utils.tooltip_with_accel( _( "Strikethrough" ), "<Control>minus" ),
       child = create_label( " <s>S</s>" )
     };
     strike.clicked.connect( insert_strike );
@@ -493,14 +496,14 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
     var hilite = new Button() {
       has_frame = false,
-      tooltip_markup = Utils.tooltip_with_accel( _( "Highlight" ), "<Control>equal" ),
+      tooltip_markup = Utils.tooltip_with_accel( _( "Highlight" ), "<Control>h" ),
       child = create_label( "<span background='#ffff00'> <b>H</b> </span>" )
     };
     hilite.clicked.connect( insert_highlight );
 
     var link = new Button.from_icon_name( "insert-link-symbolic" ) {
       has_frame = false,
-      tooltip_text = _( "Add Link" )
+      tooltip_markup = Utils.tooltip_with_accel( _( "Add Link" ), "<Control>l" )
     };
     link.clicked.connect( insert_link );
 
@@ -641,15 +644,21 @@ public class NoteItemPaneMarkdown : NoteItemPane {
             return( true );
           }
           break;
-        case Gdk.Key.asciitilde :
+        case Gdk.Key.minus :
           if( control ) {
             insert_strike();
             return( true );
           }
           break;
-        case Gdk.Key.equal :
+        case Gdk.Key.h :
           if( control ) {
             insert_highlight();
+            return( true );
+          }
+          break;
+        case Gdk.Key.l :
+          if( control ) {
+            insert_link();
             return( true );
           }
           break;
@@ -690,6 +699,12 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   // Highlights selected text.
   private void action_highlight_text() {
     insert_highlight();
+  }
+
+  //-------------------------------------------------------------
+  // Creates a Markdown link from selected text.
+  private void action_link_text() {
+    insert_link();
   }
 
   //-------------------------------------------------------------

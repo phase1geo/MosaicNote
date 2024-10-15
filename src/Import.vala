@@ -23,25 +23,33 @@ using Gtk;
 
 public class Import {
 
-  public delegate void ImportCallback( Note? note, bool last );
+  public delegate void ImportNoteCallback( Note? note, bool last );
+  public delegate void ImportFolderCallback();
 
   //-------------------------------------------------------------
-  // Exports the given note using the specified export type.
-  public static void import_notes( MainWindow win, Notebook notebook, ImportCallback? callback ) {
-    import_dialog( win, notebook, callback );
+  // Imports one or more notes selected from a dialog.
+  public static void import_notes( MainWindow win, Notebook notebook, ImportNoteCallback? callback ) {
+    import_note_dialog( win, notebook, callback );
+  }
+
+  //-------------------------------------------------------------
+  // Imports notebooks and notes from a folder from the file
+  // system.
+  public static void import_folder( MainWindow win, NotebookTree.Node? node, ImportFolderCallback? callback ) {
+    import_folder_dialog( win, node, callback );
   }
 
   //-------------------------------------------------------------
   // Displays a dialog to the user prompting to specify an output name.
-  private static void import_dialog( MainWindow win, Notebook notebook, ImportCallback? callback ) {
+  private static void import_note_dialog( MainWindow win, Notebook notebook, ImportNoteCallback? callback ) {
 
     var md_filter = new FileFilter() {
       name = _( "Markdown" )
     };
     md_filter.add_suffix( "md" );
+    md_filter.add_suffix( "markdown" );
 
-#if GTK410
-    var dialog = Utils.make_file_chooser( _( "Import" ), _( "Import" ) );
+    var dialog = Utils.make_file_chooser( _( "Import Notes" ), _( "Import" ) );
 
     dialog.default_filter = md_filter;
 
@@ -52,39 +60,73 @@ public class Import {
           var last_index = files.get_n_items() - 1;
           for( int i=0; i<files.get_n_items(); i++ ) {
             var file = (File)files.get_item( i );
-            do_import( notebook, file.get_path(), callback, (i == last_index) );
+            do_note_import( notebook, file.get_path(), callback, (i == last_index) );
           }
         }
       } catch( Error e ) {}
     });
-#else
-    var dialog = Utils.make_file_chooser( _( "Import" ), win, FileChooserAction.OPEN, _( "Import" ) );
 
-    dialog.filter = md_filter;
-    dialog.select_multiple = true;
+  }
 
-    dialog.response.connect((id) => {
-      if( id == ResponseType.ACCEPT ) {
-        var files = dialog.get_files();
-        if( files != null ) {
-          var last_index = files.get_n_items() - 1;
-          for( int i=0; i<files.get_n_items(); i++ ) {
-            var file = (File)files.get_item( i );
-            do_import( notebook, file.get_path(), callback, (i == last_index) );
-          }
+  //-------------------------------------------------------------
+  // Displays a folder dialog to import notebooks and notes.
+  private static void import_folder_dialog( MainWindow win, NotebookTree.Node? node, ImportFolderCallback? callback ) {
+
+    var dialog = Utils.make_file_chooser( _( "Import Folder" ), _( "Import" ) );
+
+    dialog.select_folder.begin( win, null, (obj, res) => {
+      try {
+        var folder = dialog.select_folder.end( res );
+        if( folder != null ) {
+          do_folder_import( win, folder, node, callback );
         }
-      }
-      dialog.destroy();
+      } catch( Error e ) {}
     });
 
-    dialog.show();
-#endif
+  }
+
+  //-------------------------------------------------------------
+  // Imports all notebooks and notes from a given folder.
+  private static void do_folder_import( MainWindow win, File folder, NotebookTree.Node node, ImportFolderCallback? callback ) {
+
+    var notebook = new Notebook( folder.get_basename() );
+
+    NotebookTree.Node new_node;
+    if( node != null ) {
+      new_node = node.add_notebook( notebook );
+    } else {
+      new_node = win.notebooks.add_notebook( notebook );
+    }
+
+    var enumerator = folder.enumerate_children( "standard::*", FileQueryInfoFlags.NOFOLLOW_SYMLINKS, null );
+
+    FileInfo info = null;
+    while( (info = enumerator.next_file(null)) != null ) {
+      var item = folder.resolve_relative_path( info.get_name() );
+      if( info.get_file_type () == FileType.DIRECTORY ) {
+        do_folder_import( win, item, new_node, callback );
+      } else if( info.get_name().has_suffix( ".md" ) || 
+                 info.get_name().has_suffix( ".markdown" ) ) {
+        var contents = "";
+        try {
+          if( FileUtils.get_contents( item.get_path(), out contents ) ) {
+            var parser = new NoteParser();
+            var note   = parser.parse_markdown( notebook, contents );
+            notebook.add_note( note );
+          }
+        } catch( FileError e ) {}
+      }
+    }
+
+    if( callback != null ) {
+      callback();
+    }
 
   }
 
   //-------------------------------------------------------------
   // Performs the export operation.  Returns the note that was imported.
-  private static void do_import( Notebook notebook, string filename, ImportCallback callback, bool last ) {
+  private static void do_note_import( Notebook notebook, string filename, ImportNoteCallback callback, bool last ) {
 
     string contents = "";
 

@@ -277,21 +277,13 @@ public class Utils {
   //-------------------------------------------------------------
   // Show the specified popover
   public static void show_popover( Popover popover ) {
-#if GTK322
     popover.popup();
-#else
-    popover.show();
-#endif
   }
 
   //-------------------------------------------------------------
   // Hide the specified popover
   public static void hide_popover( Popover popover ) {
-#if GTK322
     popover.popdown();
-#else
-    popover.hide();
-#endif
   }
 
   /*
@@ -344,7 +336,6 @@ public class Utils {
 
   }
 
-#if GTK410
   //-------------------------------------------------------------
   // Creates a file chooser dialog and returns it to the code
   public static Gtk.FileDialog make_file_chooser( string user_title, string user_accept_label ) {
@@ -363,25 +354,9 @@ public class Utils {
     return( dialog );
 
   }
-#else
+
   //-------------------------------------------------------------
-  // Creates a file chooser dialog and returns it to the code
-  public static Gtk.FileChooserNative make_file_chooser( string title, Gtk.Window win, Gtk.FileChooserAction action, string accept_label ) {
-
-    var gtk_settings = Gtk.Settings.get_default();
-
-    var use_header = gtk_settings.gtk_dialogs_use_header;
-    gtk_settings.gtk_dialogs_use_header = true;
-
-    var dialog = new FileChooserNative( title, win, action, accept_label, _( "Cancel" ) );
-    gtk_settings.gtk_dialogs_use_header = use_header;
-
-    return( dialog );
-
-  }
-#endif
-
-#if GTK410
+  // Displays a confirmation dialog.
   public static void show_confirmation( MainWindow win, string question, string detail_msg, Object? obj, ConfirmationCallback callback ) {
     var dialog = new AlertDialog( question ) {
       buttons = { _( "Yes" ), _( "No" ) },
@@ -399,25 +374,6 @@ public class Utils {
       } catch( Error e ) {}
     });
   }
-#else
-  //-------------------------------------------------------------
-  // Displays a confirmation dialog.  Calls the passed callback function
-  // with the given object if the user confirms the question.
-  public static void show_confirmation( MainWindow win, string question, string detail, Object? obj, ConfirmationCallback callback ) {
-    var flags  = DialogFlags.MODAL | DialogFlags.DESTROY_WITH_PARENT;
-    var dialog = new MessageDialog( win, flags, MessageType.WARNING, ButtonsType.YES_NO, question ) {
-      secondary_text = detail
-    };
-    dialog.set_default_response( ResponseType.NO );
-    dialog.response.connect((response_id) => {
-      if( response_id == ResponseType.YES ) {
-        callback( obj );
-      }
-      dialog.close();
-    });
-    dialog.show();
-  }
-#endif
 
   //-------------------------------------------------------------
   // Clears the given box widget
@@ -430,13 +386,7 @@ public class Utils {
   //-------------------------------------------------------------
   // Clears the given listbox widget
   public static void clear_listbox( ListBox box ) {
-#if GTK412
     box.remove_all();
-#else    
-    while( box.get_row_at_index( 0 ) != null ) {
-      box.remove( box.get_row_at_index( 0 ) );
-    }
-#endif
   }
 
   //-------------------------------------------------------------

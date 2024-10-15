@@ -60,6 +60,7 @@ public class Sidebar : Box {
     { "action_empty_trash",            action_empty_trash },
     { "action_add_new_notebook",       action_add_new_notebook },
     { "action_add_new_smart_notebook", action_add_new_smart_notebook },
+    { "action_import_notebook",        action_import_notebook },
   };
 
   private signal void add_requested( int pos );
@@ -149,15 +150,22 @@ public class Sidebar : Box {
     add_menu.append( _( "New Notebook" ),       "sidebar.action_add_new_notebook" );
     add_menu.append( _( "New Smart Notebook" ), "sidebar.action_add_new_smart_notebook" );
 
+    var import_menu = new GLib.Menu();
+    import_menu.append( _( "Import Notebook" ), "sidebar.action_import_notebook" );
+
+    var menu = new GLib.Menu();
+    menu.append_section( null, add_menu );
+    menu.append_section( null, import_menu );
+
     _add_nb_btn = new MenuButton() {
-      icon_name = "list-add-symbolic",
-  		halign = Align.START,
-  		margin_start = 5,
-  		margin_top = 5,
+      icon_name     = "list-add-symbolic",
+  		halign        = Align.START,
+  		margin_start  = 5,
+  		margin_top    = 5,
   		margin_bottom = 5,
-  		has_frame = false,
-      direction = ArrowType.UP,
-      menu_model = add_menu
+  		has_frame     = false,
+      direction     = ArrowType.UP,
+      menu_model    = menu
   	};
 
   	var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
@@ -659,6 +667,15 @@ public class Sidebar : Box {
   // Adjusts the UI to allow the user to create a new smart notebook.
   private void action_add_new_smart_notebook() {
     add_requested( _smart_add_pos );
+  }
+
+  //-------------------------------------------------------------
+  // Imports a new notebook
+  private void action_import_notebook() {
+    Import.import_folder( _win, (_selected_notebook as NotebookTree.Node), () => {
+      stdout.printf( "Done with folder import\n" );
+      // TODO - make sure that the sidebar is updated with the results
+    });
   }
 
   //-------------------------------------------------------------

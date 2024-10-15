@@ -97,12 +97,13 @@ public class NotebookTree {
 
 		//-------------------------------------------------------------
 		// Adds the given notebook to the list of children
-		public void add_notebook( Notebook nb ) {
+		public Node add_notebook( Notebook nb ) {
 			var node = new Node( this, nb );
 			node.changed.connect( node_changed );
 			_children.append_val( node );
 			_modified = true;
 			changed();
+      return( node );
 		}
 
 		//-------------------------------------------------------------
@@ -416,12 +417,13 @@ public class NotebookTree {
 
 	//-------------------------------------------------------------
 	// Adds the given notebook to the end of the list
-	public void add_notebook( Notebook nb ) {
+	public Node add_notebook( Notebook nb ) {
 		var node = new Node( null, nb );
 		node.changed.connect( set_modified );
 		_nodes.append_val( node );
 		_modified = true;
 		changed();
+    return( node );
 	}
 
 	//-------------------------------------------------------------
