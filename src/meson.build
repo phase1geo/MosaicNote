@@ -30,6 +30,7 @@ sources += files(
     'NoteItemPanes.vala',
     'NotePanel.vala',
     'NoteParser.vala',
+    # 'NoteSearch.vala',
     'NotesPanel.vala',
     'Preferences.vala',
     'SearchBox.vala',
