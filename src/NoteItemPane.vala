@@ -815,4 +815,11 @@ public class NoteItemPane : Box {
     copy_to_clipboard( Gdk.Display.get_default().get_clipboard() );
   }
 
+  //-------------------------------------------------------------
+  // Performs text search for this item panel (regardless of where the
+  // search text exists in the pane).  Returns the total number of matches.
+  protected virtual int search( string pattern ) {
+    return( 0 );
+  }
+
 }

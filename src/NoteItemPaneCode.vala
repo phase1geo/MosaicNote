@@ -25,8 +25,9 @@ public class NoteItemPaneCode : NoteItemPane {
 
   private static Array<string>? _supported_langs = null;
 
-  private Label          _h2_label;
-  private GtkSource.View _text;
+  private Label                   _h2_label;
+  private GtkSource.View          _text;
+  private GtkSource.SearchContext _search_ctx;
 
   public NoteItemCode code_item {
     get {
@@ -171,6 +172,8 @@ public class NoteItemPaneCode : NoteItemPane {
     _text = create_text( code_item.lang );
     var buffer = (GtkSource.Buffer)_text.buffer;
 
+    // TODO - _search_ctx = new GtkSource.SearchContext( buffer, search_settings );
+
     var scheme_mgr = new GtkSource.StyleSchemeManager();
     var scheme     = scheme_mgr.get_scheme( MosaicNote.settings.get_string( "default-theme" ) );
     buffer.style_scheme = scheme;
@@ -187,5 +190,18 @@ public class NoteItemPaneCode : NoteItemPane {
     return( _text );
 
   }
+
+  //-------------------------------------------------------------
+  // Performs search for this string.
+  protected override int search( string pattern ) {
+
+    var matches = 0;
+
+    // TODO - Search description field
+
+    return( matches );
+
+  }
+
 
 }
