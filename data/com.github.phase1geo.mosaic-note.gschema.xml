@@ -11,6 +11,11 @@
       <summary>Most recent height of minder window</summary>
       <description>Most recent height of minder window</description>
     </key>
+    <key name="library-location" type="s">
+      <default>"~/.local/share/mosaic-note"</default>
+      <summary>Specifies the pathname to the location of the MosaicNote library directory</summary>
+      <description>Specifies the pathname to the location of the MosaicNote library directory</description>
+    </key>
     <key name="panel-mode" type="s">
       <default>"all"</default>
       <summary>Specifies which set of panels are displayed in the UI on startup</summary>

@@ -22,6 +22,71 @@
 using Gtk;
 using Gee;
 
+public enum BrowserType {
+  OPEN,
+  SAVE,
+  SELECT_FOLDER;
+
+  public string title() {
+    switch( this ) {
+      case OPEN          :  return( _( "Select File" ) );
+      case SAVE          :  return( _( "Create File" ) );
+      case SELECT_FOLDER :  return( _( "Select Folder" ) );
+      default            :  assert_not_reached();
+    }
+  }
+
+  public string accept() {
+    switch( this ) {
+      case OPEN          :  return( _( "Select File" ) );
+      case SAVE          :  return( _( "Create File" ) );
+      case SELECT_FOLDER :  return( _( "Select Folder" ) );
+      default            :  assert_not_reached();
+    }
+  }
+
+  public void browse( Dialog parent, Entry entry ) {
+
+    var dialog = Utils.make_file_chooser( title(), accept() );
+
+    switch( this ) {
+      case OPEN :
+        dialog.open.begin( parent, null, (obj, res) => {
+          try {
+            var file = dialog.open.end( res );
+            if( file != null ) {
+              entry.text = file.get_path();
+            }
+          } catch( Error e ) {}
+        });
+        break;
+      case SAVE :
+        dialog.save.begin( parent, null, (obj, res) => {
+          try {
+            var file = dialog.save.end( res );
+            if( file != null ) {
+              entry.text = file.get_path();
+            }
+          } catch( Error e ) {}
+        });
+        break;
+      case SELECT_FOLDER :
+        dialog.select_folder.begin( parent, null, (obj, res) => {
+          try {
+            var file = dialog.select_folder.end( res );
+            if( file != null ) {
+              entry.text = file.get_path();
+            }
+          } catch( Error e ) {}
+        });
+        break;
+
+    }
+
+  }
+
+}
+
 public class Preferences : Gtk.Dialog {
 
   private MainWindow                 _win;
@@ -58,6 +123,7 @@ public class Preferences : Gtk.Dialog {
     };
     stack.add_titled( create_general(), "general",  _( "General" ) );
     stack.add_titled( create_editor(),  "editor",   _( "Editor" ) );
+    stack.add_titled( create_library(), "library",  _( "Library" ) );
 
     var switcher = new StackSwitcher() {
       halign = Align.CENTER
@@ -198,7 +264,38 @@ public class Preferences : Gtk.Dialog {
     return( grid );
 
   }
-  
+
+  // -----------------------------------------------------------------
+  // LIBRARY PANEL
+  // -----------------------------------------------------------------
+
+  private Grid create_library() {
+
+    var grid = new Grid() {
+      row_spacing = 5,
+      column_spacing = 5,
+      halign = Align.CENTER,
+      row_homogeneous = true
+    };
+
+    var row = 0;
+
+    var box = new Box( Orientation.VERTICAL, 5 );
+    box.append( make_label( _( "Change MosaicNote Library Location" ) ) );
+    box.append( make_browser( "library-location", BrowserType.SELECT_FOLDER ) );
+
+    grid.attach( box, 0, row++ );
+
+    return( grid );
+
+  }
+
+  private void change_library_location() {
+
+    // TBD
+
+  }
+
   // -----------------------------------------------------------------
 
   /* Creates visual spacer */
@@ -250,6 +347,25 @@ public class Preferences : Gtk.Dialog {
     }
     MosaicNote.settings.bind( setting, w, "text", SettingsBindFlags.DEFAULT );
     return( w );
+  }
+
+  /* Creates a file/folder browser widget */
+  private Box make_browser( string setting, BrowserType browser_type ) {
+    var w = new Entry() {
+      halign = Align.START,
+      text = MosaicNote.settings.get_string( setting ),
+      sensitive = false
+    };
+    var btn = new Button.with_label( _( "Browse…" ) ) {
+      halign = Align.END
+    };
+    btn.clicked.connect(() => {
+      browser_type.browse( this, w );
+    });
+    var box = new Box( Orientation.HORIZONTAL, 5 );
+    box.append( w );
+    box.append( btn );
+    return( box );
   }
 
   /* Helper function for the make_entry method */
