@@ -118,8 +118,10 @@ public class Import {
       }
     }
 
-    if( callback != null ) {
-      callback();
+    if( notebook.count() > 0 ) {
+      if( callback != null ) {
+        callback();
+      }
     }
 
   }

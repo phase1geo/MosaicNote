@@ -28,10 +28,17 @@ public class Utils {
   public delegate void ConfirmationCallback( Object? obj );
 
   //-------------------------------------------------------------
+  // Returns the location of the local default library.
+  public static string default_library_location() {
+    return( GLib.Path.build_filename( Environment.get_user_data_dir(), "mosaic-note" ) );
+  }
+
+  //-------------------------------------------------------------
   // Returns the location of the given subdirectory path within
   // the user storage directory
   public static string user_location( string path ) {
-    return( GLib.Path.build_filename( Environment.get_user_data_dir(), "mosaic-note", path ) );
+    var location = MosaicNote.settings.get_string( "library-location" );
+    return( GLib.Path.build_filename( ((location == "default") ? default_library_location() : location), path ) );
   }
 
   //-------------------------------------------------------------

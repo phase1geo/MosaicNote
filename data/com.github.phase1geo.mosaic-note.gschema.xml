@@ -12,9 +12,9 @@
       <description>Most recent height of minder window</description>
     </key>
     <key name="library-location" type="s">
-      <default>"~/.local/share/mosaic-note"</default>
+      <default>"default"</default>
       <summary>Specifies the pathname to the location of the MosaicNote library directory</summary>
-      <description>Specifies the pathname to the location of the MosaicNote library directory</description>
+      <description>Specifies the pathname to the location of the MosaicNote library directory.  A value of "default" will use the local, default user directory.</description>
     </key>
     <key name="panel-mode" type="s">
       <default>"all"</default>

@@ -106,13 +106,30 @@ public class Export {
   // Exports the given notebook to a user-selected directory.
   public static void export_notebook( MainWindow win, Notebook notebook ) {
 
-    var dialog = Utils.make_file_chooser( _( "Export" ), _( "Export" ) );
+    var dialog = Utils.make_file_chooser( _( "Export Notebook" ), _( "Export" ) );
 
     dialog.select_folder.begin( win, null, (obj, res) => {
       try {
-        var file = dialog.save.end( res );
+        var file = dialog.select_folder.end( res );
         if( file != null ) {
           notebook.export( win.notebooks, file.get_path() );
+        }
+      } catch( Error e ) {}
+    });
+
+  }
+
+  //-------------------------------------------------------------
+  // Exports the given smart notebook to a user-selected directory.
+  public static void export_smart_notebook( MainWindow win, SmartNotebook notebook ) {
+
+    var dialog = Utils.make_file_chooser( _( "Export Smart Notebook" ), _( "Export" ) );
+
+    dialog.select_folder.begin( win, null, (obj, res) => {
+      try {
+        var file = dialog.select_folder.end( res );
+        if( file != null ) {
+          notebook.export( file.get_path() );
         }
       } catch( Error e ) {}
     });

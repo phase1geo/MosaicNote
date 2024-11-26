@@ -55,6 +55,7 @@ public class Sidebar : Box {
     { "action_add_sub_notebook",       action_add_sub_notebook, "i" },
     { "action_rename_notebook",        action_rename_notebook, "i" },
     { "action_delete_notebook",        action_delete_notebook, "i" },
+    { "action_export_notebook",        action_export_notebook, "i" },
     { "action_save_search",            action_save_search, "i" },
     { "action_edit_search",            action_edit_search, "i" },
     { "action_empty_trash",            action_empty_trash },
@@ -418,11 +419,14 @@ public class Sidebar : Box {
         var top_menu = new GLib.Menu();
         top_menu.append( _( "New Sub-Notebook" ), "sidebar.action_add_sub_notebook(%u)".printf( item.position ) );
         top_menu.append( _( "Rename Notebook" ), "sidebar.action_rename_notebook(%u)".printf( item.position ) );
-        var bot_menu = new GLib.Menu();
-        bot_menu.append( _( "Delete Notebook" ), "sidebar.action_delete_notebook(%u)".printf( item.position ) );
+        var del_menu = new GLib.Menu();
+        del_menu.append( _( "Delete Notebook" ), "sidebar.action_delete_notebook(%u)".printf( item.position ) );
+        var exp_menu = new GLib.Menu();
+        exp_menu.append( _( "Export Notebook As Markdown" ), "sidebar.action_export_notebook(%u)".printf( item.position ) );
         var menu = new GLib.Menu();
         menu.append_section( null, top_menu );
-        menu.append_section( null, bot_menu );
+        menu.append_section( null, del_menu );
+        menu.append_section( null, exp_menu );
         popover.menu_model = menu;
         popover.popup();
       } else if( nb_is_trash( nb ) ) {
@@ -440,11 +444,14 @@ public class Sidebar : Box {
         var top_menu = new GLib.Menu();
         top_menu.append( _( "Edit Match Criteria" ), "sidebar.action_edit_search(%u)".printf( item.position ) );
         top_menu.append( _( "Rename Smart Notebook" ), "sidebar.action_rename_notebook(%u)".printf( item.position ) );
-        var bot_menu = new GLib.Menu();
-        bot_menu.append( _( "Delete Smart Notebook" ), "sidebar.action_delete_notebook(%u)".printf( item.position ) );
+        var del_menu = new GLib.Menu();
+        del_menu.append( _( "Delete Smart Notebook" ), "sidebar.action_delete_notebook(%u)".printf( item.position ) );
+        var exp_menu = new GLib.Menu();
+        exp_menu.append( _( "Export Smart Notebook As Markdown" ), "sidebar.action_export_notebook(%u)".printf( item.position ) );
         var menu = new GLib.Menu();
         menu.append_section( null, top_menu );
-        menu.append_section( null, bot_menu );
+        menu.append_section( null, del_menu );
+        menu.append_section( null, exp_menu );
         popover.menu_model = menu;
         popover.popup();
       }
@@ -467,6 +474,10 @@ public class Sidebar : Box {
       if( nb_is_node( nb ) || nb_is_smart( nb, SmartNotebookType.USER ) ) {
         if( entry.text.chomp() != "" ) {
           nb.name = entry.text;
+          if( nb_is_node( nb ) ) {
+            var node = (NotebookTree.Node)nb;
+            node.get_notebook().name = entry.text;
+          }
         }
         stack.visible_child_name = "display";
       } else if( nb_is_smart( nb, SmartNotebookType.SEARCH ) ) {
@@ -592,7 +603,10 @@ public class Sidebar : Box {
         if( node.size() == 0 ) {
           expander.hide_expander = true;
         } else {
-          row.expanded = node.expanded;
+          Idle.add(() => {
+            row.expanded = node.expanded;
+            return( false );
+          });
         }
       }
 		}
@@ -673,8 +687,8 @@ public class Sidebar : Box {
   // Imports a new notebook
   private void action_import_notebook() {
     Import.import_folder( _win, (_selected_notebook as NotebookTree.Node), () => {
-      stdout.printf( "Done with folder import\n" );
-      // TODO - make sure that the sidebar is updated with the results
+      // TODO
+      _win.notebooks.save();
     });
   }
 
@@ -733,6 +747,25 @@ public class Sidebar : Box {
         Utils.show_confirmation( _win, _( "Delete Notebook?" ), _( "This action cannot be reversed" ), row, delete_notebook );
       } else if( nb_is_smart( nb, SmartNotebookType.USER ) ) {
         Utils.show_confirmation( _win, _( "Delete Smart Notebook?" ), _( "This action cannot be reversed" ), row, delete_notebook );
+      }
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Action to export the notebook at the given position in Markdown
+  // format.
+  private void action_export_notebook( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      var pos = variant.get_int32();
+      stdout.printf( "pos: %d\n", pos );
+      var row = _model.get_row( pos );
+      var nb  = (BaseNotebook)row.get_item();
+      if( nb_is_node( nb ) ) {
+        var node = (NotebookTree.Node)nb;
+        Export.export_notebook( _win, node.get_notebook() );
+      } else if( nb_is_smart( nb, SmartNotebookType.USER ) ) {
+        var notebook = (SmartNotebook)nb;
+        Export.export_smart_notebook( _win, notebook );
       }
     }
   }

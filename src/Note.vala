@@ -272,7 +272,8 @@ public class Note : Object {
 
   //-------------------------------------------------------------
   // Exports this note to the given directory.
-  public void export( NotebookTree notebooks, string filename, string assets_dir ) throws FileError {
+  public void export( NotebookTree notebooks, string dirname, string assets_dir ) throws FileError {
+    var filename = Path.build_filename( dirname, "%s-%d.md".printf( _title.replace( " ", "-" ), _id ) );
   	var str = "---\ntitle: '%s'\ncreated: '%s'\nupdated: '%s'\ntags: [%s]\n---\n\n".printf(
         _title, _created.to_string(), _updated.to_string(), _tags.to_markdown()
       );

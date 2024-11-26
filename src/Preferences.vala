@@ -45,44 +45,14 @@ public enum BrowserType {
     }
   }
 
-  public void browse( Dialog parent, Entry entry ) {
-
+  public async File? browse( Dialog parent ) {
     var dialog = Utils.make_file_chooser( title(), accept() );
-
     switch( this ) {
-      case OPEN :
-        dialog.open.begin( parent, null, (obj, res) => {
-          try {
-            var file = dialog.open.end( res );
-            if( file != null ) {
-              entry.text = file.get_path();
-            }
-          } catch( Error e ) {}
-        });
-        break;
-      case SAVE :
-        dialog.save.begin( parent, null, (obj, res) => {
-          try {
-            var file = dialog.save.end( res );
-            if( file != null ) {
-              entry.text = file.get_path();
-            }
-          } catch( Error e ) {}
-        });
-        break;
-      case SELECT_FOLDER :
-        dialog.select_folder.begin( parent, null, (obj, res) => {
-          try {
-            var file = dialog.select_folder.end( res );
-            if( file != null ) {
-              entry.text = file.get_path();
-            }
-          } catch( Error e ) {}
-        });
-        break;
-
+      case OPEN          :  return( yield dialog.open( parent, null ) );
+      case SAVE          :  return( yield dialog.save( parent, null ) );
+      case SELECT_FOLDER :  return( yield dialog.select_folder( parent, null ) );
+      default            :  assert_not_reached();
     }
-
   }
 
 }
@@ -99,6 +69,7 @@ public class Preferences : Gtk.Dialog {
   public signal void update_theme( string theme_id );
 
   private delegate string ValidateEntryCallback( Entry entry, string text, int position );
+  private delegate void BrowserCallback( string old_value, string new_value );
 
   /* Default constructor */
   public Preferences( MainWindow win ) {
@@ -274,17 +245,26 @@ public class Preferences : Gtk.Dialog {
     var grid = new Grid() {
       row_spacing = 5,
       column_spacing = 5,
-      halign = Align.CENTER,
+      halign = Align.FILL,
       row_homogeneous = true
     };
 
     var row = 0;
 
-    var box = new Box( Orientation.VERTICAL, 5 );
-    box.append( make_label( _( "Change MosaicNote Library Location" ) ) );
-    box.append( make_browser( "library-location", BrowserType.SELECT_FOLDER ) );
+    var change_label = make_label( _( "Change MosaicNote Library Location" ) );
+    change_label.halign  = Align.FILL;
+    // change_label.hexpand = true;
 
-    grid.attach( box, 0, row++ );
+    var box = new Box( Orientation.VERTICAL, 5 ) {
+      halign  = Align.FILL
+    };
+    box.append( change_label );
+    box.append( make_browser( "library-location", Utils.default_library_location(), BrowserType.SELECT_FOLDER, (str1, str2) => {
+      // TODO - Show dialog 
+      stdout.printf( "moving library from %s to %s\n", str1, str2 );
+    }) );
+
+    grid.attach( box, 0, row++, 1 );
 
     return( grid );
 
@@ -350,21 +330,50 @@ public class Preferences : Gtk.Dialog {
   }
 
   /* Creates a file/folder browser widget */
-  private Box make_browser( string setting, BrowserType browser_type ) {
+  private Box make_browser( string setting, string default_path, BrowserType browser_type, BrowserCallback? cb = null ) {
+    var val = MosaicNote.settings.get_string( setting );
     var w = new Entry() {
-      halign = Align.START,
-      text = MosaicNote.settings.get_string( setting ),
+      halign    = Align.FILL,
+      hexpand   = true,
+      text      = (val == "default") ? default_path : val,
       sensitive = false
     };
-    var btn = new Button.with_label( _( "Browse…" ) ) {
+    var browse = new Button.with_label( _( "Browse…" ) ) {
+      halign = Align.START,
+      hexpand = true
+    };
+    browse.clicked.connect(() => {
+      browser_type.browse.begin( this, (obj, res) => {
+        var file = browser_type.browse.end( res );
+        if( file != null ) {
+          w.text = file.get_path();
+          MosaicNote.settings.set_string( setting, file.get_path() );
+          if( cb != null ) {
+            cb( val, file.get_path() );
+          }
+        }
+      });
+    });
+    var dflt = new Button.with_label( _( "Reset to Default" ) ) {
       halign = Align.END
     };
-    btn.clicked.connect(() => {
-      browser_type.browse( this, w );
+    dflt.clicked.connect(() => {
+      if( w.text != default_path ) {
+        w.text = default_path;
+        MosaicNote.settings.set_string( setting, default_path );
+        if( cb != null ) {
+          cb( val, default_path );
+        }
+      }
     });
-    var box = new Box( Orientation.HORIZONTAL, 5 );
+    var bbox = new Box( Orientation.HORIZONTAL, 5 );
+    bbox.append( browse );
+    bbox.append( dflt );
+    var box = new Box( Orientation.VERTICAL, 5 ) {
+      halign = Align.FILL
+    };
     box.append( w );
-    box.append( btn );
+    box.append( bbox );
     return( box );
   }
 

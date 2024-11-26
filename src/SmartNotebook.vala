@@ -228,6 +228,24 @@ public class SmartNotebook : BaseNotebook {
   }
 
   //-------------------------------------------------------------
+  // Exports this notebook in the given directory.
+  public void export( string root_dir ) {
+    var dirname    = Path.build_filename( root_dir, name );
+    var assets_dir = Path.build_filename( dirname, "assets" );
+    if( Utils.create_dir( dirname ) && Utils.create_dir( assets_dir ) ) {
+      try {
+        _notes.foreach((id) => {
+          var note = _notebooks.find_note_by_id( id );
+          if( note != null ) {
+            note.export( _notebooks, dirname, assets_dir );
+          }
+          return( true );
+        });
+      } catch( FileError e ) {}
+    }
+  }
+
+  //-------------------------------------------------------------
   // Saves the smartbook in XML format
   public Xml.Node* save() {
 
