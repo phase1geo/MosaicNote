@@ -38,7 +38,7 @@ public class UndoItemDelete : UndoItem {
   /* Causes the stored item to be put into the before state */
   public override void undo( MainWindow win ) {
     _note.add_note_item( _index, _item );
-    win.note.items.add_item( _item, _index );
+    win.note.items.add_item( _item, _index, true );
   }
 
   /* Causes the stored item to be put into the after state */

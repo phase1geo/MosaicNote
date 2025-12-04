@@ -130,13 +130,14 @@ public class NoteItemPanes : Box {
   public void add_new_item( NoteItemType type, int pos = -1 ) {
     var new_item = type.create( _note );
     _note.add_note_item( (uint)pos, new_item );
-    add_item( new_item, pos );
+    add_item( new_item, pos, true );
     _win.undo.add_item( new UndoItemAdd( _note, ((pos == -1) ? (_size - 1) : pos) ) );
   }
 
   //-------------------------------------------------------------
-  // Adds an item to the UI at the given position
-  public void add_item( NoteItem item, int pos = -1 ) {
+  // Adds an item to the UI at the given position.  Set pos to -1
+  // to append the item at the end of the current item set.
+  public void add_item( NoteItem item, int pos, bool show ) {
 
     NoteItemPane pane;
     switch( item.item_type ) {
@@ -270,11 +271,15 @@ public class NoteItemPanes : Box {
     _size++;
 
     // Make sure that the pane is within view
-    show_pane( pane );
+    if( show ) {
+      show_pane( pane );
+    }
 
     // Make sure that the new pane has the focus
     if( !_note.locked ) {
-      pane.grab_item_focus( TextCursorPlacement.START );
+      if( show ) {
+        pane.grab_item_focus( TextCursorPlacement.START );
+      }
     } else {
       pane.clear_current();
     }
@@ -302,7 +307,7 @@ public class NoteItemPanes : Box {
     remove( pane );
     _size--;
 
-    add_item( new_item, _current_item );
+    add_item( new_item, _current_item, true );
 
   }
 
@@ -316,7 +321,7 @@ public class NoteItemPanes : Box {
     Utils.clear_box( this );
 
     for( int i=0; i<_note.size(); i++ ) {
-      add_item( _note.get_item( i ) );
+      add_item( _note.get_item( i ), -1, false );
     }
 
     // Make sure that the first item has the focus

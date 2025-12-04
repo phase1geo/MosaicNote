@@ -513,7 +513,7 @@ public class NotePanel : Box {
 
     if( _note != null ) {
 
-      _title.text    = note.title;
+      _title.text = note.title;
       _tags.clear_tags();
       _tags.add_tags( note.tags );
       _favorite.icon_name = _note.favorite ? "starred-symbolic" : "non-starred-symbolic";

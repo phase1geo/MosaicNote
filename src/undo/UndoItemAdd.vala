@@ -44,7 +44,7 @@ public class UndoItemAdd : UndoItem {
   /* Causes the stored item to be put into the after state */
   public override void redo( MainWindow win ) {
     _note.add_note_item( _index, _item );
-    win.note.items.add_item( _item, _index );
+    win.note.items.add_item( _item, _index, true );
   }
 
 }

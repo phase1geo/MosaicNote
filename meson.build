@@ -33,10 +33,10 @@ subdir('src')
 # Work around deprecated code to avoid warnings
 gtk4_dep = dependency('gtk4')
 if gtk4_dep.version().version_compare('>=4.10.0')
-  add_project_arguments(['--define=GTK410'], language: 'vala')
+  add_project_arguments(['--define=GTK410', '--disable-warnings'], language: 'vala')
 endif
 if gtk4_dep.version().version_compare('>=4.12.0')
-  add_project_arguments(['--define=GTK412'], language: 'vala')
+  add_project_arguments(['--define=GTK412', '--disable-warnings'], language: 'vala')
 endif
 
 # Check externally used programs

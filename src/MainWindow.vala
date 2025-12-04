@@ -262,7 +262,6 @@ public class MainWindow : Gtk.ApplicationWindow {
         } else {
           _view_stack.visible_child_name = "notes";
           var node = (nb as NotebookTree.Node);
-          _ignore = true;
           _notes.populate_with_notebook( nb );
           _notes.select_row( 0 );
           if( node != null ) {
