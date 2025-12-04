@@ -419,7 +419,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       _notes.select_note( last_note_id, true );
     }
 
-    /* Handle any request to close the window */
+    // Handle any request to close the window
     close_request.connect(() => {
       int width, height;
       get_default_size( out width, out height );
@@ -431,7 +431,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       return( false );
     });
 
-    /* Loads the application-wide CSS */
+    // Loads the application-wide CSS
     load_css();
 
   }
