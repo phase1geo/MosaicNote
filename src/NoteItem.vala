@@ -234,6 +234,7 @@ public class NoteItem : Object {
 
   private string _content  = "";
   private bool   _expanded = true;
+  private int    _column   = 0;
 
 	public Note         note      { get; private set; }
 	public int          id        { get; private set; }
@@ -262,6 +263,18 @@ public class NoteItem : Object {
     set {
       if( _expanded != value ) {
         _expanded = value;
+        modified = true;
+      }
+    }
+  }
+
+  public int column {
+    get {
+      return( _column );
+    }
+    set {
+      if( _column != value ) {
+        _column = value;
         modified = true;
       }
     }
@@ -420,6 +433,7 @@ public class NoteItem : Object {
 		Xml.Node* node = new Xml.Node( null, item_type.to_string() );
 		node->set_prop( "id", id.to_string() );
     node->set_prop( "expanded", expanded.to_string() );
+    node->set_prop( "column", column.to_string() );
     node->add_content( content );
 		modified = false;
 		return( node );
@@ -437,6 +451,10 @@ public class NoteItem : Object {
     var e = node->get_prop( "expanded" );
     if( e != null ) {
       expanded = bool.parse( e );
+    }
+    var c = node->get_prop( "column" );
+    if( c != null ) {
+      column = int.parse( c );
     }
     _content = node->get_content();
   }
