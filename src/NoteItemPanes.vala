@@ -22,6 +22,44 @@
 using Gtk;
 
 //-------------------------------------------------------------
+// Location of a note item in the panes box (row and column).
+public class NoteItemPos {
+  private bool _valid = false;
+  private int  _row   = -1;
+  private int  _col   = -1;
+  public NoteItemPos() {}
+  public bool is_valid() {
+    return( _valid );
+  }
+  public void set_position( int row, int col ) {
+    _valid = true;
+    _row   = row;
+    _col   = col;
+  }
+  public void set_position_from_pane( Widget pane ) {
+    var parent  = pane.get_parent();
+    var gparent = parent.get_parent(); 
+    _valid      = true;
+    _col        = Utils.get_child_index( parent, pane );
+    _row        = Utils.get_child_index( gparent, parent );
+  }
+  public void clear_position() {
+    _valid = false;
+  }
+  public NoteItemPane? get_pane( Widget panes ) {
+    if( !_valid ) return( null );
+    var row = Utils.get_child_at_index( panes, _row ); 
+    if( row == -1 ) return( null );
+    var pane = Utils.get_child_at_index( row, _col );
+    if( pane == -1 ) return( null );
+    return( (NoteItemPane)pane );
+  }
+  public bool matches( NoteItemPos other ) {
+    return( (_valid == other._valid) && (_row == other._row) && (_col == other._col) );
+  }
+}
+
+//-------------------------------------------------------------
 // Contains all of the note item panes for a single note.  Handles
 // any resources that are shared by multiple panes (i.e., spellchecker).
 // Provides functionality for manipulating panes within the browser.
@@ -29,8 +67,8 @@ public class NoteItemPanes : Box {
 
   private MainWindow   _win;
   private Note         _note;
-  private int          _current_item = -1;
-  private int          _size         = 0;
+  private NoteItemPos  _current_item;
+  private int          _size        = 0;
   private SpellChecker _spell;
 
   public signal void item_removed( NoteItemPane pane );
@@ -50,7 +88,8 @@ public class NoteItemPanes : Box {
       spacing: 5
     );
 
-    _win = win;
+    _win          = win;
+    _current_item = new NoteItemPos();
 
     // Initialize the spell checker
     initialize_spell_checker();
@@ -78,7 +117,7 @@ public class NoteItemPanes : Box {
     var extra = new GLib.Menu();
     view.extra_menu = extra;
 
-    var pane = get_pane( _current_item );
+    var pane = _current_item.get_pane( this );
     if( pane != null ) {
       pane.populate_extra_menu();
     }
@@ -138,6 +177,14 @@ public class NoteItemPanes : Box {
   // Adds an item to the UI at the given position.  Set pos to -1
   // to append the item at the end of the current item set.
   public void add_item( NoteItem item, int pos, bool show ) {
+
+    NoteItemRow? row = null;
+
+    if( item.column == 0 ) {
+      row = new NoteItemRow();
+    } else {
+      // FOOBAR
+    }
 
     NoteItemPane pane;
     switch( item.item_type ) {
@@ -217,10 +264,12 @@ public class NoteItemPanes : Box {
     });
 
     pane.set_as_current.connect((msg) => {
-      if( _current_item == -1 ) {
-        _current_item = Utils.get_child_index( this, pane );
+      if( !_current_item.is_valid() ) {
+        _current_item.set_position_from_pane( pane );
         item_selected( pane );
-      } else if( _current_item != Utils.get_child_index( this, pane ) ) {
+      } else {
+        var FOOBAR
+        if( _current_item != Utils.get_child_index( this, pane ) ) {
         var other_pane = (NoteItemPane)Utils.get_child_at_index( this, _current_item );
         if( other_pane != null ) {
           other_pane.clear_current();
@@ -332,9 +381,9 @@ public class NoteItemPanes : Box {
   }
 
   //-------------------------------------------------------------
-  // Returns the item at the given position
-  public NoteItemPane? get_pane( int pos ) {
-    return( (NoteItemPane)Utils.get_child_at_index( this, pos ) );
+  // Returns the row at the given position.
+  public NoteItemRow? get_row( int pos ) {
+    return( (NoteItemRow)Utils.get_child_at_index( this, pos ) );
   }
 
   //-------------------------------------------------------------

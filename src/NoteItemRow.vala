@@ -35,8 +35,20 @@ public class NoteItemRow : Box {
 
   //-------------------------------------------------------------
   // Populates this row with the given note.
-  public populate() {
+  public add_item( NoteItemPane pane, int column = -1 ) {
 
+    if( column == -1 ) {
+      append( pane );
+    } else {
+      insert( column, pane );
+    }
+
+  }
+
+  //-------------------------------------------------------------
+  // Returns the item at the given column
+  public NoteItemPane? get_pane( int column ) {
+    return( (NoteItemPane)Utils.get_child_at_index( this, column ) );
   }
 
 }
