@@ -79,6 +79,9 @@ public class Sidebar : Box {
 
 		_win = win;
 
+    MosaicNote.settings.changed["sidebar-show-galleries"].connect(() => {
+      populate_tree();
+    });
     MosaicNote.settings.changed["sidebar-show-tags"].connect(() => {
       populate_tree();
     });

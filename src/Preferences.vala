@@ -143,6 +143,10 @@ public class Preferences : Gtk.Dialog {
     grid.attach( make_menu( "spellchecker-language", spell_lang_label(), create_spell_lang_menu() ), 1, row, 2 );
     row++;
 
+    grid.attach( make_label( _( "show Galleries section in sidebar" ) ), 0, row );
+    grid.attach( make_switch( "sidebar-show-galleries" ), 1, row );
+    row++;
+
     grid.attach( make_label( _( "Show Tags section in sidebar" ) ), 0, row );
     grid.attach( make_switch( "sidebar-show-tags" ), 1, row );
     row++;
