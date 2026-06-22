@@ -26,6 +26,7 @@ public class TextItem : Box {
   public NoteItem       _item;
   public GtkSource.View _text;
 
+  //-------------------------------------------------------------
 	// Default constructor
 	public TextItem( NoteItem item ) {
 
@@ -36,6 +37,7 @@ public class TextItem : Box {
 
   }
 
+  //-------------------------------------------------------------
   // Sets the height of the text widget
   private void set_text_height( GtkSource.View text ) {
 
@@ -48,6 +50,7 @@ public class TextItem : Box {
 
   }
 
+  //-------------------------------------------------------------
   // Adds a new item above or below the item at the given index.
   private void add_item( int index, bool above ) {
 
@@ -58,6 +61,7 @@ public class TextItem : Box {
 
   }
 
+  //-------------------------------------------------------------
   // Split the current item into two items at the insertion point.
   private void split_item( int index ) {
 
@@ -93,6 +97,7 @@ public class TextItem : Box {
 
   }
 
+  //-------------------------------------------------------------
   // Joins the item at the given index with the item above it.
   private bool join_items( int index ) {
 
@@ -138,6 +143,7 @@ public class TextItem : Box {
 
   }
 
+  //-------------------------------------------------------------
   // Adds and handles any text events.
   private void handle_text_events( GtkSource.View text ) {
 
@@ -177,6 +183,7 @@ public class TextItem : Box {
 
   }
 
+  //-------------------------------------------------------------
   // Adds the given item
   private void add_item_to_content( Widget w, int pos = -1 ) {
     if( pos == -1 ) {
@@ -189,6 +196,7 @@ public class TextItem : Box {
     }
   }
 
+  //-------------------------------------------------------------
   // Sets the current item and updates the UI
   private void set_current_item( int index ) {
     _current_item = index;
@@ -200,6 +208,9 @@ public class TextItem : Box {
     }
   }
 
+  //-------------------------------------------------------------
+  // Adds a new Text item at the given position in the content
+  // area.
   private GtkSource.View add_text_item( NoteItem item, string lang_id, int pos = -1 ) {
 
     var lang_mgr = new GtkSource.LanguageManager();
@@ -243,7 +254,9 @@ public class TextItem : Box {
 
   }
 
-  // Adds a new Markdown item at the given position in the content area
+  //-------------------------------------------------------------
+  // Adds a new Markdown item at the given position in the content
+  // area.
   private Widget add_markdown_item( NoteItemMarkdown item, int pos = -1 ) {
 
     var text = add_text_item( item, "markdown", pos );
@@ -252,6 +265,8 @@ public class TextItem : Box {
 
   }
 
+  //-------------------------------------------------------------
+  // Adds a new Code item at the given position in the content area.
   private Widget add_code_item( NoteItemCode item, int pos = -1 ) {
 
     var text = add_text_item( item, item.lang, pos );
@@ -265,6 +280,9 @@ public class TextItem : Box {
 
   }
 
+  //-------------------------------------------------------------
+  // Adds a new Image item at the given position in the content
+  // area.
   private Widget add_image_item( NoteItemImage item, int pos = -1 ) {
 
     var label = new Label( "This is an image" );

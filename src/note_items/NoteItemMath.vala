@@ -40,14 +40,14 @@ public class NoteItemMath : NoteItem {
 
   //-------------------------------------------------------------
 	// Default constructor
-	public NoteItemMath( Note note ) {
-		base( note, NoteItemType.MATH );
+	public NoteItemMath( NoteItemRow row ) {
+		base( row, NoteItemType.MATH );
 	}
 
   //-------------------------------------------------------------
 	// Constructor from XML node
-	public NoteItemMath.from_xml( Note note, Xml.Node* node ) {
-		base( note, NoteItemType.MATH );
+	public NoteItemMath.from_xml( NoteItemRow row, Xml.Node* node ) {
+		base( row, NoteItemType.MATH );
 		load( node );
 	}
 

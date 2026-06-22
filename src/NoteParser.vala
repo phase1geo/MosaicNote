@@ -146,11 +146,13 @@ public class NoteParser {
       var stripped = line.strip();
       if( stripped.has_prefix( "```" ) ) {
         if( in_code_block ) {
-          var code_item = new NoteItemCode( note ) {
+          var row = new NoteItemRow( note );
+          var code_item = new NoteItemCode( row ) {
             lang    = language,
             content = code
           };
-          note.add_note_item( note.size(), code_item, false );
+          row.add_item( code_item );
+          note.add_row( row );
           language = "";
           code     = "";
           start_index = index + 1;
@@ -201,11 +203,13 @@ public class NoteParser {
         if( start_index != index ) {
           parse_markdown_table( note, lines[start_index:index-1] );
         }
-        var image_item = new NoteItemImage( note ) {
+        var row = new NoteItemRow( note );
+        var image_item = new NoteItemImage( row ) {
           uri = fix_uri( match.fetch( 2 ) ),
           description = match.fetch( 1 )
         };
-        note.add_note_item( note.size(), image_item, false );
+        row.add_item( image_item );
+        note.add_row( row );
         start_index = index + 1;
       }
       index++;
@@ -297,6 +301,7 @@ public class NoteParser {
   private void parse_markdown_table( Note note, string[] lines ) {
 
     NoteItemTable? table_item = null;
+    NoteItemRow?   row = null;
     var index        = 0;
     var start_index  = 0;
     var in_header    = true;
@@ -311,7 +316,8 @@ public class NoteParser {
         }
         var columns = stripped.split( "|" );
         if( in_header ) {
-          table_item = new NoteItemTable( note, (columns.length - 2) );
+          row = new NoteItemRow( note );
+          table_item = new NoteItemTable( row, (columns.length - 2) );
           parse_markdown_table_header( table_item, columns[1:columns.length-2] );
           in_header = false;
           in_align  = true;
@@ -328,7 +334,8 @@ public class NoteParser {
         }
         start_index = index + 1;
       } else if( table_item != null ) {
-        note.add_note_item( note.size(), table_item, false );
+        row.add_item( table_item );
+        note.add_row( row );
         table_item  = null;
         in_header   = true;
         start_index = index;
@@ -352,10 +359,12 @@ public class NoteParser {
   private void parse_markdown_markdown( Note note, string[] lines ) {
     var text = string.joinv( "\n", lines ).strip();
     if( text != "" ) {
-      var markdown_item = new NoteItemMarkdown( note ) {
+      var row = new NoteItemRow( note );
+      var markdown_item = new NoteItemMarkdown( row ) {
         content = string.joinv( "\n", lines ).strip()
       };
-      note.add_note_item( note.size(), markdown_item, false );
+      row.add_item( markdown_item );
+      note.add_row( row );
     }
   }
 

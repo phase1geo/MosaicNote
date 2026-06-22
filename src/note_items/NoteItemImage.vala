@@ -55,14 +55,14 @@ public class NoteItemImage : NoteItem {
 
   //-------------------------------------------------------------
 	// Default constructor
-	public NoteItemImage( Note note ) {
-		base( note, NoteItemType.IMAGE );
+	public NoteItemImage( NoteItemRow row ) {
+		base( row, NoteItemType.IMAGE );
 	}
 
   //-------------------------------------------------------------
 	// Constructor from XML format
-	public NoteItemImage.from_xml( Note note, Xml.Node* node ) {
-		base( note, NoteItemType.IMAGE );
+	public NoteItemImage.from_xml( NoteItemRow row, Xml.Node* node ) {
+		base( row, NoteItemType.IMAGE );
 		load( node );
 	}
 

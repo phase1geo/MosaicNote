@@ -44,10 +44,13 @@ public class NoteItemPane : Box {
   private Widget        _header1;
 
   private const GLib.ActionEntry[] action_entries = {
-    { "action_add_item_above", action_add_item_above },
-    { "action_add_item_below", action_add_item_below },
-    { "action_delete_item",    action_delete_item },
-    { "action_export_item",    action_export_item, "i" },
+    { "action_add_item_above",         action_add_item_above },
+    { "action_add_item_below",         action_add_item_below },
+    { "action_add_item_left",          action_add_item_left },
+    { "action_add_item_right",         action_add_item_right },
+    { "action_delete_item",            action_delete_item },
+    { "action_delete_row",             action_delete_row },
+    { "action_export_item",            action_export_item, "i" },
     { "action_copy_item_to_clipboard", action_copy_item_to_clipboard },
   };
 
@@ -70,10 +73,11 @@ public class NoteItemPane : Box {
   public NoteItemPane? next_pane { get; set; default = null; }
   public bool          ignore_text_change { get; set; default = false; }
 
-  public signal void add_item( bool above, NoteItemType? type );
+  public signal void add_item( MoveDirection dir, NoteItemType? type );
   public signal void remove_item( bool forward, bool record_undo );
+  public signal void remove_row();
   public signal void change_item( NoteItemType type );
-  public signal void move_item( bool up, bool record_undo );
+  public signal void move_item( MoveDirection dir, bool record_undo );
   public signal void set_as_current( string msg = "" );
   public signal void note_link_clicked( string link );
   public signal void show_image();
@@ -127,7 +131,10 @@ public class NoteItemPane : Box {
   private void add_keyboard_shortcuts() {
     _win.application.set_accels_for_action( "item.action_add_item_above", { "<Control><Shift>Return" } );
     _win.application.set_accels_for_action( "item.action_add_item_below", { "<Shift>Return" } );
+    _win.application.set_accels_for_action( "item.action_add_item_left",  { "<Control><Shift>Tab" } );
+    _win.application.set_accels_for_action( "item.action_add_item_right", { "<Shift>Tab" } );
     _win.application.set_accels_for_action( "item.action_delete_item",    { "<Control>Delete" } );
+    _win.application.set_accels_for_action( "item.action_delete_row",     { "<Control><Shift>Delete" } );
   }
 
   //-------------------------------------------------------------
@@ -323,7 +330,7 @@ public class NoteItemPane : Box {
         case Gdk.Key.Up :
           if( prev_pane != null ) {
             if( control ) {
-              move_item( true, true );
+              move_item( MoveDirection.UP, true );
               return( true );
             } else if( !handled_up() ) {
               var text = get_text();
@@ -342,7 +349,7 @@ public class NoteItemPane : Box {
         case Gdk.Key.Down :
           if( next_pane != null ) {
             if( control ) {
-              move_item( false, true );
+              move_item( MoveDirection.DOWN, true );
               return( true );
             } else if( !handled_down() ) {
               var text = get_text();
@@ -568,11 +575,14 @@ public class NoteItemPane : Box {
     });
 
     var add_menu = new GLib.Menu();
-    add_menu.append( _( "Add Block Above" ), "item.action_add_item_above" );
-    add_menu.append( _( "Add Block Below" ), "item.action_add_item_below" );
+    add_menu.append( _( "Add Block Above" ),    "item.action_add_item_above" );
+    add_menu.append( _( "Add Block Below" ),    "item.action_add_item_below" );
+    add_menu.append( _( "Add Block To Left" ),  "item.action_add_item_left" );
+    add_menu.append( _( "Add Block To Right" ), "item.action_add_item_right" );
 
     var del_menu = new GLib.Menu();
     del_menu.append( _( "Delete Block" ), "item.action_delete_item" );
+    del_menu.append( _( "Delete Row" ),   "item.action_delete_row" );
 
     var export_menu = new GLib.Menu();
     for( int i=0; i<ExportType.NUM; i++ ) {
@@ -781,9 +791,27 @@ public class NoteItemPane : Box {
   }
 
   //-------------------------------------------------------------
+  // Adds an item to the left of this item
+  private void action_add_item_left() {
+    add_item( MoveDirection.LEFT, NoteItemType.MARKDOWN );
+  }
+
+  //-------------------------------------------------------------
+  // Adds an item to the right of this item
+  private void action_add_item_right() {
+    add_item( MoveDirection.RIGHT, NoteItemType.MARKDOWN );
+  }
+
+  //-------------------------------------------------------------
   // Removes the current item
   private void action_delete_item() {
     remove_item( true, true );
+  }
+
+  //-------------------------------------------------------------
+  // Removes the current row.
+  private void action_delete_row() {
+    remove_row();
   }
 
   //-------------------------------------------------------------

@@ -159,15 +159,15 @@ public enum NoteItemType {
 
   //-------------------------------------------------------------
   // Creates a note item object for the given note.
-	public NoteItem create( Note note ) {
+	public NoteItem create( NoteItemRow row ) {
 		switch( this ) {
-			case MARKDOWN :  return( new NoteItemMarkdown( note ) );
-			case CODE     :  return( new NoteItemCode( note ) );
-			case IMAGE    :  return( new NoteItemImage( note ) );
-      case UML      :  return( new NoteItemUML( note ) );
-      case MATH     :  return( new NoteItemMath( note ) );
-      case TABLE    :  return( new NoteItemTable( note, 0, 0 ) );
-      case ASSETS   :  return( new NoteItemAssets( note ) );
+			case MARKDOWN :  return( new NoteItemMarkdown( row ) );
+			case CODE     :  return( new NoteItemCode( row ) );
+			case IMAGE    :  return( new NoteItemImage( row ) );
+      case UML      :  return( new NoteItemUML( row ) );
+      case MATH     :  return( new NoteItemMath( row ) );
+      case TABLE    :  return( new NoteItemTable( row, 0, 0 ) );
+      case ASSETS   :  return( new NoteItemAssets( row ) );
 			default       :  assert_not_reached();
 		}
 	}
@@ -234,9 +234,8 @@ public class NoteItem : Object {
 
   private string _content  = "";
   private bool   _expanded = true;
-  private int    _column   = 0;
 
-	public Note         note      { get; private set; }
+	public NoteItemRow  row       { get; private set; }
 	public int          id        { get; private set; }
   public NoteItemType item_type { get; private set; default = NoteItemType.MARKDOWN; }
 	public bool         modified  { get; protected set; default = false; }
@@ -268,24 +267,12 @@ public class NoteItem : Object {
     }
   }
 
-  public int column {
-    get {
-      return( _column );
-    }
-    set {
-      if( _column != value ) {
-        _column = value;
-        modified = true;
-      }
-    }
-  }
-
   //-------------------------------------------------------------
 	// Default constructor
-	public NoteItem( Note note, NoteItemType type ) {
+	public NoteItem( NoteItemRow row, NoteItemType type ) {
     Object();
 		this.id        = current_id++;
-		this.note      = note;
+		this.row       = row;
     this.item_type = type;
 	}
 
@@ -299,20 +286,15 @@ public class NoteItem : Object {
   //-------------------------------------------------------------
   // Copy method (can be used to convert one item to another as well)
   public virtual void copy( NoteItem item ) {
-  	this.note     = item.note;
+  	this.row      = item.row;
     this._content = item._content;
     this.modified = item.modified;
   }
 
   //-------------------------------------------------------------
-  // Returns the index location of this item within its note.
+  // Returns the index location of this item within its row.
   public int index() {
-    for( int i=0; i<note.size(); i++ ) {
-      if( note.get_item( i ) == this ) {
-        return( i );
-      }
-    }
-    return( -1 );
+    return( row.get_column( this ) );
   }
 
   //-------------------------------------------------------------
@@ -372,7 +354,8 @@ public class NoteItem : Object {
   //-------------------------------------------------------------
   // Returns the directory that contains the resource in the notebook associated with this note item's note.
   public string get_resource_dir() {
-    return( Path.build_filename( note.notebook.notebook_directory( note.notebook.id ), "resources" ) );
+    var nb = row.note.notebook;
+    return( Path.build_filename( nb.notebook_directory( nb.id ), "resources" ) );
   }
 
   //-------------------------------------------------------------
@@ -433,7 +416,6 @@ public class NoteItem : Object {
 		Xml.Node* node = new Xml.Node( null, item_type.to_string() );
 		node->set_prop( "id", id.to_string() );
     node->set_prop( "expanded", expanded.to_string() );
-    node->set_prop( "column", column.to_string() );
     node->add_content( content );
 		modified = false;
 		return( node );
@@ -451,10 +433,6 @@ public class NoteItem : Object {
     var e = node->get_prop( "expanded" );
     if( e != null ) {
       expanded = bool.parse( e );
-    }
-    var c = node->get_prop( "column" );
-    if( c != null ) {
-      column = int.parse( c );
     }
     _content = node->get_content();
   }

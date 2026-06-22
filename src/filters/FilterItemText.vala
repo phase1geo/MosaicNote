@@ -47,10 +47,13 @@ public class FilterItemText : SmartTextFilter {
   //-------------------------------------------------------------
   // Checks the note to see if it matches the title text.
   public override bool check_note( Note note ) {
-    for( int i=0; i<note.size(); i++ ) {
-      var item = note.get_item( i );
-      if( (item.item_type == item_type) && check_text( item.content ) ) {
-        return( true );
+    for( int i=0; i<note.rows(); i++ ) {
+      var row = note.get_row( i );
+      for( int j=0; j<row.size(); j++ ) {
+        var item = row.get_item( j );
+        if( (item.item_type == item_type) && check_text( item.content ) ) {
+          return( true );
+        }
       }
     }
     return( false );

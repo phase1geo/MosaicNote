@@ -21,124 +21,124 @@
 
 public class NoteItemUML : NoteItem {
 
-	private string _description = "";
+  private string _description = "";
 
-	public string description {
-		get {
-			return( _description );
-		}
-		set {
-			if( _description != value ) {
-				_description = value;
-				modified = true;
-				changed();
-			}
-		}
-	}
+  public string description {
+    get {
+      return( _description );
+    }
+    set {
+      if( _description != value ) {
+        _description = value;
+        modified = true;
+        changed();
+      }
+    }
+  }
 
-	public signal void diagram_updated( string? filename );
+  public signal void diagram_updated( string? filename );
 
-	//-------------------------------------------------------------
-	// Default constructor
-	public NoteItemUML( Note note ) {
-		base( note, NoteItemType.UML );
-		changed.connect( update_diagram );
-	}
+  //-------------------------------------------------------------
+  // Default constructor
+  public NoteItemUML( NoteItemRow row ) {
+    base( row, NoteItemType.UML );
+    changed.connect( update_diagram );
+  }
 
-	//-------------------------------------------------------------
-	// Constructor from XML data.
-	public NoteItemUML.from_xml( Note note, Xml.Node* node ) {
-		base( note, NoteItemType.UML );
-		load( node );
-		changed.connect( update_diagram );
-	}
+  //-------------------------------------------------------------
+  // Constructor from XML data.
+  public NoteItemUML.from_xml( NoteItemRow row, Xml.Node* node ) {
+    base( row, NoteItemType.UML );
+    load( node );
+    changed.connect( update_diagram );
+  }
 
-	//-------------------------------------------------------------
-	// Searches the description and content fields for the given
-	// search pattern.
-	public override bool search( string pattern ) {
-		return( description.contains( pattern ) || base.search( pattern ) );
-	}
+  //-------------------------------------------------------------
+  // Searches the description and content fields for the given
+  // search pattern.
+  public override bool search( string pattern ) {
+    return( description.contains( pattern ) || base.search( pattern ) );
+  }
 
-	//-------------------------------------------------------------
-	// Returns the Markdown version of this item
-	public override string to_markdown( NotebookTree? notebooks, bool pandoc ) {
-		var filename = get_resource_filename();
-	  return( format_for_width( "![%s](file://%s)".printf( description, filename ), filename, pandoc ) );
-	}
+  //-------------------------------------------------------------
+  // Returns the Markdown version of this item
+  public override string to_markdown( NotebookTree? notebooks, bool pandoc ) {
+    var filename = get_resource_filename();
+    return( format_for_width( "![%s](file://%s)".printf( description, filename ), filename, pandoc ) );
+  }
 
-	//-------------------------------------------------------------
-	// Exports the asset to the assets directory and returns the
-	// Markdown string.
-	public override string export( NotebookTree? notebooks, string assets_dir ) {
+  //-------------------------------------------------------------
+  // Exports the asset to the assets directory and returns the
+  // Markdown string.
+  public override string export( NotebookTree? notebooks, string assets_dir ) {
     var asset = copy_asset( assets_dir, get_resource_filename() );
-  	return( "![%s](%s)".printf( description, asset ) );
-	}
+    return( "![%s](%s)".printf( description, asset ) );
+  }
 
-	//-------------------------------------------------------------
+  //-------------------------------------------------------------
   // Returns the resource filename
   public override string get_resource_filename() {
     return( get_resource_path( "png" ) );
   }
 
-	//-------------------------------------------------------------
-	// Updates the UML diagram
-	public void update_diagram() {
+  //-------------------------------------------------------------
+  // Updates the UML diagram
+  public void update_diagram() {
 
-		if( content != "" ) {
+    if( content != "" ) {
 
       Utils.create_dir( get_resource_dir() );
 
-		  var input  = get_resource_path( "txt" );
-		  var output = get_resource_path( "png" );
+      var input  = get_resource_path( "txt" );
+      var output = get_resource_path( "png" );
 
-		  FileUtils.remove( output );
+      FileUtils.remove( output );
 
-			// Save the current content to a file
-			try {
-				FileUtils.set_contents( input, content );
-			} catch( FileError e ) {
-				stdout.printf( "Error saving UML diagram contents to file %s: %s\n", input, e.message );
-				diagram_updated( null );
-				return;
-			}
+      // Save the current content to a file
+      try {
+        FileUtils.set_contents( input, content );
+      } catch( FileError e ) {
+        stdout.printf( "Error saving UML diagram contents to file %s: %s\n", input, e.message );
+        diagram_updated( null );
+        return;
+      }
 
-			var loop = new MainLoop();
+      var loop = new MainLoop();
 
-			try {
-	    	string[] spawn_args = { "plantuml", "-tpng", "-o", get_resource_dir(), input };
-    		string[] spawn_env  = Environ.get();
-    		Pid child_pid;
+      try {
+        string[] spawn_args = { "plantuml", "-tpng", "-o", get_resource_dir(), input };
+        string[] spawn_env  = Environ.get();
+        Pid child_pid;
 
-		    Process.spawn_async( "/",
-    			spawn_args,
-		    	spawn_env,
-    			SpawnFlags.SEARCH_PATH | SpawnFlags.DO_NOT_REAP_CHILD,
-		    	null,
-    			out child_pid
-    		);
+        Process.spawn_async( "/",
+          spawn_args,
+          spawn_env,
+          SpawnFlags.SEARCH_PATH | SpawnFlags.DO_NOT_REAP_CHILD,
+          null,
+          out child_pid
+        );
 
-    		ChildWatch.add( child_pid, (pid, status) => {
-			    Process.close_pid( pid );
-			    loop.quit();
-     	    if( FileUtils.test( output, FileTest.EXISTS ) ) {
-	   		    diagram_updated( output );
-   		    } else {
-  		    	diagram_updated( null );
-   		    }
-		    });
+        ChildWatch.add( child_pid, (pid, status) => {
+          Process.close_pid( pid );
+          loop.quit();
+          if( FileUtils.test( output, FileTest.EXISTS ) ) {
+            diagram_updated( output );
+          } else {
+            diagram_updated( null );
+          }
+        });
 
-    		loop.run();
-    		return;
-    	} catch (SpawnError e) {
-		    print ("Error: %s\n", e.message);
-	    }
+        loop.run();
+        return;
+      } catch (SpawnError e) {
+        print ("Error: %s\n", e.message);
+      }
 
-	  }
+    }
 
     diagram_updated( null );
 
-	}
+  }
 
   //-------------------------------------------------------------
   // Saves the content in XML format

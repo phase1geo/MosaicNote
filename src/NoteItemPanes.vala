@@ -48,15 +48,21 @@ public class NoteItemPos {
   }
   public NoteItemPane? get_pane( Widget panes ) {
     if( !_valid ) return( null );
-    var row = Utils.get_child_at_index( panes, _row ); 
-    if( row == -1 ) return( null );
-    var pane = Utils.get_child_at_index( row, _col );
-    if( pane == -1 ) return( null );
-    return( (NoteItemPane)pane );
+    var row = (NoteItemRow)Utils.get_child_at_index( panes, _row ); 
+    return( (row != null) ? row.get_pane( _col ) : null );
   }
   public bool matches( NoteItemPos other ) {
     return( (_valid == other._valid) && (_row == other._row) && (_col == other._col) );
   }
+}
+
+//-------------------------------------------------------------
+// Used to indicate a direction of movement.
+public enum MoveDirection {
+  UP,
+  DOWN,
+  LEFT,
+  RIGHT
 }
 
 //-------------------------------------------------------------
@@ -166,11 +172,12 @@ public class NoteItemPanes : Box {
 
   //-------------------------------------------------------------
   // Adds a new item of the given type at the given position
-  public void add_new_item( NoteItemType type, int pos = -1 ) {
+  public void add_new_item( NoteItemType type, int row = -1, uint col = 0 ) {
     var new_item = type.create( _note );
-    _note.add_note_item( (uint)pos, new_item );
+    new_item.column = col;
+    var pos = _note.add_item( row, new_item );
     add_item( new_item, pos, true );
-    _win.undo.add_item( new UndoItemAdd( _note, ((pos == -1) ? (_size - 1) : pos) ) );
+    _win.undo.add_item( new UndoItemAdd( _note, pos ) );
   }
 
   //-------------------------------------------------------------
@@ -178,12 +185,13 @@ public class NoteItemPanes : Box {
   // to append the item at the end of the current item set.
   public void add_item( NoteItem item, int pos, bool show ) {
 
-    NoteItemRow? row = null;
+    NoteItemRow? item_row = null;
 
     if( item.column == 0 ) {
-      row = new NoteItemRow();
+      item_row = new NoteItemRow();
+      // FOOBAR - Insert row
     } else {
-      // FOOBAR
+      item_row = (NoteItemRow)Utils.get_child_at_index( this, pos );
     }
 
     NoteItemPane pane;
@@ -198,9 +206,17 @@ public class NoteItemPanes : Box {
       default                    :  return;
     }
 
-    pane.add_item.connect((above, type) => {
-      var index = Utils.get_child_index( this, pane );
-      add_new_item( ((type == null) ? NoteItemType.MARKDOWN : type), (above ? index : (index + 1)) );
+    pane.add_item.connect((dir, type) => {
+      var row_box = pane.get_parent();
+      var row     = Utils.get_child_index( this, row_box );
+      var col     = Utils.get_child_index( row_box, pane ); 
+      switch( dir ) {
+        case MoveDirection.UP    :  col = 0;          break;
+        case MoveDirection.DOWN  :  col = 0;  row++;  break;
+        case MoveDirection.RIGHT :  col++;            break;
+        default                  :  break;
+      }
+      add_new_item( ((type == null) ? NoteItemType.MARKDOWN : type), row, col );
       // pane.set_as_current( "pane.add_item (%s)".printf( item.content ) );
     });
 
@@ -223,20 +239,27 @@ public class NoteItemPanes : Box {
         show_pane( prev_pane );
         prev_pane.grab_item_focus( TextCursorPlacement.NO_CHANGE );
       } else {
-        add_new_item( NoteItemType.MARKDOWN, 0 );
+        add_new_item( NoteItemType.MARKDOWN, 0, 0 );
       }
+    });
+
+    pane.remove_row.connect(() => {
+      stdout.printf( "Need to add code to remove row\n" );
     });
 
     pane.change_item.connect((type) => {
       set_current_item_to_type( type );
     });
 
-    pane.move_item.connect((up, record_undo) => {
-      var index = Utils.get_child_index( this, pane );
-      var prev  = get_pane( index - 1 );
-      var curr  = get_pane( index );
-      var next  = get_pane( index + 1 );
-      if( up ) {
+    pane.move_item.connect((dir, record_undo) => {
+      var row_box  = pane.get_parent();
+      var curr_row = Utils.get_child_index( this, row_box );
+      var curr_col = Utils.get_child_index( row_box, pane );
+      // FOOBAR
+      var prev     = get_pane( index - 1 );
+      var curr     = get_pane( index );
+      var next     = get_pane( index + 1 );
+      if( dir == MoveDirection.UP ) {
         curr.prev_pane = prev.prev_pane;
         curr.next_pane = prev;
         prev.prev_pane = curr;
@@ -268,8 +291,8 @@ public class NoteItemPanes : Box {
         _current_item.set_position_from_pane( pane );
         item_selected( pane );
       } else {
-        var FOOBAR
-        if( _current_item != Utils.get_child_index( this, pane ) ) {
+        // var FOOBAR
+        // if( _current_item != Utils.get_child_index( this, pane ) ) {
         var other_pane = (NoteItemPane)Utils.get_child_at_index( this, _current_item );
         if( other_pane != null ) {
           other_pane.clear_current();
@@ -338,10 +361,12 @@ public class NoteItemPanes : Box {
   //-------------------------------------------------------------
   // Clears the current item.
   public void clear_current_item() {
-    if( _current_item != -1 ) {
-      var pane = (NoteItemPane)Utils.get_child_at_index( this, _current_item );
-      pane.clear_current();
-      _current_item = -1;
+    if( _current_item.is_valid() ) {
+      var pane = _current_item.get_pane( this );
+      if( pane != null ) {
+        pane.clear_current();
+      }
+      _current_item.clear_position();
     }
   }
 
@@ -352,9 +377,11 @@ public class NoteItemPanes : Box {
     var new_item = type.create( _note );
     _note.convert_note_item( _current_item, new_item );
 
-    var pane = get_pane( _current_item );
-    remove( pane );
-    _size--;
+    var pane = _current_item.get_pane( this );
+    if( pane != null ) {
+      remove( pane );
+      _size--;
+    }
 
     add_item( new_item, _current_item, true );
 
@@ -369,21 +396,29 @@ public class NoteItemPanes : Box {
 
     Utils.clear_box( this );
 
+    // FOOBAR
     for( int i=0; i<_note.size(); i++ ) {
       add_item( _note.get_item( i ), -1, false );
     }
 
     // Make sure that the first item has the focus
     if( _note.size() > 0 ) {
-      get_pane( 0 ).grab_item_focus( TextCursorPlacement.START );
+      get_pane( 0, 0 ).grab_item_focus( TextCursorPlacement.START );
     }
 
   }
 
   //-------------------------------------------------------------
-  // Returns the row at the given position.
+  // Returns the row at the given location.
   public NoteItemRow? get_row( int pos ) {
     return( (NoteItemRow)Utils.get_child_at_index( this, pos ) );
+  }
+
+  //-------------------------------------------------------------
+  // Returns the pane at the given row/col location.
+  public NoteItemPane? get_pane( int row, int col ) {
+    var row = get_row( row );
+    return( (NoteItemPane)Utils.get_child_at_index( row, col ) );
   }
 
   //-------------------------------------------------------------
