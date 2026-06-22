@@ -405,8 +405,8 @@ public class Note : Object {
       modified = false;
     }
 
-    Xml.Node* node  = new Xml.Node( null, "note" );
-    Xml.Node* items = new Xml.Node( null, "items" );
+    Xml.Node* node = new Xml.Node( null, "note" );
+    Xml.Node* rows = new Xml.Node( null, "rows" );
     string[] referred_list = {};
 
     _referred.foreach((id) => {
@@ -427,8 +427,9 @@ public class Note : Object {
 
     // Save the note items
     for( int i=0; i<_rows.length; i++ ) {
-      node->add_child( _rows.index( i ).save() );
+      rows->add_child( _rows.index( i ).save() );
     }
+    node->add_child( rows );
 
     return( node );
 
@@ -486,7 +487,7 @@ public class Note : Object {
       if( it->type == Xml.ElementType.ELEMENT_NODE ) {
         switch( it->name ) {
           case "tags" :  _tags.load( it );  break;
-          case "row"  :  load_row( it );    break;
+          case "rows" :  load_rows( it );    break;
         }
       }
     }
@@ -495,9 +496,13 @@ public class Note : Object {
 
   //-------------------------------------------------------------
   // Loads the given row and appends it to our list of rows.
-  private void load_row( Xml.Node* node ) {
-    var row = new NoteItemRow.from_xml( this, node );
-    _rows.append_val( row );
+  private void load_rows( Xml.Node* node ) {
+    for( Xml.Node* it = node->children; it != null; it = it->next ) {
+      if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "row") ) {
+        var row = new NoteItemRow.from_xml( this, it );
+        _rows.append_val( row );
+      }
+    }
   }
 
 }

@@ -283,7 +283,6 @@ public class NoteItemPanes : Box {
       var row_box  = pane.get_parent();
       var curr_row = Utils.get_child_index( this, row_box );
       var curr_col = Utils.get_child_index( row_box, pane );
-      // FOOBAR
       var prev     = get_pane( curr_row - 1, 0 );
       var curr     = get_pane( curr_row, curr_col );
       var next     = get_pane( curr_row + 1, 0 );
@@ -319,8 +318,6 @@ public class NoteItemPanes : Box {
         _current_item.set_position_from_pane( pane );
         item_selected( pane );
       } else {
-        // var FOOBAR
-        // if( _current_item != Utils.get_child_index( this, pane ) ) {
         var other_pane = _current_item.get_pane( this );
         if( other_pane != null ) {
           other_pane.clear_current();
@@ -357,11 +354,13 @@ public class NoteItemPanes : Box {
         }
         prepend( row_pane );
       } else {
-        var sibling = get_pane( row - 1, 0 );
-        insert_child_after( pane, sibling );
+        var sibling_row = get_row( row - 1 );
+        insert_child_after( row_pane, sibling_row );
+        /* TODO
         pane.prev_pane = sibling;
         pane.next_pane = sibling.next_pane;
         sibling.next_pane = pane;
+        */
       }
       _rows++;
     }
@@ -449,7 +448,7 @@ public class NoteItemPanes : Box {
   // Returns the pane at the given row/col location.
   public NoteItemPane? get_pane( int row, int col ) {
     var row_pane = get_row( row );
-    return( (NoteItemPane)Utils.get_child_at_index( row_pane, col ) );
+    return( (row_pane != null) ? (NoteItemPane)Utils.get_child_at_index( row_pane, col ) : null );
   }
 
   //-------------------------------------------------------------
