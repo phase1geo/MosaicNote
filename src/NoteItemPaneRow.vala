@@ -23,21 +23,23 @@ using Gtk;
 
 public class NoteItemPaneRow : Box {
 
-  private Array<NoteItemPane> _panes;
+  private int _size = 0;
+
+  public int size {
+    get {
+      return( _size );
+    }
+  }
 
   //-------------------------------------------------------------
   // Constructor
   public NoteItemPaneRow() {
-
     Object( orientation: Orientation.HORIZONTAL, spacing : 5, homogeneous : true );
-
-    _panes = new Array<NoteItemPane>();
-
   }
 
   //-------------------------------------------------------------
   // Populates this row with the given note.
-  public void add_item( NoteItemPane pane, int column = -1 ) {
+  public void add_pane( NoteItemPane pane, int column = -1 ) {
     if( column == -1 ) {
       append( pane );
     } else if( column == 0 ) {
@@ -46,14 +48,16 @@ public class NoteItemPaneRow : Box {
       var sibling = get_pane( column - 1 );
       insert_child_after( pane, sibling );
     }
+    _size++;
   }
 
   //-------------------------------------------------------------
   // Deletes the item at the given column.
-  public void delete_item( int column ) {
+  public void delete_pane( int column ) {
     var box = get_pane( column );
     if( box != null ) {
       remove( box );
+      _size--;
     }
   }
 

@@ -229,7 +229,7 @@ public class NoteItemPane : Box {
     item.content = first;
     text.buffer.delete( ref start_iter, ref cursor_iter );
     text.buffer.insert( ref start_iter, first, first.length );
-    add_item( false, item.item_type );
+    add_item( MoveDirection.DOWN, item.item_type );
 
     // Update the added text pane
     text = next_pane.get_text();
@@ -308,10 +308,10 @@ public class NoteItemPane : Box {
       switch( keyval ) {
         case Gdk.Key.Return :
           if( control && shift ) {
-            add_item( true, null );
+            add_item( MoveDirection.UP, null );
             return( true );
           } else if( shift ) {
-            add_item( false, null );
+            add_item( MoveDirection.DOWN, null );
             return( true );
           }
           break;
@@ -781,13 +781,13 @@ public class NoteItemPane : Box {
   //-------------------------------------------------------------
   // Adds an item above this item
   private void action_add_item_above() {
-    add_item( true, NoteItemType.MARKDOWN );
+    add_item( MoveDirection.UP, NoteItemType.MARKDOWN );
   }
 
   //-------------------------------------------------------------
   // Adds an item below this item
   private void action_add_item_below() {
-    add_item( false, NoteItemType.MARKDOWN );
+    add_item( MoveDirection.DOWN, NoteItemType.MARKDOWN );
   }
 
   //-------------------------------------------------------------

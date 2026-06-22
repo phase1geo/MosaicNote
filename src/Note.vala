@@ -230,6 +230,31 @@ public class Note : Object {
   }
 
   //-------------------------------------------------------------
+  // Returns the item located at the specified row/column.
+  public NoteItem get_item( int row, int col ) {
+    var note_row = _rows.index( row );
+    return( note_row.get_item( col ) );
+  }
+
+  //-------------------------------------------------------------
+  // Returns the row/col position of the given item in this note.
+  public bool get_item_location( NoteItem item, out int row_pos, out int col_pos ) {
+    row_pos = -1;
+    col_pos = -1;
+    for( int i=0; i<_rows.length; i++ ) {
+      var row = _rows.index( i );
+      for( int j=0; j<row.size(); j++ ) {
+        if( row.get_item( j ) == item ) {
+          row_pos = i; 
+          col_pos = j;
+          return( true );
+        }
+      }
+    }
+    return( false );
+  }
+
+  //-------------------------------------------------------------
   // Adds the row to the list of rows.
   public void add_row( NoteItemRow row, int pos = -1 ) {
     if( pos == -1 ) {
@@ -241,10 +266,45 @@ public class Note : Object {
   }
 
   //-------------------------------------------------------------
+  // Adds a new note item, adding a new row if one is needed.
+  public void add_item( NoteItem item, int row_pos, int col_pos, bool add_to_row ) {
+    NoteItemRow row;
+    if( add_to_row && (_rows.length > 0) ) {
+      row = _rows.index( (row_pos == -1) ? (int)(_rows.length - 1) : row_pos );
+    } else {
+      row = new NoteItemRow( this );
+      add_row( row, row_pos );
+    }
+    row.add_item( item, col_pos );
+  }
+
+  //-------------------------------------------------------------
   // Deletes the row from the list of rows.
   public void delete_row( int pos ) {
     _rows.remove_index( pos );
     modified = true;
+  }
+
+  //-------------------------------------------------------------
+  // Deletes a single item from the note.  Removes the associated
+  // row if it is the last item in the row.
+  public void delete_item( int row_pos, int col_pos ) {
+    var row = _rows.index( row_pos );
+    row.delete_item( col_pos );
+    if( row.size() == 0 ) {
+      delete_row( row_pos );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Moves the row located at old_pos to the new position.
+  public void move_row( int old_pos, int new_pos ) {
+    var row = _rows.index( old_pos );
+    if( old_pos < new_pos ) {
+      new_pos++;
+    }
+    _rows.remove_index( old_pos );
+    _rows.insert_val( new_pos, row );
   }
 
   //-------------------------------------------------------------

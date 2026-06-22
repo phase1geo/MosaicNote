@@ -300,7 +300,7 @@ public class NotePanel : Box {
         _note.title = _title.text;
         note_saved( _note, null );
       }
-      _content.get_pane( 0 ).grab_item_focus( TextCursorPlacement.START );
+      _content.get_pane( 0, 0 ).grab_item_focus( TextCursorPlacement.START );
     });
 
     var separator1 = new Separator( Orientation.HORIZONTAL );
