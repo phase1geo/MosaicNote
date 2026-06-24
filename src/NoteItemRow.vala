@@ -19,7 +19,7 @@
 * Authored by: Trevor Williams <phase1geo@gmail.com>
 */
 
-public class NoteItemRow {
+public class NoteItemRow : Object {
 
   private Note            _note;
   private Array<NoteItem> _items;

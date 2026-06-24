@@ -233,7 +233,6 @@ public class NoteItem : Object {
   private const int max_image_width = 800;
 
   private string _content  = "";
-  private bool   _expanded = true;
 
 	public NoteItemRow  row       { get; private set; }
 	public int          id        { get; private set; }
@@ -251,18 +250,6 @@ public class NoteItem : Object {
         _content = value;
         modified = true;
         changed();
-      }
-    }
-  }
-
-  public bool expanded {
-    get {
-      return( _expanded );
-    }
-    set {
-      if( _expanded != value ) {
-        _expanded = value;
-        modified = true;
       }
     }
   }
@@ -415,7 +402,6 @@ public class NoteItem : Object {
 	public virtual Xml.Node* save() {
 		Xml.Node* node = new Xml.Node( null, item_type.to_string() );
 		node->set_prop( "id", id.to_string() );
-    node->set_prop( "expanded", expanded.to_string() );
     node->add_content( content );
 		modified = false;
 		return( node );
@@ -430,10 +416,6 @@ public class NoteItem : Object {
   	} else {
   		id = current_id++;
   	}
-    var e = node->get_prop( "expanded" );
-    if( e != null ) {
-      expanded = bool.parse( e );
-    }
     _content = node->get_content();
   }
 

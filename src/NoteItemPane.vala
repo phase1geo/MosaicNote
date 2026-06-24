@@ -112,7 +112,7 @@ public class NoteItemPane : Box {
     // If we are being set as the current item, make sure that we are drawn as the current item
     set_as_current.connect((msg) => {
       add_css_class( "active-item" );
-      _stack.visible_child_name = item.expanded ? "selected" : "unselected";
+      _stack.visible_child_name = item.row.expanded ? "selected" : "unselected";
       _stack.visible = true;
     });
 
@@ -141,7 +141,7 @@ public class NoteItemPane : Box {
   // Clears the current indicator
   public virtual void clear_current() {
     remove_css_class( "active-item" );
-    if( item.expanded ) {
+    if( item.row.expanded ) {
       _stack.visible_child_name = "unselected";
     }
   }
@@ -551,29 +551,6 @@ public class NoteItemPane : Box {
   // panel data (if needed).
   private void create_bar() {
 
-    var expand = new Button.with_label( item.expanded ? "\u23f7" : "\u23f5" ) {
-      has_frame = false,
-      halign = Align.START,
-      opacity = 0.0
-    };
-
-    var lbox = new Box( Orientation.VERTICAL, 5 ) {
-      margin_start  = 5,
-      margin_top    = 5,
-      margin_bottom = 5
-    };
-    lbox.append( expand );
-
-    var lbox_motion = new EventControllerMotion();
-    lbox.add_controller( lbox_motion );
-
-    lbox_motion.enter.connect((x, y) => {
-      expand.opacity = 1.0;
-    });
-    lbox_motion.leave.connect(() => {
-      expand.opacity = control_opacity;
-    });
-
     var add_menu = new GLib.Menu();
     add_menu.append( _( "Add Block Above" ),    "item.action_add_item_above" );
     add_menu.append( _( "Add Block Below" ),    "item.action_add_item_below" );
@@ -660,7 +637,7 @@ public class NoteItemPane : Box {
 
     var type_label = new Label( Utils.make_title( item.item_type.label() ) ) {
       use_markup = true,
-      visible    = !item.expanded
+      visible    = !item.row.expanded
     };
 
     var header2 = create_header2();
@@ -671,7 +648,7 @@ public class NoteItemPane : Box {
     h2_box_h.append( header2 );
 
     var sep = new Separator( Orientation.HORIZONTAL ) {
-      opacity = item.expanded ? 1.0 : 0.0
+      opacity = item.row.expanded ? 1.0 : 0.0
     };
 
     var h2_box = new Box( Orientation.VERTICAL, 5 );
@@ -684,7 +661,7 @@ public class NoteItemPane : Box {
     };
     _stack.add_named( h1_box, "selected" );
     _stack.add_named( h2_box, "unselected" );
-    _stack.visible_child_name = item.expanded ? "selected" : "unselected";
+    _stack.visible_child_name = "unselected";
 
     var header = new Box( Orientation.HORIZONTAL, 5 ) {
       halign        = Align.FILL,
@@ -697,16 +674,7 @@ public class NoteItemPane : Box {
 
     var pane = create_pane();
     click_to_current( pane );
-    pane.visible = item.expanded;
-
-    expand.clicked.connect(() => {
-      item.expanded = !item.expanded;
-      pane.visible  = item.expanded;
-      sep.opacity   = item.expanded ? 1.0 : 0.0;
-      type_label.visible = !item.expanded;
-      expand.label  = item.expanded ? "\u23f7" : "\u23f5";
-      _stack.visible_child_name = item.expanded ? "selected" : "unselected";
-    });
+    pane.visible = item.row.expanded;
 
     var cbox = new Box( Orientation.VERTICAL, 5 );
     cbox.append( header );
@@ -716,21 +684,25 @@ public class NoteItemPane : Box {
     cbox.add_controller( cbox_motion );
 
     cbox_motion.enter.connect((x, y) => {
-      expand.opacity = control_opacity;
       if( !more.active ) {
         more.opacity = control_opacity;
       }
     });
     cbox_motion.leave.connect(() => {
-      expand.opacity = 0.0;
       more.opacity   = 0.0;
     });
 
-    append( lbox );
     append( cbox );
     append( rbox );
 
     click_to_current( this );
+
+    item.row.notify["expanded"].connect(() => {
+      var expanded = item.row.expanded;
+      pane.visible = expanded;
+      type_label.visible = !expanded;
+      // _stack.visible_child_name = expanded ? "selected" : "unselected";
+    });
 
   }
 

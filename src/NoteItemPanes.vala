@@ -214,7 +214,7 @@ public class NoteItemPanes : Box {
     if( add_to_row ) {
       row_pane = (NoteItemPaneRow)Utils.get_child_at_index( this, row );
     } else {
-      row_pane = new NoteItemPaneRow();
+      row_pane = new NoteItemPaneRow( item.row );
     }
 
     NoteItemPane pane;
@@ -448,7 +448,7 @@ public class NoteItemPanes : Box {
   // Returns the pane at the given row/col location.
   public NoteItemPane? get_pane( int row, int col ) {
     var row_pane = get_row( row );
-    return( (row_pane != null) ? (NoteItemPane)Utils.get_child_at_index( row_pane, col ) : null );
+    return( (row_pane != null) ? row_pane.get_pane( col ) : null );
   }
 
   //-------------------------------------------------------------
