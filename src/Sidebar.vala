@@ -572,10 +572,6 @@ public class Sidebar : Box {
 		var row      = (TreeListRow)item.get_item();
 		var nb       = (BaseNotebook)row.get_item();
 
-    if( nb == _selected_notebook ) {
-      _list_view.model.select_item( row.get_position(), true );
-    }
-
 		if( (nb as LabelNotebook) != null ) {
 			item.selectable   = false;
 			item.activatable  = false;

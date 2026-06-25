@@ -203,25 +203,25 @@ public class MainWindow : Gtk.ApplicationWindow {
     var window_w = settings.get_int( "window-w" );
     var window_h = settings.get_int( "window-h" );
 
-    /* Create the header bar */
+    // Create the header bar
     var header = new HeaderBar() {
       show_title_buttons = true,
       title_widget = new Gtk.Label( _( "MosaicNote" ) )
     };
     set_titlebar( header );
 
-    /* Set the main window data */
+    // Set the main window data 
     set_default_size( window_w, window_h );
 
-    /* Set the stage for menu actions */
+    // Set the stage for menu actions
     var actions = new SimpleActionGroup ();
     actions.add_action_entries( action_entries, this );
     insert_action_group( "win", actions );
 
-    /* Add keyboard shortcuts */
+    // Add keyboard shortcuts
     add_keyboard_shortcuts( app );
 
-    /* Load application data */
+    // Load application data
     _notebooks       = new NotebookTree();
     _full_tags       = new FullTags( _notebooks );
     _smart_notebooks = new SmartNotebooks( _notebooks );
@@ -230,7 +230,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     _parser          = new SmartParser( _notebooks );
     _history         = new NoteHistory();
 
-    /* Create title toolbar */
+    // Create title toolbar
     _undo_btn = new Button.from_icon_name( "edit-undo-symbolic" ) {
       tooltip_markup = Utils.tooltip_with_accel( _( "Undo" ), "<Control>z" ),
       sensitive = false
@@ -249,7 +249,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     header.pack_end( create_miscellaneous() );
     header.pack_end( create_search() );
 
-    /* Create content area */
+    // Create content area
     _sidebar = new Sidebar( this );
     _notes   = new NotesPanel( this );
     _note    = new NotePanel( this );

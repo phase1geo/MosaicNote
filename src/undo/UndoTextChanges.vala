@@ -25,7 +25,8 @@ public class UndoTextChanges : UndoItem {
 
   private NoteItem _item;
 
-  /* Default constructor */
+  //-------------------------------------------------------------
+  // Default constructor
   public UndoTextChanges( NoteItem item ) {
     base( _( "Text Change" ) );
     _item = item;
@@ -34,7 +35,7 @@ public class UndoTextChanges : UndoItem {
   //-------------------------------------------------------------
   // Returns the pane currently associated with this item.
   private NoteItemPane get_pane( MainWindow win ) {
-    return( win.note.items.get_pane( _item.index() ) );
+    return( win.note.items.get_pane_from_item( _item ) );
   }
 
   //-------------------------------------------------------------
@@ -61,7 +62,8 @@ public class UndoTextChanges : UndoItem {
     return( (text_item != null) && (_item == text_item._item) );
   }
 
-  /* Causes the stored item to be put into the before state */
+  //-------------------------------------------------------------
+  // Causes the stored item to be put into the before state
   public override void undo( MainWindow win ) {
     var pane = get_pane( win );
     var text = pane.get_text();
@@ -69,7 +71,8 @@ public class UndoTextChanges : UndoItem {
     text.buffer.undo();
   }
 
-  /* Causes the stored item to be put into the after state */
+  //-------------------------------------------------------------
+  // Causes the stored item to be put into the after state
   public override void redo( MainWindow win ) {
     var pane = get_pane( win );
     var text = pane.get_text();

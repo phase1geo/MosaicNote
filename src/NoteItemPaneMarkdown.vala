@@ -197,7 +197,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
           if( is_end ) {
             next_pane.remove_item( false, false );
           }
-          add_item( false, new_type );
+          add_item( MoveDirection.DOWN, new_type );
           return( true );
         }
       }

@@ -375,7 +375,7 @@ public class GalleryItem : Box {
   //-------------------------------------------------------------
   // Displays the note associated with this item.
   private void action_view_note() {
-    var note = item.note;
+    var note = item.row.note;
     show_note( note );
   }
 

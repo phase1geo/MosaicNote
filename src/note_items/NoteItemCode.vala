@@ -21,50 +21,50 @@
 
 public class NoteItemCode : NoteItem {
 
-	private string _lang        = "vala";  // TODO
-	private string _description = "";
+  private string _lang        = "vala";  // TODO
+  private string _description = "";
 
-	public string lang {
-	  get {
-	  	return( _lang );
-	  }
-	  set {
-	  	if( _lang != value ) {
-	  		_lang    = value;
+  public string lang {
+    get {
+      return( _lang );
+    }
+    set {
+      if( _lang != value ) {
+        _lang    = value;
         modified = true;
         changed();
-	  	}
-	  }
-	}
+      }
+    }
+  }
 
-	public string description {
-		get {
-			return( _description );
-		}
-		set {
-			if( _description != value ) {
-				_description = value;
-				modified = true;
-				changed();
-			}
-		}
-	}
-
-  //-------------------------------------------------------------
-	// Default constructor
-	public NoteItemCode( Note note ) {
-		base( note, NoteItemType.CODE );
-	}
+  public string description {
+    get {
+      return( _description );
+    }
+    set {
+      if( _description != value ) {
+        _description = value;
+        modified = true;
+        changed();
+      }
+    }
+  }
 
   //-------------------------------------------------------------
-	// Constructor from XML node
-	public NoteItemCode.from_xml( Note note, Xml.Node* node ) {
-		base( note, NoteItemType.CODE );
-		load( node );
-	}
+  // Default constructor
+  public NoteItemCode( NoteItemRow row ) {
+    base( row, NoteItemType.CODE );
+  }
 
   //-------------------------------------------------------------
-	// Copies the note item to this one
+  // Constructor from XML node
+  public NoteItemCode.from_xml( NoteItemRow row, Xml.Node* node ) {
+    base( row, NoteItemType.CODE );
+    load( node );
+  }
+
+  //-------------------------------------------------------------
+  // Copies the note item to this one
   public override void copy( NoteItem item ) {
     base.copy( item );
     var code = (item as NoteItemCode);
@@ -75,47 +75,47 @@ public class NoteItemCode : NoteItem {
 
   //-------------------------------------------------------------
   // Performs search of either the description or the code itself.
-	public override bool search( string pattern ) {
-		return( _description.contains( pattern ) || base.search( pattern ) );
-	}
+  public override bool search( string pattern ) {
+    return( _description.contains( pattern ) || base.search( pattern ) );
+  }
 
   //-------------------------------------------------------------
   // Returns the Markdown version of this item
   public override string to_markdown( NotebookTree? notebooks, bool pandoc ) {
-  	var str = "```%s\n%s\n```".printf( _lang, content );
-  	if( description != "" ) {
-  		str += "\n<center>%s</center>".printf( description );
-  	}
-  	return( str );
+    var str = "```%s\n%s\n```".printf( _lang, content );
+    if( description != "" ) {
+      str += "\n<center>%s</center>".printf( description );
+    }
+    return( str );
   }
 
   //-------------------------------------------------------------
   // Exports the code block and returns the associated Markdown.
   public override string export( NotebookTree? notebooks, string assets_dir ) {
-  	return( to_markdown( notebooks, false ) );
+    return( to_markdown( notebooks, false ) );
   }
 
   //-------------------------------------------------------------
-	// Saves the content in XML format
-	public override Xml.Node* save() {
+  // Saves the content in XML format
+  public override Xml.Node* save() {
     Xml.Node* node = base.save();
     node->set_prop( "lang", lang );
     node->set_prop( "description", description );
     return( node );
-	}
+  }
 
   //-------------------------------------------------------------
-	// Loads the content from XML format
-	protected override void load( Xml.Node* node ) {
+  // Loads the content from XML format
+  protected override void load( Xml.Node* node ) {
     base.load( node );
-		var l = node->get_prop( "lang" );
-		if( l != null ) {
-			lang = l;
-		}
-		var d = node->get_prop( "description" );
-		if( d != null ) {
-			description = d;
-		}
-	}
+    var l = node->get_prop( "lang" );
+    if( l != null ) {
+      lang = l;
+    }
+    var d = node->get_prop( "description" );
+    if( d != null ) {
+      description = d;
+    }
+  }
 
 }

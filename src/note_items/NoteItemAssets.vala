@@ -51,15 +51,15 @@ public class NoteItemAssets : NoteItem {
 
   //-------------------------------------------------------------
 	// Default constructor
-	public NoteItemAssets( Note note ) {
-		base( note, NoteItemType.ASSETS );
+	public NoteItemAssets( NoteItemRow row ) {
+		base( row, NoteItemType.ASSETS );
     _assets = new Array<NoteItemAsset>();
 	}
 
   //-------------------------------------------------------------
 	// Constructor from XML node
-	public NoteItemAssets.from_xml( Note note, Xml.Node* node ) {
-		base( note, NoteItemType.ASSETS );
+	public NoteItemAssets.from_xml( NoteItemRow row, Xml.Node* node ) {
+		base( row, NoteItemType.ASSETS );
     _assets = new Array<NoteItemAsset>();
 		load( node );
 	}

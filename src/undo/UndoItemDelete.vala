@@ -25,25 +25,31 @@ public class UndoItemDelete : UndoItem {
 
   private Note     _note;
   private NoteItem _item;
-  private int      _index;
+  private int      _row;
+  private int      _col;
 
-  /* Default constructor */
-  public UndoItemDelete( Note note, int index ) {
+  //-------------------------------------------------------------
+  // Default constructor
+  public UndoItemDelete( Note note, int row, int col ) {
     base( _( "Delete Block" ) );
-    _note  = note;
-    _item  = note.get_item( index );
-    _index = index;
+    _note = note;
+    _item = note.get_item( row, col );
+    _row  = row;
+    _col  = col;
   }
 
-  /* Causes the stored item to be put into the before state */
+  //-------------------------------------------------------------
+  // Causes the stored item to be put into the before state
   public override void undo( MainWindow win ) {
-    _note.add_note_item( _index, _item );
-    win.note.items.add_item( _item, _index, true );
+    var add_to_row = (_item.row.size() > 0);
+    _note.add_item( _item, _row, _col, add_to_row );
+    win.note.items.add_pane( _item, _row, _col, add_to_row, true );
   }
 
-  /* Causes the stored item to be put into the after state */
+  //-------------------------------------------------------------
+  // Causes the stored item to be put into the after state
   public override void redo( MainWindow win ) {
-    var pane = win.note.items.get_pane( _index );
+    var pane = win.note.items.get_pane( _row, _col );
     pane.remove_item( true, false );
   }
 

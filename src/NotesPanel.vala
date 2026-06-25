@@ -206,6 +206,8 @@ public class NotesPanel : Box {
     _sorter = new NoteSorter();
     _model  = new SortListModel( null, _sorter );
 
+    _list.bind_model( _model, create_note );
+
     var list_key = new EventControllerKey();
     _list.add_controller( list_key );
 
@@ -421,7 +423,7 @@ public class NotesPanel : Box {
     var row = _list.get_selected_row();
     if( row != null ) {
       var pos = row.get_index();
-      _model.items_changed( pos, 1, 1 );
+      // _model.items_changed( pos, 1, 1 );
       _list.select_row( _list.get_row_at_index( pos ) );
     }
   }
@@ -433,13 +435,11 @@ public class NotesPanel : Box {
     _bn = bn;
     if( bn != null ) {
       _model.set_model( bn.get_model() );
-      _list.bind_model( _model, create_note );
       var sensitive = bn_is_node() || (bn_is_notebook() && ((_win.notebooks.inbox == (Notebook)_bn) || (_win.notebooks.templates == (Notebook)_bn)));
       _add.sensitive  = sensitive;
       _sort.sensitive = sensitive;
     } else {
       _model.set_model( null );
-      _list.bind_model( null, create_note );
       _add.sensitive  = false;
       _sort.sensitive = false;
     }

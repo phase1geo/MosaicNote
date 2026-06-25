@@ -69,10 +69,13 @@ public class Gallery : BaseNotebook {
   // matching note items within the note from our tracked list.
   public void remove_note( Note note ) {
     var modified = false;
-    for( int i=0; i<note.size(); i++ ) {
-      var item = note.get_item( i );
-      if( _item_id.remove( item.id ) ) {
-        modified = true;
+    for( int i=0; i<note.rows(); i++ ) {
+      var row = note.get_row( i );
+      for( int j=0; j<row.size(); j++ ) {
+        var item = row.get_item( j );
+        if( _item_id.remove( item.id ) ) {
+          modified = true;
+        }
       }
     }
     if( modified ) {
@@ -92,11 +95,14 @@ public class Gallery : BaseNotebook {
   // Handles any changes to the the note items within a given note.
   public void handle_note( Note note ) {
     var modified = false;
-    for( int i=0; i<note.size(); i++ ) {
-      var item = note.get_item( i );
-      if( item.item_type == _item_type ) {
-        _item_id.add( item.id );
-        modified = true;
+    for( int i=0; i<note.rows(); i++ ) {
+      var row = note.get_row( i );
+      for( int j=0; j<row.size(); j++ ) {
+        var item = row.get_item( j );
+        if( item.item_type == _item_type ) {
+          _item_id.add( item.id );
+          modified = true;
+        }
       }
     }
     if( modified ) {

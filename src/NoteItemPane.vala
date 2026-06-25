@@ -44,10 +44,13 @@ public class NoteItemPane : Box {
   private Widget        _header1;
 
   private const GLib.ActionEntry[] action_entries = {
-    { "action_add_item_above", action_add_item_above },
-    { "action_add_item_below", action_add_item_below },
-    { "action_delete_item",    action_delete_item },
-    { "action_export_item",    action_export_item, "i" },
+    { "action_add_item_above",         action_add_item_above },
+    { "action_add_item_below",         action_add_item_below },
+    { "action_add_item_left",          action_add_item_left },
+    { "action_add_item_right",         action_add_item_right },
+    { "action_delete_item",            action_delete_item },
+    { "action_delete_row",             action_delete_row },
+    { "action_export_item",            action_export_item, "i" },
     { "action_copy_item_to_clipboard", action_copy_item_to_clipboard },
   };
 
@@ -70,10 +73,11 @@ public class NoteItemPane : Box {
   public NoteItemPane? next_pane { get; set; default = null; }
   public bool          ignore_text_change { get; set; default = false; }
 
-  public signal void add_item( bool above, NoteItemType? type );
+  public signal void add_item( MoveDirection dir, NoteItemType? type );
   public signal void remove_item( bool forward, bool record_undo );
+  public signal void remove_row();
   public signal void change_item( NoteItemType type );
-  public signal void move_item( bool up, bool record_undo );
+  public signal void move_item( MoveDirection dir, bool record_undo );
   public signal void set_as_current( string msg = "" );
   public signal void note_link_clicked( string link );
   public signal void show_image();
@@ -108,7 +112,7 @@ public class NoteItemPane : Box {
     // If we are being set as the current item, make sure that we are drawn as the current item
     set_as_current.connect((msg) => {
       add_css_class( "active-item" );
-      _stack.visible_child_name = item.expanded ? "selected" : "unselected";
+      _stack.visible_child_name = item.row.expanded ? "selected" : "unselected";
       _stack.visible = true;
     });
 
@@ -127,14 +131,17 @@ public class NoteItemPane : Box {
   private void add_keyboard_shortcuts() {
     _win.application.set_accels_for_action( "item.action_add_item_above", { "<Control><Shift>Return" } );
     _win.application.set_accels_for_action( "item.action_add_item_below", { "<Shift>Return" } );
+    _win.application.set_accels_for_action( "item.action_add_item_left",  { "<Control><Shift>Tab" } );
+    _win.application.set_accels_for_action( "item.action_add_item_right", { "<Shift>Tab" } );
     _win.application.set_accels_for_action( "item.action_delete_item",    { "<Control>Delete" } );
+    _win.application.set_accels_for_action( "item.action_delete_row",     { "<Control><Shift>Delete" } );
   }
 
   //-------------------------------------------------------------
   // Clears the current indicator
   public virtual void clear_current() {
     remove_css_class( "active-item" );
-    if( item.expanded ) {
+    if( item.row.expanded ) {
       _stack.visible_child_name = "unselected";
     }
   }
@@ -222,7 +229,7 @@ public class NoteItemPane : Box {
     item.content = first;
     text.buffer.delete( ref start_iter, ref cursor_iter );
     text.buffer.insert( ref start_iter, first, first.length );
-    add_item( false, item.item_type );
+    add_item( MoveDirection.DOWN, item.item_type );
 
     // Update the added text pane
     text = next_pane.get_text();
@@ -301,10 +308,10 @@ public class NoteItemPane : Box {
       switch( keyval ) {
         case Gdk.Key.Return :
           if( control && shift ) {
-            add_item( true, null );
+            add_item( MoveDirection.UP, null );
             return( true );
           } else if( shift ) {
-            add_item( false, null );
+            add_item( MoveDirection.DOWN, null );
             return( true );
           }
           break;
@@ -323,7 +330,7 @@ public class NoteItemPane : Box {
         case Gdk.Key.Up :
           if( prev_pane != null ) {
             if( control ) {
-              move_item( true, true );
+              move_item( MoveDirection.UP, true );
               return( true );
             } else if( !handled_up() ) {
               var text = get_text();
@@ -342,7 +349,7 @@ public class NoteItemPane : Box {
         case Gdk.Key.Down :
           if( next_pane != null ) {
             if( control ) {
-              move_item( false, true );
+              move_item( MoveDirection.DOWN, true );
               return( true );
             } else if( !handled_down() ) {
               var text = get_text();
@@ -544,35 +551,15 @@ public class NoteItemPane : Box {
   // panel data (if needed).
   private void create_bar() {
 
-    var expand = new Button.with_label( item.expanded ? "\u23f7" : "\u23f5" ) {
-      has_frame = false,
-      halign = Align.START,
-      opacity = 0.0
-    };
-
-    var lbox = new Box( Orientation.VERTICAL, 5 ) {
-      margin_start  = 5,
-      margin_top    = 5,
-      margin_bottom = 5
-    };
-    lbox.append( expand );
-
-    var lbox_motion = new EventControllerMotion();
-    lbox.add_controller( lbox_motion );
-
-    lbox_motion.enter.connect((x, y) => {
-      expand.opacity = 1.0;
-    });
-    lbox_motion.leave.connect(() => {
-      expand.opacity = control_opacity;
-    });
-
     var add_menu = new GLib.Menu();
-    add_menu.append( _( "Add Block Above" ), "item.action_add_item_above" );
-    add_menu.append( _( "Add Block Below" ), "item.action_add_item_below" );
+    add_menu.append( _( "Add Block Above" ),    "item.action_add_item_above" );
+    add_menu.append( _( "Add Block Below" ),    "item.action_add_item_below" );
+    add_menu.append( _( "Add Block To Left" ),  "item.action_add_item_left" );
+    add_menu.append( _( "Add Block To Right" ), "item.action_add_item_right" );
 
     var del_menu = new GLib.Menu();
     del_menu.append( _( "Delete Block" ), "item.action_delete_item" );
+    del_menu.append( _( "Delete Row" ),   "item.action_delete_row" );
 
     var export_menu = new GLib.Menu();
     for( int i=0; i<ExportType.NUM; i++ ) {
@@ -650,7 +637,7 @@ public class NoteItemPane : Box {
 
     var type_label = new Label( Utils.make_title( item.item_type.label() ) ) {
       use_markup = true,
-      visible    = !item.expanded
+      visible    = !item.row.expanded
     };
 
     var header2 = create_header2();
@@ -661,7 +648,7 @@ public class NoteItemPane : Box {
     h2_box_h.append( header2 );
 
     var sep = new Separator( Orientation.HORIZONTAL ) {
-      opacity = item.expanded ? 1.0 : 0.0
+      opacity = item.row.expanded ? 1.0 : 0.0
     };
 
     var h2_box = new Box( Orientation.VERTICAL, 5 );
@@ -674,7 +661,7 @@ public class NoteItemPane : Box {
     };
     _stack.add_named( h1_box, "selected" );
     _stack.add_named( h2_box, "unselected" );
-    _stack.visible_child_name = item.expanded ? "selected" : "unselected";
+    _stack.visible_child_name = "unselected";
 
     var header = new Box( Orientation.HORIZONTAL, 5 ) {
       halign        = Align.FILL,
@@ -687,16 +674,7 @@ public class NoteItemPane : Box {
 
     var pane = create_pane();
     click_to_current( pane );
-    pane.visible = item.expanded;
-
-    expand.clicked.connect(() => {
-      item.expanded = !item.expanded;
-      pane.visible  = item.expanded;
-      sep.opacity   = item.expanded ? 1.0 : 0.0;
-      type_label.visible = !item.expanded;
-      expand.label  = item.expanded ? "\u23f7" : "\u23f5";
-      _stack.visible_child_name = item.expanded ? "selected" : "unselected";
-    });
+    pane.visible = item.row.expanded;
 
     var cbox = new Box( Orientation.VERTICAL, 5 );
     cbox.append( header );
@@ -706,21 +684,25 @@ public class NoteItemPane : Box {
     cbox.add_controller( cbox_motion );
 
     cbox_motion.enter.connect((x, y) => {
-      expand.opacity = control_opacity;
       if( !more.active ) {
         more.opacity = control_opacity;
       }
     });
     cbox_motion.leave.connect(() => {
-      expand.opacity = 0.0;
       more.opacity   = 0.0;
     });
 
-    append( lbox );
     append( cbox );
     append( rbox );
 
     click_to_current( this );
+
+    item.row.notify["expanded"].connect(() => {
+      var expanded = item.row.expanded;
+      pane.visible = expanded;
+      type_label.visible = !expanded;
+      // _stack.visible_child_name = expanded ? "selected" : "unselected";
+    });
 
   }
 
@@ -771,19 +753,37 @@ public class NoteItemPane : Box {
   //-------------------------------------------------------------
   // Adds an item above this item
   private void action_add_item_above() {
-    add_item( true, NoteItemType.MARKDOWN );
+    add_item( MoveDirection.UP, NoteItemType.MARKDOWN );
   }
 
   //-------------------------------------------------------------
   // Adds an item below this item
   private void action_add_item_below() {
-    add_item( false, NoteItemType.MARKDOWN );
+    add_item( MoveDirection.DOWN, NoteItemType.MARKDOWN );
+  }
+
+  //-------------------------------------------------------------
+  // Adds an item to the left of this item
+  private void action_add_item_left() {
+    add_item( MoveDirection.LEFT, NoteItemType.MARKDOWN );
+  }
+
+  //-------------------------------------------------------------
+  // Adds an item to the right of this item
+  private void action_add_item_right() {
+    add_item( MoveDirection.RIGHT, NoteItemType.MARKDOWN );
   }
 
   //-------------------------------------------------------------
   // Removes the current item
   private void action_delete_item() {
     remove_item( true, true );
+  }
+
+  //-------------------------------------------------------------
+  // Removes the current row.
+  private void action_delete_row() {
+    remove_row();
   }
 
   //-------------------------------------------------------------

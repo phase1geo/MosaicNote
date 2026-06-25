@@ -28,25 +28,28 @@ public class UndoItemMove : UndoItem {
   private int      _index;
   private bool     _move_up;
 
-  /* Default constructor */
+  //-------------------------------------------------------------
+  // Default constructor
   public UndoItemMove( Note note, int index, bool move_up ) {
     base( _( "Move Block" ) );
     _note    = note;
-    _item    = note.get_item( index );
+    _item    = note.get_item( index, 0 );  // TODO
     _index   = index;
     _move_up = move_up;
   }
 
-  /* Causes the stored item to be put into the before state */
+  //-------------------------------------------------------------
+  // Causes the stored item to be put into the before state
   public override void undo( MainWindow win ) {
-    var pane = win.note.items.get_pane( _index + (_move_up ? -1 : 1) );
-    pane.move_item( !_move_up, false );
+    var pane = win.note.items.get_pane( _index + (_move_up ? -1 : 1), 0 );
+    pane.move_item( (_move_up ? MoveDirection.DOWN : MoveDirection.UP), false );
   }
 
-  /* Causes the stored item to be put into the after state */
+  //-------------------------------------------------------------
+  // Causes the stored item to be put into the after state
   public override void redo( MainWindow win ) {
-    var pane = win.note.items.get_pane( _index );
-    pane.move_item( _move_up, false );
+    var pane = win.note.items.get_pane( _index, 0 );
+    pane.move_item( (_move_up ? MoveDirection.UP : MoveDirection.DOWN), false );
   }
 
 }

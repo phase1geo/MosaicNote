@@ -159,10 +159,13 @@ public class Notebook : BaseNotebook {
   public NoteItem? find_note_item( int id ) {
     for( int i=0; i<count(); i++ ) {
       var note = get_note( i );
-      for( int j=0; j<note.size(); j++ ) {
-        var item = note.get_item( j );
-        if( item.id == id ) {
-          return( item );
+      for( int j=0; j<note.rows(); j++ ) {
+        var row = note.get_row( j );
+        for( int k=0; k<row.size(); k++ ) {
+          var item = row.get_item( k );
+          if( item.id == id ) {
+            return( item );
+          }
         }
       }
     }

@@ -25,14 +25,14 @@ public class NoteItemMarkdown : NoteItem {
 
   //-------------------------------------------------------------
 	// Default constructor
-	public NoteItemMarkdown( Note note ) {
-		base( note, NoteItemType.MARKDOWN );
+	public NoteItemMarkdown( NoteItemRow row ) {
+		base( row, NoteItemType.MARKDOWN );
 	}
 
   //-------------------------------------------------------------
 	// Constructor from XML node
-	public NoteItemMarkdown.from_xml( Note note, Xml.Node* node ) {
-		base( note, NoteItemType.MARKDOWN );
+	public NoteItemMarkdown.from_xml( NoteItemRow row, Xml.Node* node ) {
+		base( row, NoteItemType.MARKDOWN );
 		load( node );
 	}
 
