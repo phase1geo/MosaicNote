@@ -75,10 +75,12 @@ case $1 in
     sudo ninja uninstall
     ;;
 "elementary")
-    sudo flatpak-builder --install --force-clean ../build-mosaic-note elementary/io.github.phase1geo.mosaic-note.yml
+    flatpak-builder --user --install --force-clean ../build-mosaic-note-elementary elementary/io.github.phase1geo.mosaic-note.yml
+    # flatpak install --user --reinstall --assumeyes "$(pwd)/.flatpak-builder/cache" io.github.phase1geo.mosaicnote.Debug
     ;;
 "flathub")
-    sudo flatpak-builder --install --force-clean ../build-mosaic-note flathub/io.github.phase1geo.mosaic-note.yml
+    flatpak-builder --user --install --force-clean ../build-mosaic-note-flathub flathub/io.github.phase1geo.mosaic-note.yml
+    # flatpak install --user --reinstall --assumeyes "$(pwd)/.flatpak-builder/cache" io.github.phase1geo.mosaicnote.Debug
     ;;
 "run-flatpak")
     flatpak run io.github.phase1geo.mosaic-note

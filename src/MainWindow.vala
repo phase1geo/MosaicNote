@@ -106,6 +106,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     { "action_quit",           action_quit },
     { "action_shortcuts",      action_shortcuts },
     { "action_preferences",    action_preferences },
+    { "action_about",          action_about },
     { "action_search",         action_search },
     { "action_next_panels",    action_next_panels },
     { "action_prev_panels",    action_prev_panels },
@@ -557,11 +558,18 @@ public class MainWindow : Gtk.ApplicationWindow {
   // bar
   private Widget create_miscellaneous() {
 
-    var menu = new GLib.Menu();
     var img  = new Image.from_icon_name( get_header_icon_name( "emblem-system" ) );
 
-    menu.append( _( "Shorcuts Cheatsheet…" ), "win.action_shortcuts" );
-    menu.append( _( "Preferences…" ), "win.action_preferences" );
+    var other_menu = new GLib.Menu();
+    other_menu.append( _( "Shorcuts Cheatsheet…" ), "win.action_shortcuts" );
+    other_menu.append( _( "Preferences…" ), "win.action_preferences" );
+
+    var about_menu = new GLib.Menu();
+    about_menu.append( _( "About MosaicNote…" ), "win.action_about" );
+
+    var menu = new GLib.Menu();
+    menu.append_section( null, other_menu );
+    menu.append_section( null, about_menu );
 
     var mb = new MenuButton() {
       has_frame = !on_elementary,
@@ -614,6 +622,13 @@ public class MainWindow : Gtk.ApplicationWindow {
   private void action_preferences() {
     var prefs = new Preferences( this );
     prefs.show();
+  }
+
+  //-------------------------------------------------------------
+  // Displays the About window.
+  private void action_about() {
+    var about = new About( this );
+    about.show();
   }
 
   //-------------------------------------------------------------
