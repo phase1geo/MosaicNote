@@ -28,6 +28,15 @@ public class Utils {
   public delegate void ConfirmationCallback( Object? obj );
 
   //-------------------------------------------------------------
+  // Determines if we are executing this within the Pantheon desktop.
+  // If we are, we need to use icons in the header bar that contain
+  // color.
+  public static bool on_elementary() {
+    var desktop = Environment.get_variable( "XDG_CURRENT_DESKTOP" );
+    return( desktop == "Pantheon" );
+  }
+  
+  //-------------------------------------------------------------
   // Returns the system information about how this application was
   // built.
   public static string get_flatpak_runtime() {
@@ -43,7 +52,7 @@ public class Utils {
     return( "" );
 
   }
-  
+
   //-------------------------------------------------------------
   // Returns the location of the local default library.
   public static string default_library_location() {
