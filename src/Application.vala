@@ -38,7 +38,7 @@ public class MosaicNote : Gtk.Application {
   // Default constructor.
   public MosaicNote () {
 
-    Object( application_id: "com.github.phase1geo.mosaic-note", flags: ApplicationFlags.HANDLES_OPEN );
+    Object( application_id: "io.github.phase1geo.mosaic-note", flags: ApplicationFlags.HANDLES_OPEN );
 
     Intl.setlocale( LocaleCategory.ALL, "" );
     Intl.bindtextdomain( GETTEXT_PACKAGE, LOCALEDIR );
@@ -55,24 +55,24 @@ public class MosaicNote : Gtk.Application {
   // First method called in the startup process
   private void start_application() {
 
-    /* Initialize the settings */
-    settings = new GLib.Settings( "com.github.phase1geo.mosaic-note" );
+    // Initialize the settings
+    settings = new GLib.Settings( "io.github.phase1geo.mosaic-note" );
 
-    /* Add the application-specific icons */
+    // Add the application-specific icons
     weak IconTheme default_theme = IconTheme.get_for_display( Display.get_default() );
-    default_theme.add_resource_path( "/com/github/phase1geo/mosaic-note" );
+    default_theme.add_resource_path( "/io/github/phase1geo/mosaic-note/icons/hicolor" );
 
-    /* Make sure that the user data directory exists */
+    // Make sure that the user data directory exists
     var app_dir = GLib.Path.build_filename( Environment.get_user_data_dir(), "mosaic-note" );
     Utils.create_dir( app_dir );
 
-    /* Create the main window */
+    // Create the main window
     appwin = new MainWindow( this, settings );
 
     var granite_settings = Granite.Settings.get_default();
     var gtk_settings = Gtk.Settings.get_default();
 
-    /* Handle dark mode changes */
+    // Handle dark mode changes
     gtk_settings.gtk_application_prefer_dark_theme = (
       granite_settings.prefers_color_scheme == Granite.Settings.ColorScheme.DARK
     );
@@ -145,11 +145,11 @@ public class MosaicNote : Gtk.Application {
     var context = new OptionContext( "- MosaicNote Options" );
     var options = new OptionEntry[2];
 
-    /* Create the command-line options */
+    // Create the command-line options
     options[0] = {"version", 0, 0, OptionArg.NONE, ref show_version, _( "Display version number" ), null};
     options[1] = {null};
 
-    /* Parse the arguments */
+    // Parse the arguments
     try {
       context.set_help_enabled( true );
       context.add_main_entries( options, null );
@@ -160,7 +160,7 @@ public class MosaicNote : Gtk.Application {
       Process.exit( 1 );
     }
 
-    /* If the version was specified, output it and then exit */
+    // If the version was specified, output it and then exit
     if( show_version ) {
       stdout.printf( current_version + "\n" );
       Process.exit( 0 );

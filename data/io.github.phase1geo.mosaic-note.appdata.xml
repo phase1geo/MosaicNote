@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright 2024 Trevor Williams <phase1geo@icloud.com> -->
 <component type="desktop-application">
-  <id>com.github.phase1geo.mosaic-note</id>
+  <id>io.github.phase1geo.mosaic-note</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0+</project_license>
   <name>MosaicNote</name>
@@ -16,7 +16,7 @@
     </ul>
   </description>
   <provides>
-    <binary>com.github.phase1geo.mosaic-note</binary>
+    <binary>io.github.phase1geo.mosaic-note</binary>
   </provides>
   <screenshots>
     <screenshot type="default">
@@ -28,7 +28,7 @@
       <image>https://raw.githubusercontent.com/phase1geo/Journaler/master/data/screenshots/screenshot-image-review.png</image>
     </screenshot>
   </screenshots>
-  <launchable type="desktop-id">com.github.phase1geo.mosaic-note.desktop</launchable>
+  <launchable type="desktop-id">io.github.phase1geo.mosaic-note.desktop</launchable>
   <developer_name>Trevor Williams</developer_name>
   <developer>com.github.phase1geo</developer>
   <url type="homepage">https://github.com/phase1geo/MosaicNote/</url>

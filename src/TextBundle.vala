@@ -136,7 +136,7 @@ public class TextBundle {
       "version":              2,
       "type":                 "net.daringfireball.markdown",
       "transient":            true,
-      "creatorIdentifier":    "com.github.phase1geo.mosaic-note"
+      "creatorIdentifier":    "io.github.phase1geo.mosaic-note"
     }
     """;
     

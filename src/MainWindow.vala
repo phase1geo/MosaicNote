@@ -439,7 +439,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   // Loads the application-wide CSS
   private void load_css() {
     var provider = new CssProvider();
-    provider.load_from_resource( "/com/github/phase1geo/mosaic-note/Application.css" );
+    provider.load_from_resource( "/io/github/phase1geo/mosaic-note/Application.css" );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
   }
 
@@ -543,14 +543,10 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     var mb = new MenuButton() {
       has_frame = !on_elementary,
-      icon_name  = themes.dark_mode ? "panel-layout-dark-symbolic" : "panel-layout-light-symbolic",
+      icon_name  = "panel-layout-symbolic",
       tooltip_markup = Utils.tooltip_with_accel( _( "Change Panel Layout" ), "<control>b" ),
       menu_model = menu
     };
-
-    themes.theme_changed.connect((theme) => {
-      mb.icon_name = themes.dark_mode ? "panel-layout-dark-symbolic" : "panel-layout-light-symbolic";
-    });
 
     return( mb );
 
@@ -599,7 +595,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   // Displays the shortcuts cheatsheet
   private void action_shortcuts() {
 
-    var builder = new Builder.from_resource( "/com/github/phase1geo/mosaic-note/shortcuts.ui" );
+    var builder = new Builder.from_resource( "/io/github/phase1geo/mosaic-note/shortcuts.ui" );
     _shortcuts = builder.get_object( "shortcuts" ) as ShortcutsWindow;
 
     _shortcuts.transient_for = this;
@@ -690,7 +686,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       var notification = new Notification( title );
       notification.set_body( msg );
       notification.set_priority( priority );
-      app.send_notification( "com.github.phase1geo.mosaic-note", notification );
+      app.send_notification( "io.github.phase1geo.mosaic-note", notification );
     }
   }
 

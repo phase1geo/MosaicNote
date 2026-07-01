@@ -75,7 +75,7 @@
      inkscape:groupmode="layer"
      id="layer1">
     <path
-       style="fill:none;stroke:#000000;stroke-width:2.947;stroke-dasharray:none"
+       style="fill:none;stroke:currentColor;stroke-width:2.947;stroke-dasharray:none"
        id="rect1"
        width="45.05138"
        height="27.979614"
@@ -86,7 +86,7 @@
        d="M 1.5421379,10.913745 H 46.593518 V 38.893359 H 1.5421379 Z"
        inkscape:label="outside" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:2.947;stroke-dasharray:none"
+       style="fill:none;stroke:currentColor;stroke-width:2.947;stroke-dasharray:none"
        id="path1"
        width="11.889449"
        height="27.817255"
