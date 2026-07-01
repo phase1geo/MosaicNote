@@ -76,11 +76,11 @@ case $1 in
     ;;
 "elementary")
     flatpak-builder --user --install --force-clean ../build-mosaic-note-elementary elementary/io.github.phase1geo.mosaic-note.yml
-    # flatpak install --user --reinstall --assumeyes "$(pwd)/.flatpak-builder/cache" io.github.phase1geo.mosaicnote.Debug
+    flatpak install --user --reinstall --assumeyes "$(pwd)/.flatpak-builder/cache" io.github.phase1geo.mosaic_note.Debug
     ;;
 "flathub")
     flatpak-builder --user --install --force-clean ../build-mosaic-note-flathub flathub/io.github.phase1geo.mosaic-note.yml
-    # flatpak install --user --reinstall --assumeyes "$(pwd)/.flatpak-builder/cache" io.github.phase1geo.mosaicnote.Debug
+    flatpak install --user --reinstall --assumeyes "$(pwd)/.flatpak-builder/cache" io.github.phase1geo.mosaic_note.Debug
     ;;
 "run-flatpak")
     flatpak run io.github.phase1geo.mosaic-note
