@@ -53,7 +53,7 @@ Archive:
   Still trying to figure out what to do here.
   I would like to use AsciiMath for the text input and generate a PNG file
  ✔ Add the following command to meson.build after the .desktop app has been installed: @done (24-08-16 09:32) @project(TODO)
-  gio mime x-scheme-handler/mosaicnote com.github.phase1geo.mosaic-note.desktop
+  gio mime x-scheme-handler/mosaicnote io.github.phase1geo.mosaic-note.desktop
  ✔ Add ability to paste note link into a note @done (24-08-16 09:28) @project(TODO)
  ✔ Add ability to paste note link into a note @done (24-08-16 00:14) @project(TODO)
  ✔ Add button to copy a note link to the clipboard @done (24-08-14 22:36) @project(TODO)

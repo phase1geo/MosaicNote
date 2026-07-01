@@ -29,10 +29,10 @@ case $1 in
     ;;
 "generate-i18n")
     grep -rc _\( * | grep ^src | grep -v :0 | cut -d : -f 1 | sort -o po/POTFILES
-    echo "data/com.github.phase1geo.mosaic-note.shortcuts.ui" >> po/POTFILES
+    echo "data/io.github.phase1geo.mosaic-note.shortcuts.ui" >> po/POTFILES
     initialize
-    ninja com.github.phase1geo.mosaic-note-pot
-    ninja com.github.phase1geo.mosaic-note-update-po
+    ninja io.github.phase1geo.mosaic-note-pot
+    ninja io.github.phase1geo.mosaic-note-update-po
     ninja extra-pot
     ninja extra-update-po
     cp data/* ../data
@@ -59,29 +59,34 @@ case $1 in
     ;;
 "run")
     initialize
-    ./com.github.phase1geo.mosaic-note "${@:2}"
+    ./io.github.phase1geo.mosaic-note "${@:2}"
     ;;
 "debug")
     initialize
-    G_DEBUG=fatal-criticals gdb --args ./com.github.phase1geo.mosaic-note "${@:2}"
-    # G_DEBUG=fatal-warnings gdb --args ./com.github.phase1geo.mosaic-note "${@:2}"
+    # G_DEBUG=fatal-criticals gdb --args ./io.github.phase1geo.mosaic-note "${@:2}"
+    G_DEBUG=fatal-warnings gdb --args ./io.github.phase1geo.mosaic-note "${@:2}"
     ;;
- "valgrind")
+"valgrind")
     initialize
-    valgrind ./com.github.phase1geo.mosaic-note "${@:2}"
+    valgrind ./io.github.phase1geo.mosaic-note "${@:2}"
     ;;
 "uninstall")
     initialize
     sudo ninja uninstall
     ;;
-"flatpak")
-    sudo flatpak-builder --install --force-clean ../build-mosaic-note com.github.phase1geo.mosaic-note.yml
+"elementary")
+    flatpak-builder --user --install --force-clean ../build-mosaic-note-elementary elementary/io.github.phase1geo.mosaic-note.yml
+    flatpak install --user --reinstall --assumeyes "$(pwd)/.flatpak-builder/cache" io.github.phase1geo.mosaic_note.Debug
     ;;
-"flat-run")
-    flatpak run com.github.phase1geo.mosaic-note
+"flathub")
+    flatpak-builder --user --install --force-clean ../build-mosaic-note-flathub flathub/io.github.phase1geo.mosaic-note.yml
+    flatpak install --user --reinstall --assumeyes "$(pwd)/.flatpak-builder/cache" io.github.phase1geo.mosaic_note.Debug
     ;;
-"flat-debug")
-    flatpak run --command=sh --devel com.github.phase1geo.mosaic-note
+"run-flatpak")
+    flatpak run io.github.phase1geo.mosaic-note
+    ;;
+"debug-flatpak")
+    flatpak run --command=sh --devel io.github.phase1geo.mosaic-note
     ;;
 *)
     echo "Usage:"
@@ -93,7 +98,12 @@ case $1 in
     echo "  install           Builds and installs application to the system (requires sudo)"
     echo "  install-deps      Installs missing build dependencies"
     echo "  run               Builds and runs the application (must run install once before successive calls to this command)"
+    echo "  debug             Builds and runs the application in gdb debug mode"
+    echo "  valgrind          Builds and runs the application using Valgrid"
     echo "  uninstall         Removes the application from the system (requires sudo)"
-    echo "  flatpak           Builds and installs the Flatpak version of the application"
+    echo "  elementary        Builds and installs the elementary OS Flatpak version of the application"
+    echo "  flathub           Builds and installs the Flathub Flatpak version of the application"
+    echo "  run-flatpak       Runs the installed Flatpak version of the application"
+    echo "  debug-flatpak     Runs the installed Flatpak version of the application in gdb debug mode"
     ;;
 esac

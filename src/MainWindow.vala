@@ -106,6 +106,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     { "action_quit",           action_quit },
     { "action_shortcuts",      action_shortcuts },
     { "action_preferences",    action_preferences },
+    { "action_about",          action_about },
     { "action_search",         action_search },
     { "action_next_panels",    action_next_panels },
     { "action_prev_panels",    action_prev_panels },
@@ -114,7 +115,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     { "action_redo",           action_redo },
   };
 
-  private bool on_elementary = Gtk.Settings.get_default().gtk_icon_theme_name == "elementary";
+  private bool on_elementary = Utils.on_elementary();
 
   public GLib.Settings settings {
     get {
@@ -439,7 +440,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   // Loads the application-wide CSS
   private void load_css() {
     var provider = new CssProvider();
-    provider.load_from_resource( "/com/github/phase1geo/mosaic-note/Application.css" );
+    provider.load_from_resource( "/io/github/phase1geo/mosaic-note/Application.css" );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
   }
 
@@ -543,14 +544,10 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     var mb = new MenuButton() {
       has_frame = !on_elementary,
-      icon_name  = themes.dark_mode ? "panel-layout-dark-symbolic" : "panel-layout-light-symbolic",
+      icon_name  = "panel-layout-symbolic",
       tooltip_markup = Utils.tooltip_with_accel( _( "Change Panel Layout" ), "<control>b" ),
       menu_model = menu
     };
-
-    themes.theme_changed.connect((theme) => {
-      mb.icon_name = themes.dark_mode ? "panel-layout-dark-symbolic" : "panel-layout-light-symbolic";
-    });
 
     return( mb );
 
@@ -561,11 +558,18 @@ public class MainWindow : Gtk.ApplicationWindow {
   // bar
   private Widget create_miscellaneous() {
 
-    var menu = new GLib.Menu();
     var img  = new Image.from_icon_name( get_header_icon_name( "emblem-system" ) );
 
-    menu.append( _( "Shorcuts Cheatsheet…" ), "win.action_shortcuts" );
-    menu.append( _( "Preferences…" ), "win.action_preferences" );
+    var other_menu = new GLib.Menu();
+    other_menu.append( _( "Shorcuts Cheatsheet…" ), "win.action_shortcuts" );
+    other_menu.append( _( "Preferences…" ), "win.action_preferences" );
+
+    var about_menu = new GLib.Menu();
+    about_menu.append( _( "About MosaicNote…" ), "win.action_about" );
+
+    var menu = new GLib.Menu();
+    menu.append_section( null, other_menu );
+    menu.append_section( null, about_menu );
 
     var mb = new MenuButton() {
       has_frame = !on_elementary,
@@ -599,7 +603,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   // Displays the shortcuts cheatsheet
   private void action_shortcuts() {
 
-    var builder = new Builder.from_resource( "/com/github/phase1geo/mosaic-note/shortcuts.ui" );
+    var builder = new Builder.from_resource( "/io/github/phase1geo/mosaic-note/shortcuts.ui" );
     _shortcuts = builder.get_object( "shortcuts" ) as ShortcutsWindow;
 
     _shortcuts.transient_for = this;
@@ -618,6 +622,13 @@ public class MainWindow : Gtk.ApplicationWindow {
   private void action_preferences() {
     var prefs = new Preferences( this );
     prefs.show();
+  }
+
+  //-------------------------------------------------------------
+  // Displays the About window.
+  private void action_about() {
+    var about = new About( this );
+    about.show();
   }
 
   //-------------------------------------------------------------
@@ -690,7 +701,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       var notification = new Notification( title );
       notification.set_body( msg );
       notification.set_priority( priority );
-      app.send_notification( "com.github.phase1geo.mosaic-note", notification );
+      app.send_notification( "io.github.phase1geo.mosaic-note", notification );
     }
   }
 

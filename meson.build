@@ -1,4 +1,4 @@
-project('com.github.phase1geo.mosaic-note', ['vala', 'c'],
+project('io.github.phase1geo.mosaic-note', ['vala', 'c'],
   meson_version : '>= 0.59.0',
   version : '1.0.0',
   license: 'GPL-3.0'
@@ -60,7 +60,7 @@ core_deps = [
     dependency('webkitgtk-6.0')
 ]
 
-e = executable('com.github.phase1geo.mosaic-note',
+e = executable('io.github.phase1geo.mosaic-note',
     sources,
     config_file,
     gresource,

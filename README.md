@@ -1,11 +1,11 @@
 <h1 align="center">MosaicNote</h1>
 <p align="center">
-  <img src="https://raw.githubusercontent.com/phase1geo/MosaicNote/master/data/icons/128/com.github.phase1geo.mosaic-note.png" width="128"/>
+  <img src="https://raw.githubusercontent.com/phase1geo/MosaicNote/master/data/icons/128/io.github.phase1geo.mosaic-note.png" width="128"/>
 </p>
 
 <!--
 <p align="center">
-  <a href="https://appcenter.elementary.io/com.github.phase1geo.mosaicnote">
+  <a href="https://appcenter.elementary.io/io.github.phase1geo.mosaicnote">
     <img src="https://appcenter.elementary.io/badge.svg" alt="Get it on AppCenter" />
   </a>
 </p>
@@ -58,7 +58,7 @@ MosaicNote is available as a Flatpak (recommended) via Flathub and elementary OS
 
 You can install the Flathub flatpak from:
 
-https://flathub.org/apps/com.github.phase1geo.journaler
+https://flathub.org/apps/io.github.phase1geo.journaler
 
 ### elementary OS AppCenter
 
@@ -75,7 +75,7 @@ MosaicNote documentation can be found [here](https://github.com/phase1geo/Mosaic
 
 <!--
 <p align="center">
-  <a href="https://appcenter.elementary.io/com.github.phase1geo.journaler">
+  <a href="https://appcenter.elementary.io/io.github.phase1geo.mosaicnote">
     <img src="https://appcenter.elementary.io/badge.svg" alt="Get it on AppCenter" />
   </a>
 </p>

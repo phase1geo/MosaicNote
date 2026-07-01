@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-  <schema path="/com/github/phase1geo/mosaic-note/" id="com.github.phase1geo.mosaic-note" gettext-domain="com.github.phase1geo.mosaic-note">
+  <schema path="/io/github/phase1geo/mosaic-note/" id="io.github.phase1geo.mosaic-note" gettext-domain="io.github.phase1geo.mosaic-note">
     <key name="window-w" type="i">
       <default>1000</default>
       <summary>Most recent width of minder window</summary>
