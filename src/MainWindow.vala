@@ -413,6 +413,9 @@ public class MainWindow : Gtk.ApplicationWindow {
     // Select the notebook and note that was last saved (if valid)
     var last_notebook_id = settings.get_int( "last-notebook" );
     var last_notebook    = _notebooks.find_notebook( last_notebook_id );
+    if( last_notebook == null ) {
+      last_notebook = _notebooks.inbox;
+    }
     if( last_notebook != null ) {
       var last_note_id = settings.get_int( "last-note" );
       _sidebar.select_notebook( last_notebook );

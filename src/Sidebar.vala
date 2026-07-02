@@ -816,11 +816,8 @@ public class Sidebar : Box {
     var selection = (SingleSelection)_list_view.model;
     uint pos;
     var found = _store.find_with_equal_func( nb, (a, b) => {
-      if( (b as Notebook) != null ) {
-        return( ((a as NotebookTree.Node) != null) && (((NotebookTree.Node)a).get_notebook() == b) );
-      } else {
-        return( a == b );
-      }
+      var a_node = (a as NotebookTree.Node);
+      return( (a_node != null) ? (a_node.get_notebook() == b) : (a == b) );
     }, out pos );
     if( found ) {
       // TODO - Make sure that the notebook is within view
