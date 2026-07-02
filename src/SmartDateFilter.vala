@@ -226,6 +226,7 @@ public enum DateMatchType {
   private bool last_matches( DateTime act, int num, TimeType amount ) {
     var now  = new DateTime.now();
     var then = amount.from_date( now, (0 - num) );
+    stdout.printf( "In last_matches, act: %s, now: %s, then: %s\n", act.to_string(), now.to_string(), then.to_string() );
     return( (act.compare( now ) != 1) && (act.compare( then ) != -1) );
   }
 

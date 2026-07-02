@@ -250,17 +250,9 @@ public class SmartNotebook : BaseNotebook {
   public Xml.Node* save() {
 
     Xml.Node* node = new Xml.Node( null, "smart-notebook" );
-    string[]  ids  = {};
-
-    // Convert the stored note IDs as a comma-separated string
-    _notes.foreach((id) => {
-      ids += id.to_string();
-      return( true );
-    });
 
     node->set_prop( "name", name );
     node->set_prop( "type", _type.to_string() );
-    node->set_prop( "ids", string.joinv( ",", ids ) );
 
     if( _type.is_extra_valid() ) {
       node->set_prop( "extra", _extra );
@@ -290,14 +282,6 @@ public class SmartNotebook : BaseNotebook {
       _type = SmartNotebookType.parse( t );
     }
 
-    var i = node->get_prop( "ids" );
-    if( i != null ) {
-      var ids = i.split( "," );
-      foreach( var id in ids ) {
-        _notes.add( int.parse( id ) );
-      }
-    }
-
     var e = node->get_prop( "extra" );
     if( e != null ) {
       _extra = e;
@@ -325,6 +309,9 @@ public class SmartNotebook : BaseNotebook {
         }
       }
     }
+
+    // Make sure that we populate ourselves after loading
+    _notebooks.populate_smart_notebook( this );
 
   }
 

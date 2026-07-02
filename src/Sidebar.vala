@@ -591,6 +591,7 @@ public class Sidebar : Box {
 		} else {
 		  expander.set_list_row( row );
 		  label.label = nb.name;
+      stdout.printf( "In bind_tree, nb: %s, count: %d\n", nb.name, nb.count() );
 		  count.label = nb.count().to_string();
 		  if( nb.count() == 0 ) {
 		  	expander.margin_top = 6;

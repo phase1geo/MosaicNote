@@ -119,6 +119,12 @@ public class SmartNotebooks {
     _modified |= local_modified;
   }
 
+  public void refresh_notebooks() {
+    for( int i=0; i<_notebooks.length; i++ ) {
+      // FOOBAR
+    }
+  }
+
   //-------------------------------------------------------------
   // Returns the path of the smart notebooks XML file
   private string xml_file() {
@@ -134,7 +140,7 @@ public class SmartNotebooks {
     add_notebook( favorites );
 
     var recents = new SmartNotebook( _( "Recents" ), SmartNotebookType.BUILTIN, _notebook_tree );
-    recents.filter = new FilterUpdated();
+    recents.filter = new FilterUpdated.relative( DateMatchType.LAST, 1, TimeType.WEEK );
     add_notebook( recents );
 
     var all = new SmartNotebook( _( "All Notes" ), SmartNotebookType.BUILTIN, _notebook_tree );
