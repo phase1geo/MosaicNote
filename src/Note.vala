@@ -61,8 +61,6 @@ public class Note : Object {
     set {
       if( _title != value ) {
         _title = value;
-        stdout.printf( "note title changed (%s)\n", _title );
-        assert( false );
         modified = true;
         title_changed();
       }
@@ -94,7 +92,6 @@ public class Note : Object {
     set {
       if( _locked != value ) {
         _locked  = value;
-        stdout.printf( "note locked changed (%s)\n", _title );
         modified = true;
       }
     }
@@ -107,7 +104,6 @@ public class Note : Object {
     set {
       if( _favorite != value ) {
         _favorite = value;
-        stdout.printf( "note favorite changed (%s)\n", _title );
         modified  = true;
       }
     }
@@ -266,7 +262,6 @@ public class Note : Object {
     } else {
       _rows.insert_val( pos, row );
     }
-    stdout.printf( "note added row (%s)\n", _title );
     modified = true;
   }
 
@@ -287,7 +282,6 @@ public class Note : Object {
   // Deletes the row from the list of rows.
   public void delete_row( int pos ) {
     _rows.remove_index( pos );
-    stdout.printf( "note deleted row (%s)\n", _title );
     modified = true;
   }
 
@@ -390,7 +384,6 @@ public class Note : Object {
   // Adds the given note id to the list of referred links.
   public void add_referred( int id ) {
     if( _referred.add( id ) ) {
-      stdout.printf( "note added referred (%s)\n", _title );
       _modified = true;
     }
   }
@@ -399,7 +392,6 @@ public class Note : Object {
   // Removes the given note id from the list of referred links.
   public void remove_referred( int id ) {
     if( _referred.remove( id ) ) {
-      stdout.printf( "note removed referred (%s)\n", _title );
       _modified = true;
     }
   }

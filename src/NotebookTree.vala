@@ -215,7 +215,6 @@ public class NotebookTree {
     // of the notebook match is returned.  If no match can be found,
     // returns null.
     public Notebook? find_notebook_by_name( string name ) {
-      stdout.printf( "In find_notebook_by_name, get_notebook().name: %s, name: %s\n", get_notebook().name, name );
       if( get_notebook().name == name ) {
         return( get_notebook() );
       }
@@ -639,8 +638,6 @@ public class NotebookTree {
   // Loads the contents of this notebook from XML format
   private void load() {
 
-    stdout.printf( "In NotebookTree.load()\n" );
-
     var doc = Xml.Parser.read_file( xml_file(), null, (Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING) );
     if( doc == null ) {
       create_default_notebooks();
@@ -676,7 +673,6 @@ public class NotebookTree {
 
     var ib_id = root->get_prop( "inbox-id" );
     _inbox = new Notebook.from_xml( ((ib_id != null) ? int.parse( ib_id ) : -1), _( "Inbox" ) );
-    stdout.printf( "Loaded inbox, valid: %s\n", (_inbox != null).to_string() );
     _inbox.changed.connect(() => {
       set_modified();
     });

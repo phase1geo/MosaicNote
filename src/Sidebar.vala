@@ -591,7 +591,6 @@ public class Sidebar : Box {
 		} else {
 		  expander.set_list_row( row );
 		  label.label = nb.name;
-      stdout.printf( "In bind_tree, nb: %s, count: %d\n", nb.name, nb.count() );
 		  count.label = nb.count().to_string();
 		  if( nb.count() == 0 ) {
 		  	expander.margin_top = 6;
@@ -757,7 +756,6 @@ public class Sidebar : Box {
   private void action_export_notebook( SimpleAction action, Variant? variant ) {
     if( variant != null ) {
       var pos = variant.get_int32();
-      stdout.printf( "pos: %d\n", pos );
       var row = _model.get_row( pos );
       var nb  = (BaseNotebook)row.get_item();
       if( nb_is_node( nb ) ) {
