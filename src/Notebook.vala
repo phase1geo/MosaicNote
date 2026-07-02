@@ -206,6 +206,15 @@ public class Notebook : BaseNotebook {
   }
 
   //-------------------------------------------------------------
+  // Populates the given gallery with the notes that match the
+  // gallery criteria.
+  public void populate_gallery( Gallery gallery ) {
+    for( int i=0; i<count(); i++ ) {
+      gallery.handle_note( get_note( i ) );
+    }
+  }
+
+  //-------------------------------------------------------------
   // Returns true if anything has been modified by the user in this notebook
   public bool is_modified() {
   	if( !_modified ) {

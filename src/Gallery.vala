@@ -114,16 +114,8 @@ public class Gallery : BaseNotebook {
   // Saves the stored note item IDs in XML format.
   public Xml.Node* save() {
 
-    // Convert the stored note IDs as a comma-separated string
-    string[] ids  = {};
-    _item_id.foreach((id) => {
-      ids += id.to_string();
-      return( true );
-    });
-
     Xml.Node* node = new Xml.Node( null, "gallery" );
     node->set_prop( "type", _item_type.to_string() );
-    node->set_prop( "ids", string.joinv( ",", ids ) );
 
     return( node );
 
@@ -139,13 +131,8 @@ public class Gallery : BaseNotebook {
       _name      = _item_type.label();
     }
 
-    var i = node->get_prop( "ids" );
-    if( i != null ) {
-      var ids = i.split( "," );
-      foreach( var id in ids ) {
-        _item_id.add( int.parse( id ) );
-      }
-    }
+    // Populate the gallery with all matching notes
+    _notebooks.populate_gallery( this );
 
   }
 

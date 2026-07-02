@@ -328,6 +328,16 @@ public class NotebookTree {
     }
 
     //-------------------------------------------------------------
+    // Populates the given gallery with the notes that match the
+    // gallery configuration.
+    public void populate_gallery( Gallery gallery ) {
+      get_notebook().populate_gallery( gallery );
+      for( int i=0; i<_children.length; i++ ) {
+        _children.index( i ).populate_gallery( gallery );
+      }
+    }
+
+    //-------------------------------------------------------------
     // Saves this notebook node in XML format
     public Xml.Node* save() {
       Xml.Node* node = new Xml.Node( null, "node" );
@@ -514,8 +524,12 @@ public class NotebookTree {
   //-------------------------------------------------------------
   // Searches the notebooks for a note that matches the given ID
   public Note? find_note_by_id( int id ) {
+    var note = _inbox.find_note_by_id( id );
+    if( note != null ) {
+      return( note );
+    }
     for( int i=0; i<_nodes.length; i++ ) {
-      var note = _nodes.index( i ).find_note_by_id( id );
+      note = _nodes.index( i ).find_note_by_id( id );
       if( note != null ) {
         return( note );
       }
@@ -527,8 +541,12 @@ public class NotebookTree {
   // Searches the notebooks for a note item that matches the given
   // ID.
   public NoteItem? find_note_item( int id ) {
+    var item = _inbox.find_note_item( id );
+    if( item != null ) {
+      return( item );
+    }
     for( int i=0; i<_nodes.length; i++ ) {
-      var item = _nodes.index( i ).find_note_item( id );
+      item = _nodes.index( i ).find_note_item( id );
       if( item != null ) {
         return( item );
       }
@@ -539,8 +557,12 @@ public class NotebookTree {
   //-------------------------------------------------------------
   // Searches the notebooks for a note that matches the given ID
   public Note? find_note_by_title( string title ) {
+    var note = _inbox.find_note_by_title( title );
+    if( note != null ) {
+      return( note );
+    }
     for( int i=0; i<_nodes.length; i++ ) {
-      var note = _nodes.index( i ).find_note_by_title( title );
+      note = _nodes.index( i ).find_note_by_title( title );
       if( note != null ) {
         return( note );
       }
@@ -551,17 +573,28 @@ public class NotebookTree {
   //-------------------------------------------------------------
   // Searches the tree of notebooks for notes that contain the given tag
   public void get_notes_with_tag( string tag, Array<Note> notes ) {
+    _inbox.get_notes_with_tag( tag, notes );
     for( int i=0; i<_nodes.length; i++ ) {
       _nodes.index( i ).get_notes_with_tag( tag, notes );
     }
   }
 
   //-------------------------------------------------------------
-  // Populates the given smart notebook with all matching nodes.
+  // Populates the given smart notebook with all matching notes.
   // This is useful for searching.
   public void populate_smart_notebook( SmartNotebook notebook ) {
+    _inbox.populate_smart_notebook( notebook );
     for( int i=0; i<_nodes.length; i++ ) {
       _nodes.index( i ).populate_smart_notebook( notebook );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Populates the given gallery with all matching notes.
+  public void populate_gallery( Gallery gallery ) {
+    _inbox.populate_gallery( gallery );
+    for( int i=0; i<_nodes.length; i++ ) {
+      _nodes.index( i ).populate_gallery( gallery );
     }
   }
 
