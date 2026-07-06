@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 2024-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -23,8 +23,9 @@ using Gtk;
 
 public class NoteItemPaneImage : NoteItemPane {
 
-  private Label   _h2_label;
-  private Picture _image;
+  private Label         _h2_label;
+  private Picture       _image;
+  private NoteItemImage _temp_item;
 
   public NoteItemImage image_item {
     get {
@@ -32,16 +33,19 @@ public class NoteItemPaneImage : NoteItemPane {
     }
   }
 
+  //-------------------------------------------------------------
 	// Default constructor
 	public NoteItemPaneImage( MainWindow win, NoteItem item, SpellChecker? spell ) {
     base( win, item, spell );
   }
 
+  //-------------------------------------------------------------
   // Grabs the focus of the note item at the specified position.
   public override void grab_item_focus( TextCursorPlacement placement ) {
     _image.grab_focus();
   }
 
+  //-------------------------------------------------------------
   // Displays a dialog to request
   private void image_dialog( NoteItemImage item ) {
 
@@ -58,6 +62,119 @@ public class NoteItemPaneImage : NoteItemPane {
         }
       } catch( Error e ) {}
     });
+
+  }
+
+  //-------------------------------------------------------------
+  // Displays screenshot utility to request
+  private void do_screenshot( NoteItemImage item ) {
+    _temp_item = item;
+    do_screenshot_portal.begin();
+  }
+
+  //-------------------------------------------------------------
+  // Waits for the given number of milliseconds.
+  private async void screenshot_wait_ms( uint ms ) {
+    GLib.Timeout.add( ms, () => {
+      screenshot_wait_ms.callback();
+      return Source.REMOVE;
+    });
+    yield;
+  }
+
+  //-------------------------------------------------------------
+  // 
+  private async void do_screenshot_portal() {
+
+    // We will hide the MosaicNote window to capture the screenshot
+    hide();
+    yield screenshot_wait_ms( 200 );
+
+    try {
+
+      var bus = Bus.get_sync (BusType.SESSION);
+
+      var proxy = new DBusProxy.sync (
+                bus,
+                DBusProxyFlags.NONE,
+                null,
+                "org.freedesktop.portal.Desktop",
+                "/org/freedesktop/portal/desktop",
+                "org.freedesktop.portal.Screenshot",
+                null
+      );
+
+      // Predict the Request handle so we can subscribe to its Response
+      // signal BEFORE issuing the Screenshot call.  Subscribing after
+      // the call returns races against the portal: when the helper is
+      // already running and responds quickly (typical for the second
+      // and subsequent screenshots in a session) the Response can fire
+      // before signal_subscribe is wired up, dropping the screenshot.
+      // The handle path format is defined by the XDG portal spec.
+      var token  = "mosaic_note_%u".printf( Random.next_int() );
+      var sender = bus.get_unique_name().substring( 1 ).replace( ".", "_" );
+      var handle = "/org/freedesktop/portal/desktop/request/%s/%s".printf( sender, token );
+
+      bus.signal_subscribe(
+        "org.freedesktop.portal.Desktop",
+        "org.freedesktop.portal.Request",
+        "Response",
+        handle,
+        null,
+        DBusSignalFlags.NONE,
+        handle_screenshot_callback
+      );
+
+      VariantDict options = new VariantDict( new Variant( "a{sv}" ) );
+      options.insert_value( "interactive",  new Variant.boolean( true ) );
+      options.insert_value( "handle_token", new Variant.string( token ) );
+
+      Variant dict_variant  = options.end ();
+      Variant tuple_variant = new Variant( "(s@a{sv})", "interactive", dict_variant );
+
+      yield proxy.call(
+        "Screenshot",
+        tuple_variant,
+        DBusCallFlags.NONE,
+        -1,
+        null
+      );
+
+    } catch (Error e) {
+      warning ("Screenshot failed: %s", e.message);
+      show();
+    }
+
+  }
+
+  //-------------------------------------------------------------
+  // Handle the screenshot callback and update the UI.
+  private void handle_screenshot_callback(
+    DBusConnection connection,
+    string? sender_name,
+    string object_path,
+    string interface_name,
+    string signal_name,
+    Variant parameters
+  ) {
+
+    uint response;
+    Variant dict;
+    string uri = "";
+
+    parameters.get( "(u@a{sv})", out response, out dict );
+
+    if( (response == 0) && dict.lookup( "uri", "s", out uri ) ) {
+      var file = File.new_for_uri( uri );
+      if( file != null ) {
+        if( file.get_uri() != _temp_item.uri ) {
+          win.undo.add_item( new UndoItemImageChange( image_item ) );
+          _temp_item.uri = file.get_uri();
+        }
+      }
+    }
+
+    show();
 
   }
 
@@ -86,16 +203,27 @@ public class NoteItemPaneImage : NoteItemPane {
     var open = new Button.from_icon_name( "image-x-generic-symbolic" ) {
       halign       = Align.END,
       has_frame    = false,
-      tooltip_text = _( "Change Image" )
+      tooltip_text = _( "Change Image From File" )
     };
 
     open.clicked.connect(() => {
       image_dialog( image_item );
     });
 
+    var screenshot = new Button.from_icon_name( "insert-image" ) {
+      halign = Align.END,
+      has_frame = false,
+      tooltip_text = _( "Change Image From Screenshot" )
+    };
+
+    screenshot.clicked.connect(() => {
+      do_screenshot( image_item );
+    });
+
     var box = new Box( Orientation.HORIZONTAL, 5 );
     box.append( entry );
     box.append( open );
+    box.append( screenshot );
 
     save.connect(() => {
       var text = (entry.text == default_text) ? "" : entry.text;
@@ -159,7 +287,8 @@ public class NoteItemPaneImage : NoteItemPane {
     _image.add_controller( image_drop );
 
     if( image_item.uri == "" ) {
-      image_dialog( image_item );
+      // image_dialog( image_item );
+      // TODO - We will want to display the screen to allow us to select an image or take a screenshot
     } else {
       _image.file = File.new_for_path( image_item.get_resource_filename() );
     }
