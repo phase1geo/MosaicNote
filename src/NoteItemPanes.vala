@@ -68,6 +68,31 @@ public class NoteItemPos {
   public bool matches( NoteItemPos other ) {
     return( (_valid == other._valid) && (_row == other._row) && (_col == other._col) );
   }
+  public NoteItemPos? get_next_pane( Widget panes ) {
+    var pane_row = get_row_pane( panes );
+    var pos      = new NoteItemPos();
+    if( (_col + 1) < pane_row.size ) {
+      pos.set_position( _row, (_col + 1) );
+      return( pos );
+    } else {
+      pos.set_position( (_row + 1), 0 );
+      return( (Utils.get_child_at_index( panes, (_row + 1) ) != null) ? pos : null );
+    }
+  }
+  public NoteItemPos? get_prev_pane( Widget panes ) {
+    var pane_row = get_row_pane( panes );
+    var pos      = new NoteItemPos();
+    if( (_col - 1) >= 0 ) {
+      pos.set_position( _row, (_col - 1) );
+      return( pos );
+    } else if( (_row - 1) >= 0 ) {
+      pane_row = (NoteItemPaneRow)Utils.get_child_at_index( panes, (_row - 1) );
+      pos.set_position( (_row - 1), (pane_row.size - 1) );
+      return( pos );
+    } else {
+      return( null );
+    }
+  }
 }
 
 //-------------------------------------------------------------
