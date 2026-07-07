@@ -115,4 +115,10 @@ public class NoteItemPaneRow : Box {
     return( (NoteItemPane)Utils.get_child_at_index( _box, column ) );
   }
 
+  //-------------------------------------------------------------
+  // Returns the column associated with the given pane in the row.
+  public int get_pane_col( Widget pane ) {
+    return( Utils.get_child_index( _box, pane ) );
+  }
+
 }

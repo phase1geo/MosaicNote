@@ -47,11 +47,11 @@ public class NoteItemPos {
     _col   = col;
   }
   public void set_position_from_pane( Widget pane ) {
-    var parent  = pane.get_parent();
-    var gparent = parent.get_parent(); 
-    _valid      = true;
-    _col        = Utils.get_child_index( parent, pane );
-    _row        = Utils.get_child_index( gparent, parent );
+    var pane_row = (NoteItemPaneRow)pane.get_parent().get_parent();
+    var parent   = pane_row.get_parent();
+    _valid       = true;
+    _col         = pane_row.get_pane_col( pane );
+    _row         = Utils.get_child_index( parent, pane_row );
   }
   public void clear_position() {
     _valid = false;

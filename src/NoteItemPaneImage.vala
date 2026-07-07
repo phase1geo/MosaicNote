@@ -87,7 +87,7 @@ public class NoteItemPaneImage : NoteItemPane {
   private async void do_screenshot_portal() {
 
     // We will hide the MosaicNote window to capture the screenshot
-    hide();
+    win.hide();
     yield screenshot_wait_ms( 200 );
 
     try {
@@ -142,7 +142,7 @@ public class NoteItemPaneImage : NoteItemPane {
 
     } catch (Error e) {
       warning ("Screenshot failed: %s", e.message);
-      show();
+      win.show();
     }
 
   }
@@ -174,7 +174,7 @@ public class NoteItemPaneImage : NoteItemPane {
       }
     }
 
-    show();
+    win.show();
 
   }
 
