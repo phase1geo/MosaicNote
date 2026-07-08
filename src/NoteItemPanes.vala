@@ -39,7 +39,7 @@ public class NoteItemPos {
   }
   public NoteItemPos() {}
   public NoteItemPos.from_pane( NoteItemPane pane ) {
-    var pane_row = (NoteItemPaneRow)pane.get_parent();
+    var pane_row = (NoteItemPaneRow)pane.get_parent().get_parent();
     var parent   = pane_row.get_parent();
     _valid       = true;
     _col         = pane_row.get_pane_col( pane );
@@ -258,9 +258,9 @@ public class NoteItemPanes : Box {
     }
 
     pane.add_item.connect((dir, type) => {
-      var row_box = pane.get_parent();
-      var row_pos = Utils.get_child_index( this, row_box );
-      var col_pos = Utils.get_child_index( row_box, pane ); 
+      var pos     = new NoteItemPos.from_pane( pane );
+      var row_pos = pos.row;
+      var col_pos = pos.col;
       var use_row = true;
       switch( dir ) {
         case MoveDirection.UP    :  col_pos = 0;  use_row = false;  break;
@@ -272,26 +272,27 @@ public class NoteItemPanes : Box {
     });
 
     pane.remove_item.connect((forward, record_undo) => {
-      var row_box = (NoteItemPaneRow)pane.get_parent();
-      var row_pos = Utils.get_child_index( this, row_box );
-      var col_pos = Utils.get_child_index( row_box, pane );
-      var rows    = _rows;
+      var pos      = new NoteItemPos.from_pane( pane );
+      var pane_row = (NoteItemPaneRow)pane.get_parent().get_parent();
+      var row_pos  = pos.row;
+      var col_pos  = pos.col;
+      var rows     = _rows;
       if( record_undo ) {
-        _win.undo.add_item( new UndoItemDelete( _note, row_pos, col_pos ) );
+        _win.undo.add_item( new UndoItemDelete( _note, pos.row, pos.col ) );
       }
       item_removed( pane );
-      row_box.delete_pane( col_pos );
-      if( row_box.size == 0 ) {
-        remove( row_box );
+      pane_row.delete_pane( pos.col );
+      if( pane_row.size == 0 ) {
+        remove( pane_row );
         _rows--;
       }
-      _note.delete_item( row_pos, col_pos );
-      if( (forward || (row_pos == 0)) && (get_pane( row_pos, 0 ) != null) ) {
-        var next_pane = get_pane( row_pos, 0 );
+      _note.delete_item( pos.row, pos.col );
+      if( (forward || (pos.row == 0)) && (get_pane( pos.row, 0 ) != null) ) {
+        var next_pane = get_pane( pos.row, 0 );
         show_pane( next_pane );
         next_pane.grab_item_focus( TextCursorPlacement.NO_CHANGE );
-      } else if( (!forward || (row_pos == (rows - 1))) && (get_pane( (row_pos - 1), 0 ) != null) ) {
-        var prev_pane = get_pane( (row_pos - 1), 0 );
+      } else if( (!forward || (pos.row == (rows - 1))) && (get_pane( (pos.row - 1), 0 ) != null) ) {
+        var prev_pane = get_pane( (pos.row - 1), 0 );
         show_pane( prev_pane );
         prev_pane.grab_item_focus( TextCursorPlacement.NO_CHANGE );
       } else {
@@ -308,20 +309,18 @@ public class NoteItemPanes : Box {
     });
 
     pane.move_item.connect((dir, record_undo) => {
-      var row_box  = pane.get_parent();
-      var curr_row = Utils.get_child_index( this, row_box );
-      var curr_col = Utils.get_child_index( row_box, pane );
-      var curr     = get_pane( curr_row, curr_col );
+      var pos  = new NoteItemPos.from_pane( pane );
+      var curr = pos.get_pane( this );
       if( dir == MoveDirection.UP ) {
-        _note.move_row( curr_row, (curr_row - 1) );
-        reorder_child_after( get_row( curr_row ), get_row( curr_row - 2 ) );
+        _note.move_row( pos.row, (pos.row - 1) );
+        reorder_child_after( get_row( pos.row ), get_row( pos.row - 2 ) );
       } else {
-        _note.move_row( curr_row, (curr_row + 1) );
-        reorder_child_after( get_row( curr_row ), get_row( curr_row + 1 ) );
+        _note.move_row( pos.row, (pos.row + 1) );
+        reorder_child_after( get_row( pos.row ), get_row( pos.row + 1 ) );
       }
       show_pane( curr );
       if( record_undo ) {
-        _win.undo.add_item( new UndoItemMove( _note, curr_row, (dir == MoveDirection.UP) ) );
+        _win.undo.add_item( new UndoItemMove( _note, pos.row, (dir == MoveDirection.UP) ) );
       }
     });
 
