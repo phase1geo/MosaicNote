@@ -172,7 +172,9 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   private bool check_for_block_change( TextBuffer buffer, ref TextIter iter, string str ) {
     var settings = MosaicNote.settings;
     if( iter.starts_line() && iter.ends_line() ) {
-      var new_type = NoteItemType.parse_char( str.get_char( 0 ) );
+      var new_type  = NoteItemType.parse_char( str.get_char( 0 ) );
+      var pos       = new NoteItemPos.from_pane( this );
+      var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( this ) );
       if( new_type == NoteItemType.MARKDOWN ) {
         if( settings.get_boolean( "split-markdown-by-header" ) ) {
           if( buffer.text != "" ) {

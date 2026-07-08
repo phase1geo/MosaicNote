@@ -69,9 +69,7 @@ public class NoteItemPane : Box {
       return( _item );
     }
   }
-  public NoteItemPane? prev_pane { get; set; default = null; }
-  public NoteItemPane? next_pane { get; set; default = null; }
-  public bool          ignore_text_change { get; set; default = false; }
+  public bool ignore_text_change { get; set; default = false; }
 
   public signal void add_item( MoveDirection dir, NoteItemType? type );
   public signal void remove_item( bool forward, bool record_undo );
@@ -211,6 +209,9 @@ public class NoteItemPane : Box {
 
     TextIter start_iter, cursor_iter;
 
+    var pos       = new NoteItemPos.from_pane( this );
+    var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( this ) );
+
     // Get the current text widget and figure out the location of
     // the insertion cursor.
     var text   = get_text();
@@ -245,6 +246,9 @@ public class NoteItemPane : Box {
   //-------------------------------------------------------------
   // Joins the current item with the item above it if they are the same type.
   private bool join_items() {
+
+    var pos       = new NoteItemPos.from_pane( this );
+    var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( this ) );
 
     // If we are unable to join with anything, return false immediately
     if( (prev_pane == null) || (prev_pane.item.item_type != item.item_type) ) {
@@ -328,6 +332,8 @@ public class NoteItemPane : Box {
           }
           break;
         case Gdk.Key.Up :
+          var pos = new NoteItemPos.from_pane( this );
+          var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( this ) );
           if( prev_pane != null ) {
             if( control ) {
               move_item( MoveDirection.UP, true );
@@ -347,6 +353,8 @@ public class NoteItemPane : Box {
           }
           return( false );
         case Gdk.Key.Down :
+          var pos = new NoteItemPos.from_pane( this );
+          var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( this ) );
           if( next_pane != null ) {
             if( control ) {
               move_item( MoveDirection.DOWN, true );
@@ -388,6 +396,8 @@ public class NoteItemPane : Box {
           }
           break;
         case Gdk.Key.BackSpace :
+          var pos = new NoteItemPos.from_pane( this );
+          var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( this ) );
           if( (prev_pane != null) && !control ) {
             TextIter cursor;
             text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );
@@ -397,6 +407,8 @@ public class NoteItemPane : Box {
           }
           break;
         case Gdk.Key.Up :
+          var pos = new NoteItemPos.from_pane( this );
+          var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( this ) );
           if( (prev_pane != null) && !control ) {
             TextIter cursor;
             text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );
@@ -407,6 +419,8 @@ public class NoteItemPane : Box {
           }
           break;
         case Gdk.Key.Down :
+          var pos = new NoteItemPos.from_pane( this );
+          var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( this ) );
           if( (next_pane != null) && !control ) {
             TextIter cursor;
             text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );

@@ -38,6 +38,13 @@ public class NoteItemPos {
     }
   }
   public NoteItemPos() {}
+  public NoteItemPos.from_pane( NoteItemPane pane ) {
+    var pane_row = (NoteItemPaneRow)pane.get_parent();
+    var parent   = pane_row.get_parent();
+    _valid       = true;
+    _col         = pane_row.get_pane_col( pane );
+    _row         = Utils.get_child_index( parent, pane_row );
+  }
   public bool is_valid() {
     return( _valid );
   }
@@ -68,30 +75,26 @@ public class NoteItemPos {
   public bool matches( NoteItemPos other ) {
     return( (_valid == other._valid) && (_row == other._row) && (_col == other._col) );
   }
-  public NoteItemPos? get_next_pane( Widget panes ) {
-    var pane_row = get_row_pane( panes );
-    var pos      = new NoteItemPos();
+  public NoteItemPane? get_next_pane( Widget panes ) {
+    var pane_row = (NoteItemPaneRow)Utils.get_child_at_index( panes, _row );
     if( (_col + 1) < pane_row.size ) {
-      pos.set_position( _row, (_col + 1) );
-      return( pos );
+      return( pane_row.get_pane( _col + 1 ) );
     } else {
-      pos.set_position( (_row + 1), 0 );
-      return( (Utils.get_child_at_index( panes, (_row + 1) ) != null) ? pos : null );
+      pane_row = (NoteItemPaneRow)Utils.get_child_at_index( panes, (_row + 1) );
+      return( (pane_row != null) ? pane_row.get_pane( 0 ) : null );
     }
   }
-  public NoteItemPos? get_prev_pane( Widget panes ) {
-    var pane_row = get_row_pane( panes );
-    var pos      = new NoteItemPos();
+  public NoteItemPane? get_prev_pane( Widget panes ) {
     if( (_col - 1) >= 0 ) {
-      pos.set_position( _row, (_col - 1) );
-      return( pos );
-    } else if( (_row - 1) >= 0 ) {
-      pane_row = (NoteItemPaneRow)Utils.get_child_at_index( panes, (_row - 1) );
-      pos.set_position( (_row - 1), (pane_row.size - 1) );
-      return( pos );
+      var pane_row = (NoteItemPaneRow)Utils.get_child_at_index( panes, _row );
+      return( pane_row.get_pane( _col - 1 ) );
     } else {
-      return( null );
+      var pane_row = (NoteItemPaneRow)Utils.get_child_at_index( panes, (_row - 1) );
+      return( (pane_row != null) ? pane_row.get_pane( pane_row.size - 1 ) : null );
     }
+  }
+  public static Widget row_box_from_pane( Widget pane ) {
+    return( pane.get_parent().get_parent().get_parent() );
   }
 }
 
@@ -308,27 +311,11 @@ public class NoteItemPanes : Box {
       var row_box  = pane.get_parent();
       var curr_row = Utils.get_child_index( this, row_box );
       var curr_col = Utils.get_child_index( row_box, pane );
-      var prev     = get_pane( curr_row - 1, 0 );
       var curr     = get_pane( curr_row, curr_col );
-      var next     = get_pane( curr_row + 1, 0 );
       if( dir == MoveDirection.UP ) {
-        curr.prev_pane = prev.prev_pane;
-        curr.next_pane = prev;
-        prev.prev_pane = curr;
-        prev.next_pane = next;
-        if( next != null ) {
-          next.prev_pane = curr;
-        }
         _note.move_row( curr_row, (curr_row - 1) );
         reorder_child_after( get_row( curr_row ), get_row( curr_row - 2 ) );
       } else {
-        curr.prev_pane = next;
-        curr.next_pane = next.next_pane;
-        next.prev_pane = prev;
-        next.next_pane = curr;
-        if( prev != null ) {
-          prev.next_pane = next;
-        }
         _note.move_row( curr_row, (curr_row + 1) );
         reorder_child_after( get_row( curr_row ), get_row( curr_row + 1 ) );
       }
@@ -372,20 +359,10 @@ public class NoteItemPanes : Box {
     // Add the pane at the given position
     if( !add_to_row ) {
       if( row == 0 ) {
-        var first_pane = get_pane( 0, 0 );
-        if( first_pane != null ) {
-          first_pane.prev_pane = pane;
-          pane.next_pane = first_pane;
-        }
         prepend( row_pane );
       } else {
         var sibling_row = get_row( row - 1 );
         insert_child_after( row_pane, sibling_row );
-        /* TODO
-        pane.prev_pane = sibling;
-        pane.next_pane = sibling.next_pane;
-        sibling.next_pane = pane;
-        */
       }
       _rows++;
     }
