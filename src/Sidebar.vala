@@ -99,12 +99,19 @@ public class Sidebar : Box {
 
     selection.selection_changed.connect((pos, num) => {
       var row = _model.get_row( selection.selected );
+      if( _selected_notebook != null ) {
+        _selected_notebook.current = false;
+      }
       if( row != null ) {
         _selected_notebook = (BaseNotebook)row.get_item();
+        _selected_notebook.current = true;
       } else {
         _selected_notebook = null;
       }
-      notebook_selected( _selected_notebook );
+      Idle.add(() => {
+        notebook_selected( _selected_notebook );
+        return( false );
+      });
     });
 
     _win.notebooks.changed.connect(() => {
@@ -136,8 +143,15 @@ public class Sidebar : Box {
 
 		_list_view.activate.connect((pos) => {
 			var row = _model.get_row( pos );
+      if( _selected_notebook != null ) {
+        _selected_notebook.current = false;
+      }
 			_selected_notebook = (BaseNotebook)row.get_item();
-			notebook_selected( _selected_notebook );
+      _selected_notebook.current = true;
+      Idle.add(() => {
+  			notebook_selected( _selected_notebook );
+        return( false );
+      });
 		});
 
     var sw = new ScrolledWindow() {
@@ -195,8 +209,15 @@ public class Sidebar : Box {
   private void update_notes_panel( uint selected ) {
     var row = _model.get_row( selected );
     if( row != null ) {
+      if( _selected_notebook != null ) {
+        _selected_notebook.current = false;
+      }
       _selected_notebook = (BaseNotebook)row.get_item();
-      notebook_selected( _selected_notebook );
+      _selected_notebook.current = true;
+      Idle.add(() => {
+        notebook_selected( _selected_notebook );
+        return( false );
+      });
     }
   }
 
@@ -561,6 +582,14 @@ public class Sidebar : Box {
 
 	}
 
+  private void update_selected_item( BaseNotebook nb, Box box ) {
+    if( nb.current ) {
+      box.add_css_class( "selected-item" );
+    } else {
+      box.remove_css_class( "selected-item" );
+    }
+  }
+
 	private void bind_tree( Object obj ) {
 
 		var item     = (ListItem)obj;
@@ -597,6 +626,12 @@ public class Sidebar : Box {
 		  	expander.margin_bottom = 6;
 		  	count.visible = false;
 		  }
+      stdout.printf( "In bind_tree, notebook %s, current: %s\n", nb.name, nb.current.to_string() );
+      if( nb.current ) {
+        expander.add_css_class( "selected-item" );
+      } else {
+        expander.remove_css_class( "selected-item" );
+      }
       var node = (nb as NotebookTree.Node);
       if( node != null ) {
         if( node.size() == 0 ) {

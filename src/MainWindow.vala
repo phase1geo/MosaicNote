@@ -100,6 +100,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private UndoBuffer      _undo;
   private Button          _undo_btn;
   private Button          _redo_btn;
+  private Widget?         _last_focus = null;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_save",           action_save },
@@ -255,6 +256,19 @@ public class MainWindow : Gtk.ApplicationWindow {
     _notes   = new NotesPanel( this );
     _note    = new NotePanel( this );
 
+    // TEMPORARY - Used to output any changes to the current keyboard focus
+    notify["focus-widget"].connect(() => {
+      if( _last_focus != null ) {
+        _last_focus.remove_css_class( "drop-area" );
+      }
+      var focus = get_focus();
+      if( focus != null ) {
+        stdout.printf( "Focus changed to %s\n", focus.get_type().name() );
+        focus.add_css_class( "drop-area" );
+      }
+      _last_focus = focus;
+    });
+
     _sidebar.notebook_selected.connect((nb) => {
       if( nb != null ) {
         if( (nb as Gallery) != null ) {
@@ -267,6 +281,8 @@ public class MainWindow : Gtk.ApplicationWindow {
           _notes.select_row( 0 );
           if( node != null ) {
             MosaicNote.settings.set_int( "last-notebook", node.get_notebook().id );
+          } else if( nb == (BaseNotebook)_notebooks.inbox ) {
+            MosaicNote.settings.set_int( "last-notebook", _notebooks.inbox.id );
           }
         }
       } else {

@@ -89,6 +89,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   //-------------------------------------------------------------
   // Grabs the focus of the note item at the specified position.
   public override void grab_item_focus( TextCursorPlacement placement ) {
+    stdout.printf( "In markdown.grab_item_focus\n" );
     place_cursor( _text, placement );
     _text.grab_focus();
   }

@@ -96,6 +96,9 @@ public class NoteItemPos {
   public static Widget row_box_from_pane( Widget pane ) {
     return( pane.get_parent().get_parent().get_parent() );
   }
+  public string to_string() {
+    return( "valid: %s, row: %d, col: %d".printf( _valid.to_string(), _row, _col ) );
+  }
 }
 
 //-------------------------------------------------------------
@@ -228,14 +231,15 @@ public class NoteItemPanes : Box {
     }
     var new_item = type.create( note_row );
     note_row.add_item( new_item, col );
-    add_pane( new_item, row, col, add_to_row, true );
+    var new_pane = add_pane( new_item, row, col, add_to_row, true );
+    new_pane.set_as_current( "add-new-item" );
     _win.undo.add_item( new UndoItemAdd( _note, row, col ) );
   }
 
   //-------------------------------------------------------------
   // Adds an item to the UI at the given position.  Set pos to -1
   // to append the item at the end of the current item set.
-  public void add_pane( NoteItem item, int row, int col, bool add_to_row, bool show ) {
+  public NoteItemPane? add_pane( NoteItem item, int row, int col, bool add_to_row, bool show ) {
 
     NoteItemPaneRow? row_pane = null;
 
@@ -254,7 +258,7 @@ public class NoteItemPanes : Box {
       case NoteItemType.TABLE    :  pane = new NoteItemPaneTable( _win, item, _spell );     break;
       case NoteItemType.ASSETS   :  pane = new NoteItemPaneAssets( _win, item, _spell );    break;
       case NoteItemType.MATH     :  pane = new NoteItemPaneMath( _win, item, _spell );      break;
-      default                    :  return;
+      default                    :  return( null );
     }
 
     pane.add_item.connect((dir, type) => {
@@ -326,15 +330,20 @@ public class NoteItemPanes : Box {
 
     pane.set_as_current.connect((msg) => {
       if( !_current_item.is_valid() ) {
+        stdout.printf( "Setting current item\n" );
         _current_item.set_position_from_pane( pane );
         item_selected( pane );
       } else {
+        stdout.printf( "HERE B, msg: %s, current: %s\n", msg, _current_item.to_string() );
         var other_pane = _current_item.get_pane( this );
-        if( other_pane != null ) {
-          other_pane.clear_current();
+        if( other_pane != pane ) {
+          if( other_pane != null ) {
+            stdout.printf( "Clearing current item\n" );
+            other_pane.clear_current();
+          }
+          _current_item.set_position_from_pane( pane );
+          item_selected( pane );
         }
-        _current_item.set_position_from_pane( pane );
-        item_selected( pane );
       }
       show_pane( pane );
     });
@@ -380,6 +389,8 @@ public class NoteItemPanes : Box {
       pane.clear_current();
     }
 
+    return( pane );
+
   }
 
   //-------------------------------------------------------------
@@ -412,13 +423,16 @@ public class NoteItemPanes : Box {
       row_pane.delete_pane( col );
 
       // Add the modified pane back into the pane row
-      add_pane( new_item, row, col, true, true );
+      var new_pane = add_pane( new_item, row, col, true, true );
+      new_pane.set_as_current( "add-new-item" );
     }
   }
 
   //-------------------------------------------------------------
   // Adds the contents of the current note into the content area
   public void populate( Note note ) {
+
+    NoteItemPane? first = null;
 
     _note = note;
     _rows = 0;
@@ -434,7 +448,10 @@ public class NoteItemPanes : Box {
 
     // Make sure that the first item has the focus
     if( _note.rows() > 0 ) {
-      get_pane( 0, 0 ).grab_item_focus( TextCursorPlacement.START );
+      stdout.printf( "In populate, selecting first pane\n" );
+      var first_pane = get_pane( 0, 0 );
+      first_pane.set_as_current( "populate" );
+      first_pane.grab_item_focus( TextCursorPlacement.START );
     }
 
   }

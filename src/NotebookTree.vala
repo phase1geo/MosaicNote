@@ -478,6 +478,9 @@ public class NotebookTree {
   //-------------------------------------------------------------
   // Searches the notebooks for one that matches the given ID
   public Notebook? find_notebook( int id ) {
+    if( _inbox.id == id ) {
+      return( _inbox );
+    }
     for( int i=0; i<_nodes.length; i++ ) {
       var nb = _nodes.index( i ).find_notebook( id );
       if( nb != null ) {

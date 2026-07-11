@@ -21,28 +21,30 @@
 
 public class BaseNotebook : Object {
 
-	protected string _name     = "";
+  protected string _name     = "";
   private   bool   _modified = false;
 
-	public signal void changed();
+  public signal void changed();
 
-	public string name {
-		get {
-			return( _name );
-		}
-		set {
-			if( _name != value ) {
-				_name = value;
-				_modified = true;
-				changed();
-			}
-		}
-	}
+  public string name {
+    get {
+      return( _name );
+    }
+    set {
+      if( _name != value ) {
+        _name = value;
+        _modified = true;
+        changed();
+      }
+    }
+  }
 
-	// Default constructor
-	public BaseNotebook( string name ) {
-		_name = name;
-	}
+  public bool current { set; get; default = false; }
+
+  // Default constructor
+  public BaseNotebook( string name ) {
+    _name = name;
+  }
 
   // Returns the number of stored notes
   public virtual int count() {
@@ -54,16 +56,16 @@ public class BaseNotebook : Object {
   }
 
   // Saves the contents of the notebook to XML formatted file
-	protected void base_save( Xml.Node* node ) {
-	  node->set_prop( "name", _name );
-	  _modified = false;
+  protected void base_save( Xml.Node* node ) {
+    node->set_prop( "name", _name );
+    _modified = false;
   }
 
   // Loads the contents of this notebook from XML format
   protected void base_load( Xml.Node* node ) {
     var n = node->get_prop( "name" );
     if( n != null ) {
-    	_name = n;
+      _name = n;
     }
   }
 

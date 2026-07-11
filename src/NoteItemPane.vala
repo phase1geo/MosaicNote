@@ -77,6 +77,7 @@ public class NoteItemPane : Box {
   public signal void change_item( NoteItemType type );
   public signal void move_item( MoveDirection dir, bool record_undo );
   public signal void set_as_current( string msg = "" );
+  public signal void lose_as_current();
   public signal void note_link_clicked( string link );
   public signal void show_image();
 

@@ -145,6 +145,15 @@ public class NoteItemPaneAssets : NoteItemPane {
       show_file_dialog();
     });
 
+    var focus = new EventControllerFocus();
+    _add.add_controller( focus );
+
+    focus.leave.connect(() => {
+      if( assets_item.size() == 0 ) {
+        lose_as_current();
+      }
+    });
+
     return( _add );
 
   }
@@ -228,6 +237,10 @@ public class NoteItemPaneAssets : NoteItemPane {
     focus.enter.connect(() => {
       set_as_current();
       _drop_box.visible = true;
+    });
+
+    focus.leave.connect(() => {
+      lose_as_current();
     });
     
     list_drag.prepare.connect((x, y) => {

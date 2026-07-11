@@ -12,6 +12,11 @@
    border-radius: 5px;
 }
 
+.selected-item {
+   background-color: rgba(53, 132, 228, 0.3);
+   /* color: #ffffff;  @accent_fg_color; */
+}
+
 .tag-count {
    padding: 4px;
    border-radius: 5px;
