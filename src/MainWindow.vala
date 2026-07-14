@@ -256,19 +256,6 @@ public class MainWindow : Gtk.ApplicationWindow {
     _notes   = new NotesPanel( this );
     _note    = new NotePanel( this );
 
-    // TEMPORARY - Used to output any changes to the current keyboard focus
-    notify["focus-widget"].connect(() => {
-      if( _last_focus != null ) {
-        _last_focus.remove_css_class( "drop-area" );
-      }
-      var focus = get_focus();
-      if( focus != null ) {
-        stdout.printf( "Focus changed to %s\n", focus.get_type().name() );
-        focus.add_css_class( "drop-area" );
-      }
-      _last_focus = focus;
-    });
-
     _sidebar.notebook_selected.connect((nb) => {
       if( nb != null ) {
         if( (nb as Gallery) != null ) {

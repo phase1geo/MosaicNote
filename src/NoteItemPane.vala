@@ -73,11 +73,10 @@ public class NoteItemPane : Box {
 
   public signal void add_item( MoveDirection dir, NoteItemType? type );
   public signal void remove_item( bool forward, bool record_undo );
-  public signal void remove_row();
+  public signal void remove_row( bool forward, bool record_undo );
   public signal void change_item( NoteItemType type );
   public signal void move_item( MoveDirection dir, bool record_undo );
   public signal void set_as_current( string msg = "" );
-  public signal void lose_as_current();
   public signal void note_link_clicked( string link );
   public signal void show_image();
 
@@ -798,7 +797,7 @@ public class NoteItemPane : Box {
   //-------------------------------------------------------------
   // Removes the current row.
   private void action_delete_row() {
-    remove_row();
+    remove_row( true, true );
   }
 
   //-------------------------------------------------------------

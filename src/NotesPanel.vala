@@ -226,19 +226,11 @@ public class NotesPanel : Box {
   			if( row == null ) {
           note_selected( null );
         } else {
-          var note = (Note)_model.get_item( row.get_index() );
-          Idle.add(() => {
-      			note_selected( note );
-            return( false );
-          });
+    			note_selected( (Note)_model.get_item( row.get_index() ) );
         }
         _list.grab_focus();
       }
   	});
-
-    _list.row_activated.connect((row) => {
-      stdout.printf( "Activated row: %s\n", ((row == null) ? "none" : row.get_index().to_string() ) );
-    });
 
     var sw = new ScrolledWindow() {
       hscrollbar_policy = PolicyType.NEVER,

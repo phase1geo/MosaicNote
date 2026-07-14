@@ -116,11 +116,11 @@ public enum MoveDirection {
 // Provides functionality for manipulating panes within the browser.
 public class NoteItemPanes : Box {
 
-  private MainWindow   _win;
-  private Note         _note;
-  private NoteItemPos  _current_item;
-  private int          _rows = 0;
-  private SpellChecker _spell;
+  private MainWindow    _win;
+  private Note          _note;
+  private NoteItemPane? _current_item = null;
+  private int           _rows = 0;
+  private SpellChecker  _spell;
 
   public signal void item_removed( NoteItemPane pane );
   public signal void item_selected( NoteItemPane pane );
@@ -139,8 +139,7 @@ public class NoteItemPanes : Box {
       spacing: 5
     );
 
-    _win          = win;
-    _current_item = new NoteItemPos();
+    _win = win;
 
     // Initialize the spell checker
     initialize_spell_checker();
@@ -168,9 +167,8 @@ public class NoteItemPanes : Box {
     var extra = new GLib.Menu();
     view.extra_menu = extra;
 
-    var pane = _current_item.get_pane( this );
-    if( pane != null ) {
-      pane.populate_extra_menu();
+    if( _current_item != null ) {
+      _current_item.populate_extra_menu();
     }
 
   }
@@ -304,8 +302,28 @@ public class NoteItemPanes : Box {
       }
     });
 
-    pane.remove_row.connect(() => {
-      stdout.printf( "Need to add code to remove row\n" );
+    pane.remove_row.connect((forward, record_undo) => {
+      var pos      = new NoteItemPos.from_pane( pane );
+      var pane_row = (NoteItemPaneRow)pane.get_parent().get_parent();
+      var row_pos  = pos.row;
+      var rows     = _rows;
+      if( record_undo ) {
+        _win.undo.add_item( new UndoRowDelete( _note, pos.row ) );
+      }
+      remove( pane_row );
+      _rows--;
+      _note.delete_row( pos.row );
+      if( (forward || (pos.row == 0)) && (get_pane( pos.row, 0 ) != null) ) {
+        var next_pane = get_pane( pos.row, 0 );
+        show_pane( next_pane );
+        next_pane.grab_item_focus( TextCursorPlacement.NO_CHANGE );
+      } else if( (!forward || (pos.row == (rows - 1))) && (get_pane( (pos.row - 1), 0 ) != null) ) {
+        var prev_pane = get_pane( (pos.row - 1), 0 );
+        show_pane( prev_pane );
+        prev_pane.grab_item_focus( TextCursorPlacement.NO_CHANGE );
+      } else {
+        add_new_item( NoteItemType.MARKDOWN );
+      }
     });
 
     pane.change_item.connect((type) => {
@@ -329,19 +347,15 @@ public class NoteItemPanes : Box {
     });
 
     pane.set_as_current.connect((msg) => {
-      if( !_current_item.is_valid() ) {
-        stdout.printf( "Setting current item\n" );
-        _current_item.set_position_from_pane( pane );
+      if( _current_item == null ) {
+        _current_item = pane;
         item_selected( pane );
       } else {
-        stdout.printf( "HERE B, msg: %s, current: %s\n", msg, _current_item.to_string() );
-        var other_pane = _current_item.get_pane( this );
-        if( other_pane != pane ) {
-          if( other_pane != null ) {
-            stdout.printf( "Clearing current item\n" );
-            other_pane.clear_current();
+        if( _current_item != pane ) {
+          if( _current_item != null ) {
+            _current_item.clear_current();
           }
-          _current_item.set_position_from_pane( pane );
+          _current_item = pane;
           item_selected( pane );
         }
       }
@@ -396,12 +410,9 @@ public class NoteItemPanes : Box {
   //-------------------------------------------------------------
   // Clears the current item.
   public void clear_current_item() {
-    if( _current_item.is_valid() ) {
-      var pane = _current_item.get_pane( this );
-      if( pane != null ) {
-        pane.clear_current();
-      }
-      _current_item.clear_position();
+    if( _current_item != null ) {
+      _current_item.clear_current();
+      _current_item = null;
     }
   }
 
@@ -409,22 +420,21 @@ public class NoteItemPanes : Box {
   // Changes the currently selected item to the given pane type
   public void set_current_item_to_type( NoteItemType type ) {
 
-    if( _current_item.is_valid() ) {
+    if( _current_item != null ) {
 
-      var row = _current_item.row;
-      var col = _current_item.col;
+      var pos = new NoteItemPos.from_pane( _current_item );
 
       // Create the new item
-      var note_row = _note.get_row( row );
+      var note_row = _note.get_row( pos.row );
       var new_item = type.create( note_row );
-      note_row.convert_note_item( col, new_item );
+      note_row.convert_note_item( pos.col, new_item );
 
       // Remove the old pane from the pane row
-      var row_pane = _current_item.get_row_pane( this );
-      row_pane.delete_pane( col );
+      var row_pane = (NoteItemPaneRow)_current_item.get_parent().get_parent();
+      row_pane.delete_pane( pos.col );
 
       // Add the modified pane back into the pane row
-      var new_pane = add_pane( new_item, row, col, true, true );
+      var new_pane = add_pane( new_item, pos.row, pos.col, true, true );
       new_pane.set_as_current( "add-new-item" );
 
     }

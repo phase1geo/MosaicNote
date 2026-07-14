@@ -14,6 +14,7 @@ sources += files(
     'UndoNoteAdd.vala',
     'UndoNoteDelete.vala',
     'UndoNoteMove.vala',
+    'UndoRowDelete.vala',
     'UndoTagAdd.vala',
     'UndoTagDelete.vala',
     'UndoTextChanges.vala',
