@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 2024-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -25,7 +25,8 @@ public class Theme {
   public string light { get; set; default = ""; }
   public string dark  { get; set; default = ""; }
 
-  /* Default constructor */
+  //-------------------------------------------------------------
+  // Default constructor
   public Theme( string theme ) {
     var theme_bits = theme.split( "-" );
     name = theme_bits[0].splice( 0, 1, theme_bits[0].slice( 0, 1 ).up() );
@@ -40,7 +41,9 @@ public class Theme {
     }
   }
 
-  /* Returns true if this theme matches the given theme.  If it matches, the value is stored */
+  //-------------------------------------------------------------
+  // Returns true if this theme matches the given theme.  If it
+  // matches, the value is stored
   public bool matches( Theme theme ) {
     if( theme.name == name ) {
       if( dark != "" ) {
@@ -56,17 +59,21 @@ public class Theme {
     return( false );
   }
 
-  /* We will purge this theme if it does not contain a dark and a light variant */
+  //-------------------------------------------------------------
+  // We will purge this theme if it does not contain a dark and a
+  // light variant
   public bool purge() {
     return( (light == "") || (dark == "") );
   }
 
-  /* Returns the theme to use based on the dark mode setting */
+  //-------------------------------------------------------------
+  // Returns the theme to use based on the dark mode setting
   public string get_theme( bool dark_mode ) {
     return( dark_mode ? dark : light );
   }
 
-  /* Returns the theme in a string for debug purposes */
+  //-------------------------------------------------------------
+  // Returns the theme in a string for debug purposes
   public string to_string() {
     return( "name: %s, light: %s, dark: %s".printf( name, light, dark ) ); 
   }
@@ -107,7 +114,8 @@ public class Themes {
 
   public signal void theme_changed( string name );
 
-  /* Default constructor */
+  //-------------------------------------------------------------
+  // Default constructor
   public Themes() {
 
     _themes = new Array<Theme>();
@@ -120,7 +128,7 @@ public class Themes {
 
     purge();
 
-    /* Let's setup the current theme */
+    // Let's setup the current theme
     _current_theme = MosaicNote.settings.get_string( "default-theme" );
     if( get_theme_from_name( _current_theme ) == null ) {
       _current_theme = index( 0 ).name;
@@ -128,7 +136,9 @@ public class Themes {
 
   }
 
-  /* Stores the given theme into the list of themes based on its dark/light setting */
+  //-------------------------------------------------------------
+  // Stores the given theme into the list of themes based on its
+  // dark/light setting
   private void store( string name ) {
     var ttheme = new Theme( name );
     for( int i=0; i<_themes.length; i++ ) {
@@ -139,7 +149,9 @@ public class Themes {
     _themes.append_val( ttheme );
   }
 
-  /* Remove all of the stored themes that do not have light/dark variants */
+  //-------------------------------------------------------------
+  // Remove all of the stored themes that do not have light/dark
+  // variants
   private void purge() {
     for( int i=(int)(_themes.length - 1); i>=0; i-- ) {
       if( _themes.index( i ).purge() ) {
@@ -148,17 +160,20 @@ public class Themes {
     }
   }
 
-  /* Returns the number of stored themes */
+  //-------------------------------------------------------------
+  // Returns the number of stored themes
   public int size() {
     return( (int)_themes.length );
   }
 
-  /* Returns the theme at the given index */
+  //-------------------------------------------------------------
+  // Returns the theme at the given index
   public Theme index( int idx ) {
     return( _themes.index( idx ) );
   }
 
-  /* Returns the theme with the given name */
+  //-------------------------------------------------------------
+  // Returns the theme with the given name
   public Theme? get_theme_from_name( string name ) {
     for( int i=0; i<_themes.length; i++ ) {
       if( _themes.index( i ).name == name ) {
@@ -168,7 +183,9 @@ public class Themes {
     return( null );
   }
 
-  /* Returns the gtksource.view theme name to use based on the current dark mode and settings default theme */
+  //-------------------------------------------------------------
+  // Returns the gtksource.view theme name to use based on the
+  // current dark mode and settings default theme
   public string get_current_theme() {
     var theme = get_theme_from_name( _current_theme );
     return( theme.get_theme( _dark_mode ) );

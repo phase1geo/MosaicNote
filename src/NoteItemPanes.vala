@@ -408,6 +408,7 @@ public class NoteItemPanes : Box {
   //-------------------------------------------------------------
   // Changes the currently selected item to the given pane type
   public void set_current_item_to_type( NoteItemType type ) {
+
     if( _current_item.is_valid() ) {
 
       var row = _current_item.row;
@@ -425,7 +426,9 @@ public class NoteItemPanes : Box {
       // Add the modified pane back into the pane row
       var new_pane = add_pane( new_item, row, col, true, true );
       new_pane.set_as_current( "add-new-item" );
+
     }
+
   }
 
   //-------------------------------------------------------------
@@ -444,14 +447,6 @@ public class NoteItemPanes : Box {
       for( int j=0; j<row.size(); j++ ) {
         add_pane( _note.get_item( i, j ), i, j, (j > 0), false );
       }
-    }
-
-    // Make sure that the first item has the focus
-    if( _note.rows() > 0 ) {
-      stdout.printf( "In populate, selecting first pane\n" );
-      var first_pane = get_pane( 0, 0 );
-      first_pane.set_as_current( "populate" );
-      first_pane.grab_item_focus( TextCursorPlacement.START );
     }
 
   }
@@ -484,13 +479,12 @@ public class NoteItemPanes : Box {
   public void show_pane( NoteItemPane pane ) {
 
     Timeout.add( 100, () => {
-      Allocation child_alloc, parent_alloc;
-
-      get_allocation( out parent_alloc );
-      pane.get_allocation( out child_alloc );
-
-      see( (child_alloc.y + parent_alloc.y), child_alloc.height );
-
+      Graphene.Rect child_rect;
+      if( pane.compute_bounds( this, out child_rect ) ) {
+        Allocation parent_alloc;
+        get_allocation( out parent_alloc );
+        see( (int)(child_rect.get_y() + parent_alloc.y), (int)child_rect.get_height() );
+      }
       return( false );
     });
 
