@@ -89,6 +89,7 @@ public class Sidebar : Box {
     var factory = new SignalListItemFactory();
     factory.setup.connect( setup_tree );
     factory.bind.connect( bind_tree );
+    factory.unbind.connect( unbind_tree );
     
     _store        = new GLib.ListStore( typeof( BaseNotebook ) );
     _model        = new TreeListModel( _store, false, false, add_tree_node );
@@ -590,6 +591,9 @@ public class Sidebar : Box {
     }
   }
 
+  //-------------------------------------------------------------
+  // Automatically called by Gtk to update the stored model representation
+  // in the UI.
 	private void bind_tree( Object obj ) {
 
 		var item     = (ListItem)obj;
@@ -601,6 +605,7 @@ public class Sidebar : Box {
 		var row      = (TreeListRow)item.get_item();
 		var nb       = (BaseNotebook)row.get_item();
 
+    // If the current notebook is a label, update it with the name of the notebook
 		if( (nb as LabelNotebook) != null ) {
 			item.selectable   = false;
 			item.activatable  = false;
@@ -611,12 +616,17 @@ public class Sidebar : Box {
 			count.visible     = false;
 			box.margin_top    = 10;
 			box.margin_bottom = 10;
+
+    // If the current notebook is hidden, make sure that we show the rename UI
     } else if( ((nb as HiddenNotebook) != null) || ((nb as HiddenSmartNotebook) != null) ) {
       item.selectable  = false;
       item.activatable = false;
       item.focusable = false;
       stack.visible_child_name = "rename";
       stack.visible = false;
+
+    // For all other notebooks, update the label, the note count, the selection color, and
+    // the expander state
 		} else {
 		  expander.set_list_row( row );
 		  label.label = nb.name;
@@ -626,12 +636,19 @@ public class Sidebar : Box {
 		  	expander.margin_bottom = 6;
 		  	count.visible = false;
 		  }
-      stdout.printf( "In bind_tree, notebook %s, current: %s\n", nb.name, nb.current.to_string() );
-      if( nb.current ) {
-        expander.add_css_class( "selected-item" );
-      } else {
-        expander.remove_css_class( "selected-item" );
+      void update_selected() {
+        if( nb.current ) {
+          expander.add_css_class( "selected-item" );
+        } else {
+          expander.remove_css_class( "selected-item" );
+        }
       }
+      update_selected();
+      var handler = nb.notify["current"].connect(() => {
+        update_selected();
+      });
+      obj.set_data<ulong>( "current-handler", handler );
+      obj.set_data<BaseNotebook>( "current-nb", nb );
       var node = (nb as NotebookTree.Node);
       if( node != null ) {
         if( node.size() == 0 ) {
@@ -655,6 +672,16 @@ public class Sidebar : Box {
     });
 
 	}
+
+  //-------------------------------------------------------------
+  // Handles unbinding stuff bound in the bind_tree method
+  private void unbind_tree( Object obj ) {
+    var id = obj.get_data<ulong>( "current-handler" );
+    var nb = obj.get_data<BaseNotebook>( "current-nb" );
+    if( nb != null ) {
+      nb.disconnect( id );
+    }
+  }
 
   //-------------------------------------------------------------
 	// Create expander tree

@@ -69,4 +69,11 @@ public class BaseNotebook : Object {
     }
   }
 
+  //-------------------------------------------------------------
+  // Returns the string version of this notebook for debugging
+  // purposes.
+  public virtual string to_string( string prefix = "" ) {
+    return( "name: %s, current: %s".printf( name, current.to_string() ) );
+  }
+
 }

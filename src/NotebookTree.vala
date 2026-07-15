@@ -341,7 +341,7 @@ public class NotebookTree {
     // Saves this notebook node in XML format
     public Xml.Node* save() {
       Xml.Node* node = new Xml.Node( null, "node" );
-      node->set_prop( "id",   _id.to_string() );
+      node->set_prop( "id", _id.to_string() );
       base_save( node );
       for( int i=0; i<_children.length; i++ ) {
         node->add_child( _children.index( i ).save() );
@@ -377,6 +377,17 @@ public class NotebookTree {
           _children.append_val( n );
         }
       }
+    }
+
+    //-------------------------------------------------------------
+    // Outputs the contents of this node in string format for debugging
+    // purposes.
+    public override string to_string( string prefix ) {
+      var str = "%snode, id: %d, %s\n".printf( prefix, _id, base.to_string() );
+      for( int i=0; i<_children.length; i++ ) {
+        str += _children.index( i ).to_string( "  " + prefix );
+      }
+      return( str );
     }
 
   }  // class Node
@@ -735,6 +746,20 @@ public class NotebookTree {
     
     delete doc;
 
+  }
+
+  //-------------------------------------------------------------
+  // Outputs the contents of the tree as a displayable string.
+  public string to_string() {
+    string str = "";
+    str += "inbox: %s\n".printf( _inbox.to_string() );
+    str += "trash: %s\n".printf( _trash.to_string() );
+    str += "templates: %s\n".printf( _templates.to_string() );
+
+    for( int i=0; i<_nodes.length; i++ ) {
+      str += _nodes.index( i ).to_string( "" );
+    }
+    return( str );
   }
 
   //-------------------------------------------------------------
