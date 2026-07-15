@@ -662,7 +662,7 @@ public class Sidebar : Box {
       }
 		}
 
-    row.notify["expanded"].connect(() => {
+    var handler = row.notify["expanded"].connect(() => {
       if( row.expandable ) {
         var node = (nb as NotebookTree.Node);
         if( node != null ) {
@@ -671,15 +671,23 @@ public class Sidebar : Box {
       }
     });
 
+    obj.set_data<ulong>( "expanded-handler", handler );
+    obj.set_data<TreeListRow>( "expanded-row", row );
+
 	}
 
   //-------------------------------------------------------------
   // Handles unbinding stuff bound in the bind_tree method
   private void unbind_tree( Object obj ) {
-    var id = obj.get_data<ulong>( "current-handler" );
-    var nb = obj.get_data<BaseNotebook>( "current-nb" );
+    var current_id = obj.get_data<ulong>( "current-handler" );
+    var nb         = obj.get_data<BaseNotebook>( "current-nb" );
     if( nb != null ) {
-      nb.disconnect( id );
+      nb.disconnect( current_id );
+    }
+    var expanded_id = obj.get_data<ulong>( "expanded-handler" );
+    var row         = obj.get_data<TreeListRow>( "expanded-row" );
+    if( row != null ) {
+      row.disconnect( expanded_id );
     }
   }
 
