@@ -583,14 +583,6 @@ public class Sidebar : Box {
 
 	}
 
-  private void update_selected_item( BaseNotebook nb, Box box ) {
-    if( nb.current ) {
-      box.add_css_class( "selected-item" );
-    } else {
-      box.remove_css_class( "selected-item" );
-    }
-  }
-
   //-------------------------------------------------------------
   // Automatically called by Gtk to update the stored model representation
   // in the UI.
@@ -628,14 +620,15 @@ public class Sidebar : Box {
     // For all other notebooks, update the label, the note count, the selection color, and
     // the expander state
 		} else {
+
+      var no_count = (nb.count() == 0);
 		  expander.set_list_row( row );
 		  label.label = nb.name;
 		  count.label = nb.count().to_string();
-		  if( nb.count() == 0 ) {
-		  	expander.margin_top = 6;
-		  	expander.margin_bottom = 6;
-		  	count.visible = false;
-		  }
+      expander.margin_top    = no_count ? 6 : 0;
+      expander.margin_bottom = no_count ? 6 : 0;
+      count.opacity          = no_count ? 0 : 1;
+
       void update_selected() {
         if( nb.current ) {
           expander.add_css_class( "selected-item" );
@@ -643,6 +636,7 @@ public class Sidebar : Box {
           expander.remove_css_class( "selected-item" );
         }
       }
+
       update_selected();
       var handler = nb.notify["current"].connect(() => {
         update_selected();
@@ -660,6 +654,7 @@ public class Sidebar : Box {
           });
         }
       }
+
 		}
 
     var handler = row.notify["expanded"].connect(() => {
@@ -679,16 +674,19 @@ public class Sidebar : Box {
   //-------------------------------------------------------------
   // Handles unbinding stuff bound in the bind_tree method
   private void unbind_tree( Object obj ) {
+
     var current_id = obj.get_data<ulong>( "current-handler" );
     var nb         = obj.get_data<BaseNotebook>( "current-nb" );
     if( nb != null ) {
       nb.disconnect( current_id );
     }
+
     var expanded_id = obj.get_data<ulong>( "expanded-handler" );
     var row         = obj.get_data<TreeListRow>( "expanded-row" );
     if( row != null ) {
       row.disconnect( expanded_id );
     }
+
   }
 
   //-------------------------------------------------------------

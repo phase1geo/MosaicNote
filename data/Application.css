@@ -1,3 +1,8 @@
+listview row:selected {
+    background: transparent;
+    color: inherit;
+}
+
 .listbox-head {
    font-size: 12pt;
 }
