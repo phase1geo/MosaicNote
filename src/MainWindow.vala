@@ -258,20 +258,23 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _sidebar.notebook_selected.connect((nb) => {
       if( nb != null ) {
-        if( (nb as Gallery) != null ) {
-          _view_stack.visible_child_name = "gallery";
-          _gallery_view.populate( (Gallery)nb );
-        } else {
-          _view_stack.visible_child_name = "notes";
-          var node = (nb as NotebookTree.Node);
-          _notes.populate_with_notebook( nb );
-          _notes.select_row( 0 );
-          if( node != null ) {
-            MosaicNote.settings.set_int( "last-notebook", node.get_notebook().id );
-          } else if( nb == (BaseNotebook)_notebooks.inbox ) {
-            MosaicNote.settings.set_int( "last-notebook", _notebooks.inbox.id );
+        Idle.add(() => {
+          if( (nb as Gallery) != null ) {
+            _view_stack.visible_child_name = "gallery";
+            _gallery_view.populate( (Gallery)nb );
+          } else {
+            _view_stack.visible_child_name = "notes";
+            var node = (nb as NotebookTree.Node);
+            _notes.populate_with_notebook( nb );
+            _notes.select_row( 0 );
+            if( node != null ) {
+              MosaicNote.settings.set_int( "last-notebook", node.get_notebook().id );
+            } else if( nb == (BaseNotebook)_notebooks.inbox ) {
+              MosaicNote.settings.set_int( "last-notebook", _notebooks.inbox.id );
+            }
           }
-        }
+          return( false );
+        });
       } else {
         _view_stack.visible_child_name = "notes";
         _notes.populate_with_notebook( nb );

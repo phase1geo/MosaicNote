@@ -109,10 +109,7 @@ public class Sidebar : Box {
       } else {
         _selected_notebook = null;
       }
-      Idle.add(() => {
-        notebook_selected( _selected_notebook );
-        return( false );
-      });
+      notebook_selected( _selected_notebook );
     });
 
     _win.notebooks.changed.connect(() => {
@@ -149,10 +146,7 @@ public class Sidebar : Box {
       }
 			_selected_notebook = (BaseNotebook)row.get_item();
       _selected_notebook.current = true;
-      Idle.add(() => {
-  			notebook_selected( _selected_notebook );
-        return( false );
-      });
+			notebook_selected( _selected_notebook );
 		});
 
     var sw = new ScrolledWindow() {
@@ -215,10 +209,7 @@ public class Sidebar : Box {
       }
       _selected_notebook = (BaseNotebook)row.get_item();
       _selected_notebook.current = true;
-      Idle.add(() => {
-        notebook_selected( _selected_notebook );
-        return( false );
-      });
+      notebook_selected( _selected_notebook );
     }
   }
 
