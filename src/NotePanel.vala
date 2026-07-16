@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 2024-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -137,7 +137,7 @@ public class NotePanel : Box {
       update_theme( theme );
     });
 
-    /* Set the stage for menu actions */
+    // Set the stage for menu actions
     var actions = new SimpleActionGroup ();
     actions.add_action_entries( action_entries, this );
     insert_action_group( "note", actions );
@@ -246,7 +246,8 @@ public class NotePanel : Box {
 
     var more = new MenuButton() {
       has_frame  = false,
-      icon_name  = "open-menu-symbolic",
+      icon_name  = "view-more-symbolic",
+      tooltip_text = _( "Note Actions" ),
       margin_end = 5,
       menu_model = more_menu
     };

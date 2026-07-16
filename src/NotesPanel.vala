@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 2024-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -308,10 +308,10 @@ public class NotesPanel : Box {
 		bbox.append( _add );
     bbox.append( _sort );
 
+    append( bbox );
 		append( sw );
-		append( bbox );
 
-    /* Set the stage for menu actions */
+    // Set the stage for menu actions
     _actions.add_action_entries( action_entries, this );
     insert_action_group( "notes", _actions );
 
