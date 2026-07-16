@@ -621,13 +621,10 @@ public class Sidebar : Box {
     // the expander state
 		} else {
 
-      var no_count = (nb.count() == 0);
 		  expander.set_list_row( row );
-		  label.label = nb.name;
-		  count.label = nb.count().to_string();
-      expander.margin_top    = no_count ? 6 : 0;
-      expander.margin_bottom = no_count ? 6 : 0;
-      count.opacity          = no_count ? 0 : 1;
+		  label.label   = nb.name;
+		  count.label   = nb.count().to_string();
+      count.opacity = (nb.count() == 0) ? 0 : 1;
 
       void update_selected() {
         if( nb.current ) {
