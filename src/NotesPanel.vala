@@ -423,7 +423,7 @@ public class NotesPanel : Box {
     var row = _list.get_selected_row();
     if( row != null ) {
       var pos = row.get_index();
-      // _model.items_changed( pos, 1, 1 );
+      _model.items_changed( pos, 1, 1 );
       _list.select_row( _list.get_row_at_index( pos ) );
     }
   }

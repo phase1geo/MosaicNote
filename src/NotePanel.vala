@@ -293,13 +293,21 @@ public class NotePanel : Box {
 
     handle_nonitem_focus( _title );
 
-    _title.activate.connect(() => {
-      if( _note != null ) {
-        _win.undo.add_item( new UndoTitleChange( _note ) );
-        _note.title = _title.text;
-        note_saved( _note, null );
-      }
-      _content.get_pane( 0, 0 ).grab_item_focus( TextCursorPlacement.START );
+    var title_focus = new EventControllerFocus();
+    _title.add_controller( title_focus );
+
+    title_focus.leave.connect(() => {
+      Idle.add(() => {
+        if( _note != null ) {
+          if( _note.title != _title.text ) {
+            _win.undo.add_item( new UndoTitleChange( _note ) );
+            _note.title = _title.text;
+            note_saved( _note, null );
+          }
+        }
+        _content.get_pane( 0, 0 ).grab_item_focus( TextCursorPlacement.START );
+        return( false );
+      });
     });
 
     var separator1 = new Separator( Orientation.HORIZONTAL );
