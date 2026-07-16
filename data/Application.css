@@ -18,7 +18,7 @@ listview row:selected {
 }
 
 .selected-item {
-   background-color: rgba(53, 132, 228, 0.3);
+   background-color: alpha(@accent_color, 0.3);  /* rgba(53, 132, 228, 0.3); */
    /* color: #ffffff;  @accent_fg_color; */
 }
 
