@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 2024-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -209,8 +209,7 @@ public class NoteItemPane : Box {
 
     TextIter start_iter, cursor_iter;
 
-    var pos       = new NoteItemPos.from_pane( this );
-    var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( this ) );
+    var pos = new NoteItemPos.from_pane( this );
 
     // Get the current text widget and figure out the location of
     // the insertion cursor.
@@ -233,6 +232,7 @@ public class NoteItemPane : Box {
     add_item( MoveDirection.DOWN, item.item_type );
 
     // Update the added text pane
+    var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( this ) );
     text = next_pane.get_text();
     next_pane.item.content = last;
     text.buffer.get_iter_at_offset( out start_iter, 0 );

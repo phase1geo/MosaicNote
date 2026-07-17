@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 2024-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -174,13 +174,13 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     if( iter.starts_line() && iter.ends_line() ) {
       var new_type  = NoteItemType.parse_char( str.get_char( 0 ) );
       var pos       = new NoteItemPos.from_pane( this );
-      var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( this ) );
       if( new_type == NoteItemType.MARKDOWN ) {
         if( settings.get_boolean( "split-markdown-by-header" ) ) {
           if( buffer.text != "" ) {
             Idle.add(() => {
               TextIter start_iter;
               split_item();
+              var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( this ) );
               var next_buf = next_pane.get_text().buffer;
               next_buf.get_iter_at_offset( out start_iter, 0 );
               next_buf.insert( ref start_iter, str, str.length );
@@ -193,7 +193,6 @@ public class NoteItemPaneMarkdown : NoteItemPane {
         if( buffer.text == "" ) {
           Idle.add(() => {
             change_item( new_type );
-            buffer.text = str;
             return( false );
           });
           return( true );;
@@ -201,6 +200,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
           var is_end = iter.is_end();
           split_item();
           if( is_end ) {
+            var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( this ) );
             next_pane.remove_item( false, false );
           }
           add_item( MoveDirection.DOWN, new_type );
@@ -692,7 +692,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
     handle_key_events( _text );
 
-    /* Set the stage for menu actions */
+    // Set the stage for menu actions
     var actions = new SimpleActionGroup();
     actions.add_action_entries( action_entries, _text );
     insert_action_group( "markdown", actions );
