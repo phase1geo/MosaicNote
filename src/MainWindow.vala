@@ -114,6 +114,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     { "action_set_panel_mode", action_set_panel_mode, "i" },
     { "action_undo",           action_undo },
     { "action_redo",           action_redo },
+    { "action_new_note",       action_new_note },
   };
 
   private bool on_elementary = Utils.on_elementary();
@@ -515,6 +516,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     app.set_accels_for_action( "win.action_prev_panels", { "<Control><Shift>k" } );
     app.set_accels_for_action( "win.action_undo",        { "<Control>z" } );
     app.set_accels_for_action( "win.action_redo",        { "<Control><Shift>z" } );
+    app.set_accels_for_action( "win.action_new_note",    { "<Control>n" } );
 
   }
 
@@ -689,6 +691,12 @@ public class MainWindow : Gtk.ApplicationWindow {
   // Redoes the action last undone.
   private void action_redo() {
     _undo.redo();
+  }
+
+  //-------------------------------------------------------------
+  // Creates a new note in the currently selected notebook (if possible).
+  private void action_new_note() {
+    _notes.add_new_note_to_current_notebook();
   }
 
   //-------------------------------------------------------------

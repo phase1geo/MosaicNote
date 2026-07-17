@@ -178,20 +178,24 @@ public class NoteItemPaneMarkdown : NoteItemPane {
       if( new_type == NoteItemType.MARKDOWN ) {
         if( settings.get_boolean( "split-markdown-by-header" ) ) {
           if( buffer.text != "" ) {
-            TextIter start_iter;
-            split_item();
-            var next_buf = next_pane.get_text().buffer;
-            next_buf.get_iter_at_offset( out start_iter, 0 );
-            next_buf.insert( ref start_iter, str, str.length );
-            Signal.stop_emission_by_name( buffer, "insert_text" );
+            Idle.add(() => {
+              TextIter start_iter;
+              split_item();
+              var next_buf = next_pane.get_text().buffer;
+              next_buf.get_iter_at_offset( out start_iter, 0 );
+              next_buf.insert( ref start_iter, str, str.length );
+              return( false );
+            });
             return( true );
           }
         }
       } else if( (new_type != NoteItemType.NUM) && settings.get_boolean( "enable-markdown-block-char" ) ) {
         if( buffer.text == "" ) {
-          change_item( new_type );
-          buffer.text = str;
-          Signal.stop_emission_by_name( buffer, "insert_text" );
+          Idle.add(() => {
+            change_item( new_type );
+            buffer.text = str;
+            return( false );
+          });
           return( true );;
         } else {
           var is_end = iter.is_end();
@@ -290,23 +294,29 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
           // If we have only the list item on the line, clear the list item
           if( match.fetch( 0 ) == line ) {
-            start_iter.forward_chars( match.fetch( 1 ).char_count() );
-            buffer.delete( ref start_iter, ref end_iter );
+            Idle.add(() => {
+              start_iter.forward_chars( match.fetch( 1 ).char_count() );
+              buffer.delete( ref start_iter, ref end_iter );
+              return( false );
+            });
             return( true );
 
           // Otherwise, create the list item on the new line  
           } else {
-            var ins_text = "\n" + match.fetch( 1 );
-            if( match.fetch( 3 ) != "" ) {
-              ins_text += match.fetch( 3 );
-            } else if( match.fetch( 8 ) != "" ) {
-              ins_text += "[ ]";  // New tasks should be unfinished
-            } else {
-              var num = int.parse( match.fetch( 7 ) ) + 1;
-              ins_text += num.to_string() + ".";
-            }
-            ins_text += match.fetch( 9 );
-            buffer.insert( ref iter, ins_text, ins_text.length );
+            Idle.add(() => {
+              var ins_text = "\n" + match.fetch( 1 );
+              if( match.fetch( 3 ) != "" ) {
+                ins_text += match.fetch( 3 );
+              } else if( match.fetch( 8 ) != "" ) {
+                ins_text += "[ ]";  // New tasks should be unfinished
+              } else {
+                var num = int.parse( match.fetch( 7 ) ) + 1;
+                ins_text += num.to_string() + ".";
+              }
+              ins_text += match.fetch( 9 );
+              buffer.insert( ref start_iter, ins_text, ins_text.length );
+              return( false );
+            });
             return( true );
           }
 
@@ -317,7 +327,10 @@ public class NoteItemPaneMarkdown : NoteItemPane {
           var start_fill = string.nfill( _text.tab_width, ' ' );
 
           if( match.fetch( 8 ) != "" ) {
-            buffer.insert( ref start_iter, start_fill, start_fill.length ); 
+            Idle.add(() => {
+              buffer.insert( ref start_iter, start_fill, start_fill.length ); 
+              return( false );
+            });
             return( true );
           }
 
@@ -331,42 +344,51 @@ public class NoteItemPaneMarkdown : NoteItemPane {
             // If the current and previous lines are at the same level, we need
             // to change the current line to indent
             if( prev_match.fetch( 1 ).length == match.fetch( 1 ).length ) {
-              var ins_text = start_fill + match.fetch( 1 );
-              switch( prev_match.fetch( 4 ) ) {
-                case "-" :  ins_text += "*";  break;
-                case "*" :  ins_text += "+";  break;
-                default  :  ins_text += "-";  break;
-              }
-              if( match.fetch( 6 ) != "" ) {
-                ins_text += match.fetch( 5 ) + match.fetch( 6 );
-              }
-              ins_text += match.fetch( 9 );
-              var del_end = start_iter;
-              del_end.forward_chars( match.fetch( 0 ).char_count() );
-              buffer.delete( ref start_iter, ref del_end );
-              buffer.insert( ref start_iter, ins_text, ins_text.length );
+              Idle.add(() => {
+                var ins_text = start_fill + match.fetch( 1 );
+                switch( prev_match.fetch( 4 ) ) {
+                  case "-" :  ins_text += "*";  break;
+                  case "*" :  ins_text += "+";  break;
+                  default  :  ins_text += "-";  break;
+                }
+                if( match.fetch( 6 ) != "" ) {
+                  ins_text += match.fetch( 5 ) + match.fetch( 6 );
+                }
+                ins_text += match.fetch( 9 );
+                var del_end = start_iter;
+                del_end.forward_chars( match.fetch( 0 ).char_count() );
+                buffer.delete( ref start_iter, ref del_end );
+                buffer.insert( ref start_iter, ins_text, ins_text.length );
+                return( false );
+              });
               return( true );
 
             // If the previous and current lines will be at the same level of
             // indentation, make the current line match the previous line
             } else if( prev_match.fetch( 1 ).length == (match.fetch( 1 ).length + start_fill.length) ) {
-              var ins_text = prev_match.fetch( 1 );
-              if( prev_match.fetch( 2 ) != "" ) {
-                ins_text += prev_match.fetch( 4 );
-              } else {
-                var num = int.parse( prev_match.fetch( 7 ) ) + 1;
-                ins_text += num.to_string() + ". ";
-              } 
-              ins_text += match.fetch( 5 ) + match.fetch( 6 ) + match.fetch( 9 );
-              var del_end = start_iter;
-              del_end.forward_chars( match.fetch( 0 ).char_count() );
-              buffer.delete( ref start_iter, ref del_end );
-              buffer.insert( ref start_iter, ins_text, ins_text.length );
+              Idle.add(() => {
+                var ins_text = prev_match.fetch( 1 );
+                if( prev_match.fetch( 2 ) != "" ) {
+                  ins_text += prev_match.fetch( 4 );
+                } else {
+                  var num = int.parse( prev_match.fetch( 7 ) ) + 1;
+                  ins_text += num.to_string() + ". ";
+                } 
+                ins_text += match.fetch( 5 ) + match.fetch( 6 ) + match.fetch( 9 );
+                var del_end = start_iter;
+                del_end.forward_chars( match.fetch( 0 ).char_count() );
+                buffer.delete( ref start_iter, ref del_end );
+                buffer.insert( ref start_iter, ins_text, ins_text.length );
+                return( false );
+              });
               return( true );
 
             // Otherwise, just go ahead and insert the start_fill
             } else {
-              buffer.insert( ref start_iter, start_fill, start_fill.length ); 
+              Idle.add(() => {
+                buffer.insert( ref start_iter, start_fill, start_fill.length ); 
+                return( false );
+              });
               return( true );
             }
 

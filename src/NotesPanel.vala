@@ -246,7 +246,7 @@ public class NotesPanel : Box {
       margin_top = 5,
       margin_bottom = 5,
       halign = Align.START,
-			tooltip_text = _( "Add new note" ),
+			tooltip_markup = Utils.tooltip_with_accel( _( "Add new note" ), "<Control>n" ),
       sensitive = false
 		};
 
@@ -277,11 +277,7 @@ public class NotesPanel : Box {
     });
 
 		_add.clicked.connect(() => {
-      var nb = bn_is_node() ? ((NotebookTree.Node)_bn).get_notebook() : (Notebook)_bn;
-			var note = new Note( nb );
-			nb.add_note( note );
-      _win.undo.add_item( new UndoNoteAdd( note ) );
-      note_added( note );
+      add_new_note_to_current_notebook();
 		});
 
     // Create sorting menu
@@ -570,6 +566,19 @@ public class NotesPanel : Box {
         _win.notebooks.trash.move_note( note );
       }
       note_deleted( note );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Adds a new note to the current notebook if the notebook can
+  // be added to.
+  public void add_new_note_to_current_notebook() {
+    if( _add.sensitive ) {
+      var nb = bn_is_node() ? ((NotebookTree.Node)_bn).get_notebook() : (Notebook)_bn;
+      var note = new Note( nb );
+      nb.add_note( note );
+      _win.undo.add_item( new UndoNoteAdd( note ) );
+      note_added( note );
     }
   }
 

@@ -21,8 +21,6 @@ Most note-taking apps give you one writing “language” to record your notes, 
 
 MosaicNote allows you to use several types of note-taking languages all within the same note, using note blocks. A block can allow you to write in Markdown, write code with syntax highlighting, insert images, UML diagrams, tables, Mathematical expressions, and more. You can rearrange note blocks, export a full note or export just a single note block. MosaicNote’s sidebar boasts hierarchical notebook stacking, access to tags, favorites, recently used notes, and support for smart notebooks that dynamically store notes based on a rich search criteria. 
 
-MosaicNote can do what other note apps can do and what they can’t.
-
 **Features:**
 
 - Built with GTK-4.
