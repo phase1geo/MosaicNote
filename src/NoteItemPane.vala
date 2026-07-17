@@ -332,14 +332,15 @@ public class NoteItemPane : Box {
             return( true );
           }
           break;
-        case Gdk.Key.Up :
+        case Gdk.Key.Up   :
+        case Gdk.Key.Left :
           var pos = new NoteItemPos.from_pane( this );
-          var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( this ) );
+          var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( this ), (keyval == Gdk.Key.Up) );
           if( prev_pane != null ) {
             if( control ) {
-              move_item( MoveDirection.UP, true );
+              move_item( ((keyval == Gdk.Key.Up) ? MoveDirection.UP : MoveDirection.LEFT), true );
               return( true );
-            } else if( !handled_up() ) {
+            } else if( (keyval != Gdk.Key.Up) || !handled_up() ) {
               var text = get_text();
               if( text != null ) {
                 TextIter iter;
@@ -353,14 +354,15 @@ public class NoteItemPane : Box {
             }
           }
           return( false );
-        case Gdk.Key.Down :
+        case Gdk.Key.Down  :
+        case Gdk.Key.Right :
           var pos = new NoteItemPos.from_pane( this );
-          var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( this ) );
+          var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( this ), (keyval == Gdk.Key.Down) );
           if( next_pane != null ) {
             if( control ) {
-              move_item( MoveDirection.DOWN, true );
+              move_item( ((keyval == Gdk.Key.Down) ? MoveDirection.DOWN : MoveDirection.RIGHT), true );
               return( true );
-            } else if( !handled_down() ) {
+            } else if( (keyval != Gdk.Key.Down) || !handled_down() ) {
               var text = get_text();
               if( text != null ) {
                 TextIter iter;
@@ -676,11 +678,11 @@ public class NoteItemPane : Box {
     };
     _stack.add_named( h1_box, "selected" );
     _stack.add_named( h2_box, "unselected" );
-    _stack.visible_child_name = "unselected";
+    _stack.visible_child_name = item.row.expanded ? "selected" : "unselected";
 
     var header = new Box( Orientation.HORIZONTAL, 5 ) {
       halign        = Align.FILL,
-      visible       = false,
+      visible       = (!item.row.expanded || is_active()),
       margin_start  = 5,
       margin_end    = 5,
       margin_top    = 5,
@@ -690,6 +692,7 @@ public class NoteItemPane : Box {
 
     var pane = create_pane();
     click_to_current( pane );
+    handle_key_events( pane );
     pane.halign = Align.FILL;
     pane.hexpand = true;
     pane.visible = item.row.expanded;
@@ -707,7 +710,7 @@ public class NoteItemPane : Box {
       }
     });
     cbox_motion.leave.connect(() => {
-      more.opacity   = 0.0;
+      more.opacity = 0.0;
     });
 
     append( cbox );
@@ -716,13 +719,22 @@ public class NoteItemPane : Box {
     click_to_current( this );
 
     item.row.notify["expanded"].connect(() => {
-      var expanded = item.row.expanded;
+      var expanded  = item.row.expanded;
       pane.visible = expanded;
       type_label.visible = !expanded;
       _stack.visible_child_name = expanded ? "selected" : "unselected";
-      _stack.get_parent().visible = !expanded || has_css_class( "active-item" );
+      header.visible = !expanded || is_active();
+      if( is_active() ) {
+        grab_item_focus( TextCursorPlacement.NO_CHANGE );
+      }
     });
 
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if this pane is the active pane.
+  public bool is_active() {
+    return( has_css_class( "active-item" ) );
   }
 
   //-------------------------------------------------------------

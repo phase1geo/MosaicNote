@@ -75,22 +75,22 @@ public class NoteItemPos {
   public bool matches( NoteItemPos other ) {
     return( (_valid == other._valid) && (_row == other._row) && (_col == other._col) );
   }
-  public NoteItemPane? get_next_pane( Widget panes ) {
+  public NoteItemPane? get_next_pane( Widget panes, bool vertical = true ) {
     var pane_row = (NoteItemPaneRow)Utils.get_child_at_index( panes, _row );
     if( (_col + 1) < pane_row.size ) {
-      return( pane_row.get_pane( _col + 1 ) );
+      return( vertical ? null : pane_row.get_pane( _col + 1 ) );
     } else {
       pane_row = (NoteItemPaneRow)Utils.get_child_at_index( panes, (_row + 1) );
-      return( (pane_row != null) ? pane_row.get_pane( 0 ) : null );
+      return( (vertical && (pane_row != null)) ? pane_row.get_pane( 0 ) : null );
     }
   }
-  public NoteItemPane? get_prev_pane( Widget panes ) {
+  public NoteItemPane? get_prev_pane( Widget panes, bool vertical = true ) {
     if( (_col - 1) >= 0 ) {
       var pane_row = (NoteItemPaneRow)Utils.get_child_at_index( panes, _row );
-      return( pane_row.get_pane( _col - 1 ) );
+      return( vertical ? null : pane_row.get_pane( _col - 1 ) );
     } else {
       var pane_row = (NoteItemPaneRow)Utils.get_child_at_index( panes, (_row - 1) );
-      return( (pane_row != null) ? pane_row.get_pane( pane_row.size - 1 ) : null );
+      return( (vertical && (pane_row != null)) ? pane_row.get_pane( pane_row.size - 1 ) : null );
     }
   }
   public static Widget row_box_from_pane( Widget pane ) {
