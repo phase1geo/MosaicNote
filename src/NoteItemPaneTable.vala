@@ -170,6 +170,12 @@ public class NoteItemPaneTable : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Returns true if the header2 widget is valid.
+  protected override bool header2_exists() {
+    return( table_item.description.chomp() != "" );
+  }
+
+  //-------------------------------------------------------------
   // Displays the secondary header when this note is not expanded.
   protected override Widget? create_header2() {
     _h2_label = new Label( table_item.description ) {

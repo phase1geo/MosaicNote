@@ -130,6 +130,12 @@ public class NoteItemPaneMath : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Returns true if header2 exists.
+  protected override bool header2_exists() {
+    return( math_item.description.chomp() != "" );
+  }
+
+  //-------------------------------------------------------------
   // Create custom header when the pane is not selected.
   protected override Widget? create_header2() {
 

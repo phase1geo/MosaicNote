@@ -111,7 +111,7 @@ public class NoteItemPane : Box {
     set_as_current.connect((msg) => {
       add_css_class( "active-item" );
       _stack.visible_child_name = item.row.expanded ? "selected" : "unselected";
-      _stack.visible = true;
+      _stack.get_parent().visible = true;
     });
 
     // Set the stage for menu actions
@@ -141,6 +141,7 @@ public class NoteItemPane : Box {
     remove_css_class( "active-item" );
     if( item.row.expanded ) {
       _stack.visible_child_name = "unselected";
+      _stack.get_parent().visible = header2_exists();
     }
   }
 
@@ -679,6 +680,7 @@ public class NoteItemPane : Box {
 
     var header = new Box( Orientation.HORIZONTAL, 5 ) {
       halign        = Align.FILL,
+      visible       = false,
       margin_start  = 5,
       margin_end    = 5,
       margin_top    = 5,
@@ -688,6 +690,8 @@ public class NoteItemPane : Box {
 
     var pane = create_pane();
     click_to_current( pane );
+    pane.halign = Align.FILL;
+    pane.hexpand = true;
     pane.visible = item.row.expanded;
 
     var cbox = new Box( Orientation.VERTICAL, 5 );
@@ -715,7 +719,8 @@ public class NoteItemPane : Box {
       var expanded = item.row.expanded;
       pane.visible = expanded;
       type_label.visible = !expanded;
-      // _stack.visible_child_name = expanded ? "selected" : "unselected";
+      _stack.visible_child_name = expanded ? "selected" : "unselected";
+      _stack.get_parent().visible = !expanded || has_css_class( "active-item" );
     });
 
   }
@@ -744,6 +749,13 @@ public class NoteItemPane : Box {
     };
     // click_to_current( box );
     return( box );
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if calling create_header2 will return a valid
+  // widget.
+  protected virtual bool header2_exists() {
+    return( false );
   }
 
   //-------------------------------------------------------------

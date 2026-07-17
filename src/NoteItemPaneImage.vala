@@ -247,6 +247,12 @@ public class NoteItemPaneImage : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Returns true if a valid header2 exists.
+  protected override bool header2_exists() {
+    return( image_item.description.chomp() != "" );
+  }
+
+  //-------------------------------------------------------------
   // Create custom header when the pane is not selected.
   protected override Widget? create_header2() {
 

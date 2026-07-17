@@ -151,6 +151,12 @@ public class NoteItemPaneCode : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Indicate that we have a valid header2.
+  protected override bool header2_exists() {
+    return( code_item.description.chomp() != "" );
+  }
+
+  //-------------------------------------------------------------
   // Creates header bar shown when the pane is not selected
   protected override Widget? create_header2() {
 

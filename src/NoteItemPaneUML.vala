@@ -139,6 +139,12 @@ public class NoteItemPaneUML : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Returns true if the header2 widget exists.
+  protected override bool header2_exists() {
+    return( uml_item.description.chomp() != "" );
+  }
+
+  //-------------------------------------------------------------
   // Creates the header bar shown when the pane is not selected.
   protected override Widget? create_header2() {
 
