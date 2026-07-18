@@ -242,10 +242,11 @@ public class NotesPanel : Box {
 
 		_add = new Button.from_icon_name( "list-add-symbolic" ) {
       has_frame = false,
-      margin_start = 5,
+      margin_end = 5,
       margin_top = 5,
       margin_bottom = 5,
-      halign = Align.START,
+      halign = Align.END,
+      hexpand = true,
 			tooltip_markup = Utils.tooltip_with_accel( _( "Add new note" ), "<Control>n" ),
       sensitive = false
 		};
@@ -286,9 +287,8 @@ public class NotesPanel : Box {
     _sort = new MenuButton() {
       has_frame     = false,
       icon_name     = "view-sort-descending-symbolic",
-      halign        = Align.END,
-      hexpand       = true,
-      margin_end    = 5,
+      halign        = Align.START,
+      margin_start  = 5,
       margin_top    = 5,
       margin_bottom = 5,
       menu_model    = sort_menu,
@@ -301,8 +301,8 @@ public class NotesPanel : Box {
 			valign = Align.END
 		};
 
-		bbox.append( _add );
     bbox.append( _sort );
+    bbox.append( _add );
 
     append( bbox );
 		append( sw );
