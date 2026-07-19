@@ -22,13 +22,15 @@
 using Gee;
 
 public class ContentLocation {
-  public int row    { get; private set; default = -1; }
-  public int col    { get; private set; default = -1; }
-  public int offset { get; private set; default = 0; }
-  public ContentLocation( int r, int c, int o ) {
-    row = r;
-    col = c;
+  public int    row    { get; private set; default = -1; }
+  public int    col    { get; private set; default = -1; }
+  public int    offset { get; private set; default = 0; }
+  public string id     { get; private set; default = ""; }
+  public ContentLocation( int r, int c, int o, string i ) {
+    row    = r;
+    col    = c;
     offset = o;
+    id     = i;
   }
 }
 
@@ -342,6 +344,10 @@ public class Note : Object {
         str += "%s\n\n".printf( item.to_markdown( notebooks, pandoc ) );
       }
     }
+    _footnotes.map_iterator().foreach((k, v) => {
+      str += "[^%s]: %s\n\n".printf( k, v );
+      return( true );
+    });
     return( str );
   }
 
@@ -359,6 +365,10 @@ public class Note : Object {
         str += "%s\n\n".printf( item.export( notebooks, assets_dir ) );
       }
     }
+    _footnotes.map_iterator().foreach((k, v) => {
+      str += "[^%s]: %s\n\n".printf( k, v );
+      return( true );
+    });
     FileUtils.set_contents( filename, str );
   }
 
@@ -413,8 +423,7 @@ public class Note : Object {
   //-------------------------------------------------------------
   // Removes an existing footnote.
   public void remove_footnote( string id ) {
-    if( _footnotes.has_key( id ) ) {
-      _footnotes.unset( id );
+    if( _footnotes.unset( id ) ) {
       _modified = true;
     }
   }
@@ -423,8 +432,6 @@ public class Note : Object {
   // Finds the given footnote and returns the locations of all
   // matched instances.
   public void find_footnote( string id, Array<ContentLocation> locations, bool multiple = true ) {
-
-    stdout.printf( "In find_footnote, id: %s\n", id );
 
     var search = "[^%s]".printf( id );
 
@@ -437,8 +444,9 @@ public class Note : Object {
           while( true ) {
             var index = item.content.index_of( search, start );
             if( index != -1 ) {
-              stdout.printf( "Adding ContentLocation, i: %d, j: %d, index: %d\n", i, j, index );
-              locations.append_val( new ContentLocation( i, j, index ) );
+              var str = item.content.slice( 0, index );
+              var chars = str.char_count() + 2;
+              locations.append_val( new ContentLocation( i, j, chars, id ) );
               if( !multiple ) {
                 return;
               }
@@ -449,6 +457,55 @@ public class Note : Object {
           }
         }
       }
+    }
+
+  }
+
+  //-------------------------------------------------------------
+  // Scrapes all of the Markdown panes and searches for footnote
+  // references.  Adds missing footnotes and removes unused footnotes.
+  public void update_all_footnotes() {
+
+    var changed = false;
+
+    try {
+
+      var re      = new Regex( """[^.*?]""" );
+      var removed = new HashSet<string>();
+
+      _footnotes.map_iterator().foreach((k, v) => {
+        removed.add( k );
+        return( true );
+      });
+
+      for( int i=0; i<_rows.length; i++ ) {
+        var row = _rows.index( i );
+        for( int j=0; j<row.size(); j++ ) {
+          var item = row.get_item( j ) as NoteItemMarkdown;
+          if( item != null ) {
+            MatchInfo matches;
+            if( re.match( item.content, 0, out matches ) ) {
+              foreach( var match in matches.fetch_all() ) {
+                removed.remove( match );
+                if( !_footnotes.has_key( match ) ) {
+                  _footnotes.set( match, "" );
+                  changed = true;
+                }
+              }
+              removed.foreach((id) => {
+                _footnotes.unset( id );
+                changed = true;
+                return( true );
+              });
+            }
+          }
+        }
+      }
+
+    } catch( Error e ) {}
+
+    if( changed ) {
+      _modified = true;
     }
 
   }

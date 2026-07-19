@@ -461,27 +461,19 @@ public class NotePanel : Box {
       _footnotes.get_parent().visible = false;
     } else {
       _note.footnotes.map_iterator().foreach((k, v) => {
-        var id = new Label( Utils.make_title( "<u>" + k + "</u>." ) ) {
+        var id = new Button.with_label( k + "." ) {
+          has_frame = false,
           halign = Align.START,
-          use_markup = true,
           cursor = _pointer
         };
-        var click = new GestureClick();
-        id.add_controller( click );
-        click.set_propagation_phase( PropagationPhase.CAPTURE );
-        click.pressed.connect((n_press, x, y) => {
-          stdout.printf( "In click\n" );
-          if( n_press == 1 ) {
-            var locations = new Array<ContentLocation>();
-            _note.find_footnote( k, locations, false );
-            if( locations.length > 0 ) {
-              var pane = _content.get_pane( locations.index( 0 ).row, locations.index( 0 ).col );
-              _content.show_pane( pane );
-            }
+        id.clicked.connect(() => {
+          var locations = new Array<ContentLocation>();
+          _note.find_footnote( k, locations, false );
+          if( locations.length > 0 ) {
+            var pane = _content.get_pane( locations.index( 0 ).row, locations.index( 0 ).col );
+            _content.show_pane( pane );
+            pane.grab_item_focus( TextCursorPlacement.AT_OFFSET, locations.index( 0 ).offset );
           }
-        });
-        click.cancel.connect(() => {
-          stdout.printf( "Cancelled\n" );
         });
         var description = new EditableLabel( v ) {
           halign = Align.FILL,

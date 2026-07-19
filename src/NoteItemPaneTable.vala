@@ -65,7 +65,7 @@ public class NoteItemPaneTable : NoteItemPane {
 
   //-------------------------------------------------------------
   // Grabs the focus of the note item at the specified position.
-  public override void grab_item_focus( TextCursorPlacement placement ) {
+  public override void grab_item_focus( TextCursorPlacement placement, int offset = 0 ) {
     _table.grab_focus();
   }
 
