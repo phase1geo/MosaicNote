@@ -22,6 +22,12 @@
 using Gtk;
 using Gee;
 
+public enum MarkdownLinkType {
+  NOTE_LINK,
+  FOOTNOTE,
+  URL
+}
+
 //-------------------------------------------------------------
 // Note item pane that represents Markdown text.  Contains proper
 // syntax highlighting as well as support for clicking highlighted
@@ -146,7 +152,26 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   }
 
   //-------------------------------------------------------------
-  // Returns true if the
+  // Returns the link information for the link located at the given
+  // iter.
+  private void get_link_info( TextIter iter, TextTag link_tag, out MarkdownLinkType link_type, out string link ) {
+    var start = iter;
+    var end   = start;
+    start.forward_char();
+    start.backward_to_tag_toggle( link_tag );
+    end.forward_to_tag_toggle( link_tag );
+    link = _text.buffer.get_text( start, end, false ).strip();
+    if( within_note_link( start, end ) ) {
+      link_type = MarkdownLinkType.NOTE_LINK;
+    } else if( within_footnote_ref( start, end ) ) {
+      link_type = MarkdownLinkType.FOOTNOTE;
+    } else {
+      link_type = MarkdownLinkType.URL;
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if the clickable link is a note link.
   private bool within_note_link( TextIter start, TextIter end ) {
     var bstart = start;
     var bend   = end;
@@ -154,6 +179,17 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     bend.forward_chars( 2 );
     return( (_text.buffer.get_text( bstart, start, false ) == "[[") &&
             (_text.buffer.get_text( end, bend, false ) == "]]") );
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if the clickable link is a footnote reference.
+  private bool within_footnote_ref( TextIter start, TextIter end ) {
+    var bstart = start;
+    var bend   = end;
+    bstart.backward_chars( 2 );
+    bend.forward_chars( 1 );
+    return( (_text.buffer.get_text( bstart, start, false ) == "[^") &&
+            (_text.buffer.get_text( end, bend, false ) == "]") );
   }
 
   //-------------------------------------------------------------
@@ -250,6 +286,17 @@ public class NoteItemPaneMarkdown : NoteItemPane {
       return( true );
 
     }
+
+    return( false );
+
+  }
+
+  //-------------------------------------------------------------
+  // Checks the given text string to see if it contains a footnote
+  // reference.  Converts it to a clickable footnote link.
+  private bool check_for_footnote( TextBuffer buffer, ref TextIter iter, string str ) {
+
+    // FOOBAR
 
     return( false );
 
@@ -617,13 +664,23 @@ public class NoteItemPaneMarkdown : NoteItemPane {
       TextTag  link_tag;
       if( _text.get_iter_at_location( out iter, (int)x, (int)y ) ) {
         if( iter_within_link( iter, out link_tag ) ) {
+          MarkdownLinkType link_type;
+          string link;
           _text.set_cursor( _cursor_pointer );
-        } else {
-          _text.set_cursor( _cursor_text );
+          get_link_info( iter, link_tag, out link_type, out link );
+          if( link_type == MarkdownLinkType.FOOTNOTE ) {
+            var footnotes = item.row.note.footnotes;
+            var tooltip   = "<i>Click to edit footnote</i>";
+            if( footnotes.has_key( link ) ) {
+              tooltip = Utils.make_title( "Footnote: " ) + footnotes.get( link ) + "\n\n" + tooltip;
+            }
+            _text.tooltip_markup = tooltip;
+          }
+          return;
         }
-      } else {
-        _text.set_cursor( _cursor_text );
       }
+      _text.set_cursor( _cursor_text );
+      _text.tooltip_markup = null;
     });
 
     click.released.connect((n_press, x, y) => {
@@ -632,14 +689,13 @@ public class NoteItemPaneMarkdown : NoteItemPane {
         TextTag  link_tag;
         if( _text.get_iter_at_location( out start, (int)x, (int)y ) ) {
           if( iter_within_link( start, out link_tag ) ) {
-            var end = start;
-            start.backward_to_tag_toggle( link_tag );
-            end.forward_to_tag_toggle( link_tag );
-            var link = _text.buffer.get_text( start, end, false ).strip();
-            if( within_note_link( start, end ) ) {
-              note_link_clicked( link );
-            } else {
-              Utils.open_url( link );
+            MarkdownLinkType link_type;
+            string link;
+            get_link_info( start, link_tag, out link_type, out link );
+            switch( link_type ) {
+              case MarkdownLinkType.NOTE_LINK :  note_link_clicked( link );  break;
+              case MarkdownLinkType.FOOTNOTE  :  footnote_clicked( link );  break;
+              default                         :  Utils.open_url( link );  break;
             }
           }
         }
