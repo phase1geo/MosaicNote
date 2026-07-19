@@ -21,6 +21,17 @@
 
 using Gee;
 
+public class ContentLocation {
+  public int row    { get; private set; default = -1; }
+  public int col    { get; private set; default = -1; }
+  public int offset { get; private set; default = 0; }
+  public ContentLocation( int r, int c, int o ) {
+    row = r;
+    col = c;
+    offset = o;
+  }
+}
+
 public class Note : Object {
 
   public static int current_id = 0;
@@ -406,6 +417,40 @@ public class Note : Object {
       _footnotes.unset( id );
       _modified = true;
     }
+  }
+
+  //-------------------------------------------------------------
+  // Finds the given footnote and returns the locations of all
+  // matched instances.
+  public void find_footnote( string id, Array<ContentLocation> locations, bool multiple = true ) {
+
+    stdout.printf( "In find_footnote, id: %s\n", id );
+
+    var search = "[^%s]".printf( id );
+
+    for( int i=0; i<_rows.length; i++ ) {
+      var row = _rows.index( i );
+      for( int j=0; j<row.size(); j++ ) {
+        var item = row.get_item( j ) as NoteItemMarkdown;
+        if( item != null ) {
+          var start = 0;
+          while( true ) {
+            var index = item.content.index_of( search, start );
+            if( index != -1 ) {
+              stdout.printf( "Adding ContentLocation, i: %d, j: %d, index: %d\n", i, j, index );
+              locations.append_val( new ContentLocation( i, j, index ) );
+              if( !multiple ) {
+                return;
+              }
+              start += search.length;
+            } else {
+              break;
+            }
+          }
+        }
+      }
+    }
+
   }
 
   //-------------------------------------------------------------
