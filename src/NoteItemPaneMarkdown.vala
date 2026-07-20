@@ -47,6 +47,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     { "action_highlight_text", action_highlight_text },
     { "action_link_text",      action_link_text },
     { "action_toggle_task",    action_toggle_task },
+    { "action_footnote_ref",   action_footnote_ref },
   };
 
   //-------------------------------------------------------------
@@ -84,6 +85,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     app.set_accels_for_action( "markdown.action_highlight_text", { "<Control>h" } );
     app.set_accels_for_action( "markdown.action_link_text",      { "<Control>l" } );
     app.set_accels_for_action( "markdown.action_toggle_task",    { "<Control>d" } );
+    app.set_accels_for_action( "markdown.action_footnote_ref",   { "<Control>t" } );
   }
 
   //-------------------------------------------------------------
@@ -109,6 +111,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     markup.append( _( "Strikethrough" ), "markdown.action_strike_text" );
     markup.append( _( "Highlight" ),     "markdown.action_highlight_text" );
     markup.append( _( "Add Link" ),      "markdown.action_link_text" );
+    markup.append( _( "Add Footnote" ),  "markdown.action_footnote_ref" );
 
     var task = new GLib.Menu();
     task.append( _( "Toggle Task" ), "markdown.action_toggle_task" );
@@ -578,6 +581,12 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     };
     link.clicked.connect( insert_link );
 
+    var footnote = new Button.with_label( "\u2020" ) {
+      has_frame = false,
+      tooltip_markup = Utils.tooltip_with_accel( _( "Add Footnote" ), "<Control>t" )
+    };
+    footnote.clicked.connect( insert_footnote_ref );
+
     var box = new Box( Orientation.HORIZONTAL, 5 );
     box.append( bold );
     box.append( italics );
@@ -585,6 +594,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     box.append( code );
     box.append( hilite );
     box.append( link );
+    box.append( footnote );
 
     return( box );
 
@@ -642,6 +652,14 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Adds footnote reference Markdown syntax around currently
+  // selected text.
+  private void insert_footnote_ref() {
+    MarkdownFuncs.insert_footnote_ref( _text, _text.buffer );
+    _text.grab_focus();
+  }
+
+  //-------------------------------------------------------------
   // Adds a new Markdown item at the given position in the content area
   protected override Widget create_pane() {
 
@@ -672,7 +690,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
             var footnotes = item.row.note.footnotes;
             var tooltip   = "<i>Click to edit footnote</i>";
             if( footnotes.has_key( link ) ) {
-              tooltip = Utils.make_title( "Footnote: " ) + footnotes.get( link ) + "\n\n" + tooltip;
+              tooltip = footnotes.get( link ) + "\n\n" + tooltip;
             }
             _text.tooltip_markup = tooltip;
           }
@@ -785,6 +803,12 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   // Creates a Markdown link from selected text.
   private void action_link_text() {
     insert_link();
+  }
+
+  //-------------------------------------------------------------
+  // Creates a Markdown footnote reference from selected text.
+  private void action_footnote_ref() {
+    insert_footnote_ref();
   }
 
   //-------------------------------------------------------------
