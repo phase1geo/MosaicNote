@@ -464,13 +464,14 @@ public class Note : Object {
   //-------------------------------------------------------------
   // Scrapes all of the Markdown panes and searches for footnote
   // references.  Adds missing footnotes and removes unused footnotes.
-  public void update_all_footnotes() {
+  // Returns true if something changed.
+  public bool update_all_footnotes() {
 
     var changed = false;
 
     try {
 
-      var re      = new Regex( """[^.*?]""" );
+      var re      = new Regex( """\[\^(.*?)\]""" );
       var removed = new HashSet<string>();
 
       _footnotes.map_iterator().foreach((k, v) => {
@@ -483,30 +484,36 @@ public class Note : Object {
         for( int j=0; j<row.size(); j++ ) {
           var item = row.get_item( j ) as NoteItemMarkdown;
           if( item != null ) {
-            MatchInfo matches;
-            if( re.match( item.content, 0, out matches ) ) {
-              foreach( var match in matches.fetch_all() ) {
-                removed.remove( match );
-                if( !_footnotes.has_key( match ) ) {
-                  _footnotes.set( match, "" );
-                  changed = true;
-                }
-              }
-              removed.foreach((id) => {
-                _footnotes.unset( id );
+            MatchInfo match;
+            int start = 0;
+            while( re.match_full( item.content, -1, start, 0, out match ) ) {
+              var id = match.fetch( 1 );
+              int end;
+              match.fetch_pos( 0, out start, out end );
+              removed.remove( id );
+              if( !_footnotes.has_key( id ) ) {
+                _footnotes.set( id, "" );
                 changed = true;
-                return( true );
-              });
+              }
+              start = end;
             }
           }
         }
       }
 
-    } catch( Error e ) {}
+      removed.foreach((id) => {
+        _footnotes.unset( id );
+        changed = true;
+        return( true );
+      });
+
+    } catch( RegexError e ) {}
 
     if( changed ) {
       _modified = true;
     }
+
+    return( changed );
 
   }
 

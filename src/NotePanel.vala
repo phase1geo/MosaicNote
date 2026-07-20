@@ -338,7 +338,6 @@ public class NotePanel : Box {
           var box = row.get_child();
           var entry = (EditableLabel)Utils.get_child_at_index( box, 1 );
           entry.start_editing();
-          // FOOBAR
           return( false );
         }
         index++;
@@ -348,6 +347,11 @@ public class NotePanel : Box {
     _content.show_images.connect((items, index) => {
       _image_viewer.populate( items, index );
       _stack.visible_child_name = "imageview";
+    });
+    _content.update_all_footnotes.connect(() => {
+      if( _note.update_all_footnotes() ) {
+        add_footnotes();
+      }
     });
 
     var footnotes  = create_footnotes();
@@ -387,6 +391,9 @@ public class NotePanel : Box {
         _note.tags.copy( _tags.tags );
         _note.title = _title.text;
         _content.save();
+        if( _note.update_all_footnotes() ) {
+          add_footnotes();
+        }
         note_saved( _note, _orig_link_titles );
       }
     });
@@ -461,14 +468,14 @@ public class NotePanel : Box {
       _footnotes.get_parent().visible = false;
     } else {
       _note.footnotes.map_iterator().foreach((k, v) => {
-        var id = new Button.with_label( k + "." ) {
+        var fn_id = k;
+        var id = new Button.with_label( fn_id + "." ) {
           has_frame = false,
-          halign = Align.START,
-          cursor = _pointer
+          halign = Align.START
         };
         id.clicked.connect(() => {
           var locations = new Array<ContentLocation>();
-          _note.find_footnote( k, locations, false );
+          _note.find_footnote( fn_id, locations, false );
           if( locations.length > 0 ) {
             var pane = _content.get_pane( locations.index( 0 ).row, locations.index( 0 ).col );
             _content.show_pane( pane );
@@ -479,8 +486,10 @@ public class NotePanel : Box {
           halign = Align.FILL,
           hexpand = true
         };
-        description.changed.connect(() => {
-          _note.add_footnote( k, description.text );
+        description.notify["editing"].connect(() => {
+          if( !description.editing ) {
+            _note.add_footnote( fn_id, description.text );
+          }
         });
         var box = new Box( Orientation.HORIZONTAL, 5 ) {
           margin_top = 10

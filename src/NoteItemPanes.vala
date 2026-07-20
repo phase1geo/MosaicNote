@@ -128,6 +128,7 @@ public class NoteItemPanes : Box {
   public signal void footnote_clicked( string link );
   public signal void see( int y, int height );
   public signal void show_images( Array<NoteItem> items, int index );
+  public signal void update_all_footnotes();
 
   public signal void save();
 
@@ -355,6 +356,7 @@ public class NoteItemPanes : Box {
         if( _current_item != pane ) {
           if( _current_item != null ) {
             _current_item.clear_current();
+            update_all_footnotes();
           }
           _current_item = pane;
           item_selected( pane );
