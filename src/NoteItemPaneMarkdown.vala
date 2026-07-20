@@ -760,6 +760,12 @@ public class NoteItemPaneMarkdown : NoteItemPane {
             return( true );
           }
           break;
+        case Gdk.Key.t :
+          if( control ) {
+            insert_footnote_ref();
+            return( true );
+          }
+          break;
       }
       return( false );
     });
