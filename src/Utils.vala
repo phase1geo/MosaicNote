@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 2024-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -174,9 +174,9 @@ public class Utils {
     }
   }
 
+  /*
   //-------------------------------------------------------------
   // Prepares the given note string for use in a markup tooltip
-  /*
   public static string prepare_note_markup( string note ) {
     var str = markdown_to_html( note );  // .replace( "<", "&lt;" ).replace( ">", "&gt;" ) );
     // stdout.printf( "---------------\n%s--------------\n", str );
@@ -296,8 +296,9 @@ public class Utils {
     return( Regex.match_simple( url_re(), str ) );
   }
 
-  /* Returns true if the given file is read-only */
   /*
+  //-------------------------------------------------------------
+  // Returns true if the given file is read-only
   public static bool is_read_only( string fname ) {
     var file = File.new_for_path( fname );
     var src  = new Gtk.SourceFile();
@@ -334,7 +335,8 @@ public class Utils {
     MosaicNote.settings.set_string( "last-directory", dir );
   }
 
-  /* Creates a snippet that can be inserted into a GtkSource.Buffer */
+  //-------------------------------------------------------------
+  // Creates a snippet that can be inserted into a GtkSource.Buffer
   public static GtkSource.Snippet? make_snippet( string text ) {
 
     Xml.Doc*  doc       = new Xml.Doc( "1.0" );

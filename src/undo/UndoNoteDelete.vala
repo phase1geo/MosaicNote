@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 2024-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -26,20 +26,23 @@ public class UndoNoteDelete : UndoItem {
   private Notebook _notebook;
   private Note     _note;
 
-  /* Default constructor */
+  //-------------------------------------------------------------
+  // Default constructor
   public UndoNoteDelete( Note note ) {
     base( _( "Delete Note" ) );
     _notebook = note.notebook;
     _note     = note;
   }
 
-  /* Causes the stored item to be put into the before state */
+  //-------------------------------------------------------------
+  // Causes the stored item to be put into the before state
   public override void undo( MainWindow win ) {
     _note.notebook = _notebook;
     win.notes.add_note( _note );
   }
 
-  /* Causes the stored item to be put into the after state */
+  //-------------------------------------------------------------
+  // Causes the stored item to be put into the after state
   public override void redo( MainWindow win ) {
     win.notes.delete_note( _note, true );
   }

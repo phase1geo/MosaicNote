@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2018 (https://github.com/phase1geo/Minder)
+* Copyright (c) 2018-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -26,33 +26,44 @@ public class UndoItem : GLib.Object {
   public string name { set; get; default = ""; }
   public int    id   { set; get; default = -1; }
 
-  /* Default constructor */
+  //-------------------------------------------------------------
+  // Default constructor
   public UndoItem( string name ) {
     this.name = name;
   }
 
-  /* Allows the undo item to determine if it should be removed from the undo buffer */
+  //-------------------------------------------------------------
+  // Allows the undo item to determine if it should be removed
+  // from the undo buffer
   public virtual bool undo_done( MainWindow win ) {
     return( true );
   }
 
-  /* Allows the redo item to determine if it should be removed from the redo buffer */
+  //-------------------------------------------------------------
+  // Allows the redo item to determine if it should be removed
+  // from the redo buffer
   public virtual bool redo_done( MainWindow win ) {
     return( true );
   }
 
-  /* Allows the item to specify if it should be added to the end of the undo buffer */
+  //-------------------------------------------------------------
+  // Allows the item to specify if it should be added to the end
+  // of the undo buffer
   public virtual bool mergeable( UndoItem item ) {
     return( false );
   }
 
-  /* Causes the stored item to be put into the before state */
+  //-------------------------------------------------------------
+  // Causes the stored item to be put into the before state
   public virtual void undo( MainWindow win ) {}
 
-  /* Causes the stored item to be put into the after state */
+  //-------------------------------------------------------------
+  // Causes the stored item to be put into the after state
   public virtual void redo( MainWindow win ) {}
 
-  /* Checks to see if the given undo item is "mergeable" with this one */
+  //-------------------------------------------------------------
+  // Checks to see if the given undo item is "mergeable" with this
+  // one
   public virtual bool matches( UndoItem item ) {
     return( false );
   }

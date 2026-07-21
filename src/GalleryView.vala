@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 2024-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -141,11 +141,11 @@ public class GalleryView : Box {
   // Perform search.
   private void do_search() {
 
-    /* If the search field is empty, show all of the icons by category again */
+    // If the search field is empty, show all of the icons by category again
     if( _search.text == "" ) {
       _flowbox.invalidate_filter();
     
-    /* Otherwise, show only the currently matching icons */
+    // Otherwise, show only the currently matching icons
     } else {
       _flowbox.set_filter_func((item) => {
         var gallery_item = (GalleryItem)item.child;

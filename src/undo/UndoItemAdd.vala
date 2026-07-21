@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 2024-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -28,7 +28,8 @@ public class UndoItemAdd : UndoItem {
   private int      _row;
   private int      _col;
 
-  /* Default constructor */
+  //-------------------------------------------------------------
+  // Default constructor
   public UndoItemAdd( Note note, int row, int col ) {
     base( _( "Add Block" ) );
     _note = note;
@@ -37,13 +38,15 @@ public class UndoItemAdd : UndoItem {
     _col  = col;
   }
 
-  /* Causes the stored item to be put into the before state */
+  //-------------------------------------------------------------
+  // Causes the stored item to be put into the before state
   public override void undo( MainWindow win ) {
     var pane = win.note.items.get_pane( _row, _col );
     pane.remove_item( true, false );
   }
 
-  /* Causes the stored item to be put into the after state */
+  //-------------------------------------------------------------
+  // Causes the stored item to be put into the after state
   public override void redo( MainWindow win ) {
     var add_to_row = (_item.row.size() > 0);
     _note.add_item( _item, _row, _col, add_to_row );

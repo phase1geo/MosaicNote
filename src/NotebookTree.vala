@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 2024-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -653,7 +653,7 @@ public class NotebookTree {
   }
 
   //-------------------------------------------------------------
-  /* Saves all of the modified notebooks */
+  // Saves all of the modified notebooks
   public void save_notebooks() {
     for( int i=0; i<_nodes.length; i++ ) {
       _nodes.index( i ).save_notebooks();

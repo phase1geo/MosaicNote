@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 2024-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -30,7 +30,8 @@ public class UndoItemTableInsCol : UndoItem {
   private Gtk.Justification _justify;
   private TableColumnType   _type;
 
-  /* Default constructor */
+  //-------------------------------------------------------------
+  // Default constructor
   public UndoItemTableInsCol( NoteItemPaneTable pane, NoteItemTable item, int index ) {
 
     base( _( "Insert Table Column" ) );
@@ -46,13 +47,15 @@ public class UndoItemTableInsCol : UndoItem {
 
   }
 
-  /* Causes the stored item to be put into the before state */
+  //-------------------------------------------------------------
+  // Causes the stored item to be put into the before state
   public override void undo( MainWindow win ) {
     _item.delete_column( _index );
     _pane.remove_cv_column( _index );
   }
 
-  /* Causes the stored item to be put into the after state */
+  //-------------------------------------------------------------
+  // Causes the stored item to be put into the after state
   public override void redo( MainWindow win ) {
     _item.insert_column( _index, _header, _justify, _type );
     _pane.add_cv_column( _index );

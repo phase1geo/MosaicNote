@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023 (https://github.com/phase1geo/Journaler)
+* Copyright (c) 2023-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -58,7 +58,8 @@ public class TagBox : Box {
   public signal void removed( string name );
   public signal void changed();
 
-  /* Default constructor */
+  //-------------------------------------------------------------
+  // Default constructor
   public TagBox( MainWindow win ) {
 
     Object( orientation: Orientation.VERTICAL, spacing: 0 );
@@ -94,29 +95,33 @@ public class TagBox : Box {
 
   }
 
-  /* Initializes the set of available tags */
+  //-------------------------------------------------------------
+  // Initializes the set of available tags
   public void set_available_tags( Tags tags ) {
     for( int i=0; i<tags.size(); i++ ) {
       _all_tags.append_val( tags.get_tag( i ) );
     }
   }
 
-  /* Adds the given tags to this list */
+  //-------------------------------------------------------------
+  // Adds the given tags to this list
   public void add_tags( Tags tags ) {
     _tags.copy( tags );
     update_tags();
   }
 
-  /* Clears the list of tags */
+  //-------------------------------------------------------------
+  // Clears the list of tags
   public void clear_tags() {
     _tags.clear();
     update_tags();
   }
 
-  /* Redraws the tags */
+  //-------------------------------------------------------------
+  // Redraws the tags
   public void update_tags() {
 
-    /* Delete the tags from the box */
+    // Delete the tags from the box
     _box.remove( _new_tag_entry );
     _tag_widgets.foreach((tag_widget) => {
       _box.remove( tag_widget );
@@ -165,7 +170,7 @@ public class TagBox : Box {
 
     }
 
-    /* Remove any tags that are currently set for this entry */
+    // Remove any tags that are currently set for this entry
     var avail_tags = new Array<string>();
     for( int i=0; i<_all_tags.length; i++ ) {
       if( !_tags.contains_tag( _all_tags.index( i ) ) ) {

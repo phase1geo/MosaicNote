@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 2024-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -23,17 +23,20 @@ public class Tags {
 
   private Array<string> _tags;
 
+  //-------------------------------------------------------------
   // Default constructor
   public Tags() {
     _tags = new Array<string>();
   }
 
+  //-------------------------------------------------------------
   // Constructor from XML
   public Tags.from_xml( Xml.Node* node ) {
     _tags = new Array<string>();
     load( node );
   }
 
+  //-------------------------------------------------------------
   // Copies the given Tags object to this object
   public void copy( Tags tags ) {
     _tags.remove_range( 0, _tags.length );
@@ -42,16 +45,19 @@ public class Tags {
     }
   }
 
+  //-------------------------------------------------------------
   // Size of the tag list
   public int size() {
     return( (int)_tags.length );
   }
 
+  //-------------------------------------------------------------
   // Returns the tag at the given position
   public string get_tag( int pos ) {
     return( _tags.index( pos ) );
   }
 
+  //-------------------------------------------------------------
   // Returns true if the list of tags contains the given tag
   public bool contains_tag( string tag ) {
     for( int i=0; i<_tags.length; i++ ) {
@@ -62,6 +68,7 @@ public class Tags {
     return( false );
   }
 
+  //-------------------------------------------------------------
   // Adds the tag if it is unique to this list
   public void add_tag( string tag ) {
     if( !contains_tag( tag ) ) {
@@ -69,6 +76,7 @@ public class Tags {
     }
   }
 
+  //-------------------------------------------------------------
   // Removes the tag from the given list if it exists
   public void delete_tag( string tag ) {
     for( int i=0; i<_tags.length; i++ ) {
@@ -79,11 +87,13 @@ public class Tags {
     }
   }
 
+  //-------------------------------------------------------------
   // Removes all of the tags
   public void clear() {
     _tags.remove_range( 0, _tags.length );
   }
 
+  //-------------------------------------------------------------
   // Returns string version of tags to be used in Markdown YAML front-matter
   public string to_markdown() {
     string[] tags = {};
@@ -93,6 +103,7 @@ public class Tags {
     return( string.joinv( ",", tags ) );
   }
 
+  //-------------------------------------------------------------
   // Saves the tags in XML format
   public Xml.Node* save() {
     Xml.Node* node = new Xml.Node( null, "tags" );
@@ -104,6 +115,7 @@ public class Tags {
     return( node );
   }
 
+  //-------------------------------------------------------------
   // Loads the tags from XML format
   public void load( Xml.Node* node ) {
     for( Xml.Node* it = node->children; it != null; it = it->next ) {

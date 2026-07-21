@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 2024-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -35,6 +35,7 @@ public class NoteItemPaneUML : NoteItemPane {
     }
   }
 
+  //-------------------------------------------------------------
 	// Default constructor
 	public NoteItemPaneUML( MainWindow win, NoteItem item, SpellChecker? spell ) {
     base( win, item, spell );
@@ -47,6 +48,7 @@ public class NoteItemPaneUML : NoteItemPane {
     return( null );
   }
 
+  //-------------------------------------------------------------
   // Grabs the focus of the note item at the specified position.
   public override void grab_item_focus( TextCursorPlacement placement, int offset = 0 ) {
     if( _stack.visible_child_name == "input" ) {

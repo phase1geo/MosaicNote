@@ -39,7 +39,6 @@ public class UndoRowDelete : UndoItem {
   //-------------------------------------------------------------
   // Causes the stored item to be put into the before state
   public override void undo( MainWindow win ) {
-    stdout.printf( "IN UNDO ROW DELETION\n" );
     _note.add_row( _row, _row_pos );
     for( int i=0; i<_row.size(); i++ ) {
       var item = _row.get_item( i );

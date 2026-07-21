@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 2024-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -41,11 +41,13 @@ public class BaseNotebook : Object {
 
   public bool current { set; get; default = false; }
 
+  //-------------------------------------------------------------
   // Default constructor
   public BaseNotebook( string name ) {
     _name = name;
   }
 
+  //-------------------------------------------------------------
   // Returns the number of stored notes
   public virtual int count() {
     return( 0 );
@@ -55,12 +57,14 @@ public class BaseNotebook : Object {
     return( null );
   }
 
+  //-------------------------------------------------------------
   // Saves the contents of the notebook to XML formatted file
   protected void base_save( Xml.Node* node ) {
     node->set_prop( "name", _name );
     _modified = false;
   }
 
+  //-------------------------------------------------------------
   // Loads the contents of this notebook from XML format
   protected void base_load( Xml.Node* node ) {
     var n = node->get_prop( "name" );

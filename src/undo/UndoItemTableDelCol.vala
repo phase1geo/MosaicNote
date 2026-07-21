@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 2024-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -31,7 +31,8 @@ public class UndoItemTableDelCol : UndoItem {
   private TableColumnType   _type;
   private Array<string>     _data;
 
-  /* Default constructor */
+  //-------------------------------------------------------------
+  // Default constructor
   public UndoItemTableDelCol( NoteItemPaneTable pane, NoteItemTable item, int index ) {
 
     base( _( "Delete Table Column" ) );
@@ -50,14 +51,16 @@ public class UndoItemTableDelCol : UndoItem {
 
   }
 
-  /* Causes the stored item to be put into the before state */
+  //-------------------------------------------------------------
+  // Causes the stored item to be put into the before state
   public override void undo( MainWindow win ) {
     _item.insert_column( _index, _header, _justify, _type );
     _item.set_column_data( _index, _data );
     _pane.add_cv_column( _index );
   }
 
-  /* Causes the stored item to be put into the after state */
+  //-------------------------------------------------------------
+  // Causes the stored item to be put into the after state
   public override void redo( MainWindow win ) {
     _item.delete_column( _index );
     _pane.remove_cv_column( _index );

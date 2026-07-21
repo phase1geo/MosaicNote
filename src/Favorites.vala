@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 2024-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -21,73 +21,80 @@
 
 public class Favorites {
 
-	private ListStore _model;
-	private bool      _modified = false;
+  private ListStore _model;
+  private bool      _modified = false;
 
-	public ListStore model {
-		get {
-			return( _model );
-		}
-	}
+  public ListStore model {
+    get {
+      return( _model );
+    }
+  }
 
-	// Default constructor
-	public Favorites() {
-		_model = new ListStore( Type.OBJECT );
-		load();
-	}
+  //-------------------------------------------------------------
+  // Default constructor
+  public Favorites() {
+    _model = new ListStore( Type.OBJECT );
+    load();
+  }
 
-	// Favorites the given notebook
-	public void favorite_notebook( Notebook nb ) {
-		var fav = new Favorite( true, nb.id );
-		_model.insert( 0, fav );
-		_modified = true;
-	}
+  //-------------------------------------------------------------
+  // Favorites the given notebook
+  public void favorite_notebook( Notebook nb ) {
+    var fav = new Favorite( true, nb.id );
+    _model.insert( 0, fav );
+    _modified = true;
+  }
 
-	// Favorites the given note
-	public void favorite_note( Note note ) {
-		var fav = new Favorite( false, note.id );
-		_model.insert( 0, fav );
-		_modified = true;
-	}
+  //-------------------------------------------------------------
+  // Favorites the given note
+  public void favorite_note( Note note ) {
+    var fav = new Favorite( false, note.id );
+    _model.insert( 0, fav );
+    _modified = true;
+  }
 
-	// Removes the given favorite from the favorite list
-	public void unfavorite( Favorite fav ) {
-		uint pos;
-		if( _model.find( fav, out pos ) ) {
-			_model.remove( pos );
-			_modified = true;
-		}
-	}
+  //-------------------------------------------------------------
+  // Removes the given favorite from the favorite list
+  public void unfavorite( Favorite fav ) {
+    uint pos;
+    if( _model.find( fav, out pos ) ) {
+      _model.remove( pos );
+      _modified = true;
+    }
+  }
 
-	// Returns the pathname of the XML file
+  //-------------------------------------------------------------
+  // Returns the pathname of the XML file
   private string xml_file() {
     return( Utils.user_location( "favorites.xml" ) );
   }
 
+  //-------------------------------------------------------------
   // Saves the current state of this list of favorites
-	public void save() {
+  public void save() {
 
-	  Xml.Doc*  doc  = new Xml.Doc( "1.0" );
-	  Xml.Node* root = new Xml.Node( null, "favorites" );
+    Xml.Doc*  doc  = new Xml.Doc( "1.0" );
+    Xml.Node* root = new Xml.Node( null, "favorites" );
 
-	  root->set_prop( "version", MosaicNote.current_version );
+    root->set_prop( "version", MosaicNote.current_version );
 
-	  for( uint i=0; i<_model.get_n_items(); i++ ) {
-	  	var fav = (Favorite)_model.get_object( i );
-	  	root->add_child( fav.save() );
-	  } 
-	
-	  doc->set_root_element( root );
-	  doc->save_format_file( xml_file(), 1 );
-	
-	  delete doc;
+    for( uint i=0; i<_model.get_n_items(); i++ ) {
+      var fav = (Favorite)_model.get_object( i );
+      root->add_child( fav.save() );
+    } 
+  
+    doc->set_root_element( root );
+    doc->save_format_file( xml_file(), 1 );
+  
+    delete doc;
 
-	  _modified = false;
+    _modified = false;
 
-	}
+  }
 
-	// Loads the contents of this
-	public void load() {
+  //-------------------------------------------------------------
+  // Loads the contents of this
+  public void load() {
 
     var doc = Xml.Parser.read_file( xml_file(), null, (Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING) );
     if( doc == null ) {
@@ -103,21 +110,23 @@ public class Favorites {
   
     for( Xml.Node* it = root->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "favorite") ) {
-      	var fav = new Favorite.from_xml( it );
-      	_model.append( fav );
+        var fav = new Favorite.from_xml( it );
+        _model.append( fav );
       }
     }
     
     delete doc;
 
-	}
+  }
 
-	// Checks the stored version against the current version of the application.  If changes have been
-	// made to the format, handle them here.
-	private void check_version( string version ) {
+  //-------------------------------------------------------------
+  // Checks the stored version against the current version of the
+  // application.  If changes have been made to the format, handle
+  // them here.
+  private void check_version( string version ) {
 
-		// Nothing to do yet
+    // Nothing to do yet
 
-	}
+  }
 
 }

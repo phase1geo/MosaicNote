@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 2024-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -71,7 +71,8 @@ public class Preferences : Gtk.Dialog {
   private delegate string ValidateEntryCallback( Entry entry, string text, int position );
   private delegate void BrowserCallback( string old_value, string new_value );
 
-  /* Default constructor */
+  //-------------------------------------------------------------
+  // Default constructor
   public Preferences( MainWindow win ) {
 
     Object(
@@ -112,7 +113,7 @@ public class Preferences : Gtk.Dialog {
 
     get_content_area().append( box );
 
-    /* Add the menu actions */
+    // Add the menu actions
     var actions = new SimpleActionGroup();
     actions.add_action_entries( action_entries, this );
     insert_action_group( "prefs", actions );
@@ -123,7 +124,8 @@ public class Preferences : Gtk.Dialog {
   // GENERAL PANEL
   // -----------------------------------------------------------------
 
-  /* Creates the general panel */
+  //-------------------------------------------------------------
+  // Creates the general panel
   private Grid create_general() {
 
     var grid = new Grid() {
@@ -155,7 +157,8 @@ public class Preferences : Gtk.Dialog {
 
   }
 
-  /* Create the spell checker language menu */
+  //-------------------------------------------------------------
+  // Create the spell checker language menu
   private GLib.Menu create_spell_lang_menu() {
 
     var menu  = new GLib.Menu();
@@ -180,7 +183,9 @@ public class Preferences : Gtk.Dialog {
 
   }
 
-  /* Get the currently specified spell checker language value from settings */
+  //-------------------------------------------------------------
+  // Get the currently specified spell checker language value from
+  // settings
   private string spell_lang_label() {
 
     var lang = MosaicNote.settings.get_string( "spellchecker-language" );
@@ -193,7 +198,8 @@ public class Preferences : Gtk.Dialog {
 
   }
 
-  /* Handles changes to the spell checker language menu */
+  //-------------------------------------------------------------
+  // Handles changes to the spell checker language menu
   private void action_spell_menu( SimpleAction action, Variant? variant ) {
     if( variant != null ) {
       var lang = variant.get_string();
@@ -209,7 +215,8 @@ public class Preferences : Gtk.Dialog {
   // EDITOR PANEL
   // -----------------------------------------------------------------
 
-  /* Creates the editor panel */
+  //-------------------------------------------------------------
+  // Creates the editor panel
   private Grid create_editor() {
 
     var grid = new Grid() {
@@ -282,13 +289,15 @@ public class Preferences : Gtk.Dialog {
 
   // -----------------------------------------------------------------
 
-  /* Creates visual spacer */
+  //-------------------------------------------------------------
+  // Creates visual spacer
   private Label make_spacer() {
     var w = new Label( "" );
     return( w );
   }
 
-  /* Creates label */
+  //-------------------------------------------------------------
+  // Creates label
   private Label make_label( string label ) {
     var w = new Label( Utils.make_title( label ) ) {
       use_markup = true,
@@ -297,7 +306,8 @@ public class Preferences : Gtk.Dialog {
     return( w );
   }
 
-  /* Creates switch */
+  //-------------------------------------------------------------
+  // Creates switch
   private Switch make_switch( string setting ) {
     var w = new Switch() {
       halign = Align.START,
@@ -307,14 +317,16 @@ public class Preferences : Gtk.Dialog {
     return( w );
   }
 
-  /* Creates spinner */
+  //-------------------------------------------------------------
+  // Creates spinner
   private SpinButton make_spinner( string setting, int min_value, int max_value, int step ) {
     var w = new SpinButton.with_range( min_value, max_value, step );
     MosaicNote.settings.bind( setting, w, "value", SettingsBindFlags.DEFAULT );
     return( w );
   }
 
-  /* Creates an entry */
+  //-------------------------------------------------------------
+  // Creates an entry
   private Entry make_entry( string setting, string placeholder, int max_length = 30, ValidateEntryCallback? cb = null ) {
     var w = new Entry() {
       placeholder_text        = placeholder,
@@ -333,7 +345,8 @@ public class Preferences : Gtk.Dialog {
     return( w );
   }
 
-  /* Creates a file/folder browser widget */
+  //-------------------------------------------------------------
+  // Creates a file/folder browser widget
   private Box make_browser( string setting, string default_path, BrowserType browser_type, BrowserCallback? cb = null ) {
     var val = MosaicNote.settings.get_string( setting );
     var w = new Entry() {
@@ -381,7 +394,8 @@ public class Preferences : Gtk.Dialog {
     return( box );
   }
 
-  /* Helper function for the make_entry method */
+  //-------------------------------------------------------------
+  // Helper function for the make_entry method
   private void handle_text_insertion( Entry entry, string cleaned, ref int position ) {
     var void_entry = (void*)entry;
     SignalHandler.block_by_func( void_entry, (void*)handle_text_insertion, this );
@@ -390,7 +404,8 @@ public class Preferences : Gtk.Dialog {
     Signal.stop_emission_by_name( entry, "insert_text" );
   }
 
-  /* Creates a menubutton with the given menu */
+  //-------------------------------------------------------------
+  // Creates a menubutton with the given menu
   private MenuButton make_menu( string setting, string label, GLib.Menu menu ) {
     var w = new MenuButton() {
       label      = label,
@@ -400,7 +415,8 @@ public class Preferences : Gtk.Dialog {
     return( w );
   }
 
-  /* Creates an information image */
+  //-------------------------------------------------------------
+  // Creates an information image
   private Image make_info( string detail ) {
     var w = new Image.from_icon_name( "dialog-information-symbolic" ) {
       halign       = Align.START,
@@ -409,7 +425,8 @@ public class Preferences : Gtk.Dialog {
     return( w );
   }
 
-  /* Creates the theme menu button */
+  //-------------------------------------------------------------
+  // Creates the theme menu button
   private DropDown make_themes() {
 
     var mgr    = GtkSource.StyleSchemeManager.get_default();

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 2024-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -196,7 +196,7 @@ public class NoteItemPanes : Box {
     var lang_list = new Gee.ArrayList<string>();
     _spell.get_language_list( lang_list );
 
-    /* Check to see if the given language exists */
+    // Check to see if the given language exists
     lang_list.foreach((elem) => {
       if( elem == lang ) {
         _spell.set_language( lang );
@@ -206,7 +206,7 @@ public class NoteItemPanes : Box {
       return( true );
     });
 
-    /* Based on the search, set the language to use in the spell checker */
+    // Based on the search, set the language to use in the spell checker
     if( lang_list.size == 0 ) {
       _spell.set_language( null );
     } else if( !lang_exists ) {

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020 (https://github.com/phase1geo/Minder)
+* Copyright (c) 2020-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -50,7 +50,8 @@ public class NoteSearch : Box {
   private SearchMatch  _prev;
   private int          _ignore_update;
 
-  /* Default constructor */
+  //-------------------------------------------------------------
+  // Default constructor
   public NoteSearch( NotePanel panel ) {
 
     Object(
@@ -82,7 +83,8 @@ public class NoteSearch : Box {
 
   }
 
-  /* Called whenever the search bar is displayed or hidden */
+  //-------------------------------------------------------------
+  // Called whenever the search bar is displayed or hidden
   public void change_display( bool show ) {
     if( !show ) {
       _search_entry.text = "";
@@ -95,7 +97,8 @@ public class NoteSearch : Box {
     }
   }
 
-  /* Creates the search entry field and adds it to this box */
+  //-------------------------------------------------------------
+  // Creates the search entry field and adds it to this box
   private void add_search_entry() {
 
     _search_entry = new Gtk.SearchEntry() {
@@ -111,18 +114,21 @@ public class NoteSearch : Box {
 
   }
 
-  /* Performs the text search */
+  //-------------------------------------------------------------
+  // Performs the text search
   private void search() {
 
-    /* Perform search */
+    // Perform search
     _panel.do_search( _search_entry.text );
 
-    /* Update the UI state */
+    // Update the UI state
     update_next_previous();
 
   }
 
-  /* Called whenever the cursor changes position or the selected node changes */
+  //-------------------------------------------------------------
+  // Called whenever the cursor changes position or the selected
+  // node changes
   private void update_next_previous() {
 
     if( _ignore_update > 0 ) {
@@ -132,16 +138,17 @@ public class NoteSearch : Box {
       return;
     }
 
-    /* Get the next and previous matches */
+    // Get the next and previous matches
     find_next_match();
     find_prev_match();
 
-    /* Update the UI state */
+    // Update the UI state
     update_state();
 
   }
 
-  /* Updates the UI state */
+  //-------------------------------------------------------------
+  // Updates the UI state
   private void update_state() {
 
     var found = (_next.node != null) || (_prev.node != null) || is_match_selected();
@@ -155,7 +162,8 @@ public class NoteSearch : Box {
 
   }
 
-  /* Creates the search next field and adds it to this box */
+  //-------------------------------------------------------------
+  // Creates the search next field and adds it to this box
   private void add_search_next() {
 
     _search_next = new Gtk.Button.from_icon_name( "go-down-symbolic" );
@@ -165,7 +173,8 @@ public class NoteSearch : Box {
 
   }
 
-  /* Finds the match after the currently selected node */
+  //-------------------------------------------------------------
+  // Finds the match after the currently selected node
   private void find_next_match() {
 
     _next.node  = _ot.selected;
@@ -213,7 +222,8 @@ public class NoteSearch : Box {
 
   }
 
-  /* Finds the match after the currently selected node */
+  //-------------------------------------------------------------
+  // Finds the match after the currently selected node
   private void find_prev_match() {
 
     _prev.node  = _ot.selected;
@@ -259,12 +269,14 @@ public class NoteSearch : Box {
 
   }
 
-  /* Perform the search for the next text match */
+  //-------------------------------------------------------------
+  // Perform the search for the next text match
   private void search_next() {
     select_matched_text( _next );
   }
 
-  /* Selects the matched text */
+  //-------------------------------------------------------------
+  // Selects the matched text
   private void select_matched_text( SearchMatch match ) {
 
     if( match.node == null ) return;
@@ -272,7 +284,7 @@ public class NoteSearch : Box {
     var selchange = (match.node != _ot.selected);
     var curchange = (match.name ? match.node.name.cursor : match.node.note.cursor) != match.end;
 
-    /* Set the matched node to edit mode and select the matched text */
+    // Set the matched node to edit mode and select the matched text
     _ignore_update = selchange ? 1 : 0;
     _ot.selected   = match.node;
     _ot.edit_selected( match.name );
@@ -285,14 +297,15 @@ public class NoteSearch : Box {
       _ot.selected.note.set_cursor_only( match.end );
     }
 
-    /* Make sure that we update the search bar */
+    // Make sure that we update the search bar
     if( !curchange ) {
       _ot.cursor_changed();
     }
 
   }
 
-  /* Creates the search previous field and adds it to this box */
+  //-------------------------------------------------------------
+  // Creates the search previous field and adds it to this box
   private void add_search_previous() {
 
     _search_prev = new Gtk.Button.from_icon_name( "go-up-symbolic" );
@@ -302,21 +315,22 @@ public class NoteSearch : Box {
 
   }
 
-  /* Perform the search for the previous text match */
+  //-------------------------------------------------------------
+  // Perform the search for the previous text match
   private void search_previous() {
-
-    /* Select the matched text */
     select_matched_text( _prev );
-
   }
 
-  /* Adds a spacer between the search and replace portions of the search bar */
+  //-------------------------------------------------------------
+  // Adds a spacer between the search and replace portions of the
+  // search bar
   private void add_spacer() {
     var lbl = new Label( " " );
     append( lbl );
   }
 
-  /* Returns true if the selected text is a matched pattern */
+  //-------------------------------------------------------------
+  // Returns true if the selected text is a matched pattern
   private bool is_match_selected() {
 
     var pattern = _search_entry.text;
@@ -334,7 +348,8 @@ public class NoteSearch : Box {
 
   }
 
-  /* Adds the replace text entry field and adds it to this box */
+  //-------------------------------------------------------------
+  // Adds the replace text entry field and adds it to this box
   private void add_replace_entry() {
 
     _replace_entry = new Gtk.SearchEntry() {
@@ -354,19 +369,22 @@ public class NoteSearch : Box {
 
   }
 
-  /* Called when the search box loses focus */
+  //-------------------------------------------------------------
+  // Called when the search box loses focus
   private void replace_focus_in() {
     if( !is_match_selected() ) {
       select_matched_text( _next );
     }
   }
 
-  /* Called whenever the replacement text is changed */
+  //-------------------------------------------------------------
+  // Called whenever the replacement text is changed
   private void replace_text_changed() {
     update_state();
   }
 
-  /* Adds the replace current button and adds it to this box */
+  //-------------------------------------------------------------
+  // Adds the replace current button and adds it to this box
   private void add_replace_current() {
 
     _replace_current = new Gtk.Button.with_label( _( "Replace" ) );
@@ -376,18 +394,20 @@ public class NoteSearch : Box {
 
   }
 
-  /* Performs the replacement for the currently matched text */
+  //-------------------------------------------------------------
+  // Performs the replacement for the currently matched text
   private void replace_current() {
 
-    /* Replace the current match */
+    // Replace the current match
     _panel.replace_current( _replace_entry.text );
 
-    /* Jump to the next match */
+    // Jump to the next match
     select_matched_text( _next );
 
   }
 
-  /* Adds the replace all button and adds it to this box */
+  //-------------------------------------------------------------
+  // Adds the replace all button and adds it to this box
   private void add_replace_all() {
 
     _replace_all = new Gtk.Button.with_label( _( "Replace All" ) );
@@ -397,7 +417,8 @@ public class NoteSearch : Box {
 
   }
 
-  /* Performs the replacement for all text that matches the search text */
+  //-------------------------------------------------------------
+  // Performs the replacement for all text that matches the search text
   private void replace_all() {
 
     _panel.replace_all( _search_entry.text, _replace_entry.text );

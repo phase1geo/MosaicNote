@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 2024-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -26,13 +26,16 @@ public class UndoTitleChange : UndoItem {
   private Note   _note;
   private string _title;
 
-  /* Default constructor */
+  //-------------------------------------------------------------
+  // Default constructor
   public UndoTitleChange( Note note ) {
     base( _( "Title Change" ) );
     _note  = note;
     _title = note.title;
   }
 
+  //-------------------------------------------------------------
+  // Performs the title change
   private void swap_titles( MainWindow win ) {
     var prev_title = _note.title;
     _note.title = _title;
@@ -41,12 +44,14 @@ public class UndoTitleChange : UndoItem {
     win.note.note_saved( _note, null );
   }
 
-  /* Causes the stored item to be put into the before state */
+  //-------------------------------------------------------------
+  // Causes the stored item to be put into the before state
   public override void undo( MainWindow win ) {
     swap_titles( win );
   }
 
-  /* Causes the stored item to be put into the after state */
+  //-------------------------------------------------------------
+  // Causes the stored item to be put into the after state
   public override void redo( MainWindow win ) {
     swap_titles( win );
   }

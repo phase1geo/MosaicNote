@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 2024-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -26,21 +26,24 @@ public class UndoTagAdd : UndoItem {
   private Note   _note;
   private string _tag;
 
-  /* Default constructor */
+  //-------------------------------------------------------------
+  // Default constructor
   public UndoTagAdd( Note note, string tag ) {
     base( _( "Add Tag" ) );
     _note = note;
     _tag  = tag;
   }
 
-  /* Causes the stored item to be put into the before state */
+  //-------------------------------------------------------------
+  // Causes the stored item to be put into the before state
   public override void undo( MainWindow win ) {
     _note.tags.delete_tag( _tag );
     win.note.tags.add_tags( _note.tags );
     win.note.tag_removed( _tag, _note.id );
   }
 
-  /* Causes the stored item to be put into the after state */
+  //-------------------------------------------------------------
+  // Causes the stored item to be put into the after state
   public override void redo( MainWindow win ) {
     _note.tags.add_tag( _tag );
     win.note.tags.add_tags( _note.tags );

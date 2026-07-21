@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023 (https://github.com/phase1geo/Journaler)
+* Copyright (c) 2023-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -62,7 +62,8 @@ public class TagEntry : Box {
   public signal void removed( string tag );
   public signal void button_double_clicked( string tag );
 
-  /* Default constructor */
+  //-------------------------------------------------------------
+  // Default constructor
   public class TagEntry( MainWindow win, string tag_text ) {
 
     Object( orientation: Orientation.VERTICAL, spacing: 0, halign: Align.START, valign: Align.CENTER, vexpand: false );
@@ -165,7 +166,8 @@ public class TagEntry : Box {
 
   }
 
-  /* Populates the entry completion with the given tags */
+  //-------------------------------------------------------------
+  // Populates the entry completion with the given tags
   public void populate_completion( Array<string> tags ) {
 
     TreeIter iter;
@@ -181,7 +183,8 @@ public class TagEntry : Box {
 
   }
 
-  /* Displays the text entry field */
+  //-------------------------------------------------------------
+  // Displays the text entry field
   public void show_entry() {
     _button_revealer.reveal_child = false;
     _entry_revealer.reveal_child  = true;
@@ -190,7 +193,8 @@ public class TagEntry : Box {
     _entry.grab_focus();
   }
 
-  /* Hides the text entry field and just shows the tag */
+  //-------------------------------------------------------------
+  // Hides the text entry field and just shows the tag
   public void hide_entry () {
     _entry_revealer.reveal_child = false;
     _button_revealer.reveal_child = true;
