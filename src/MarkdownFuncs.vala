@@ -28,7 +28,7 @@ public class MarkdownFuncs {
   //-------------------------------------------------------------
   // Returns the directory containing the templates.snippets file
   private static string xml_dir() {
-    return( GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler", "snippets" ) );
+    return( GLib.Path.build_filename( Environment.get_user_data_dir(), "mosaic-note", "snippets" ) );
   }
 
   //-------------------------------------------------------------
@@ -47,7 +47,7 @@ public class MarkdownFuncs {
 
     var contents = """
       <?xml version="1.0"?>
-      <snippets _group="journaler-markdown">
+      <snippets _group="mosaic-note-markdown">
         <snippet _name="md-bold" _description="Insert bold text" trigger="%md-bold%">
           <text languages="markdown"><![CDATA[**${1}**$0]]></text>
         </snippet>
@@ -64,6 +64,7 @@ public class MarkdownFuncs {
           <text languages="markdown"><![CDATA[`${1}`$0]]></text>
         </snippet>
         <snippet _name="md-footnote" _description="Insert footnote reference" trigger="%md-footnote%">
+          <tooltip position="1" text="Footnote reference ID goes here"/>
           <text languages="markdown"><![CDATA[[^${1}]$0]]></text>
         </snippet>
         <snippet _name="md-link" _description="Insert link text" trigger="%md-link%">
@@ -108,7 +109,7 @@ public class MarkdownFuncs {
     search_path += xml_dir();
     mgr.search_path = search_path;
 
-    var snippet = mgr.get_snippet( "journaler-markdown", null, trigger );
+    var snippet = mgr.get_snippet( "mosaic-note-markdown", null, trigger );
 
     // We need to remove the tooltips because there appears to be a bug
     if( snippet != null ) {

@@ -421,7 +421,7 @@ public class NotePanel : Box {
 
     var box = new Box( Orientation.VERTICAL, 5 ) {
       margin_top = 20,
-      margin_bottom = 100,
+      margin_bottom = 20,
       visible = false
     };
     box.append( label );

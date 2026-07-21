@@ -40,16 +40,6 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   private Regex          _list_re;
   private int            _last_checked_line = -1;
 
-  private const GLib.ActionEntry[] action_entries = {
-    { "action_bold_text",      action_bold_text },
-    { "action_italicize_text", action_italicize_text },
-    { "action_strike_text",    action_strike_text },
-    { "action_highlight_text", action_highlight_text },
-    { "action_link_text",      action_link_text },
-    { "action_toggle_task",    action_toggle_task },
-    { "action_footnote_ref",   action_footnote_ref },
-  };
-
   //-------------------------------------------------------------
 	// Default constructor
 	public NoteItemPaneMarkdown( MainWindow win, NoteItem item, SpellChecker spell ) {
@@ -72,20 +62,6 @@ public class NoteItemPaneMarkdown : NoteItemPane {
       _list_re = new Regex("""^(\s*)((([*+-])(\s*)(\[.\]))|(\d+)\.|(\[.\]))(\s+)""");
     } catch( RegexError e ) {}
 
-    add_keyboard_shortcuts( win.application );
-
-  }
-
-  //-------------------------------------------------------------
-  // Adds keyboard shortcuts for the menu actions
-  private void add_keyboard_shortcuts( Gtk.Application app ) {
-    app.set_accels_for_action( "markdown.action_bold_text",      { "<Control>b" } );
-    app.set_accels_for_action( "markdown.action_italicize_text", { "<Control>i" } );
-    app.set_accels_for_action( "markdown.action_strike_text",    { "<Control>minus" } );
-    app.set_accels_for_action( "markdown.action_highlight_text", { "<Control>h" } );
-    app.set_accels_for_action( "markdown.action_link_text",      { "<Control>l" } );
-    app.set_accels_for_action( "markdown.action_toggle_task",    { "<Control>d" } );
-    app.set_accels_for_action( "markdown.action_footnote_ref",   { "<Control>t" } );
   }
 
   //-------------------------------------------------------------
@@ -106,15 +82,15 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   public override void populate_extra_menu() {
 
     var markup = new GLib.Menu();
-    markup.append( _( "Bold" ),          "markdown.action_bold_text" );
-    markup.append( _( "Italicize" ),     "markdown.action_italicize_text" );
-    markup.append( _( "Strikethrough" ), "markdown.action_strike_text" );
-    markup.append( _( "Highlight" ),     "markdown.action_highlight_text" );
-    markup.append( _( "Add Link" ),      "markdown.action_link_text" );
-    markup.append( _( "Add Footnote" ),  "markdown.action_footnote_ref" );
+    markup.append( _( "Bold" ),          "win.action_text_bold" );
+    markup.append( _( "Italicize" ),     "win.action_text_italicize" );
+    markup.append( _( "Strikethrough" ), "win.action_text_strike" );
+    markup.append( _( "Highlight" ),     "win.action_text_highlight" );
+    markup.append( _( "Add Link" ),      "win.action_text_link" );
+    markup.append( _( "Add Footnote" ),  "win.action_text_footnote" );
 
     var task = new GLib.Menu();
-    task.append( _( "Toggle Task" ), "markdown.action_toggle_task" );
+    task.append( _( "Toggle Task" ), "win.action_text_toggle_task" );
 
     var extra = new GLib.Menu();
     extra.append_section( null, markup );
@@ -478,7 +454,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     if( cursor.get_line() != _last_checked_line ) {
       var enabled = get_markdown_list_item( buffer, ref cursor, out line, out match ) &&
                     ((match.fetch( 6 ) != "") || (match.fetch( 8 ) != ""));
-      action_set_enabled( "markdown.action_toggle_task", enabled );
+      action_set_enabled( "win.action_toggle_task", enabled );
       _last_checked_line = cursor.get_line();
     }
 
@@ -486,7 +462,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
   //-------------------------------------------------------------
   // Toggles the task on the current line if one exists.
-  private bool toggle_task() {
+  public bool toggle_task() {
 
     MatchInfo match;
     TextIter  cursor;
@@ -611,42 +587,42 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
   //-------------------------------------------------------------
   // Adds bold Markdown syntax around currently selected code.
-  private void insert_bold() {
+  public void insert_bold() {
     MarkdownFuncs.insert_bold_text( _text, _text.buffer );
     _text.grab_focus();
   }
 
   //-------------------------------------------------------------
   // Adds italic Markdown syntax around currently selected code.
-  private void insert_italics() {
+  public void insert_italics() {
     MarkdownFuncs.insert_italicize_text( _text, _text.buffer );
     _text.grab_focus();
   }
 
   //-------------------------------------------------------------
   // Adds strikethrough Markdown syntax around currently selected code.
-  private void insert_strike() {
+  public void insert_strike() {
     MarkdownFuncs.insert_strikethrough_text( _text, _text.buffer );
     _text.grab_focus();
   }
 
   //-------------------------------------------------------------
   // Adds code Markdown syntax around currently selected code.
-  private void insert_code() {
+  public void insert_code() {
     MarkdownFuncs.insert_code_text( _text, _text.buffer );
     _text.grab_focus();
   }
 
   //-------------------------------------------------------------
   // Adds code highlighting syntax around currently selected text.
-  private void insert_highlight() {
+  public void insert_highlight() {
     MarkdownFuncs.insert_highlight_text( _text, _text.buffer );
     _text.grab_focus();
   }
 
   //-------------------------------------------------------------
   // Adds link Markdown syntax around currently selected code.
-  private void insert_link() {
+  public void insert_link() {
     MarkdownFuncs.insert_link_text( _text, _text.buffer );
     _text.grab_focus();
   }
@@ -654,7 +630,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   //-------------------------------------------------------------
   // Adds footnote reference Markdown syntax around currently
   // selected text.
-  private void insert_footnote_ref() {
+  public void insert_footnote_ref() {
     MarkdownFuncs.insert_footnote_ref( _text, _text.buffer );
     _text.grab_focus();
   }
@@ -772,55 +748,8 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
     handle_key_events( _text );
 
-    // Set the stage for menu actions
-    var actions = new SimpleActionGroup();
-    actions.add_action_entries( action_entries, _text );
-    insert_action_group( "markdown", actions );
-
     return( _text );
 
-  }
-
-  //-------------------------------------------------------------
-  // Emboldens selected text.
-  private void action_bold_text() {
-    insert_bold();
-  }
-
-  //-------------------------------------------------------------
-  // Italicizes selected text.
-  private void action_italicize_text() {
-    insert_italics();
-  }
-
-  //-------------------------------------------------------------
-  // Strikes through selected text.
-  private void action_strike_text() {
-    insert_strike();
-  }
-
-  //-------------------------------------------------------------
-  // Highlights selected text.
-  private void action_highlight_text() {
-    insert_highlight();
-  }
-
-  //-------------------------------------------------------------
-  // Creates a Markdown link from selected text.
-  private void action_link_text() {
-    insert_link();
-  }
-
-  //-------------------------------------------------------------
-  // Creates a Markdown footnote reference from selected text.
-  private void action_footnote_ref() {
-    insert_footnote_ref();
-  }
-
-  //-------------------------------------------------------------
-  // Toggles the current task
-  private void action_toggle_task() {
-    toggle_task();
   }
 
 }

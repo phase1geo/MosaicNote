@@ -176,6 +176,12 @@ public class NoteItemPanes : Box {
   }
 
   //-------------------------------------------------------------
+  // Returns the text that is currently being edited.
+  public NoteItemPane get_current_pane() {
+    return( _current_item );
+  }
+
+  //-------------------------------------------------------------
   // Updates the spelling language based on application gsettings
   private void update_spell_language() {
 
