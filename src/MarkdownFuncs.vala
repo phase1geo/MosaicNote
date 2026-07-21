@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023 (https://github.com/phase1geo/Journaler)
+* Copyright (c) 2023-2026 (https://github.com/phase1geo/Journaler)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -25,27 +25,29 @@ public class MarkdownFuncs {
 
   public delegate void MarkdownProcessLineFunc( TextBuffer buffer, ref TextIter linestart, TextIter lineend, string text, int index );
 
-  /* Returns the directory containing the templates.snippets file */
+  //-------------------------------------------------------------
+  // Returns the directory containing the templates.snippets file
   private static string xml_dir() {
-    return( GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler", "snippets" ) );
+    return( GLib.Path.build_filename( Environment.get_user_data_dir(), "mosaic-note", "snippets" ) );
   }
 
-  /* Add the markdown.snippets file to the user's directory */
+  //-------------------------------------------------------------
+  // Add the markdown.snippets file to the user's directory
   public static void add_markdown_snippets() {
 
-    /* Make sure that snippets directory exists */
+    // Make sure that snippets directory exists
     Utils.create_dir( xml_dir() );
 
     var path = GLib.Path.build_filename( xml_dir(), "markdown.snippets" );
 
-    /* If the file already exists, leave it alone */
+    // If the file already exists, leave it alone
     if( FileUtils.test( path, FileTest.EXISTS ) ) {
       return;
     }
 
     var contents = """
       <?xml version="1.0"?>
-      <snippets _group="journaler-markdown">
+      <snippets _group="mosaic-note-markdown">
         <snippet _name="md-bold" _description="Insert bold text" trigger="%md-bold%">
           <text languages="markdown"><![CDATA[**${1}**$0]]></text>
         </snippet>
@@ -60,6 +62,10 @@ public class MarkdownFuncs {
         </snippet>
         <snippet _name="md-monospace" _description="Insert monospaced text" trigger="%md-mono%">
           <text languages="markdown"><![CDATA[`${1}`$0]]></text>
+        </snippet>
+        <snippet _name="md-footnote" _description="Insert footnote reference" trigger="%md-footnote%">
+          <tooltip position="1" text="Footnote reference ID goes here"/>
+          <text languages="markdown"><![CDATA[[^${1}]$0]]></text>
         </snippet>
         <snippet _name="md-link" _description="Insert link text" trigger="%md-link%">
           <tooltip position="1" text="Linked text goes here"/>
@@ -90,21 +96,22 @@ public class MarkdownFuncs {
 
   }
 
-  /* Returns the snippet associated with the given template name */
+  //-------------------------------------------------------------
+  // Returns the snippet associated with the given template name
   public static GtkSource.Snippet? get_snippet( string trigger ) {
 
-    /* Add the snippets file if it doesn't exist */
+    // Add the snippets file if it doesn't exist
     add_markdown_snippets();
 
-    /* Get the snippet manager */
+    // Get the snippet manager
     var mgr = GtkSource.SnippetManager.get_default();
     var search_path = mgr.search_path;
     search_path += xml_dir();
     mgr.search_path = search_path;
 
-    var snippet = mgr.get_snippet( "journaler-markdown", null, trigger );
+    var snippet = mgr.get_snippet( "mosaic-note-markdown", null, trigger );
 
-    /* We need to remove the tooltips because there appears to be a bug */
+    // We need to remove the tooltips because there appears to be a bug
     if( snippet != null ) {
       for( int i=0; i<snippet.get_n_chunks(); i++ ) {
         snippet.get_nth_chunk( i ).set_tooltip_text( "" );
@@ -115,11 +122,11 @@ public class MarkdownFuncs {
 
   }
 
-  /*
-   If text is currently selected, make sure the selection is adjusted such that the start of
-   the selection is not on a whitespace character and the end selection is one character to the
-   right of a non-whitespace character.
-  */
+  //-------------------------------------------------------------
+  // If text is currently selected, make sure the selection is
+  // adjusted such that the start of the selection is not on a
+  // whitespace character and the end selection is one character
+  // to the right of a non-whitespace character.
   public static bool get_markup_selection( TextBuffer buffer, out TextIter start, out TextIter end ) {
 
     if( buffer.get_selection_bounds( out start, out end ) ) {
@@ -138,14 +145,16 @@ public class MarkdownFuncs {
 
   }
 
-  /* Adds the given text markup based on whether valid text is selected or not */
+  //-------------------------------------------------------------
+  // Adds the given text markup based on whether valid text is
+  // selected or not
   public static void add_text_markup( GtkSource.View view, TextBuffer buffer, string prefix, string suffix = "", string trigger = "" ) {
 
     TextIter sel_start, sel_end;
 
     buffer.begin_user_action();
 
-    /* Otherwise, do the text-based insertion */
+    // Otherwise, do the text-based insertion
     if( get_markup_selection( buffer, out sel_start, out sel_end ) ) {
 
       buffer.insert( ref sel_start, prefix, prefix.length );
@@ -174,7 +183,8 @@ public class MarkdownFuncs {
 
   }
 
-  /* Adds the line markup for each line within the selected range */
+  //-------------------------------------------------------------
+  // Adds the line markup for each line within the selected range
   public static void add_line_markup( TextBuffer buffer, string text, MarkdownProcessLineFunc process_line ) {
 
     buffer.begin_user_action();
@@ -200,7 +210,9 @@ public class MarkdownFuncs {
 
   }
 
-  /* Inserts the given text at the beginning of each empty line that contains a non-empty line below it */
+  //-------------------------------------------------------------
+  // Inserts the given text at the beginning of each empty line
+  // that contains a non-empty line below it
   public static void insert_at_empty_line( TextBuffer buffer, ref TextIter linestart, TextIter lineend, string text, int index ) {
     if( buffer.get_text( linestart, lineend, false ).strip() == "" ) {
       var next_linestart = linestart;
@@ -219,7 +231,9 @@ public class MarkdownFuncs {
     }
   }
 
-  /* Inserts the given text prior to the beginning of the line if the line is not empty */
+  //-------------------------------------------------------------
+  // Inserts the given text prior to the beginning of the line if
+  // the line is not empty
   public static void insert_line_chars( TextBuffer buffer, ref TextIter linestart, TextIter lineend, string text, int index ) {
     if( buffer.get_text( linestart, lineend, false ).strip() != "" ) {
       var ins = text.contains( "%d" ) ? text.printf( index + 1 ) : text;
@@ -227,15 +241,15 @@ public class MarkdownFuncs {
     }
   }
 
-  /*
-   Inserts a line below the current line using the first character in text as the underline character.  Underline all text
-   without preceding and succeeding whitespace.
-  */
+  //-------------------------------------------------------------
+  // Inserts a line below the current line using the first character
+  // in text as the underline character.  Underline all text without
+  // preceding and succeeding whitespace.
   public static void insert_line_below( TextBuffer buffer, ref TextIter linestart, TextIter lineend, string text, int index ) {
 
     TextIter cstart = linestart;
 
-    /* Advance cstart to the first non-whitespace character */
+    // Advance cstart to the first non-whitespace character
     if( cstart.get_char().isspace() ) {
       cstart.forward_find_char( (c) => { return( !c.isspace() ); }, lineend );
     }
@@ -250,13 +264,13 @@ public class MarkdownFuncs {
 
   }
 
-  /*
-   Gets the markup selection range depending on whether text was selected and whether we need the range
-   for line-based Markdown or text-based Markdown.
-  */
+  //-------------------------------------------------------------
+  // Gets the markup selection range depending on whether text was
+  // selected and whether we need the range for line-based
+  // Markdown or text-based Markdown.
   public static void get_markup_range( TextBuffer buffer, bool line, out TextIter start, out TextIter end ) {
 
-    /* Get the string to replace */
+    // Get the string to replace
     if( buffer.get_selection_bounds( out start, out end ) ) {
       if( line ) {
         start.set_line( start.get_line() );
@@ -271,7 +285,9 @@ public class MarkdownFuncs {
 
   }
 
-  /* Returns true if the selected text contains the given markup pattern */
+  //-------------------------------------------------------------
+  // Returns true if the selected text contains the given markup
+  // pattern
   public static bool contains_markup( TextBuffer buffer, string pattern ) {
 
     TextIter start, end;
@@ -291,7 +307,8 @@ public class MarkdownFuncs {
 
   }
 
-  /* Removes any markup that matches the given regex pattern */
+  //-------------------------------------------------------------
+  // Removes any markup that matches the given regex pattern
   public static void remove_markup( TextBuffer buffer, string pattern ) {
 
     TextIter start, end;
@@ -336,12 +353,14 @@ public class MarkdownFuncs {
 
   }
 
-  /* Adds Markdown bold syntax around selected text */
+  //-------------------------------------------------------------
+  // Adds Markdown bold syntax around selected text
   public static void insert_bold_text( GtkSource.View view, TextBuffer buffer ) {
     add_text_markup( view, buffer, "**", "**", "%md-bold%" );
   }
 
-  /* Adds Markdown italic syntax around selected text */
+  //-------------------------------------------------------------
+  // Adds Markdown italic syntax around selected text
   public static void insert_italicize_text( GtkSource.View view, TextBuffer buffer ) {
     add_text_markup( view, buffer, "_", "_", "%md-italic%" );
   }
@@ -358,7 +377,14 @@ public class MarkdownFuncs {
     add_text_markup( view, buffer, "==", "==", "%md-hilite%" );
   }
 
-  /* Adds Markdown code syntax around selected text */
+  //-------------------------------------------------------------
+  // Inserts a footnote reference.
+  public static void insert_footnote_ref( GtkSource.View view, TextBuffer buffer ) {
+    add_text_markup( view, buffer, "[^", "]", "%md-footnote%" );
+  }
+
+  //-------------------------------------------------------------
+  // Adds Markdown code syntax around selected text
   public static void insert_code_text( GtkSource.View view, TextBuffer buffer ) {
 
     TextIter start, end;
@@ -373,7 +399,8 @@ public class MarkdownFuncs {
 
   }
 
-  /* Adds Markdown header syntax around selected text */
+  //-------------------------------------------------------------
+  // Adds Markdown header syntax around selected text
   public static void insert_header_text( TextBuffer buffer, int depth ) {
 
     var syntax = string.nfill( depth, '#' ) + " ";
@@ -385,7 +412,8 @@ public class MarkdownFuncs {
 
   }
 
-  /* Inserts a horizontal rule */
+  //-------------------------------------------------------------
+  // Inserts a horizontal rule
   public static void insert_horizontal_rule( TextBuffer buffer ) {
 
     var syntax = "---\n";
@@ -396,7 +424,8 @@ public class MarkdownFuncs {
 
   }
 
-  /* Inserts one level of blockquote at every non-blank line */
+  //-------------------------------------------------------------
+  // Inserts one level of blockquote at every non-blank line
   public static void insert_blockquote( TextBuffer buffer ) {
 
     var syntax = "> ";
@@ -407,7 +436,9 @@ public class MarkdownFuncs {
 
   }
 
-  /* Adds a double underline below each line of selected text, converting them to H1 headers */
+  //-------------------------------------------------------------
+  // Adds a double underline below each line of selected text,
+  // converting them to H1 headers
   public static void insert_h1_ul_text( TextBuffer buffer ) {
 
     buffer.begin_user_action();
@@ -417,7 +448,9 @@ public class MarkdownFuncs {
 
   }
 
-  /* Adds a single underline below each line of selected text, converting them to H2 headers */
+  //-------------------------------------------------------------
+  // Adds a single underline below each line of selected text,
+  // converting them to H2 headers
   public static void insert_h2_ul_text( TextBuffer buffer ) {
 
     buffer.begin_user_action();
@@ -427,7 +460,9 @@ public class MarkdownFuncs {
 
   }
 
-  /* Inserts ordered list numbers at the beginning of each non-empty line */
+  //-------------------------------------------------------------
+  // Inserts ordered list numbers at the beginning of each
+  // non-empty line
   public static void insert_ordered_list_text( TextBuffer buffer ) {
 
     buffer.begin_user_action();
@@ -437,7 +472,9 @@ public class MarkdownFuncs {
 
   }
 
-  /* Inserts unordered list (-) characters at the beginning of each non-empty line */
+  //-------------------------------------------------------------
+  // Inserts unordered list (-) characters at the beginning of
+  // each non-empty line
   public static void insert_unordered_list_text( TextBuffer buffer ) {
 
     buffer.begin_user_action();
@@ -447,7 +484,9 @@ public class MarkdownFuncs {
 
   }
 
-  /* Inserts incomplete task strings at the beginning of each non-empty line */
+  //-------------------------------------------------------------
+  // Inserts incomplete task strings at the beginning of each
+  // non-empty line
   public static void insert_task_text( TextBuffer buffer ) {
 
     buffer.begin_user_action();
@@ -457,7 +496,9 @@ public class MarkdownFuncs {
 
   }
 
-  /* Inserts incomplete task strings at the beginning of each non-empty line */
+  //-------------------------------------------------------------
+  // Inserts incomplete task strings at the beginning of each
+  // non-empty line
   public static void insert_task_done_text( TextBuffer buffer ) {
 
     buffer.begin_user_action();
@@ -467,7 +508,8 @@ public class MarkdownFuncs {
 
   }
 
-  /* Inserts a snippet */
+  //-------------------------------------------------------------
+  // Inserts a snippet
   private static bool insert_snippet( GtkSource.View view, TextBuffer buffer, string trigger, string clipboard = "" ) {
     var snippet = get_snippet( trigger );
     if( snippet != null ) {
@@ -480,7 +522,8 @@ public class MarkdownFuncs {
     return( false );
   }
 
-  /* Inserts a link */
+  //-------------------------------------------------------------
+  // Inserts a link
   public static void insert_link_text( GtkSource.View view, TextBuffer buffer ) {
 
     TextIter start, end;
@@ -538,7 +581,8 @@ public class MarkdownFuncs {
 
   }
 
-  /* Inserts a link */
+  //-------------------------------------------------------------
+  // Inserts a link
   public static void insert_image_text( GtkSource.View view, TextBuffer buffer ) {
 
     TextIter start, end;
@@ -596,13 +640,14 @@ public class MarkdownFuncs {
 
   }
 
-  /* Removes all markup from the selected area */
+  //-------------------------------------------------------------
+  // Removes all markup from the selected area
   public static void clear_markup( TextBuffer buffer ) {
 
-    /* Remove the markup */
-    remove_markup( buffer, "(^#+\\s+|^\\s*(>\\s*)+|`+|\\*+|_{1,2}|~{2}|={2}|^-\\s+|^[0-9]+\\.\\s+|\\[[ xX]\\]\\s+|^\\s*[=-]+|!?\\[(.*?)\\]\\s*\\((.*?)\\))" );
+    // Remove the markup
+    remove_markup( buffer, "(^#+\\s+|^\\s*(>\\s*)+|`+|\\*+|_{1,2}|~{2}|={2}|\\[\\^.*?\\]|^-\\s+|^[0-9]+\\.\\s+|\\[[ xX]\\]\\s+|^\\s*[=-]+|!?\\[(.*?)\\]\\s*\\((.*?)\\))" );
 
-    /* Deselect text */
+    // Deselect text
     TextIter cursor;
     buffer.get_iter_at_mark( out cursor, buffer.get_insert() );
     buffer.select_range( cursor, cursor );

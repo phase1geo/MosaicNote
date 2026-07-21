@@ -19,6 +19,8 @@
 * Authored by: Trevor Williams <phase1geo@gmail.com>
 */
 
+using Gee;
+
 public class NoteItemImage : NoteItem {
 
 	private string _uri = "";
@@ -87,7 +89,7 @@ public class NoteItemImage : NoteItem {
 
   //-------------------------------------------------------------
   // Returns the Markdown code for this item
-  public override string to_markdown( NotebookTree? notebooks, bool pandoc ) {
+  public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc ) {
   	var file = File.new_for_uri( uri );
 	  return( format_for_width( "![%s](%s)".printf( description, uri ), file.get_path(), pandoc ) );
   }
@@ -95,7 +97,7 @@ public class NoteItemImage : NoteItem {
   //-------------------------------------------------------------
   // Returns the Markdown code for this item and copies the asset
   // to the specified assets directory.
-  public override string export( NotebookTree? notebooks, string assets_dir ) {
+  public override string export( NotebookTree? notebooks, bool include_footnotes, string assets_dir ) {
     var asset = copy_asset( assets_dir, get_resource_filename() );
   	return( "![%s](%s)".printf( description, asset ) );
   }

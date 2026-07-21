@@ -27,6 +27,7 @@ using Gtk;
 public enum TextCursorPlacement {
   START,
   END,
+  AT_OFFSET,
   NO_CHANGE
 }
 
@@ -78,6 +79,7 @@ public class NoteItemPane : Box {
   public signal void move_item( MoveDirection dir, bool record_undo );
   public signal void set_as_current( string msg = "" );
   public signal void note_link_clicked( string link );
+  public signal void footnote_clicked( string link );
   public signal void show_image();
 
   //-------------------------------------------------------------
@@ -179,14 +181,19 @@ public class NoteItemPane : Box {
 
   //-------------------------------------------------------------
   // Grabs the focus of the note item at the specified position.
-  public virtual void grab_item_focus( TextCursorPlacement placement ) {}
+  public virtual void grab_item_focus( TextCursorPlacement placement, int offset = 0 ) {}
 
   //-------------------------------------------------------------
   // Places cursor in the given text based on the value of placement
-  public void place_cursor( GtkSource.View text, TextCursorPlacement placement ) {
+  public void place_cursor( GtkSource.View text, TextCursorPlacement placement, int offset = 0 ) {
     if( placement != TextCursorPlacement.NO_CHANGE ) {
       TextIter iter;
-      text.buffer.get_start_iter( out iter );
+      switch( placement ) {
+        case TextCursorPlacement.START     :  text.buffer.get_start_iter( out iter );  break;
+        case TextCursorPlacement.END       :  text.buffer.get_end_iter( out iter );  break;
+        case TextCursorPlacement.AT_OFFSET :  text.buffer.get_iter_at_offset( out iter, offset );  break;
+        default                            :  assert_not_reached();
+      }
       text.buffer.place_cursor( iter );
     }
   }

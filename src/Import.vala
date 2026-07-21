@@ -23,7 +23,7 @@ using Gtk;
 
 public class Import {
 
-  public delegate void ImportNoteCallback( Note? note, bool last );
+  public delegate void ImportNoteCallback( Notebook notebook, Note? note, bool last );
   public delegate void ImportFolderCallback();
 
   //-------------------------------------------------------------
@@ -136,7 +136,7 @@ public class Import {
       if( FileUtils.get_contents( filename, out contents ) ) {
         var parser = new NoteParser();
         var note   = parser.parse_markdown( notebook, contents );
-        callback( note, last );
+        callback( notebook, note, last );
       }
     } catch( FileError e ) {}
 

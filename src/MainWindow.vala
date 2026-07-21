@@ -103,18 +103,26 @@ public class MainWindow : Gtk.ApplicationWindow {
   private Widget?         _last_focus = null;
 
   private const GLib.ActionEntry[] action_entries = {
-    { "action_save",           action_save },
-    { "action_quit",           action_quit },
-    { "action_shortcuts",      action_shortcuts },
-    { "action_preferences",    action_preferences },
-    { "action_about",          action_about },
-    { "action_search",         action_search },
-    { "action_next_panels",    action_next_panels },
-    { "action_prev_panels",    action_prev_panels },
-    { "action_set_panel_mode", action_set_panel_mode, "i" },
-    { "action_undo",           action_undo },
-    { "action_redo",           action_redo },
-    { "action_new_note",       action_new_note },
+    { "action_save",             action_save },
+    { "action_quit",             action_quit },
+    { "action_shortcuts",        action_shortcuts },
+    { "action_preferences",      action_preferences },
+    { "action_about",            action_about },
+    { "action_search",           action_search },
+    { "action_next_panels",      action_next_panels },
+    { "action_prev_panels",      action_prev_panels },
+    { "action_set_panel_mode",   action_set_panel_mode, "i" },
+    { "action_undo",             action_undo },
+    { "action_redo",             action_redo },
+    { "action_new_note",         action_new_note },
+    { "action_text_bold",        action_text_bold },
+    { "action_text_italicize",   action_text_italicize },
+    { "action_text_strike",      action_text_strike },
+    { "action_text_code",        action_text_code },
+    { "action_text_highlight",   action_text_highlight },
+    { "action_text_link",        action_text_link },
+    { "action_text_toggle_task", action_text_toggle_task },
+    { "action_text_footnote",    action_text_footnote },
   };
 
   private bool on_elementary = Utils.on_elementary();
@@ -518,6 +526,15 @@ public class MainWindow : Gtk.ApplicationWindow {
     app.set_accels_for_action( "win.action_redo",        { "<Control><Shift>z" } );
     app.set_accels_for_action( "win.action_new_note",    { "<Control>n" } );
 
+    app.set_accels_for_action( "win.action_text_bold",        { "<Control>b" } );
+    app.set_accels_for_action( "win.action_text_italicize",   { "<Control>i" } );
+    app.set_accels_for_action( "win.action_text_strike",      { "<Control>minus" } );
+    app.set_accels_for_action( "win.action_text_code",        { "<Control>grave" } );
+    app.set_accels_for_action( "win.action_text_highlight",   { "<Control>h" } );
+    app.set_accels_for_action( "win.action_text_link",        { "<Control>l" } );
+    app.set_accels_for_action( "win.action_text_toggle_task", { "<Control>d" } );
+    app.set_accels_for_action( "win.action_text_footnote",    { "<Control>t" } );
+
   }
 
   //-------------------------------------------------------------
@@ -697,6 +714,78 @@ public class MainWindow : Gtk.ApplicationWindow {
   // Creates a new note in the currently selected notebook (if possible).
   private void action_new_note() {
     _notes.add_new_note_to_current_notebook();
+  }
+
+  //-------------------------------------------------------------
+  // Emboldens selected text.
+  private void action_text_bold() {
+    var pane = _note.items.get_current_pane() as NoteItemPaneMarkdown;
+    if( pane != null ) {
+      pane.insert_bold();
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Italicizes selected text.
+  private void action_text_italicize() {
+    var pane = _note.items.get_current_pane() as NoteItemPaneMarkdown;
+    if( pane != null ) {
+      pane.insert_italics();
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Strikes through selected text.
+  private void action_text_strike() {
+    var pane = _note.items.get_current_pane() as NoteItemPaneMarkdown;
+    if( pane != null ) {
+      pane.insert_strike();
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Codifies selected text.
+  private void action_text_code() {
+    var pane = _note.items.get_current_pane() as NoteItemPaneMarkdown;
+    if( pane != null ) {
+      pane.insert_code();
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Highlights selected text.
+  private void action_text_highlight() {
+    var pane = _note.items.get_current_pane() as NoteItemPaneMarkdown;
+    if( pane != null ) {
+      pane.insert_highlight();
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Creates a Markdown link from selected text.
+  private void action_text_link() {
+    var pane = _note.items.get_current_pane() as NoteItemPaneMarkdown;
+    if( pane != null ) {
+      pane.insert_link();
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Creates a Markdown footnote reference from selected text.
+  private void action_text_footnote() {
+    var pane = _note.items.get_current_pane() as NoteItemPaneMarkdown;
+    if( pane != null ) {
+      pane.insert_footnote_ref();
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Toggles the current task
+  private void action_text_toggle_task() {
+    var pane = _note.items.get_current_pane() as NoteItemPaneMarkdown;
+    if( pane != null ) {
+      pane.toggle_task();
+    }
   }
 
   //-------------------------------------------------------------

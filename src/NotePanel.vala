@@ -25,6 +25,7 @@ using Gee;
 public class NotePanel : Box {
 
   private Note? _note = null;
+  private Gdk.Cursor _pointer;
 
   private MainWindow _win;
   private Stack      _stack;
@@ -38,6 +39,7 @@ public class NotePanel : Box {
   private NoteItemPanes   _content;
   private Button          _hist_prev;
   private Button          _hist_next;
+  private ListBox         _footnotes;
   private ListBox         _references;
   private bool            _ignore = false;
   private HashSet<string> _orig_link_titles;
@@ -98,6 +100,7 @@ public class NotePanel : Box {
 
     _win = win;
     _orig_link_titles = new HashSet<string>();
+    _pointer = new Gdk.Cursor.from_name( "pointer", null );
 
     // Initialize the language manager
     initialize_languages();
@@ -323,17 +326,42 @@ public class NotePanel : Box {
     _content.note_link_clicked.connect((link) => {
       note_link_clicked( link, _note );
     });
+    _content.footnote_clicked.connect((link) => {
+      var index = 0;
+      if( !_note.footnotes.has_key( link ) ) {
+        _note.add_footnote( link, "" );
+        add_footnotes();
+      }
+      _note.footnotes.map_iterator().foreach((k, v) => {
+        if( k == link ) {
+          var row = _footnotes.get_row_at_index( index );
+          var box = row.get_child();
+          var entry = (EditableLabel)Utils.get_child_at_index( box, 1 );
+          entry.start_editing();
+          return( false );
+        }
+        index++;
+        return( true );
+      });
+    });
     _content.show_images.connect((items, index) => {
       _image_viewer.populate( items, index );
       _stack.visible_child_name = "imageview";
     });
+    _content.update_all_footnotes.connect(() => {
+      if( _note.update_all_footnotes() ) {
+        add_footnotes();
+      }
+    });
 
+    var footnotes  = create_footnotes();
     var references = create_references();
 
     var cbox = new Box( Orientation.VERTICAL, 5 );
     cbox.add_css_class( "themed" );
     cbox.append( _title );
     cbox.append( _content );
+    cbox.append( footnotes );
     cbox.append( references );
 
     var sw = new ScrolledWindow() {
@@ -363,6 +391,9 @@ public class NotePanel : Box {
         _note.tags.copy( _tags.tags );
         _note.title = _title.text;
         _content.save();
+        if( _note.update_all_footnotes() ) {
+          add_footnotes();
+        }
         note_saved( _note, _orig_link_titles );
       }
     });
@@ -370,6 +401,36 @@ public class NotePanel : Box {
     return( box );
 
 	}
+
+  //-------------------------------------------------------------
+  // Creates the list of footnotes and descriptions.
+  private Box create_footnotes() {
+
+    var label = new Label( Utils.make_title( _( "Footnotes" ) ) ) {
+      halign = Align.START,
+      use_markup = true
+    };
+
+    var sep = new Separator( Orientation.HORIZONTAL );
+
+    _footnotes = new ListBox() {
+      halign = Align.FILL,
+      hexpand = true,
+      selection_mode = SelectionMode.NONE
+    };
+
+    var box = new Box( Orientation.VERTICAL, 5 ) {
+      margin_top = 20,
+      margin_bottom = 20,
+      visible = false
+    };
+    box.append( label );
+    box.append( sep );
+    box.append( _footnotes );
+
+    return( box );
+
+  }
 
   //-------------------------------------------------------------
   // Creates the list of notes which contain links to this note.
@@ -397,6 +458,49 @@ public class NotePanel : Box {
 
     return( box );
 
+  }
+
+  //-------------------------------------------------------------
+  // Adds the list of footnotes in the note.
+  private void add_footnotes() {
+    Utils.clear_listbox( _footnotes );
+    if( _note.footnotes.size == 0 ) {
+      _footnotes.get_parent().visible = false;
+    } else {
+      _note.footnotes.map_iterator().foreach((k, v) => {
+        var fn_id = k;
+        var id = new Button.with_label( fn_id + "." ) {
+          has_frame = false,
+          halign = Align.START
+        };
+        id.clicked.connect(() => {
+          var locations = new Array<ContentLocation>();
+          _note.find_footnote( fn_id, locations, false );
+          if( locations.length > 0 ) {
+            var pane = _content.get_pane( locations.index( 0 ).row, locations.index( 0 ).col );
+            _content.show_pane( pane );
+            pane.grab_item_focus( TextCursorPlacement.AT_OFFSET, locations.index( 0 ).offset );
+          }
+        });
+        var description = new EditableLabel( v ) {
+          halign = Align.FILL,
+          hexpand = true
+        };
+        description.notify["editing"].connect(() => {
+          if( !description.editing ) {
+            _note.add_footnote( fn_id, description.text );
+          }
+        });
+        var box = new Box( Orientation.HORIZONTAL, 5 ) {
+          margin_top = 10
+        };
+        box.append( id );
+        box.append( description );
+        _footnotes.append( box );
+        return( true );
+      });
+      _footnotes.get_parent().visible = true;
+    }
   }
 
   //-------------------------------------------------------------
@@ -531,6 +635,7 @@ public class NotePanel : Box {
 
       _orig_link_titles.clear();
       _note.get_note_links( _orig_link_titles );
+      add_footnotes();
       add_references();
 
       // Update the note history

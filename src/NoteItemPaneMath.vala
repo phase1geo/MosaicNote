@@ -59,8 +59,8 @@ public class NoteItemPaneMath : NoteItemPane {
 
   //-------------------------------------------------------------
   // Grabs the focus of the note item at the specified position.
-  public override void grab_item_focus( TextCursorPlacement placement ) {
-    place_cursor( _text, placement );
+  public override void grab_item_focus( TextCursorPlacement placement, int offset = 0 ) {
+    place_cursor( _text, placement, offset );
     _text_frame.visible = true;
     _text.grab_focus();
   }

@@ -21,6 +21,19 @@
 
 using Gee;
 
+public class ContentLocation {
+  public int    row    { get; private set; default = -1; }
+  public int    col    { get; private set; default = -1; }
+  public int    offset { get; private set; default = 0; }
+  public string id     { get; private set; default = ""; }
+  public ContentLocation( int r, int c, int o, string i ) {
+    row    = r;
+    col    = c;
+    offset = o;
+    id     = i;
+  }
+}
+
 public class Note : Object {
 
   public static int current_id = 0;
@@ -36,6 +49,7 @@ public class Note : Object {
   private Tags               _tags;      // done
   private Array<NoteItemRow> _rows;
   private HashSet<int>       _referred;
+  private HashMap<string,string> _footnotes;
 
   public bool modified { get; private set; default = false; }
 
@@ -121,6 +135,12 @@ public class Note : Object {
     }
   }
 
+  public HashMap<string,string> footnotes {
+    get {
+      return( _footnotes );
+    }
+  }
+
   public signal void changed();
   public signal void title_changed();
 
@@ -128,17 +148,18 @@ public class Note : Object {
   // Default constructor
   public Note( Notebook nb, bool add_initial_item = true ) {
 
-    _nb       = nb;
-    _id       = current_id++;
-    _title    = "";
-    _created  = new DateTime.now_local();
-    _updated  = new DateTime.now_local();
-    _viewed   = new DateTime.now_local();
-    _locked   = false;
-    _favorite = false;
-    _tags     = new Tags();
-    _rows     = new Array<NoteItemRow>();
-    _referred = new HashSet<int>();
+    _nb        = nb;
+    _id        = current_id++;
+    _title     = "";
+    _created   = new DateTime.now_local();
+    _updated   = new DateTime.now_local();
+    _viewed    = new DateTime.now_local();
+    _locked    = false;
+    _favorite  = false;
+    _tags      = new Tags();
+    _rows      = new Array<NoteItemRow>();
+    _referred  = new HashSet<int>();
+    _footnotes = new HashMap<string,string>();
 
     if( add_initial_item ) {
       var row  = new NoteItemRow( this );
@@ -152,10 +173,11 @@ public class Note : Object {
   //-------------------------------------------------------------
   // Constructs note from XML node
   public Note.from_xml( Notebook nb, Xml.Node* node ) {
-    _nb       = nb;
-    _tags     = new Tags();
-    _rows     = new Array<NoteItemRow>();
-    _referred = new HashSet<int>();
+    _nb        = nb;
+    _tags      = new Tags();
+    _rows      = new Array<NoteItemRow>();
+    _referred  = new HashSet<int>();
+    _footnotes = new HashMap<string,string>();
 
     load( node );
   }
@@ -165,17 +187,18 @@ public class Note : Object {
   // to the specified notebook.
   public Note.copy( Notebook nb, Note note ) {
 
-    _nb       = nb;
-    _id       = current_id++;
-    _title    = note.title;
-    _created  = new DateTime.now_local();
-    _updated  = new DateTime.now_local();
-    _viewed   = new DateTime.now_local();
-    _locked   = note.locked;
-    _favorite = note.favorite;
-    _tags     = new Tags();
-    _rows     = new Array<NoteItemRow>();
-    _referred = new HashSet<int>();
+    _nb        = nb;
+    _id        = current_id++;
+    _title     = note.title;
+    _created   = new DateTime.now_local();
+    _updated   = new DateTime.now_local();
+    _viewed    = new DateTime.now_local();
+    _locked    = note.locked;
+    _favorite  = note.favorite;
+    _tags      = new Tags();
+    _rows      = new Array<NoteItemRow>();
+    _referred  = new HashSet<int>();
+    _footnotes = new HashMap<string,string>();
 
     _tags.copy( note.tags );
 
@@ -318,9 +341,13 @@ public class Note : Object {
       var row = _rows.index( i );
       for( int j=0; j<row.size(); j++ ) {
         var item = row.get_item( j );
-        str += "%s\n\n".printf( item.to_markdown( notebooks, pandoc ) );
+        str += "%s\n\n".printf( item.to_markdown( notebooks, false, pandoc ) );
       }
     }
+    _footnotes.map_iterator().foreach((k, v) => {
+      str += "[^%s]: %s\n\n".printf( k, v );
+      return( true );
+    });
     return( str );
   }
 
@@ -335,9 +362,13 @@ public class Note : Object {
       var row = _rows.index( i );
       for( int j=0; j<row.size(); j++ ) {
         var item = row.get_item( j );
-        str += "%s\n\n".printf( item.export( notebooks, assets_dir ) );
+        str += "%s\n\n".printf( item.export( notebooks, false, assets_dir ) );
       }
     }
+    _footnotes.map_iterator().foreach((k, v) => {
+      str += "[^%s]: %s\n\n".printf( k, v );
+      return( true );
+    });
     FileUtils.set_contents( filename, str );
   }
 
@@ -378,6 +409,112 @@ public class Note : Object {
         item.get_note_links( note_titles );
       }
     }
+  }
+
+  //-------------------------------------------------------------
+  // Adds a new footnote.
+  public void add_footnote( string id, string description ) {
+    if( !_footnotes.has( id, description ) ) {
+      _footnotes.set( id, description );
+      _modified = true;
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Removes an existing footnote.
+  public void remove_footnote( string id ) {
+    if( _footnotes.unset( id ) ) {
+      _modified = true;
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Finds the given footnote and returns the locations of all
+  // matched instances.
+  public void find_footnote( string id, Array<ContentLocation> locations, bool multiple = true ) {
+
+    var search = "[^%s]".printf( id );
+
+    for( int i=0; i<_rows.length; i++ ) {
+      var row = _rows.index( i );
+      for( int j=0; j<row.size(); j++ ) {
+        var item = row.get_item( j ) as NoteItemMarkdown;
+        if( item != null ) {
+          var start = 0;
+          while( true ) {
+            var index = item.content.index_of( search, start );
+            if( index != -1 ) {
+              var str = item.content.slice( 0, index );
+              var chars = str.char_count() + 2;
+              locations.append_val( new ContentLocation( i, j, chars, id ) );
+              if( !multiple ) {
+                return;
+              }
+              start += search.length;
+            } else {
+              break;
+            }
+          }
+        }
+      }
+    }
+
+  }
+
+  //-------------------------------------------------------------
+  // Scrapes all of the Markdown panes and searches for footnote
+  // references.  Adds missing footnotes and removes unused footnotes.
+  // Returns true if something changed.
+  public bool update_all_footnotes() {
+
+    var changed = false;
+
+    try {
+
+      var re      = new Regex( """\[\^(.*?)\]""" );
+      var removed = new HashSet<string>();
+
+      _footnotes.map_iterator().foreach((k, v) => {
+        removed.add( k );
+        return( true );
+      });
+
+      for( int i=0; i<_rows.length; i++ ) {
+        var row = _rows.index( i );
+        for( int j=0; j<row.size(); j++ ) {
+          var item = row.get_item( j ) as NoteItemMarkdown;
+          if( item != null ) {
+            MatchInfo match;
+            int start = 0;
+            while( re.match_full( item.content, -1, start, 0, out match ) ) {
+              var id = match.fetch( 1 );
+              int end;
+              match.fetch_pos( 0, out start, out end );
+              removed.remove( id );
+              if( !_footnotes.has_key( id ) ) {
+                _footnotes.set( id, "" );
+                changed = true;
+              }
+              start = end;
+            }
+          }
+        }
+      }
+
+      removed.foreach((id) => {
+        _footnotes.unset( id );
+        changed = true;
+        return( true );
+      });
+
+    } catch( RegexError e ) {}
+
+    if( changed ) {
+      _modified = true;
+    }
+
+    return( changed );
+
   }
 
   //-------------------------------------------------------------
@@ -424,6 +561,18 @@ public class Note : Object {
     node->set_prop( "referred", string.joinv( ",", referred_list ) );
 
     node->add_child( _tags.save() );
+
+    if( _footnotes.size > 0 ) {
+      Xml.Node* footnotes = new Xml.Node( null, "footnotes" );
+      _footnotes.map_iterator().foreach((k, v) => {
+        Xml.Node* footnote = new Xml.Node( null, "footnote" );
+        footnote->set_prop( "id", k );
+        footnote->set_prop( "description", v );
+        footnotes->add_child( footnote );
+        return( true );
+      });
+      node->add_child( footnotes );
+    }
 
     // Save the note items
     for( int i=0; i<_rows.length; i++ ) {
@@ -486,8 +635,9 @@ public class Note : Object {
     for( Xml.Node* it = node->children; it != null; it = it->next ) {
       if( it->type == Xml.ElementType.ELEMENT_NODE ) {
         switch( it->name ) {
-          case "tags" :  _tags.load( it );  break;
-          case "rows" :  load_rows( it );    break;
+          case "tags"      :  _tags.load( it );  break;
+          case "rows"      :  load_rows( it );    break;
+          case "footnotes" :  load_footnotes( it );  break;
         }
       }
     }
@@ -501,6 +651,20 @@ public class Note : Object {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "row") ) {
         var row = new NoteItemRow.from_xml( this, it );
         _rows.append_val( row );
+      }
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Load the footnotes from XML format.
+  private void load_footnotes( Xml.Node* node ) {
+    for( Xml.Node* it = node->children; it != null; it = it->next ) {
+      if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "footnote") ) {
+        var k = it->get_prop( "id" );
+        var v = it->get_prop( "description" );
+        if( (k != null) && (v != null) ) {
+          _footnotes.set( k, v );
+        }
       }
     }
   }

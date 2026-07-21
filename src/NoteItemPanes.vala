@@ -125,8 +125,10 @@ public class NoteItemPanes : Box {
   public signal void item_removed( NoteItemPane pane );
   public signal void item_selected( NoteItemPane pane );
   public signal void note_link_clicked( string link );
+  public signal void footnote_clicked( string link );
   public signal void see( int y, int height );
   public signal void show_images( Array<NoteItem> items, int index );
+  public signal void update_all_footnotes();
 
   public signal void save();
 
@@ -171,6 +173,12 @@ public class NoteItemPanes : Box {
       _current_item.populate_extra_menu();
     }
 
+  }
+
+  //-------------------------------------------------------------
+  // Returns the text that is currently being edited.
+  public NoteItemPane get_current_pane() {
+    return( _current_item );
   }
 
   //-------------------------------------------------------------
@@ -354,6 +362,7 @@ public class NoteItemPanes : Box {
         if( _current_item != pane ) {
           if( _current_item != null ) {
             _current_item.clear_current();
+            update_all_footnotes();
           }
           _current_item = pane;
           item_selected( pane );
@@ -364,6 +373,10 @@ public class NoteItemPanes : Box {
 
     pane.note_link_clicked.connect((link) => {
       note_link_clicked( link );
+    });
+
+    pane.footnote_clicked.connect((link) => {
+      footnote_clicked( link );
     });
 
     pane.show_image.connect(() => {

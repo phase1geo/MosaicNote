@@ -55,7 +55,7 @@ public class NoteItemPaneAssets : NoteItemPane {
 
   //-------------------------------------------------------------
   // Grabs the focus of the note item at the specified position.
-  public override void grab_item_focus( TextCursorPlacement placement ) {
+  public override void grab_item_focus( TextCursorPlacement placement, int offset = 0 ) {
     if( assets_item.size() > 0 ) {
       _listbox.grab_focus();
       _listbox.select_row( _listbox.get_row_at_index( 0 ) );

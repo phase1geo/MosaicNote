@@ -65,7 +65,7 @@ public class NoteItemPaneTable : NoteItemPane {
 
   //-------------------------------------------------------------
   // Grabs the focus of the note item at the specified position.
-  public override void grab_item_focus( TextCursorPlacement placement ) {
+  public override void grab_item_focus( TextCursorPlacement placement, int offset = 0 ) {
     _table.grab_focus();
   }
 
@@ -914,7 +914,7 @@ public class NoteItemPaneTable : NoteItemPane {
   //-------------------------------------------------------------
   // Copies the table in Markdown format to the clipboard.
   protected override void copy_to_clipboard( Gdk.Clipboard clipboard ) {
-    clipboard.set_text( item.to_markdown( win.notebooks, false ) );
+    clipboard.set_text( item.to_markdown( win.notebooks, true, false ) );
   }
 
 }

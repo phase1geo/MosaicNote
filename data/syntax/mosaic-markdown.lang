@@ -54,6 +54,8 @@
     <style id="highlight"         name="Highlight"         map-to="def:note"/>
     <style id="backslash-escape"  name="Backslash Escape"  map-to="def:special-char"/>
     <style id="line-break"        name="Line Break"        map-to="def:note"/>
+    <style id="footnote-ref"      name="Footnote Reference" map-to="def:list-marker"/>
+    <style id="footnote"          name="Footnote"           map-to="def:list-marker"/>
   </styles>
 
   <definitions>
@@ -284,7 +286,7 @@
     <!-- Note: some assertions are used to differentiate reference link from
          link label. -->
     <context id="reference-link">
-      <match>(?&lt;!^ |^  |^   )\[(.*?)\]([ \t]?\[(.*?)\])?(?!:)</match>
+      <match>(?&lt;!^ |^  |^   )\[([^^]*?)\]([ \t]?\[(.*?)\])?(?!:)</match>
 
       <include>
         <context sub-pattern="1" style-ref="link-text"/>
@@ -300,7 +302,7 @@
     <context id="link-definition">
       <match extended="true">
         ^[ ]{0,3}             # Maximum 3 spaces at the beginning of the line.
-        \[(.+?)\]:            # Link label and colon.
+        \[([^^[^^]]+?)\]:            # Link label and colon.
         [ \t]*                # Optional spaces or tabs.
         (&lt;([^ \t]+?)&gt; | # URL with brackets.
         ([^ \t]+?))           # URL without brackets.
@@ -426,6 +428,26 @@
       </include>
     </context>
 
+    <!-- Examples: 
+         Lorem [^1] sit amet.
+         Here's a footnote reference [^info].
+    -->
+    <context id="footnote-ref">
+      <match>\[\^([a-zA-Z0-9_]+)\]([^:]|$)</match>
+
+      <include>
+        <context sub-pattern="1" style-ref="url"/>
+      </include>
+    </context>
+
+    <context id="footnote">
+      <match>^[ ]{0,3}\[\^([a-zA-Z0-9_]+)\]:\s</match>
+
+      <include>
+        <context sub-pattern="1" style-ref="url"/>
+      </include>
+    </context>
+
     <context id="markdown-syntax">
       <include>
         <context ref="atx-header1"/>
@@ -457,6 +479,8 @@
         <context ref="highlight"/>
         <context ref="backslash-escape"/>
         <context ref="line-break"/>
+        <context ref="footnote-ref"/>
+        <context ref="footnote"/>
       </include>
     </context>
 

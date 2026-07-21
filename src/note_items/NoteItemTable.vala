@@ -19,6 +19,8 @@
 * Authored by: Trevor Williams <phase1geo@gmail.com>
 */
 
+using Gee;
+
 public enum TableColumnType {
   TEXT,
   CHECKBOX,
@@ -562,7 +564,7 @@ public class NoteItemTable : NoteItem {
 
   //-------------------------------------------------------------
   // Converts the content to markdown text
-  public override string to_markdown( NotebookTree? notebooks, bool pandoc ) {
+  public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc ) {
     var str = create_markdown_header();
     if( _auto_number ) {
       for( int i=0; i<rows(); i++ ) {
@@ -578,8 +580,8 @@ public class NoteItemTable : NoteItem {
 
   //-------------------------------------------------------------
   // Exports the table and returns the generated Markdown.
-  public override string export( NotebookTree? notebooks, string assets_dir ) {
-    return( to_markdown( notebooks, false ) );
+  public override string export( NotebookTree? notebooks, bool include_footnotes, string assets_dir ) {
+    return( to_markdown( notebooks, include_footnotes, false ) );
   }
 
   //-------------------------------------------------------------

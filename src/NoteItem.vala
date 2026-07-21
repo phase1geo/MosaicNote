@@ -291,8 +291,14 @@ public class NoteItem : Object {
 	}
 
   //-------------------------------------------------------------
+  // Returns the footnotes for the associated note item.
+  protected Note get_note() {
+    return( row.note );
+  }
+
+  //-------------------------------------------------------------
 	// Returns the markdown text for this item
-	public virtual string to_markdown( NotebookTree? notebooks, bool pandoc ) {
+	public virtual string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc ) {
 		return( "" );
 	}
 
@@ -300,7 +306,7 @@ public class NoteItem : Object {
   // Returns the markdown text for this item converting any
   // file references to relative references and copy those
   // references assets to the "assets" directory.
-  public virtual string export( NotebookTree? notebooks, string assets_dir ) {
+  public virtual string export( NotebookTree? notebooks, bool include_footnotes, string assets_dir ) {
     return( "" );
   }
 

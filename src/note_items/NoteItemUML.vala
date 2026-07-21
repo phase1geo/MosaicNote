@@ -62,7 +62,7 @@ public class NoteItemUML : NoteItem {
 
   //-------------------------------------------------------------
   // Returns the Markdown version of this item
-  public override string to_markdown( NotebookTree? notebooks, bool pandoc ) {
+  public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc ) {
     var filename = get_resource_filename();
     return( format_for_width( "![%s](file://%s)".printf( description, filename ), filename, pandoc ) );
   }
@@ -70,7 +70,7 @@ public class NoteItemUML : NoteItem {
   //-------------------------------------------------------------
   // Exports the asset to the assets directory and returns the
   // Markdown string.
-  public override string export( NotebookTree? notebooks, string assets_dir ) {
+  public override string export( NotebookTree? notebooks, bool include_footnotes, string assets_dir ) {
     var asset = copy_asset( assets_dir, get_resource_filename() );
     return( "![%s](%s)".printf( description, asset ) );
   }

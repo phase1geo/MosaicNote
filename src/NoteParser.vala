@@ -357,11 +357,46 @@ public class NoteParser {
   // assign it to a new Markdown item content value and add the item
   // to the note.
   private void parse_markdown_markdown( Note note, string[] lines ) {
-    var text = string.joinv( "\n", lines ).strip();
+
+    string[] new_lines = {};
+
+    try {
+      MatchInfo matched;
+      var fn_re = new Regex( """^\[\^(.*?)\]:\s*(.*)$""" );
+      var sp_re = new Regex( """^ {4}(.*)$""" );
+      var id    = "";
+      var description = "";
+      var in_footnote = false;
+      foreach( var line in lines ) {
+        var stripped = line.strip();
+        if( in_footnote ) {
+          if( sp_re.match( line, 0, out matched ) ) {
+            description += "\n%s".printf( matched.fetch( 1 ).strip() );
+          } else {
+            in_footnote = false;
+            note.add_footnote( id, description );
+          }
+        }
+        if( !in_footnote ) {
+          if( fn_re.match( stripped, 0, out matched ) ) {
+            id          = matched.fetch( 1 );
+            description = matched.fetch( 2 );
+            in_footnote = true;
+          } else {
+            new_lines += line;
+          }
+        }
+      }
+      if( in_footnote ) {
+        note.add_footnote( id, description );
+      }
+    } catch( RegexError e ) {}
+
+    var text = string.joinv( "\n", new_lines ).strip();
     if( text != "" ) {
       var row = new NoteItemRow( note );
       var markdown_item = new NoteItemMarkdown( row ) {
-        content = string.joinv( "\n", lines ).strip()
+        content = text
       };
       row.add_item( markdown_item );
       note.add_row( row );

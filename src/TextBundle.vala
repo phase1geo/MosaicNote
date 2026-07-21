@@ -160,7 +160,7 @@ public class TextBundle {
   private void export_markdown_item( NoteItem item, string dirname, string assets_dir ) throws FileError {
 
     var filename = Path.build_filename( dirname, "text.md" );
-    var markdown = item.export( _win.notebooks, assets_dir );
+    var markdown = item.export( _win.notebooks, false, assets_dir );
 
     FileUtils.set_contents( filename, markdown );
 
