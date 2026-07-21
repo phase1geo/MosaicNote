@@ -19,6 +19,8 @@
 * Authored by: Trevor Williams <phase1geo@gmail.com>
 */
 
+using Gee;
+
 public class NoteItemAsset {
 
   private int    _id;
@@ -137,7 +139,7 @@ public class NoteItemAssets : NoteItem {
 
   //-------------------------------------------------------------
   // Returns the Markdown version of this item
-  public override string to_markdown( NotebookTree? notebooks, bool pandoc ) {
+  public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc ) {
     string[] str = {};
     for( int i=0; i<_assets.length; i++ ) {
       var asset = _assets.index( i );
@@ -148,8 +150,8 @@ public class NoteItemAssets : NoteItem {
 
   //-------------------------------------------------------------
   // Returns the Markdown version of this item.
-  public override string export( NotebookTree? notebooks, string assets_dir ) {
-    return( to_markdown( notebooks, false ) );
+  public override string export( NotebookTree? notebooks, bool include_footnotes, string assets_dir ) {
+    return( to_markdown( notebooks, include_footnotes, false ) );
   }
 
   //-------------------------------------------------------------

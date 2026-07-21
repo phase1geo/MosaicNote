@@ -341,7 +341,7 @@ public class Note : Object {
       var row = _rows.index( i );
       for( int j=0; j<row.size(); j++ ) {
         var item = row.get_item( j );
-        str += "%s\n\n".printf( item.to_markdown( notebooks, pandoc ) );
+        str += "%s\n\n".printf( item.to_markdown( notebooks, false, pandoc ) );
       }
     }
     _footnotes.map_iterator().foreach((k, v) => {
@@ -362,7 +362,7 @@ public class Note : Object {
       var row = _rows.index( i );
       for( int j=0; j<row.size(); j++ ) {
         var item = row.get_item( j );
-        str += "%s\n\n".printf( item.export( notebooks, assets_dir ) );
+        str += "%s\n\n".printf( item.export( notebooks, false, assets_dir ) );
       }
     }
     _footnotes.map_iterator().foreach((k, v) => {

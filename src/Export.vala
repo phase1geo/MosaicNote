@@ -182,7 +182,7 @@ public class Export {
               note.get_needed_languages( langs );
               do_export( win, export_type, file.get_path(), markdown, langs );
             } else if( item != null ) {
-              markdown = item.to_markdown( win.notebooks, true );
+              markdown = item.to_markdown( win.notebooks, true, true );
               if( item.item_type == NoteItemType.CODE ) {
                 langs.add( ((NoteItemCode)item).lang );
               }

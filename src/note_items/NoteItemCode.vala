@@ -19,6 +19,8 @@
 * Authored by: Trevor Williams <phase1geo@gmail.com>
 */
 
+using Gee;
+
 public class NoteItemCode : NoteItem {
 
   private string _lang        = "vala";  // TODO
@@ -81,7 +83,7 @@ public class NoteItemCode : NoteItem {
 
   //-------------------------------------------------------------
   // Returns the Markdown version of this item
-  public override string to_markdown( NotebookTree? notebooks, bool pandoc ) {
+  public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc ) {
     var str = "```%s\n%s\n```".printf( _lang, content );
     if( description != "" ) {
       str += "\n<center>%s</center>".printf( description );
@@ -91,8 +93,8 @@ public class NoteItemCode : NoteItem {
 
   //-------------------------------------------------------------
   // Exports the code block and returns the associated Markdown.
-  public override string export( NotebookTree? notebooks, string assets_dir ) {
-    return( to_markdown( notebooks, false ) );
+  public override string export( NotebookTree? notebooks, bool include_footnotes, string assets_dir ) {
+    return( to_markdown( notebooks, include_footnotes, false ) );
   }
 
   //-------------------------------------------------------------
