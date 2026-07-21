@@ -645,9 +645,9 @@ public class NotesPanel : Box {
   // Imports a note from the filesystem.
   private void action_import_note() {
     var nb = bn_is_node() ? ((NotebookTree.Node)_bn).get_notebook() : (Notebook)_bn;
-    Import.import_notes( _win, nb, (note, last) => {
+    Import.import_notes( _win, nb, (notebook, note, last) => {
       if( note != null ) {
-        nb.add_note( note );
+        notebook.add_note( note );
         _win.undo.add_item( new UndoNoteAdd( note ) );
         note_added( note );
       }
