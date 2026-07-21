@@ -339,18 +339,43 @@ public class NoteItemPanes : Box {
     });
 
     pane.move_item.connect((dir, record_undo) => {
-      var pos  = new NoteItemPos.from_pane( pane );
-      var curr = pos.get_pane( this );
-      if( dir == MoveDirection.UP ) {
-        _note.move_row( pos.row, (pos.row - 1) );
-        reorder_child_after( get_row( pos.row ), get_row( pos.row - 2 ) );
-      } else {
-        _note.move_row( pos.row, (pos.row + 1) );
-        reorder_child_after( get_row( pos.row ), get_row( pos.row + 1 ) );
+      var pos   = new NoteItemPos.from_pane( pane );
+      var curr  = pos.get_pane( this );
+      var moved = false;
+      switch( dir ) {
+        case MoveDirection.UP :
+          if( pos.row > 0 ) {
+            _note.move_row( pos.row, (pos.row - 1) );
+            reorder_child_after( get_row( pos.row ), get_row( pos.row - 2 ) );
+            moved = true;
+          }
+          break;
+        case MoveDirection.DOWN :
+          if( (pos.row + 1) < _note.rows() ) {
+            _note.move_row( pos.row, (pos.row + 1) );
+            reorder_child_after( get_row( pos.row ), get_row( pos.row + 1 ) );
+            moved = true;
+          }
+          break;
+        case MoveDirection.LEFT :
+          if( pos.col > 0 ) {
+            _note.get_row( pos.row ).move_item( pos.col, (pos.col - 1) );
+            get_row( pos.row ).move_pane( pos.col, true );
+            moved = true;
+          }
+          break;
+        case MoveDirection.RIGHT :
+          if( (pos.col + 1) < _note.get_row( pos.row ).size() ) {
+            _note.get_row( pos.row ).move_item( pos.col, (pos.col + 1) );
+            get_row( pos.row ).move_pane( pos.col, false );
+            moved = true;
+          }
+          break;
+        default :  break;
       }
       show_pane( curr );
-      if( record_undo ) {
-        _win.undo.add_item( new UndoItemMove( _note, pos.row, (dir == MoveDirection.UP) ) );
+      if( record_undo && moved ) {
+        _win.undo.add_item( new UndoItemMove( pane, dir ) );
       }
     });
 

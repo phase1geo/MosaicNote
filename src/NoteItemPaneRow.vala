@@ -110,6 +110,16 @@ public class NoteItemPaneRow : Box {
   }
 
   //-------------------------------------------------------------
+  // Move the pane to the new location.
+  public void move_pane( int col, bool left ) {
+    if( left ) {
+      _box.reorder_child_after( get_pane( col ), get_pane( col - 2 ) );
+    } else {
+      _box.reorder_child_after( get_pane( col ), get_pane( col + 1 ) );
+    }
+  }
+
+  //-------------------------------------------------------------
   // Returns the item at the given column
   public NoteItemPane? get_pane( int column ) {
     return( (NoteItemPane)Utils.get_child_at_index( _box, column ) );

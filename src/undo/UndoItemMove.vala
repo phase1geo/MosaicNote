@@ -23,33 +23,33 @@ using GLib;
 
 public class UndoItemMove : UndoItem {
 
-  private Note     _note;
-  private NoteItem _item;
-  private int      _index;
-  private bool     _move_up;
+  private NoteItemPane  _pane;
+  private MoveDirection _move_dir;
 
   //-------------------------------------------------------------
   // Default constructor
-  public UndoItemMove( Note note, int index, bool move_up ) {
+  public UndoItemMove( NoteItemPane pane, MoveDirection move_dir ) {
     base( _( "Move Block" ) );
-    _note    = note;
-    _item    = note.get_item( index, 0 );  // TODO
-    _index   = index;
-    _move_up = move_up;
+    _pane     = pane;
+    _move_dir = move_dir;
   }
 
   //-------------------------------------------------------------
   // Causes the stored item to be put into the before state
   public override void undo( MainWindow win ) {
-    var pane = win.note.items.get_pane( _index + (_move_up ? -1 : 1), 0 );
-    pane.move_item( (_move_up ? MoveDirection.DOWN : MoveDirection.UP), false );
+    switch( _move_dir ) {
+      case MoveDirection.UP    :  _pane.move_item( MoveDirection.DOWN,  false );  break;
+      case MoveDirection.DOWN  :  _pane.move_item( MoveDirection.UP,    false );  break;
+      case MoveDirection.LEFT  :  _pane.move_item( MoveDirection.RIGHT, false );  break;
+      case MoveDirection.RIGHT :  _pane.move_item( MoveDirection.LEFT,  false );  break;
+      default                  :  break;
+    }
   }
 
   //-------------------------------------------------------------
   // Causes the stored item to be put into the after state
   public override void redo( MainWindow win ) {
-    var pane = win.note.items.get_pane( _index, 0 );
-    pane.move_item( (_move_up ? MoveDirection.UP : MoveDirection.DOWN), false );
+    _pane.move_item( _move_dir, false );
   }
 
 }
