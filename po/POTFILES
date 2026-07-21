@@ -1,3 +1,4 @@
+src/About.vala
 src/Application.vala
 src/Export.vala
 src/gallery_items/GalleryItemCode.vala
@@ -49,6 +50,7 @@ src/undo/UndoItemTableInsRow.vala
 src/undo/UndoNoteAdd.vala
 src/undo/UndoNoteDelete.vala
 src/undo/UndoNoteMove.vala
+src/undo/UndoRowDelete.vala
 src/undo/UndoTagAdd.vala
 src/undo/UndoTagDelete.vala
 src/undo/UndoTextChanges.vala

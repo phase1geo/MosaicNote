@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 20242-206 (https://github.com/phase1geo/MosaicNote)
+* Copyright (c) 20242-2026 (https://github.com/phase1geo/MosaicNote)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public

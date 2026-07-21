@@ -3,13 +3,13 @@
   <schema path="/io/github/phase1geo/mosaic-note/" id="io.github.phase1geo.mosaic-note" gettext-domain="io.github.phase1geo.mosaic-note">
     <key name="window-w" type="i">
       <default>1000</default>
-      <summary>Most recent width of minder window</summary>
-      <description>Most recent width of minder window</description>
+      <summary>Most recent width of window</summary>
+      <description>Most recent width of window</description>
     </key>
     <key name="window-h" type="i">
       <default>800</default>
-      <summary>Most recent height of minder window</summary>
-      <description>Most recent height of minder window</description>
+      <summary>Most recent height of window</summary>
+      <description>Most recent height of window</description>
     </key>
     <key name="library-location" type="s">
       <default>"default"</default>
