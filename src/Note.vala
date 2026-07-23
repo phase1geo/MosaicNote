@@ -292,9 +292,11 @@ public class Note : Object {
   // Adds a new note item, adding a new row if one is needed.
   public void add_item( NoteItem item, int row_pos, int col_pos, bool add_to_row ) {
     NoteItemRow row;
+    stdout.printf( "In Note.add_item\n" );
     if( add_to_row && (_rows.length > 0) ) {
       row = _rows.index( (row_pos == -1) ? (int)(_rows.length - 1) : row_pos );
     } else {
+      stdout.printf( "Adding item to new row, row_pos: %d\n", row_pos );
       row = new NoteItemRow( this );
       add_row( row, row_pos );
     }
@@ -328,6 +330,44 @@ public class Note : Object {
     }
     _rows.remove_index( old_pos );
     _rows.insert_val( new_pos, row );
+  }
+
+  //-------------------------------------------------------------
+  // Plans the move operation, calculating the new_row, new_col and
+  // add_row inputs to the move_item operation.
+  public void plan_move( int old_row, int old_col, MoveDirection dir, out int new_row, out int new_col, out bool add_to_row ) {
+    var row = _rows.index( old_row );
+    stdout.printf( "In plane_move, old_row: %d, old_col: %d, dir: %s, row.size: %d\n",
+      old_row, old_col, dir.to_string(), row.size() );
+    if( dir.is_horizontal() ) {
+      new_row = old_row;
+      new_col = (dir == MoveDirection.LEFT) ? (old_col - 1) : (old_col + 1);
+      add_to_row = true;
+    } else if( row.size() == 1 ) {
+      stdout.printf( "Only pane in row\n" );
+      new_row = (dir == MoveDirection.UP) ? (old_row - 1) : (old_row + 1);
+      new_col = old_col;
+      add_to_row = true;
+    } else {
+      new_row = (dir == MoveDirection.UP) ? old_row : (old_row + 1);
+      new_col = 0;
+      add_to_row = false;
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Moves the item located at the old row/col to the new row/col
+  public void move_item( int old_row, int old_col, int new_row, int new_col, bool add_to_row ) {
+    stdout.printf( "In Note.move_item, old_row: %d, old_col: %d, new_row: %d, row_col: %d, add: %s\n",
+      old_row, old_col, new_row, new_col, add_to_row.to_string() );
+    var row = _rows.index( old_row );
+    if( (old_row != new_row) || !add_to_row ) {
+      var item = row.get_item( old_col );
+      delete_item( old_row, old_col );
+      add_item( item, new_row, new_col, add_to_row );
+    } else {
+      row.move_item( old_col, new_col );
+    }
   }
 
   //-------------------------------------------------------------

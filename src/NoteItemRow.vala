@@ -107,7 +107,7 @@ public class NoteItemRow : Object {
   // Adds the given item at the specified column.  If col is -1,
   // appends the column to the end.
   public void add_item( NoteItem item, int col = -1 ) {
-    if( col == -1 ) {
+    if( (col == -1) || (col >= _items.length) ) {
       _items.append_val( item );
     } else {
       _items.insert_val( (uint)col, item );

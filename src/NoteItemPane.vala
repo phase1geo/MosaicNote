@@ -49,7 +49,13 @@ public class NoteItemPane : Box {
     { "action_add_item_below",         action_add_item_below },
     { "action_add_item_left",          action_add_item_left },
     { "action_add_item_right",         action_add_item_right },
+    { "action_move_item_above",        action_move_item_above },
+    { "action_move_item_below",        action_move_item_below },
+    { "action_move_item_left",         action_move_item_left },
+    { "action_move_item_right",        action_move_item_right },
     { "action_delete_item",            action_delete_item },
+    { "action_move_row_above",         action_move_row_above },
+    { "action_move_row_below",         action_move_row_below },
     { "action_delete_row",             action_delete_row },
     { "action_export_item",            action_export_item, "i" },
     { "action_copy_item_to_clipboard", action_copy_item_to_clipboard },
@@ -76,7 +82,7 @@ public class NoteItemPane : Box {
   public signal void remove_item( bool forward, bool record_undo );
   public signal void remove_row( bool forward, bool record_undo );
   public signal void change_item( NoteItemType type );
-  public signal void move_item( MoveDirection dir, bool record_undo );
+  public signal void move_item( bool row, MoveDirection dir, bool record_undo );
   public signal void set_as_current( string msg = "" );
   public signal void note_link_clicked( string link );
   public signal void footnote_clicked( string link );
@@ -341,11 +347,13 @@ public class NoteItemPane : Box {
           break;
         case Gdk.Key.Up   :
         case Gdk.Key.Left :
+          stdout.printf( "Keying UP\n" );
           var pos = new NoteItemPos.from_pane( this );
           var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( this ), (keyval == Gdk.Key.Up) );
           if( prev_pane != null ) {
+            stdout.printf( "Prev_pane found, control: %s, shift: %s\n", control.to_string(), shift.to_string() );
             if( control ) {
-              move_item( ((keyval == Gdk.Key.Up) ? MoveDirection.UP : MoveDirection.LEFT), true );
+              move_item( shift, ((keyval == Gdk.Key.Up) ? MoveDirection.UP : MoveDirection.LEFT), true );
               return( true );
             } else if( (keyval != Gdk.Key.Up) || !handled_up() ) {
               var text = get_text();
@@ -367,7 +375,7 @@ public class NoteItemPane : Box {
           var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( this ), (keyval == Gdk.Key.Down) );
           if( next_pane != null ) {
             if( control ) {
-              move_item( ((keyval == Gdk.Key.Down) ? MoveDirection.DOWN : MoveDirection.RIGHT), true );
+              move_item( shift, ((keyval == Gdk.Key.Down) ? MoveDirection.DOWN : MoveDirection.RIGHT), true );
               return( true );
             } else if( (keyval != Gdk.Key.Down) || !handled_down() ) {
               var text = get_text();
@@ -575,15 +583,36 @@ public class NoteItemPane : Box {
   // panel data (if needed).
   private void create_bar() {
 
-    var add_menu = new GLib.Menu();
-    add_menu.append( _( "Add Block Above" ),    "item.action_add_item_above" );
-    add_menu.append( _( "Add Block Below" ),    "item.action_add_item_below" );
-    add_menu.append( _( "Add Block To Left" ),  "item.action_add_item_left" );
-    add_menu.append( _( "Add Block To Right" ), "item.action_add_item_right" );
+    var add_item_menu = new GLib.Menu();
+    add_item_menu.append( _( "Above" ),    "item.action_add_item_above" );
+    add_item_menu.append( _( "Below" ),    "item.action_add_item_below" );
+    add_item_menu.append( _( "To Left" ),  "item.action_add_item_left" );
+    add_item_menu.append( _( "To Right" ), "item.action_add_item_right" );
 
-    var del_menu = new GLib.Menu();
-    del_menu.append( _( "Delete Block" ), "item.action_delete_item" );
-    del_menu.append( _( "Delete Row" ),   "item.action_delete_row" );
+    var move_item_menu = new GLib.Menu();
+    move_item_menu.append( _( "Above" ),    "item.action_move_item_above" );
+    move_item_menu.append( _( "Below" ),    "item.action_move_item_below" );
+    move_item_menu.append( _( "To Left" ),  "item.action_move_item_left" );
+    move_item_menu.append( _( "To Right" ), "item.action_move_item_right" );
+
+    var del_item_menu = new GLib.Menu();
+    del_item_menu.append( _( "Delete Block" ), "item.action_delete_item" );
+
+    var item_menu = new GLib.Menu();
+    item_menu.append_submenu( _( "Add Block" ), add_item_menu );
+    item_menu.append_submenu( _( "Move Block" ), move_item_menu );
+    item_menu.append_section( null, del_item_menu );
+
+    var move_row_menu = new GLib.Menu();
+    move_row_menu.append( _( "Above" ), "item.action_move_row_above" );
+    move_row_menu.append( _( "Below" ), "item.action_move_row_below" );
+
+    var del_row_menu = new GLib.Menu();
+    del_row_menu.append( _( "Delete Row" ), "item.action_delete_row" );
+
+    var row_menu = new GLib.Menu();
+    row_menu.append_submenu( _( "Move Row" ), move_row_menu );
+    row_menu.append_section( null, del_row_menu );
 
     var export_menu = new GLib.Menu();
     for( int i=0; i<ExportType.NUM; i++ ) {
@@ -596,8 +625,8 @@ public class NoteItemPane : Box {
     var clip_menu = create_clipboard_menu();
 
     var menu = new GLib.Menu();
-    menu.append_section( null, add_menu );
-    menu.append_section( null, del_menu );
+    menu.append_section( null, item_menu );
+    menu.append_section( null, row_menu );
     menu.append_section( null, exp_menu );
 
     if( clip_menu != null ) {
@@ -820,11 +849,46 @@ public class NoteItemPane : Box {
   }
 
   //-------------------------------------------------------------
+  // Moves the current item to the row above.
+  private void action_move_item_above() {
+    move_item( false, MoveDirection.UP, true );
+  }
+
+  //-------------------------------------------------------------
+  // Moves the current item to the row below.
+  private void action_move_item_below() {
+    move_item( false, MoveDirection.DOWN, true );
+  }
+
+  //-------------------------------------------------------------
+  // Moves the current item to the left in the current row.
+  private void action_move_item_left() {
+    move_item( false, MoveDirection.LEFT, true );
+  }
+
+  //-------------------------------------------------------------
+  // Moves the current item to the right in the current row.
+  private void action_move_item_right() {
+    move_item( false, MoveDirection.RIGHT, true );
+  }
+
+  //-------------------------------------------------------------
   // Removes the current item
   private void action_delete_item() {
     remove_item( true, true );
   }
 
+  //-------------------------------------------------------------
+  // Moves the current row up one row.
+  private void action_move_row_above() {
+    move_item( true, MoveDirection.UP, true );
+  }
+
+  //-------------------------------------------------------------
+  // Moves the current row down one row.
+  private void action_move_row_below() {
+    move_item( true, MoveDirection.DOWN, true );
+  }
   //-------------------------------------------------------------
   // Removes the current row.
   private void action_delete_row() {

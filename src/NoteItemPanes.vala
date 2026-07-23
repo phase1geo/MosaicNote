@@ -76,21 +76,21 @@ public class NoteItemPos {
     return( (_valid == other._valid) && (_row == other._row) && (_col == other._col) );
   }
   public NoteItemPane? get_next_pane( Widget panes, bool vertical = true ) {
-    var pane_row = (NoteItemPaneRow)Utils.get_child_at_index( panes, _row );
-    if( (_col + 1) < pane_row.size ) {
-      return( vertical ? null : pane_row.get_pane( _col + 1 ) );
+    if( vertical ) {
+      var pane_row = (NoteItemPaneRow)Utils.get_child_at_index( panes, (_row + 1) );
+      return( (pane_row == null) ? null : pane_row.get_pane( _col ) );
     } else {
-      pane_row = (NoteItemPaneRow)Utils.get_child_at_index( panes, (_row + 1) );
-      return( (vertical && (pane_row != null)) ? pane_row.get_pane( 0 ) : null );
+      var pane_row = (NoteItemPaneRow)Utils.get_child_at_index( panes, _row );
+      return( (pane_row == null) ? null : pane_row.get_pane( _col + 1 ) );
     }
   }
   public NoteItemPane? get_prev_pane( Widget panes, bool vertical = true ) {
-    if( (_col - 1) >= 0 ) {
-      var pane_row = (NoteItemPaneRow)Utils.get_child_at_index( panes, _row );
-      return( vertical ? null : pane_row.get_pane( _col - 1 ) );
-    } else {
+    if( vertical ) {
       var pane_row = (NoteItemPaneRow)Utils.get_child_at_index( panes, (_row - 1) );
-      return( (vertical && (pane_row != null)) ? pane_row.get_pane( pane_row.size - 1 ) : null );
+      return( (pane_row == null) ? null : pane_row.get_pane( _col ) );
+    } else {
+      var pane_row = (NoteItemPaneRow)Utils.get_child_at_index( panes, _row );
+      return( (pane_row == null) ? null : pane_row.get_pane( _col - 1 ) );
     }
   }
   public static Widget row_box_from_pane( Widget pane ) {
@@ -107,7 +107,25 @@ public enum MoveDirection {
   UP,
   DOWN,
   LEFT,
-  RIGHT
+  RIGHT;
+
+  public string to_string() {
+    switch( this ) {
+      case UP    :  return( "up" );
+      case DOWN  :  return( "down" );
+      case LEFT  :  return( "left" );
+      case RIGHT :  return( "right" );
+      default    :  assert_not_reached();
+    }
+  }
+
+  public bool is_vertical() {
+    return( (this == UP) || (this == DOWN) );
+  }
+
+  public bool is_horizontal() {
+    return( (this == LEFT) || (this == RIGHT) );
+  }
 }
 
 //-------------------------------------------------------------
@@ -338,45 +356,29 @@ public class NoteItemPanes : Box {
       set_current_item_to_type( type );
     });
 
-    pane.move_item.connect((dir, record_undo) => {
+    pane.move_item.connect((move_row, dir, record_undo) => {
       var pos   = new NoteItemPos.from_pane( pane );
-      var curr  = pos.get_pane( this );
       var moved = false;
-      switch( dir ) {
-        case MoveDirection.UP :
-          if( pos.row > 0 ) {
-            _note.move_row( pos.row, (pos.row - 1) );
-            reorder_child_after( get_row( pos.row ), get_row( pos.row - 2 ) );
-            moved = true;
-          }
-          break;
-        case MoveDirection.DOWN :
-          if( (pos.row + 1) < _note.rows() ) {
-            _note.move_row( pos.row, (pos.row + 1) );
-            reorder_child_after( get_row( pos.row ), get_row( pos.row + 1 ) );
-            moved = true;
-          }
-          break;
-        case MoveDirection.LEFT :
-          if( pos.col > 0 ) {
-            _note.get_row( pos.row ).move_item( pos.col, (pos.col - 1) );
-            get_row( pos.row ).move_pane( pos.col, true );
-            moved = true;
-          }
-          break;
-        case MoveDirection.RIGHT :
-          if( (pos.col + 1) < _note.get_row( pos.row ).size() ) {
-            _note.get_row( pos.row ).move_item( pos.col, (pos.col + 1) );
-            get_row( pos.row ).move_pane( pos.col, false );
-            moved = true;
-          }
-          break;
-        default :  break;
+
+      stdout.printf( "In move_item, move_row: %s, dir: %s, record: %s\n", move_row.to_string(), dir.to_string(), record_undo.to_string() );
+
+      // If we need to move the entire current row, do that now
+      if( move_row ) {
+        moved = move_item_row( pos.row, dir );
+
+      // If we need to move just the current item, do that now
+      } else {
+        moved = move_item( pos.row, pos.col, dir );
       }
-      show_pane( curr );
+
+      // Make sure the pane is in view
+      show_pane( pane );
+
+      // Record the move
       if( record_undo && moved ) {
-        _win.undo.add_item( new UndoItemMove( pane, dir ) );
+        _win.undo.add_item( new UndoItemMove( pane, move_row, dir ) );
       }
+
     });
 
     pane.set_as_current.connect((msg) => {
@@ -442,6 +444,68 @@ public class NoteItemPanes : Box {
     }
 
     return( pane );
+
+  }
+
+  //-------------------------------------------------------------
+  // Moves the given item's row up or down (based on direction).
+  private bool move_item_row( int row, MoveDirection dir ) {
+
+    // Move the given row up, if possible
+    if( (dir == MoveDirection.UP) && (row > 0) ) {
+      _note.move_row( row, (row - 1) );
+      reorder_child_after( get_row( row ), get_row( row - 2 ) );
+      return( true );
+
+    // Move the given row down, if possible
+    } else if( (dir == MoveDirection.DOWN) && ((row + 1) < _note.rows()) ) {
+      _note.move_row( row, (row + 1) );
+      reorder_child_after( get_row( row ), get_row( row + 1 ) );
+      return( true );
+    }
+
+    return( false );
+
+  }
+
+  //-------------------------------------------------------------
+  // Moves the current item to the location determined by dir.
+  private bool move_item( int row, int col, MoveDirection dir ) {
+
+    int new_row, new_col;
+    bool add_to_row;
+
+    // Figure out how to make the move
+    _note.plan_move( row, col, dir, out new_row, out new_col, out add_to_row );
+
+    stdout.printf( "In move_item, row: %d, col: %d, dir: %s, new_row: %d, row_col: %d, add: %s\n",
+      row, col, dir.to_string(), new_row, new_col, add_to_row.to_string() );
+
+    // Move the note item
+    _note.move_item( row, col, new_row, new_col, add_to_row );
+
+    // Move the pane to the new row, if necessary
+    if( (row != new_row) || !add_to_row ) {
+      var pane = get_pane( row, col );
+      get_row( row ).delete_pane( col );
+      if( get_row( row ).size == 0 ) {
+        remove( get_row( row ) );
+      }
+      if( !add_to_row ) {
+        var row_pane = new NoteItemPaneRow( _note.get_row( new_row ) );
+        insert_child_after( row_pane, get_row( new_row - 1 ) );
+        _rows++;
+      }
+      get_row( new_row ).add_pane( pane, new_col );
+      return( true );
+
+    // Move the pane within the current row, if necessary
+    } else if( col != new_col ) {
+      get_row( row ).move_pane( col, (dir == MoveDirection.LEFT) );
+      return( true );
+    }
+
+    return( false );
 
   }
 

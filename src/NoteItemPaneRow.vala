@@ -88,7 +88,7 @@ public class NoteItemPaneRow : Box {
   //-------------------------------------------------------------
   // Populates this row with the given note.
   public void add_pane( NoteItemPane pane, int column = -1 ) {
-    if( column == -1 ) {
+    if( (column == -1) || (column >= _size) ) {
       _box.append( pane );
     } else if( column == 0 ) {
       _box.prepend( pane );

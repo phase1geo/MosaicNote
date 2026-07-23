@@ -24,13 +24,15 @@ using GLib;
 public class UndoItemMove : UndoItem {
 
   private NoteItemPane  _pane;
+  private bool          _move_row;
   private MoveDirection _move_dir;
 
   //-------------------------------------------------------------
   // Default constructor
-  public UndoItemMove( NoteItemPane pane, MoveDirection move_dir ) {
+  public UndoItemMove( NoteItemPane pane, bool move_row, MoveDirection move_dir ) {
     base( _( "Move Block" ) );
     _pane     = pane;
+    _move_row = move_row;
     _move_dir = move_dir;
   }
 
@@ -38,10 +40,10 @@ public class UndoItemMove : UndoItem {
   // Causes the stored item to be put into the before state
   public override void undo( MainWindow win ) {
     switch( _move_dir ) {
-      case MoveDirection.UP    :  _pane.move_item( MoveDirection.DOWN,  false );  break;
-      case MoveDirection.DOWN  :  _pane.move_item( MoveDirection.UP,    false );  break;
-      case MoveDirection.LEFT  :  _pane.move_item( MoveDirection.RIGHT, false );  break;
-      case MoveDirection.RIGHT :  _pane.move_item( MoveDirection.LEFT,  false );  break;
+      case MoveDirection.UP    :  _pane.move_item( _move_row, MoveDirection.DOWN,  false );  break;
+      case MoveDirection.DOWN  :  _pane.move_item( _move_row, MoveDirection.UP,    false );  break;
+      case MoveDirection.LEFT  :  _pane.move_item( _move_row, MoveDirection.RIGHT, false );  break;
+      case MoveDirection.RIGHT :  _pane.move_item( _move_row, MoveDirection.LEFT,  false );  break;
       default                  :  break;
     }
   }
@@ -49,7 +51,7 @@ public class UndoItemMove : UndoItem {
   //-------------------------------------------------------------
   // Causes the stored item to be put into the after state
   public override void redo( MainWindow win ) {
-    _pane.move_item( _move_dir, false );
+    _pane.move_item( _move_row, _move_dir, false );
   }
 
 }
