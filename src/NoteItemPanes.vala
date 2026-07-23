@@ -374,6 +374,11 @@ public class NoteItemPanes : Box {
       // Make sure the pane is in view
       show_pane( pane );
 
+      // Give the pane focus again if it was moved
+      if( moved ) {
+        pane.grab_item_focus( TextCursorPlacement.NO_CHANGE );
+      }
+
       // Record the move
       if( record_undo && moved ) {
         _win.undo.add_item( new UndoItemMove( pane, move_row, dir ) );

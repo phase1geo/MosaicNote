@@ -312,13 +312,16 @@ public class Note : Object {
 
   //-------------------------------------------------------------
   // Deletes a single item from the note.  Removes the associated
-  // row if it is the last item in the row.
-  public void delete_item( int row_pos, int col_pos ) {
+  // row if it is the last item in the row.  Returns true if the
+  // row is also deleted.
+  public bool delete_item( int row_pos, int col_pos ) {
     var row = _rows.index( row_pos );
     row.delete_item( col_pos );
     if( row.size() == 0 ) {
       delete_row( row_pos );
+      return( true );
     }
+    return( false );
   }
 
   //-------------------------------------------------------------
@@ -363,7 +366,9 @@ public class Note : Object {
     var row = _rows.index( old_row );
     if( (old_row != new_row) || !add_to_row ) {
       var item = row.get_item( old_col );
-      delete_item( old_row, old_col );
+      if( delete_item( old_row, old_col ) ) {
+        new_row--;
+      }
       add_item( item, new_row, new_col, add_to_row );
     } else {
       row.move_item( old_col, new_col );
