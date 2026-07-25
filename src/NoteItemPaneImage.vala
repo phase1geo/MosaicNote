@@ -83,7 +83,7 @@ public class NoteItemPaneImage : NoteItemPane {
   }
 
   //-------------------------------------------------------------
-  // 
+  // Perform the screenshot.
   private async void do_screenshot_portal() {
 
     // We will hide the MosaicNote window to capture the screenshot

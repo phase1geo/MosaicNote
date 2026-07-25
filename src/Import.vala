@@ -142,4 +142,89 @@ public class Import {
 
   }
 
+  //-------------------------------------------------------------
+  // Creates a new note from the given filename.  We will figure out
+  // what the filename type is and create the note to best match.
+  // 
+  // Image file:     Create a note with an image block
+  // Markdown file:  Create a note from the Markdown
+  // Text file:      Create a note with text in a single Markdown block
+  // Binary file:    Create a note with an assets block.
+  public static void do_file_import( Notebook notebook, File file, ImportNoteCallback? callback = null ) {
+
+    stdout.printf( "In do_file_import, file: %s (%s)\n", file.get_path(), file.get_uri() );
+
+    // If we have a Markdown file, parse it and add it as a fully featured note.
+    var ext = Utils.get_extension( file.get_path() );
+    if( (ext == ".md") || (ext == ".markdown") ) {
+      do_note_import( notebook, file.get_path(), callback, true );
+      return;
+    }
+
+    // Create the note and a note row
+    var note = new Note( notebook, false );
+    var row  = new NoteItemRow( note );
+    note.add_row( row );
+
+    // If the file is a supported image, add an image block to the note.
+    if( Utils.is_uri_supported_image( file.get_uri() ) ) {
+      var item = new NoteItemImage( row ) {
+        uri = file.get_uri()
+      };
+      row.add_item( item );
+
+    // Otherwise, add the file as a single Markdown block (if it is a code segment, it can be easily changed)
+    } else {
+      try {
+        string contents = "";
+        if( FileUtils.get_contents( file.get_path(), out contents ) ) {
+          if( contents.validate( 2 ) ) {
+            var item = new NoteItemMarkdown( row ) {
+              content = contents
+            };
+            row.add_item( item );
+          } else {
+            var item = new NoteItemAssets( row );
+            item.add_asset( file.get_uri() );
+            row.add_item( item );
+          }
+        } else {
+          return;
+        }
+      } catch( FileError e ) {
+        return;
+      }
+    }
+
+    // Finally, perform the callback
+    if( callback != null ) {
+      callback( notebook, note, true );
+    }
+
+  }
+
+  //-------------------------------------------------------------
+  // Creates a new note from the given text string.
+  public static void do_text_import( Notebook notebook, string text, ImportNoteCallback? callback = null ) {
+
+    if( FileUtils.test( text.chomp(), FileTest.EXISTS ) && text.has_prefix( "/" ) ) {
+      if( text.has_prefix( "file://" ) ) {
+        var file = File.new_for_uri( text );
+        do_file_import( notebook, file, callback );
+      } else {
+        var file = File.new_for_path( text );
+        do_file_import( notebook, file, callback );
+      }
+      return;
+    }
+
+    var parser = new NoteParser();
+    var note   = parser.parse_markdown( notebook, text );
+
+    if( callback != null ) {
+      callback( notebook, note, true );
+    }
+
+  }
+
 }

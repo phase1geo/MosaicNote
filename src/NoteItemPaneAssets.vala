@@ -69,7 +69,7 @@ public class NoteItemPaneAssets : NoteItemPane {
   // Adds the given asset to the listbox.
   public void add_asset( string uri, bool add_to_item, int insert_index = -1 ) {
 
-    var label = new Label( Filename.display_basename( uri ) ) {
+    var label = new Label( Filename.display_basename( uri ).replace( "%20", " " ) ) {
       halign = Align.START,
       hexpand = true,
       ellipsize = Pango.EllipsizeMode.MIDDLE,

@@ -50,6 +50,7 @@ public class Sidebar : Box {
   private int            _notebook_add_pos = -1;
   private int            _smart_add_pos = -1;
   private BaseNotebook?  _selected_notebook = null;
+  private Note?          _dropped_note = null;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_add_sub_notebook",       action_add_sub_notebook, "i" },
@@ -180,6 +181,28 @@ public class Sidebar : Box {
       direction     = ArrowType.UP,
       menu_model    = menu
   	};
+
+    var add_drop = new DropTarget( Type.OBJECT, Gdk.DragAction.MOVE );
+    _add_nb_btn.add_controller( add_drop );
+
+    add_drop.enter.connect((x, y) => {
+      _add_nb_btn.add_css_class( "drop-area" );
+      return( Gdk.DragAction.MOVE );
+    });
+
+    add_drop.leave.connect(() => {
+      _add_nb_btn.remove_css_class( "drop-area" );
+    });
+
+    add_drop.drop.connect((val, x, y) => {
+      var note = (val.get_object() as Note);
+      if( note != null ) {
+        _dropped_note = note;
+        add_requested( _notebook_add_pos );
+      }
+      _add_nb_btn.remove_css_class( "drop-area" );
+      return( false );
+    });
 
   	var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
   		valign = Align.END,
@@ -511,8 +534,12 @@ public class Sidebar : Box {
             var parent = (NotebookTree.Node)row.get_item();
             parent.add_notebook( new_nb );
           }
+          if( _dropped_note != null ) {
+            move_note_to_notebook( _dropped_note, new_nb );
+          }
         }
         stack.visible = false;
+        _dropped_note = null;
       } else {
         if( entry.text.chomp() != "" ) {
           var new_nb = new SmartNotebook( entry.text, SmartNotebookType.USER, _win.notebooks );
@@ -527,9 +554,13 @@ public class Sidebar : Box {
       var row = (TreeListRow)item.get_item();
       var nb  = (BaseNotebook)row.get_item();
       if( keyval == Gdk.Key.Escape ) {
-        stack.visible_child_name = "display";
-        if( nb.name == "" ) {
+        if( (nb as HiddenNotebook) != null ) {
           stack.visible = false;
+        } else {
+          stack.visible_child_name = "display";
+          if( nb.name == "" ) {
+            stack.visible = false;
+          }
         }
       }
     });

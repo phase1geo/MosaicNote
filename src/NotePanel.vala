@@ -294,23 +294,17 @@ public class NotePanel : Box {
     _title.add_css_class( "note-title" );
     _title.add_css_class( "themed" );
 
+    _title.activate.connect(() => {
+      update_title();
+    });
+
     handle_nonitem_focus( _title );
 
     var title_focus = new EventControllerFocus();
     _title.add_controller( title_focus );
 
     title_focus.leave.connect(() => {
-      Idle.add(() => {
-        if( _note != null ) {
-          if( _note.title != _title.text ) {
-            _win.undo.add_item( new UndoTitleChange( _note ) );
-            _note.title = _title.text;
-            note_saved( _note, null );
-          }
-        }
-        _content.get_pane( 0, 0 ).grab_item_focus( TextCursorPlacement.START );
-        return( false );
-      });
+      update_title();
     });
 
     var separator1 = new Separator( Orientation.HORIZONTAL );
@@ -401,6 +395,22 @@ public class NotePanel : Box {
     return( box );
 
 	}
+
+  //-------------------------------------------------------------
+  // Updates the title for the note.
+  private void update_title() {
+    Idle.add(() => {
+      if( _note != null ) {
+        if( _note.title != _title.text ) {
+          _win.undo.add_item( new UndoTitleChange( _note ) );
+          _note.title = _title.text;
+          note_saved( _note, null );
+        }
+      }
+      _content.get_pane( 0, 0 ).grab_item_focus( TextCursorPlacement.START );
+      return( false );
+    });
+  }
 
   //-------------------------------------------------------------
   // Creates the list of footnotes and descriptions.

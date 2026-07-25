@@ -281,6 +281,18 @@ public class NotesPanel : Box {
       add_new_note_to_current_notebook();
 		});
 
+    var add_drop_file = new DropTarget( typeof(File), Gdk.DragAction.COPY );
+    _add.add_controller( add_drop_file );
+    add_drop_file.enter.connect( add_drop_enter );
+    add_drop_file.leave.connect( add_drop_leave );
+    add_drop_file.drop.connect( add_drop_file_dropped );
+
+    var add_drop_text = new DropTarget( typeof(string), Gdk.DragAction.COPY );
+    _add.add_controller( add_drop_text );
+    add_drop_text.enter.connect( add_drop_enter );
+    add_drop_text.leave.connect( add_drop_leave );
+    add_drop_text.drop.connect( add_drop_text_dropped );
+
     // Create sorting menu
     var sort_menu = create_sort_menu( _actions );
 
@@ -312,6 +324,57 @@ public class NotesPanel : Box {
     insert_action_group( "notes", _actions );
 
 	}
+
+  //-------------------------------------------------------------
+  // Called whenever something is dragged over the add button.
+  private Gdk.DragAction add_drop_enter( double x, double y ) {
+    _add.add_css_class( "drop-area" );
+    return( Gdk.DragAction.COPY );
+  }
+
+  //-------------------------------------------------------------
+  // Called whenever a drag leaves the add button.
+  private void add_drop_leave() {
+    _add.remove_css_class( "drop-area" );
+  }
+
+  //-------------------------------------------------------------
+  // Handles a drop operation of a file over the add button.
+  private bool add_drop_file_dropped( Value val, double x, double y ) {
+    var file = (val as File);
+    var nb   = bn_is_node() ? ((NotebookTree.Node)_bn).get_notebook() : (Notebook)_bn;
+    if( file != null ) {
+      Import.do_file_import( nb, file, (notebook, note, last) => {
+        if( note != null ) {
+          notebook.add_note( note );
+          _win.undo.add_item( new UndoNoteAdd( note ) );
+          note_added( note );
+        }
+      });
+      add_drop_leave();
+      return( true );
+    }
+    return( false );
+  }
+
+  //-------------------------------------------------------------
+  // Handles a drop operation of a file over the add button.
+  private bool add_drop_text_dropped( Value val, double x, double y ) {
+    var text = (val as string);
+    var nb   = bn_is_node() ? ((NotebookTree.Node)_bn).get_notebook() : (Notebook)_bn;
+    if( text != null ) {
+      Import.do_text_import( nb, text, (notebook, note, last) => {
+        if( note != null ) {
+          notebook.add_note( note );
+          _win.undo.add_item( new UndoNoteAdd( note ) );
+          note_added( note );
+        }
+      });
+      add_drop_leave();
+      return( true );
+    }
+    return( false );
+  }
 
   //-------------------------------------------------------------
   // Returns the index of the note with the given ID in the sorted
