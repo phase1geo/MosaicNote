@@ -152,11 +152,9 @@ public class Import {
   // Binary file:    Create a note with an assets block.
   public static void do_file_import( Notebook notebook, File file, ImportNoteCallback? callback = null ) {
 
-    stdout.printf( "In do_file_import, file: %s (%s)\n", file.get_path(), file.get_uri() );
-
     // If we have a Markdown file, parse it and add it as a fully featured note.
     var ext = Utils.get_extension( file.get_path() );
-    if( (ext == ".md") || (ext == ".markdown") ) {
+    if( (ext == "md") || (ext == "markdown") ) {
       do_note_import( notebook, file.get_path(), callback, true );
       return;
     }
