@@ -90,18 +90,67 @@ public class Utils {
     return( parts[parts.length - 1] );
   }
 
+  /*
   //-------------------------------------------------------------
-  // Checks to see if the given URI image extension is supported
-  public static bool is_uri_supported_image( string uri ) {
-    var uri_ext = get_extension( uri ).down();
-    foreach( var format in Pixbuf.get_formats() ) {
+  // Retrieves the image src string from the given HTML string.
+  private static string? get_image_src( string html ) {
+    Html.Doc* doc = Html.Doc.read_memory( html.data, (int)html.length, null, null, Html.ParserOption.NOERROR | Html.ParserOption.NOWARNING );
+    if( doc == null ) {
+      return null;
+    }
+    Xml.XPath.Context* ctx = new Xml.XPath.Context( doc );
+    Xml.XPath.Object* obj = ctx->eval_expression( "//img/@src" );
+    string? src = null;
+    if( (obj != null) && (obj->nodesetval != null) && (obj->nodesetval->nodeNr > 0) ) {
+      Xml.Node* node = obj->nodesetval->nodeTab[0];
+      src = node->get_content();
+    }
+    delete obj;
+    delete ctx;
+    delete doc;
+    return src;
+  }
+
+  //-------------------------------------------------------------
+  // Checks the given URI extension to look for an image match.
+  private static bool is_uri_supported_image_by_extension( string uri ) {
+    var uri_ext = get_extension( uri );   
+    foreach ( var format in Pixbuf.get_formats() ) {
       foreach( var ext in format.get_extensions() ) {
-        if( ext == uri_ext ) {
+        if( uri_ext == ext ) {
           return( true );
         }
       }
     }
     return( false );
+  }
+  */
+
+  //-------------------------------------------------------------
+  // Checks to see if the given URI image extension is supported
+  public static bool is_uri_supported_image( string uri ) {
+
+    var file = File.new_for_uri( uri );
+
+    try {
+      var info  = file.query_info( FileAttribute.STANDARD_CONTENT_TYPE, FileQueryInfoFlags.NONE );
+      var uri_mtype = info.get_content_type();
+      if( uri_mtype != null ) {
+        if( uri_mtype == "text/html" ) {
+          // var src = get_image_src( string html );
+        }
+        foreach( var format in Pixbuf.get_formats() ) {
+          foreach( var mtype in format.get_mime_types() ) {
+            if( mtype == uri_mtype ) {
+              return( true );
+            }
+          }
+        }
+      }
+    } catch( Error e ) {}
+
+    return( false );
+
   }
 
   //-------------------------------------------------------------

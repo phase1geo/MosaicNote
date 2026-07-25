@@ -152,13 +152,13 @@ public class Import {
   // Binary file:    Create a note with an assets block.
   public static void do_file_import( Notebook notebook, File file, ImportNoteCallback? callback = null ) {
 
-    stdout.printf( "In do_file_import, file: %s (%s)\n", file.get_path(), file.get_uri() );
-
     // If we have a Markdown file, parse it and add it as a fully featured note.
-    var ext = Utils.get_extension( file.get_path() );
-    if( (ext == ".md") || (ext == ".markdown") ) {
-      do_note_import( notebook, file.get_path(), callback, true );
-      return;
+    if( file.get_path() != null ) {
+      var ext = Utils.get_extension( file.get_path() );
+      if( (ext == ".md") || (ext == ".markdown") ) {
+        do_note_import( notebook, file.get_path(), callback, true );
+        return;
+      }
     }
 
     // Create the note and a note row
@@ -207,8 +207,10 @@ public class Import {
   // Creates a new note from the given text string.
   public static void do_text_import( Notebook notebook, string text, ImportNoteCallback? callback = null ) {
 
-    if( FileUtils.test( text.chomp(), FileTest.EXISTS ) && text.has_prefix( "/" ) ) {
-      if( text.has_prefix( "file://" ) ) {
+    var url = Utils.is_url( text );
+
+    if( (FileUtils.test( text.chomp(), FileTest.EXISTS ) && text.has_prefix( "/" )) || url ) {
+      if( text.has_prefix( "file://" ) || url ) {
         var file = File.new_for_uri( text );
         do_file_import( notebook, file, callback );
       } else {

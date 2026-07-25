@@ -72,6 +72,11 @@ public class NoteParser {
       index++;
     }
 
+    // If we didn't find any front matter, parse the remaining text as Markdown
+    if( !in_yaml ) {
+      parse_markdown_code( note, lines );
+    }
+
     return( note );
 
   }
@@ -159,7 +164,7 @@ public class NoteParser {
           in_code_block = false;
         } else {
           if( start_index != index ) {
-            parse_markdown_image( note, lines[start_index:index-1] );
+            parse_markdown_image( note, lines[start_index:index] );
           }
           language = stripped.substring( stripped.index_of_nth_char( 3 ) );
           in_code_block = true;
