@@ -155,7 +155,7 @@ public class Import {
     // If we have a Markdown file, parse it and add it as a fully featured note.
     if( file.get_path() != null ) {
       var ext = Utils.get_extension( file.get_path() );
-      if( (ext == ".md") || (ext == ".markdown") ) {
+      if( (ext == "md") || (ext == "markdown") ) {
         do_note_import( notebook, file.get_path(), callback, true );
         return;
       }
