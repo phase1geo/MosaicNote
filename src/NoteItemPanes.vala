@@ -552,8 +552,6 @@ public class NoteItemPanes : Box {
   // Adds the contents of the current note into the content area
   public void populate( Note note ) {
 
-    NoteItemPane? first = null;
-
     _note = note;
     _rows = 0;
 
@@ -600,7 +598,7 @@ public class NoteItemPanes : Box {
       if( pane.compute_bounds( this, out child_rect ) ) {
         Allocation parent_alloc;
         get_allocation( out parent_alloc );
-        see( (int)(child_rect.get_y() + parent_alloc.y), (int)child_rect.get_height() );
+        see( (int)(pane.get_show_offset() + child_rect.get_y() + parent_alloc.y), (int)child_rect.get_height() );
       }
       return( false );
     });

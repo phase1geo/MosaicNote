@@ -468,6 +468,32 @@ public class NoteItemPane : Box {
   }
 
   //-------------------------------------------------------------
+  // Returns the y-position of the current insertion point relative
+  // to the position of the top of the panel.
+  protected double get_cursor_y_pos( GtkSource.View text ) {
+
+    TextIter iter;
+    Gdk.Rectangle location;
+    text.buffer.get_iter_at_mark( out iter, text.buffer.get_insert() );
+    text.get_iter_location( iter, out location );
+
+    Graphene.Rect child_rect;
+    if( text.compute_bounds( this, out child_rect ) ) {
+      return( child_rect.get_y() + location.y );
+    }
+
+    return( location.y );
+
+  }
+
+  //-------------------------------------------------------------
+  // Returns an additional offset from the top of the pane to make
+  // sure is visible when this pane is forced to be seen.
+  public virtual double get_show_offset() {
+    return( (double)0 );
+  }
+
+  //-------------------------------------------------------------
   // Creates a text box with syntax highlighting enabled for the given
   // language ID.  Note item panes that contain a text widget should
   // call this function to create and configure the text widget that

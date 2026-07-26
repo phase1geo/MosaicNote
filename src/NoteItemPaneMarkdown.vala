@@ -78,6 +78,12 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Returns the location of the top of the insertion point.
+  public override double get_show_offset() {
+    return( get_cursor_y_pos( _text ) );
+  }
+
+  //-------------------------------------------------------------
   // Populates the extra menu of the text widget.
   public override void populate_extra_menu() {
 
@@ -185,15 +191,38 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   // If we are inserting multiple characters at a time, we will assume
   // a paste or drag event, so we will need to 
   private bool check_for_paste( TextBuffer buffer, ref TextIter iter, string str ) {
+
     var settings = MosaicNote.settings;
+
     if( (str.char_count() > 1) && settings.get_boolean( "enable-markdown-block-char" ) ) {
-      var parser = new NoteParser();
-      var note   = parser.parse_markdown( item.row.note.notebook, str );
-      // FOOBAR - Append note items from this note to the current note.  If the first item
-      // is a Markdown item, append the contents of that item to the current item.
-      return( true );
+
+      int row_pos, col_pos;
+      if( item.row.note.get_item_location( item, out row_pos, out col_pos ) ) {
+
+        // Create the note from the inserted text
+        var parser = new NoteParser();
+        var note   = parser.parse_markdown( item.row.note.notebook, str );
+
+        // Insert the note into the current note
+        var offset = iter.get_offset();
+        item.row.note.insert_note( note, row_pos, col_pos, offset );
+
+        // Update the note items panel
+        win.note.items.populate( item.row.note );
+
+        // Set the insertion cursor to the correct location, give the new pane focus, and
+        // grab keyboard focus
+        var pane = win.note.items.get_pane( row_pos, col_pos );
+        pane.grab_item_focus( TextCursorPlacement.AT_OFFSET, offset );
+        pane.set_as_current( "check-for-paste" );
+
+        return( true );
+      }
+
     }
+
     return( false );
+
   }
 
   //-------------------------------------------------------------

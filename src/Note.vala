@@ -323,9 +323,12 @@ public class Note : Object {
   //   appended to the current Markdown item.
   // - If the last item in the note is a Markdown item, it should be
   //   prepended to the split Markdown item.
-  public void insert_note( Note note, int row, int col, int byte_offset ) {
-    var first_row = get_row( row );
-    var first_md  = get_item( row, col ) as NoteItemMarkdown;
+  public void insert_note( Note note, int row, int col, int char_offset ) {
+
+    var first_row   = get_row( row );
+    var first_md    = get_item( row, col ) as NoteItemMarkdown;
+    var byte_offset = first_md.content.index_of_nth_char( char_offset );
+
     if( first_md != null ) {
 
       // If the note to insert only has a single Markdown item, just insert the text from
@@ -392,6 +395,7 @@ public class Note : Object {
 
       }
     }
+
   }
 
   //-------------------------------------------------------------
