@@ -45,6 +45,7 @@ public class SpellChecker {
     { "action_none",              null },
   };
 
+  public signal void recheck_all();
   public signal void populate_extra_menu( TextView view );
 
   //-------------------------------------------------------------
@@ -350,7 +351,7 @@ public class SpellChecker {
       mark_insert_end   = view.buffer.create_mark( "sc-insert-end",   end,   true );
       mark_click        = view.buffer.create_mark( "sc-click",        start, true );
       deferred_check    = false;
-      recheck_all();
+      recheck();
     }
 
   }
@@ -384,11 +385,19 @@ public class SpellChecker {
     }
   }
 
-  public void recheck_all() {
+  public void recheck( TextView? temp_view = null ) {
     TextIter start, end;
+    TextView? restore_view = null;
+    if( (temp_view != null) && (view != null) && (temp_view != view) ) {
+      restore_view = view;
+      set_buffer( temp_view );
+    }
     if( view != null ) {
       view.buffer.get_bounds( out start, out end );
       check_range( start, end, true );
+    }
+    if( restore_view != null ) { 
+      set_buffer( restore_view );
     }
   }
 
@@ -426,7 +435,7 @@ public class SpellChecker {
 
   public bool set_language( string? lang ) {
     if( set_language_internal( lang ) ) {
-      recheck_all();
+      recheck();
       return( true );
     }
     return( false );

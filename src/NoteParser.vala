@@ -149,7 +149,6 @@ public class NoteParser {
 
     foreach( var line in lines ) {
       var stripped = line.strip();
-      stdout.printf( "Parsing code: %s\n", stripped );
       if( stripped.has_prefix( "```" ) ) {
         if( in_code_block ) {
           var row = new NoteItemRow( note );
@@ -177,7 +176,7 @@ public class NoteParser {
     }
 
     if( start_index != index ) {
-      parse_markdown_image( note, lines[start_index:index-1] );
+      parse_markdown_image( note, lines[start_index:index] );
     }
 
   }
@@ -207,7 +206,7 @@ public class NoteParser {
       var stripped = line.strip();
       if( _image_re.match( stripped, 0, out match ) ) {
         if( start_index != index ) {
-          parse_markdown_table( note, lines[start_index:index-1] );
+          parse_markdown_table( note, lines[start_index:index] );
         }
         var row = new NoteItemRow( note );
         var image_item = new NoteItemImage( row ) {
@@ -222,7 +221,7 @@ public class NoteParser {
     }
 
     if( start_index != index ) {
-      parse_markdown_table( note, lines[start_index:index-1] );
+      parse_markdown_table( note, lines[start_index:index] );
     }
 
   }
@@ -356,6 +355,21 @@ public class NoteParser {
   }
 
   //-------------------------------------------------------------
+  // Join the lines and append resulting Markdown into a new
+  // Markdown item in the specified note.
+  private void add_markdown_item( Note note, string[] lines ) {
+    var text = string.joinv( "\n", lines ).strip();
+    if( text != "" ) {
+      var row = new NoteItemRow( note );
+      var markdown_item = new NoteItemMarkdown( row ) {
+        content = text
+      };
+      row.add_item( markdown_item );
+      note.add_row( row );
+    }
+  }
+
+  //-------------------------------------------------------------
   // Parses the given lines for normal Markdown content.  In this
   // case because we have parsed everything else out of the Markdown,
   // the given lines contain Markdown that can be put into a Markdown
@@ -374,8 +388,6 @@ public class NoteParser {
       var description = "";
       var in_footnote = false;
       foreach( var line in lines ) {
-        var stripped = line.strip();
-        stdout.printf( "Parsing markdown line: %s\n", stripped );
         if( in_footnote ) {
           if( sp_re.match( line, 0, out matched ) ) {
             description += "\n%s".printf( matched.fetch( 1 ).strip() );
@@ -385,10 +397,13 @@ public class NoteParser {
           }
         }
         if( !in_footnote ) {
-          if( fn_re.match( stripped, 0, out matched ) ) {
+          if( fn_re.match( line, 0, out matched ) ) {
             id          = matched.fetch( 1 );
             description = matched.fetch( 2 );
             in_footnote = true;
+          } else if( line.has_prefix( "---" ) || line.has_prefix( "***" ) ) {
+            add_markdown_item( note, new_lines );
+            new_lines = {};
           } else {
             new_lines += line;
           }
@@ -399,15 +414,9 @@ public class NoteParser {
       }
     } catch( RegexError e ) {}
 
-    var text = string.joinv( "\n", new_lines ).strip();
-    if( text != "" ) {
-      var row = new NoteItemRow( note );
-      var markdown_item = new NoteItemMarkdown( row ) {
-        content = text
-      };
-      row.add_item( markdown_item );
-      note.add_row( row );
-    }
+    // Add the current lines
+    add_markdown_item( note, new_lines );
+
   }
 
 }

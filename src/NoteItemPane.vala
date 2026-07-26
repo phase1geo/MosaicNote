@@ -550,6 +550,12 @@ public class NoteItemPane : Box {
 
     text.add_controller( focus );
 
+    _spell.recheck_all.connect(() => {
+      if( item.item_type.spell_checkable() ) {
+        _spell.recheck( get_text() );
+      }
+    });
+
     focus.enter.connect(() => {
       if( item.item_type.spell_checkable() ) {
         set_spellchecker();
