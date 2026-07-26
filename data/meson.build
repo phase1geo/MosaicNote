@@ -35,11 +35,18 @@ install_data(
 )
 
 langs = ['plantuml', 'mosaic-markdown']
-
 foreach lang : langs
     install_data(
         join_paths('syntax', lang + '.lang'),
         install_dir: join_paths(get_option('datadir'), 'mosaic-note', 'gtksourceview-5', 'language-specs')
+    )
+endforeach
+
+styles = ['mosaic-markdown']
+foreach style : styles
+    install_data(
+        join_paths('styles', style + '.xml'),
+        install_dir: join_paths(get_option('datadir'), 'mosaic-note', 'gtksourceview-5', 'styles')
     )
 endforeach
 

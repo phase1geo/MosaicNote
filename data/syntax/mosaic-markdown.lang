@@ -32,12 +32,12 @@
 
   <styles>
     <style id="header"            name="Header"            map-to="def:heading"/>
-    <style id="header1"           name="Header1"           map-to="def:heading"/>
-    <style id="header2"           name="Header2"           map-to="def:heading"/>
-    <style id="header3"           name="Header3"           map-to="def:heading"/>
-    <style id="header4"           name="Header4"           map-to="def:heading"/>
-    <style id="header5"           name="Header5"           map-to="def:heading"/>
-    <style id="header6"           name="Header6"           map-to="def:heading"/>
+    <style id="header1"           name="Header1"           map-to="def:heading1"/>
+    <style id="header2"           name="Header2"           map-to="def:heading2"/>
+    <style id="header3"           name="Header3"           map-to="def:heading3"/>
+    <style id="header4"           name="Header4"           map-to="def:heading4"/>
+    <style id="header5"           name="Header5"           map-to="def:heading5"/>
+    <style id="header6"           name="Header6"           map-to="def:heading6"/>
     <style id="horizontal-rule"   name="Horizontal Rule"   map-to="def:thematic-break"/>
     <style id="list-marker"       name="List Marker"       map-to="def:list-marker"/>
     <style id="code-span"         name="Code Span"         map-to="def:inline-code"/>
@@ -65,22 +65,22 @@
          ###Header 3###
     -->
     <context id="atx-header1" style-ref="header1">
-      <match>^#[^#]+</match>
+      <match>^# .*$</match>
     </context>
     <context id="atx-header2" style-ref="header2">
-      <match>^##[^#]+</match>
+      <match>^## .*$</match>
     </context>
     <context id="atx-header3" style-ref="header3">
-      <match>^###[^#]+</match>
+      <match>^### .*$</match>
     </context>
     <context id="atx-header4" style-ref="header4">
-      <match>^####[^#]+</match>
+      <match>^#### .*$</match>
     </context>
     <context id="atx-header5" style-ref="header5">
-      <match>^#####[^#]+</match>
+      <match>^##### .*$</match>
     </context>
     <context id="atx-header6" style-ref="header6">
-      <match>^######[^#]+</match>
+      <match>^###### .*$</match>
     </context>
 
     <!-- Examples:

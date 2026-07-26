@@ -182,11 +182,27 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // If we are inserting multiple characters at a time, we will assume
+  // a paste or drag event, so we will need to 
+  private bool check_for_paste( TextBuffer buffer, ref TextIter iter, string str ) {
+    var settings = MosaicNote.settings;
+    if( (str.char_count() > 1) && settings.get_boolean( "enable-markdown-block-char" ) ) {
+      var parser = new NoteParser();
+      var note   = parser.parse_markdown( item.row.note.notebook, str );
+      // FOOBAR - Append note items from this note to the current note.  If the first item
+      // is a Markdown item, append the contents of that item to the current item.
+      return( true );
+    }
+    return( false );
+  }
+
+  //-------------------------------------------------------------
   // Checks the given text string to see if it contains the value
-  // necessary for inserting a new block.
+  // necessary for inserting a new block if we are inserting
+  // one character.
   private bool check_for_block_change( TextBuffer buffer, ref TextIter iter, string str ) {
     var settings = MosaicNote.settings;
-    if( iter.starts_line() && iter.ends_line() ) {
+    if( iter.starts_line() && iter.ends_line() && (str.char_count() == 1) ) {
       var new_type  = NoteItemType.parse_char( str.get_char( 0 ) );
       var pos       = new NoteItemPos.from_pane( this );
       if( new_type == NoteItemType.MARKDOWN ) {
@@ -502,7 +518,8 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   // replace the existing text.
   private void check_inserted_text( ref TextIter iter, string str, int strlen ) {
     var buffer = (GtkSource.Buffer)_text.buffer;
-    if( check_for_block_change( buffer, ref iter, str ) ||
+    if( check_for_paste( buffer, ref iter, str ) ||
+        check_for_block_change( buffer, ref iter, str ) ||
         check_for_markdown_list( buffer, ref iter, str ) ) {
       Signal.stop_emission_by_name( buffer, "insert_text" );
       return;
@@ -547,7 +564,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     var hilite = new Button() {
       has_frame = false,
       tooltip_markup = Utils.tooltip_with_accel( _( "Highlight" ), "<Control>h" ),
-      child = create_label( "<span background='#ffff00'> <b>H</b> </span>" )
+      child = create_label( "<span background='#ffff0080'> <b>H</b> </span>" )
     };
     hilite.clicked.connect( insert_highlight );
 
@@ -639,7 +656,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   // Adds a new Markdown item at the given position in the content area
   protected override Widget create_pane() {
 
-    _text = create_text( "mosaic-markdown" );
+    _text = create_text( "mosaic-markdown", "mosaic-markdown" );
     _text.add_css_class( "markdown-text" );
 
     var buffer = (GtkSource.Buffer)_text.buffer;

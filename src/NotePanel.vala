@@ -104,6 +104,7 @@ public class NotePanel : Box {
 
     // Initialize the language manager
     initialize_languages();
+    initialize_styles();
 
     _stack = new Stack() {
       hhomogeneous = true,
@@ -163,6 +164,22 @@ public class NotePanel : Box {
       }
     }
 
+  }
+
+  //-------------------------------------------------------------
+  // Initializes the style manager to include the specialty
+  // styles that MosaicNote provides.
+  private void initialize_styles() {
+
+    foreach( var data_dir in Environment.get_system_data_dirs() ) {
+      var path = GLib.Path.build_filename( data_dir, "mosaic-note", "gtksourceview-5" );
+      if( FileUtils.test( path, FileTest.EXISTS ) ) {
+        var style_path = GLib.Path.build_filename( path, "styles" );
+        var manager = GtkSource.StyleSchemeManager.get_default();
+        manager.append_search_path( style_path );
+        break;
+      }
+    }
   }
 
   //-------------------------------------------------------------

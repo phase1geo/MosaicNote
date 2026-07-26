@@ -247,6 +247,16 @@ public class Note : Object {
   }
 
   //-------------------------------------------------------------
+  // Returns the number of total items in the note.
+  public int items() {
+    int cnt = 0;
+    for( int i=0; i<_rows.length; i++ ) {
+      cnt += _rows.index( i ).size();
+    }
+    return( cnt );
+  }
+
+  //-------------------------------------------------------------
   // Returns the note item at the given index
   public NoteItemRow get_row( int index ) {
     return( _rows.index( index ) );
@@ -292,15 +302,96 @@ public class Note : Object {
   // Adds a new note item, adding a new row if one is needed.
   public void add_item( NoteItem item, int row_pos, int col_pos, bool add_to_row ) {
     NoteItemRow row;
-    stdout.printf( "In Note.add_item\n" );
     if( add_to_row && (_rows.length > 0) ) {
       row = _rows.index( (row_pos == -1) ? (int)(_rows.length - 1) : row_pos );
     } else {
-      stdout.printf( "Adding item to new row, row_pos: %d\n", row_pos );
       row = new NoteItemRow( this );
       add_row( row, row_pos );
     }
     row.add_item( item, col_pos );
+  }
+
+  //-------------------------------------------------------------
+  // Inserts the given note contents at the current insert point as
+  // specified by row, col and offset.  This operation is somewhat
+  // complicated, so here are the rules.
+  // - We can only do an insert operation if the given row/col is a
+  //   Markdown item.
+  // - If the offset is not the end of the Markdown text of the item,
+  //   we need to split the Markdown item into to parts.
+  // - If the first item in the note is a Markdown item, it should be
+  //   appended to the current Markdown item.
+  // - If the last item in the note is a Markdown item, it should be
+  //   prepended to the split Markdown item.
+  public void insert_note( Note note, int row, int col, int byte_offset ) {
+    var first_row = get_row( row );
+    var first_md  = get_item( row, col ) as NoteItemMarkdown;
+    if( first_md != null ) {
+
+      // If the note to insert only has a single Markdown item, just insert the text from
+      // that item
+      if( (note.items() == 1) && (note.get_item( 0, 0 ).item_type == NoteItemType.MARKDOWN) ) {
+        first_md.content = first_md.content.slice( 0, byte_offset ) +
+                           note.get_item( 0, 0 ).content +
+                           first_md.content.slice( byte_offset, -1 );
+
+      } else {
+
+        NoteItemRow? last_row = null;
+
+        // If we need to split our Markdown item into two items, do that now.  Keep the first
+        // item in the current row, move the remaining portion and all other items into a
+        // new row just below ours
+        if( first_md.content.length != byte_offset ) {
+          var first = first_md.content.splice( 0, byte_offset );
+          var last  = first_md.content.splice( byte_offset, -1 );
+          first_md.content = first;
+
+          last_row = new NoteItemRow( this );
+          add_row( last_row, (row + 1) );
+
+          var last_item = new NoteItemMarkdown( last_row );
+          last_row.add_item( last_item, 0 );
+          for( int i=(col + 1); i<first_row.size(); i++ ) {
+            last_row.add_item( first_row.get_item( i ) ); 
+          }
+        }
+
+        // Now, let's insert the note
+
+        // If the first item of the inserted note is a Markdown, append it to the
+        // current Markdown item
+        var insert_index = 0;
+        if( note.get_item( 0, 0 ).item_type == NoteItemType.MARKDOWN ) {
+          first_md.content += note.get_item( 0, 0 ).content;
+          insert_index = 1;
+        }
+
+        // Insert the note's items, prepending the last item of the note if we split
+        // ourselves and the last item is a Markdown item
+        var current_index = 0;
+        var current_row   = first_row;
+        var current_col   = col + 1;
+        for( int i=row; i<note.rows(); i++ ) {
+          var note_row = note.get_row( i );
+          for( int j=0; j<note_row.size(); j++ ) {
+            if( current_index >= insert_index ) {
+              if( (i == (note.rows() - 1)) && (j == (note_row.size() - 1)) && (last_row != null) && (note.get_item( i, j ).item_type == NoteItemType.MARKDOWN) ) {
+                last_row.get_item( 0 ).content = note.get_item( i, j ).content + last_row.get_item( 0 ).content;
+              } else {
+                if( j == 0 ) {
+                  current_row = new NoteItemRow( this );
+                  add_row( current_row, current_col++ );
+                }
+                var note_item = note.get_item( i, j );
+                current_row.add_item( note_item.item_type.create( current_row ) );
+              }
+            }
+          }
+        }
+
+      }
+    }
   }
 
   //-------------------------------------------------------------
@@ -340,14 +431,11 @@ public class Note : Object {
   // add_row inputs to the move_item operation.
   public void plan_move( int old_row, int old_col, MoveDirection dir, out int new_row, out int new_col, out bool add_to_row ) {
     var row = _rows.index( old_row );
-    stdout.printf( "In plane_move, old_row: %d, old_col: %d, dir: %s, row.size: %d\n",
-      old_row, old_col, dir.to_string(), row.size() );
     if( dir.is_horizontal() ) {
       new_row = old_row;
       new_col = (dir == MoveDirection.LEFT) ? (old_col - 1) : (old_col + 1);
       add_to_row = true;
     } else if( row.size() == 1 ) {
-      stdout.printf( "Only pane in row\n" );
       new_row = (dir == MoveDirection.UP) ? (old_row - 1) : (old_row + 1);
       new_col = old_col;
       add_to_row = true;
@@ -361,8 +449,6 @@ public class Note : Object {
   //-------------------------------------------------------------
   // Moves the item located at the old row/col to the new row/col
   public void move_item( int old_row, int old_col, int new_row, int new_col, bool add_to_row ) {
-    stdout.printf( "In Note.move_item, old_row: %d, old_col: %d, new_row: %d, row_col: %d, add: %s\n",
-      old_row, old_col, new_row, new_col, add_to_row.to_string() );
     var row = _rows.index( old_row );
     if( (old_row != new_row) || !add_to_row ) {
       var item = row.get_item( old_col );

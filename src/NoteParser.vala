@@ -149,6 +149,7 @@ public class NoteParser {
 
     foreach( var line in lines ) {
       var stripped = line.strip();
+      stdout.printf( "Parsing code: %s\n", stripped );
       if( stripped.has_prefix( "```" ) ) {
         if( in_code_block ) {
           var row = new NoteItemRow( note );
@@ -374,6 +375,7 @@ public class NoteParser {
       var in_footnote = false;
       foreach( var line in lines ) {
         var stripped = line.strip();
+        stdout.printf( "Parsing markdown line: %s\n", stripped );
         if( in_footnote ) {
           if( sp_re.match( line, 0, out matched ) ) {
             description += "\n%s".printf( matched.fetch( 1 ).strip() );

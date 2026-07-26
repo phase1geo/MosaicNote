@@ -347,11 +347,9 @@ public class NoteItemPane : Box {
           break;
         case Gdk.Key.Up   :
         case Gdk.Key.Left :
-          stdout.printf( "Keying UP\n" );
           var pos = new NoteItemPos.from_pane( this );
           var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( this ), (keyval == Gdk.Key.Up) );
           if( prev_pane != null ) {
-            stdout.printf( "Prev_pane found, control: %s, shift: %s\n", control.to_string(), shift.to_string() );
             if( control ) {
               move_item( shift, ((keyval == Gdk.Key.Up) ? MoveDirection.UP : MoveDirection.LEFT), true );
               return( true );
@@ -474,7 +472,7 @@ public class NoteItemPane : Box {
   // language ID.  Note item panes that contain a text widget should
   // call this function to create and configure the text widget that
   // can be embedded in the pane.
-  protected GtkSource.View create_text( string? lang_id = null ) {
+  protected GtkSource.View create_text( string? lang_id = null, string? style_id = null ) {
 
     var buffer = new GtkSource.Buffer( null ) {
       highlight_syntax = true,
@@ -495,6 +493,12 @@ public class NoteItemPane : Box {
       buffer.set_language( lang );
     }
 
+    if( style_id != null ) {
+      var style_mgr = GtkSource.StyleSchemeManager.get_default();
+      var style     = style_mgr.get_scheme( style_id );
+      buffer.set_style_scheme( style );
+    }
+
     var focus = new EventControllerFocus();
     var text = new GtkSource.View.with_buffer( buffer ) {
       halign    = Align.FILL,
@@ -506,6 +510,10 @@ public class NoteItemPane : Box {
       margin_bottom = 5,
       margin_start  = 5,
       margin_end    = 5
+    };
+
+    var code_font = new TextTag( "def:note" ) {
+      family = "monospace"
     };
 
     item.item_type.initialize_text( text );
@@ -548,11 +556,13 @@ public class NoteItemPane : Box {
       text.add_controller( vim_key );
     }
 
+    /*
     var style_mgr = new GtkSource.StyleSchemeManager();
     buffer.style_scheme = style_mgr.get_scheme( win.themes.get_current_theme() );
     win.themes.theme_changed.connect((theme) => {
       buffer.style_scheme = style_mgr.get_scheme( theme );
     });
+    */
 
     // Handle any changes to the Vim mode
     MosaicNote.settings.changed["editor-vim-mode"].connect(() => {
