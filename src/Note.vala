@@ -472,11 +472,17 @@ public class Note : Object {
     var str = "---\ntitle: '%s'\ncreated: '%s'\nupdated: '%s'\ntags: [%s]\n---\n\n".printf(
       mod_title, _created.to_string(), _updated.to_string(), _tags.to_markdown()
     );
+    var last_markdown = false;
     for( int i=0; i<_rows.length; i++ ) {
       var row = _rows.index( i );
       for( int j=0; j<row.size(); j++ ) {
-        var item = row.get_item( j );
+        var item     = row.get_item( j );
+        var markdown = (item.item_type == NoteItemType.MARKDOWN);
+        if( markdown && last_markdown ) {
+          str += "---\n\n";
+        }
         str += "%s\n\n".printf( item.to_markdown( notebooks, false, pandoc ) );
+        last_markdown = markdown;
       }
     }
     _footnotes.map_iterator().foreach((k, v) => {
