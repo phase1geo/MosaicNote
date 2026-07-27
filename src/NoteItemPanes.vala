@@ -575,6 +575,7 @@ public class NoteItemPanes : Box {
     _note = note;
     _rows = 0;
     _current_item = null;
+    _spell.detach();
 
     // Hide the widget to avoid unnecessary layout calls
     this.visible = false;
