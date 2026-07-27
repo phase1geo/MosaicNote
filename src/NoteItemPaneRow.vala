@@ -72,12 +72,7 @@ public class NoteItemPaneRow : Box {
 
     expand.clicked.connect(() => {
       _row.expanded = !_row.expanded;
-      // _box.visible  = _row.expanded;
-      // pane.visible  = item.expanded;
-      // sep.opacity   = item.expanded ? 1.0 : 0.0;
-      // type_label.visible = !item.expanded;
       expand.label  = _row.expanded ? "\u23f7" : "\u23f5";
-      // _stack.visible_child_name = item.expanded ? "selected" : "unselected";
     });
 
     append( lbox );
@@ -93,6 +88,16 @@ public class NoteItemPaneRow : Box {
       child.cleanup();
       child = child.get_next_sibling() as NoteItemPane;
     } 
+  }
+
+  //-------------------------------------------------------------
+  // Saves all of the stored panes.
+  public void save() {
+    var child = _box.get_first_child() as NoteItemPane;
+    while( child != null ) {
+      child.save();
+      child = child.get_next_sibling() as NoteItemPane;
+    }
   }
 
   //-------------------------------------------------------------

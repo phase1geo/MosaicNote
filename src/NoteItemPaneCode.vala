@@ -25,6 +25,9 @@ public class NoteItemPaneCode : NoteItemPane {
 
   private static Array<string>? _supported_langs = null;
 
+  private ulong _description_id = 0;
+  private ulong _setting_id     = 0;
+
   private Label          _h2_label;
   private GtkSource.View _text;
 
@@ -47,6 +50,20 @@ public class NoteItemPaneCode : NoteItemPane {
       }
     }
     base( win, item, spell );
+  }
+
+  //-------------------------------------------------------------
+  // Cleans up signal handlers prior to destruction.
+  public override void cleanup() {
+    base.cleanup();
+    if( _description_id != 0 ) {
+      SignalHandler.disconnect( code_item, _description_id );
+      _description_id = 0;
+    }
+    if( _setting_id != 0 ) {
+      SignalHandler.disconnect( MosaicNote.settings, _setting_id );
+      _setting_id = 0;
+    }
   }
 
   //-------------------------------------------------------------
@@ -134,7 +151,7 @@ public class NoteItemPaneCode : NoteItemPane {
       }
     });
 
-    code_item.notify["description"].connect(() => {
+    _description_id = code_item.notify["description"].connect(() => {
       var text = (code_item.description == "") ? default_text : code_item.description;
       if( entry.text != text ) {
         entry.text = text;
@@ -183,7 +200,7 @@ public class NoteItemPaneCode : NoteItemPane {
 
     _text.add_css_class( "code-text" );
 
-    MosaicNote.settings.changed["default-theme"].connect(() => {
+    _setting_id = MosaicNote.settings.changed["default-theme"].connect(() => {
       buffer.style_scheme = scheme_mgr.get_scheme( MosaicNote.settings.get_string( "default-theme" ) );
     });
 

@@ -23,6 +23,9 @@ using Gtk;
 
 public class NoteItemPaneUML : NoteItemPane {
 
+  private ulong _description_id     = 0;
+  private ulong _diagram_updated_id = 0;
+
   private Label          _h2_label;
   private GtkSource.View _text;
   private Picture        _image;
@@ -39,6 +42,20 @@ public class NoteItemPaneUML : NoteItemPane {
 	// Default constructor
 	public NoteItemPaneUML( MainWindow win, NoteItem item, SpellChecker? spell ) {
     base( win, item, spell );
+  }
+
+  //-------------------------------------------------------------
+  // Cleans up signal handlers prior to destruction.
+  public override void cleanup() {
+    base.cleanup();
+    if( _description_id != 0 ) {
+      SignalHandler.disconnect( uml_item, _description_id );
+      _description_id = 0;
+    }
+    if( _diagram_updated_id != 0 ) {
+      SignalHandler.disconnect( uml_item, _diagram_updated_id );
+      _diagram_updated_id = 0;
+    }
   }
 
   public override GtkSource.View? get_text() {
@@ -90,7 +107,7 @@ public class NoteItemPaneUML : NoteItemPane {
       }
     });
 
-    uml_item.notify["description"].connect(() => {
+    _description_id = uml_item.notify["description"].connect(() => {
       var text = (uml_item.description == "") ? default_text : uml_item.description;
       if( entry.text != text ) {
         entry.text = text;
@@ -200,7 +217,7 @@ public class NoteItemPaneUML : NoteItemPane {
     _stack.add_named( _image,  "image" );
     _stack.set_size_request( -1, 500 );
 
-    uml_item.diagram_updated.connect((filename) => {
+    _diagram_updated_id = uml_item.diagram_updated.connect((filename) => {
       if( filename != null ) {
         _image.file = File.new_for_path( filename );
         _stack.visible_child_name = "image";

@@ -42,6 +42,7 @@ public class NoteItemPane : Box {
   private ulong _setting1_id = 0;
   private ulong _setting2_id = 0;
   private ulong _setting3_id = 0;
+  private ulong _expanded_id = 0;
 
   private MainWindow    _win;
   private NoteItem      _item;
@@ -608,7 +609,7 @@ public class NoteItemPane : Box {
 
   //-------------------------------------------------------------
   // Called prior to the pane being destroyed.
-  public void cleanup() {
+  public virtual void cleanup() {
 
     if( _spell_id != 0 ) {
       SignalHandler.disconnect( _spell, _spell_id );
@@ -625,6 +626,10 @@ public class NoteItemPane : Box {
     if( _setting3_id != 0 ) {
       SignalHandler.disconnect( MosaicNote.settings, _setting3_id );
       _setting3_id = 0;
+    }
+    if( _expanded_id != 0 ) {
+      SignalHandler.disconnect( _item.row, _expanded_id );
+      _expanded_id = 0;
     }
 
   }
@@ -814,7 +819,7 @@ public class NoteItemPane : Box {
 
     click_to_current( this );
 
-    item.row.notify["expanded"].connect(() => {
+    _expanded_id = item.row.notify["expanded"].connect(() => {
       var expanded  = item.row.expanded;
       pane.visible = expanded;
       type_label.visible = !expanded;

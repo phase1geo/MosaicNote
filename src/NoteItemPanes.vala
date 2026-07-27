@@ -167,6 +167,16 @@ public class NoteItemPanes : Box {
     // Add keyboard shortcuts
     add_keyboard_shortcuts();
 
+    // Handle save events
+    save.connect(() => {
+      var child = get_first_child() as NoteItemPane;
+      while( child != null ) {
+        child.save();
+        child = child.get_next_sibling() as NoteItemPane;
+      }
+    });
+
+
     add_css_class( "themed" );
 
   }
@@ -299,8 +309,10 @@ public class NoteItemPanes : Box {
       default                    :  return( null );
     }
 
+    weak NoteItemPane weak_pane = pane;
+
     pane.add_item.connect((dir, type) => {
-      var pos     = new NoteItemPos.from_pane( pane );
+      var pos     = new NoteItemPos.from_pane( weak_pane );
       var row_pos = pos.row;
       var col_pos = pos.col;
       var use_row = true;
@@ -314,15 +326,15 @@ public class NoteItemPanes : Box {
     });
 
     pane.remove_item.connect((forward, record_undo) => {
-      var pos      = new NoteItemPos.from_pane( pane );
-      var pane_row = (NoteItemPaneRow)pane.get_parent().get_parent();
+      var pos      = new NoteItemPos.from_pane( weak_pane );
+      var pane_row = (NoteItemPaneRow)weak_pane.get_parent().get_parent();
       var row_pos  = pos.row;
       var col_pos  = pos.col;
       var rows     = _rows;
       if( record_undo ) {
         _win.undo.add_item( new UndoItemDelete( _note, pos.row, pos.col ) );
       }
-      item_removed( pane );
+      item_removed( weak_pane );
       pane_row.delete_pane( pos.col );
       if( pane_row.size == 0 ) {
         remove( pane_row );
@@ -343,8 +355,8 @@ public class NoteItemPanes : Box {
     });
 
     pane.remove_row.connect((forward, record_undo) => {
-      var pos      = new NoteItemPos.from_pane( pane );
-      var pane_row = (NoteItemPaneRow)pane.get_parent().get_parent();
+      var pos      = new NoteItemPos.from_pane( weak_pane );
+      var pane_row = (NoteItemPaneRow)weak_pane.get_parent().get_parent();
       var row_pos  = pos.row;
       var rows     = _rows;
       if( record_undo ) {
@@ -371,7 +383,7 @@ public class NoteItemPanes : Box {
     });
 
     pane.move_item.connect((move_row, dir, record_undo) => {
-      var pos   = new NoteItemPos.from_pane( pane );
+      var pos   = new NoteItemPos.from_pane( weak_pane );
       var moved = false;
 
       // If we need to move the entire current row, do that now
@@ -384,35 +396,35 @@ public class NoteItemPanes : Box {
       }
 
       // Make sure the pane is in view
-      show_pane( pane );
+      show_pane( weak_pane );
 
       // Give the pane focus again if it was moved
       if( moved ) {
-        pane.grab_item_focus( TextCursorPlacement.NO_CHANGE );
+        weak_pane.grab_item_focus( TextCursorPlacement.NO_CHANGE );
       }
 
       // Record the move
       if( record_undo && moved ) {
-        _win.undo.add_item( new UndoItemMove( pane, move_row, dir ) );
+        _win.undo.add_item( new UndoItemMove( weak_pane, move_row, dir ) );
       }
 
     });
 
     pane.set_as_current.connect((msg) => {
       if( _current_item == null ) {
-        _current_item = pane;
-        item_selected( pane );
+        _current_item = weak_pane;
+        item_selected( weak_pane );
       } else {
         if( _current_item != pane ) {
           if( _current_item != null ) {
             _current_item.clear_current();
             update_all_footnotes();
           }
-          _current_item = pane;
-          item_selected( pane );
+          _current_item = weak_pane;
+          item_selected( weak_pane );
         }
       }
-      show_pane( pane );
+      show_pane( weak_pane );
     });
 
     pane.note_link_clicked.connect((link) => {
@@ -427,10 +439,6 @@ public class NoteItemPanes : Box {
       var items = new Array<NoteItem>();
       items.append_val( item );
       show_images( items, 0 );
-    });
-
-    save.connect(() => {
-      pane.save();
     });
 
     row_pane.add_pane( pane, col );
@@ -566,6 +574,7 @@ public class NoteItemPanes : Box {
 
     _note = note;
     _rows = 0;
+    _current_item = null;
 
     // Hide the widget to avoid unnecessary layout calls
     this.visible = false;
