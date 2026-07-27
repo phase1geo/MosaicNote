@@ -24,6 +24,8 @@ using Gee;
 
 public class NoteItemPaneTable : NoteItemPane {
 
+  private ulong _description_id = 0;
+
   private Label      _h2_label;
   private ColumnView _table;
   private int        _col_id = 0;
@@ -62,6 +64,15 @@ public class NoteItemPaneTable : NoteItemPane {
     actions.add_action_entries( action_entries, this );
     insert_action_group( "table", actions );
 
+  }
+
+  //-------------------------------------------------------------
+  // Removes all signal handlers prior to destruction.
+  public override void cleanup() {
+    if( _description_id != 0 ) {
+      SignalHandler.disconnect( table_item, _description_id );
+      _description_id = 0;
+    }
   }
 
   //-------------------------------------------------------------
@@ -138,7 +149,7 @@ public class NoteItemPaneTable : NoteItemPane {
       }
     });
 
-    table_item.notify["description"].connect(() => {
+    _description_id = table_item.notify["description"].connect(() => {
       var text = (table_item.description == "") ? default_text : table_item.description;
       if( entry.text != text ) {
         entry.text = text;

@@ -23,6 +23,8 @@ using Gtk;
 
 public class NoteItemPaneImage : NoteItemPane {
 
+  private ulong _description_id = 0;
+
   private Label         _h2_label;
   private Picture       _image;
   private NoteItemImage _temp_item;
@@ -37,6 +39,16 @@ public class NoteItemPaneImage : NoteItemPane {
 	// Default constructor
 	public NoteItemPaneImage( MainWindow win, NoteItem item, SpellChecker? spell ) {
     base( win, item, spell );
+  }
+
+  //-------------------------------------------------------------
+  // Removes all signal connections prior to destruction.
+  public override void cleanup() {
+    base.cleanup();
+    if( _description_id != 0 ) {
+      SignalHandler.disconnect( image_item, _description_id );
+      _description_id = 0;
+    }
   }
 
   //-------------------------------------------------------------
@@ -234,7 +246,7 @@ public class NoteItemPaneImage : NoteItemPane {
       }
     });
 
-    image_item.notify["description"].connect(() => {
+    _description_id = image_item.notify["description"].connect(() => {
       var text = (image_item.description == "") ? default_text : image_item.description;
       if( entry.text != text ) {
         entry.text = text;

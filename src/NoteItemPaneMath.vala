@@ -28,6 +28,8 @@ using Gee;
 // links.
 public class NoteItemPaneMath : NoteItemPane {
 
+  private ulong _description_id = 0;
+
   private WebKit.WebView _web;
   private GtkSource.View _text;
   private Frame          _text_frame;
@@ -49,6 +51,15 @@ public class NoteItemPaneMath : NoteItemPane {
     base( win, item, spell );
     _cursor_pointer = new Gdk.Cursor.from_name( "pointer", null );
     _cursor_text    = new Gdk.Cursor.from_name( "text", null );
+  }
+
+  //-------------------------------------------------------------
+  // Cleans up signal connections prior to destruction.
+  public override void cleanup() {
+    if( _description_id != 0 ) {
+      SignalHandler.disconnect( math_item, _description_id );
+      _description_id = 0;
+    }
   }
 
   //-------------------------------------------------------------
@@ -103,7 +114,7 @@ public class NoteItemPaneMath : NoteItemPane {
       }
     });
 
-    math_item.notify["description"].connect(() => {
+    _description_id = math_item.notify["description"].connect(() => {
       var text = (math_item.description == "") ? default_text : math_item.description;
       if( entry.text != text ) {
         entry.text = text;
