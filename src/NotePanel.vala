@@ -644,12 +644,13 @@ public class NotePanel : Box {
 
     // If we had a previously displayed note, save it before populating with the new note
     if( _note != null ) {
+      stdout.printf( "CALLING SAVE\n" );
       save();
     }
 
-    _note = note;
+    if( note != null ) {
 
-    if( _note != null ) {
+      _note = note;
 
       _title.text = note.title;
       _tags.clear_tags();

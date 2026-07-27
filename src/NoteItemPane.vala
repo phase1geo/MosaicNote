@@ -38,6 +38,11 @@ public class NoteItemPane : Box {
 
   private const double control_opacity = 0.1;
 
+  private ulong _spell_id    = 0;
+  private ulong _setting1_id = 0;
+  private ulong _setting2_id = 0;
+  private ulong _setting3_id = 0;
+
   private MainWindow    _win;
   private NoteItem      _item;
   private SpellChecker? _spell;
@@ -127,20 +132,10 @@ public class NoteItemPane : Box {
     actions.add_action_entries( action_entries, this );
     insert_action_group( "item", actions );
 
-    // Add keyboard shortcuts
-    add_keyboard_shortcuts();
-
   }
 
-  //-------------------------------------------------------------
-  // Adds keyboard shortcuts for the menu actions
-  private void add_keyboard_shortcuts() {
-    _win.application.set_accels_for_action( "item.action_add_item_above", { "<Control><Shift>Return" } );
-    _win.application.set_accels_for_action( "item.action_add_item_below", { "<Shift>Return" } );
-    _win.application.set_accels_for_action( "item.action_add_item_left",  { "<Control><Shift>Tab" } );
-    _win.application.set_accels_for_action( "item.action_add_item_right", { "<Shift>Tab" } );
-    _win.application.set_accels_for_action( "item.action_delete_item",    { "<Control>Delete" } );
-    _win.application.set_accels_for_action( "item.action_delete_row",     { "<Control><Shift>Delete" } );
+  ~NoteItemPane () {
+    stdout.printf( "NoteItemPane destroyed\n" );
   }
 
   //-------------------------------------------------------------
@@ -550,7 +545,7 @@ public class NoteItemPane : Box {
 
     text.add_controller( focus );
 
-    _spell.recheck_all.connect(() => {
+    _spell_id = _spell.recheck_all.connect(() => {
       if( item.item_type.spell_checkable() ) {
         _spell.recheck( get_text() );
       }
@@ -567,13 +562,13 @@ public class NoteItemPane : Box {
       item.content = buffer.text;
     });
 
-    MosaicNote.settings.changed["editor-line-spacing"].connect(() => {
+    _setting1_id = MosaicNote.settings.changed["editor-line-spacing"].connect(() => {
       set_line_spacing( text );
     });
 
     // Attach the spell checker temporarily
     if( item.item_type.spell_checkable() ) {
-      MosaicNote.settings.changed["enable-spellchecker"].connect(() => {
+      _setting2_id = MosaicNote.settings.changed["enable-spellchecker"].connect(() => {
         set_spellchecker();
       });
     }
@@ -597,7 +592,7 @@ public class NoteItemPane : Box {
     */
 
     // Handle any changes to the Vim mode
-    MosaicNote.settings.changed["editor-vim-mode"].connect(() => {
+    _setting3_id = MosaicNote.settings.changed["editor-vim-mode"].connect(() => {
       if( MosaicNote.settings.get_boolean( "editor-vim-mode" ) ) {
         text.add_controller( vim_key );
         vim_context.set_client_widget( text );
@@ -608,6 +603,29 @@ public class NoteItemPane : Box {
     });
 
     return( text );
+
+  }
+
+  //-------------------------------------------------------------
+  // Called prior to the pane being destroyed.
+  public void cleanup() {
+
+    if( _spell_id != 0 ) {
+      SignalHandler.disconnect( _spell, _spell_id );
+      _spell_id = 0;
+    }
+    if( _setting1_id != 0 ) {
+      SignalHandler.disconnect( MosaicNote.settings, _setting1_id );
+      _setting1_id = 0;
+    }
+    if( _setting2_id != 0 ) {
+      SignalHandler.disconnect( MosaicNote.settings, _setting2_id );
+      _setting2_id = 0;
+    }
+    if( _setting3_id != 0 ) {
+      SignalHandler.disconnect( MosaicNote.settings, _setting3_id );
+      _setting3_id = 0;
+    }
 
   }
 

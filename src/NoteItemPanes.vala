@@ -164,8 +164,22 @@ public class NoteItemPanes : Box {
     // Initialize the spell checker
     initialize_spell_checker();
 
+    // Add keyboard shortcuts
+    add_keyboard_shortcuts();
+
     add_css_class( "themed" );
 
+  }
+
+  //-------------------------------------------------------------
+  // Adds keyboard shortcuts for the menu actions
+  private void add_keyboard_shortcuts() {
+    _win.application.set_accels_for_action( "item.action_add_item_above", { "<Control><Shift>Return" } );
+    _win.application.set_accels_for_action( "item.action_add_item_below", { "<Shift>Return" } );
+    _win.application.set_accels_for_action( "item.action_add_item_left",  { "<Control><Shift>Tab" } );
+    _win.application.set_accels_for_action( "item.action_add_item_right", { "<Shift>Tab" } );
+    _win.application.set_accels_for_action( "item.action_delete_item",    { "<Control>Delete" } );
+    _win.application.set_accels_for_action( "item.action_delete_row",     { "<Control><Shift>Delete" } );
   }
 
   //-------------------------------------------------------------
@@ -360,8 +374,6 @@ public class NoteItemPanes : Box {
       var pos   = new NoteItemPos.from_pane( pane );
       var moved = false;
 
-      stdout.printf( "In move_item, move_row: %s, dir: %s, record: %s\n", move_row.to_string(), dir.to_string(), record_undo.to_string() );
-
       // If we need to move the entire current row, do that now
       if( move_row ) {
         moved = move_item_row( pos.row, dir );
@@ -555,14 +567,29 @@ public class NoteItemPanes : Box {
     _note = note;
     _rows = 0;
 
+    // Hide the widget to avoid unnecessary layout calls
+    this.visible = false;
+
+    // Cleanup the signal handlers for all panes about to be removed
+    var child = get_first_child() as NoteItemPaneRow;
+    while( child != null ) {
+      child.cleanup();
+      child = child.get_next_sibling() as NoteItemPaneRow;
+    }
+
+    // Clear the pane box
     Utils.clear_box( this );
 
+    // Add the panes
     for( int i=0; i<_note.rows(); i++ ) {
       var row = _note.get_row( i );
       for( int j=0; j<row.size(); j++ ) {
         add_pane( _note.get_item( i, j ), i, j, (j > 0), false );
       }
     }
+
+    // After all panes have been added, show this box
+    this.visible = true;
 
   }
 

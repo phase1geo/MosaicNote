@@ -483,7 +483,8 @@ public class NotesPanel : Box {
     if( row != null ) {
       var pos = row.get_index();
       _model.items_changed( pos, 1, 1 );
-      _list.select_row( _list.get_row_at_index( pos ) );
+      stdout.printf( "In update_notes\n" );
+      // TODO _list.select_row( _list.get_row_at_index( pos ) );
     }
   }
 

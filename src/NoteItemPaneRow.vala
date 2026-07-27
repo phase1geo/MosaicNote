@@ -86,6 +86,16 @@ public class NoteItemPaneRow : Box {
   }
 
   //-------------------------------------------------------------
+  // Called prior to destruction of row to cleanup signal handlers.
+  public void cleanup() {
+    var child = _box.get_first_child() as NoteItemPane;
+    while( child != null ) {
+      child.cleanup();
+      child = child.get_next_sibling() as NoteItemPane;
+    } 
+  }
+
+  //-------------------------------------------------------------
   // Populates this row with the given note.
   public void add_pane( NoteItemPane pane, int column = -1 ) {
     if( (column == -1) || (column >= _size) ) {
