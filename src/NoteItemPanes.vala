@@ -572,8 +572,7 @@ public class NoteItemPanes : Box {
   // Adds the contents of the current note into the content area
   public void populate( Note note ) {
 
-    _note = note;
-    _rows = 0;
+    // Remove references to any panes
     _current_item = null;
     _spell.detach();
 
@@ -589,6 +588,9 @@ public class NoteItemPanes : Box {
 
     // Clear the pane box
     Utils.clear_box( this );
+
+    _note = note;
+    _rows = 0;
 
     // Add the panes
     for( int i=0; i<_note.rows(); i++ ) {

@@ -43,6 +43,7 @@ public class NoteItemPane : Box {
   private ulong _setting2_id = 0;
   private ulong _setting3_id = 0;
   private ulong _expanded_id = 0;
+  private ulong _current_id  = 0;
 
   private MainWindow    _win;
   private NoteItem      _item;
@@ -122,7 +123,7 @@ public class NoteItemPane : Box {
     create_bar();
 
     // If we are being set as the current item, make sure that we are drawn as the current item
-    set_as_current.connect((msg) => {
+    _current_id = set_as_current.connect((msg) => {
       add_css_class( "active-item" );
       _stack.visible_child_name = item.row.expanded ? "selected" : "unselected";
       _stack.get_parent().visible = true;
@@ -316,41 +317,44 @@ public class NoteItemPane : Box {
 
     w.add_controller( key );
 
+    weak NoteItemPane weak_self = this;
+
     key.key_pressed.connect((keyval, keycode, state) => {
+      if( weak_self == null ) return( false );
       var shift   = (bool)(state & Gdk.ModifierType.SHIFT_MASK);
       var control = (bool)(state & Gdk.ModifierType.CONTROL_MASK);
       switch( keyval ) {
         case Gdk.Key.Return :
           if( control && shift ) {
-            add_item( MoveDirection.UP, null );
+            weak_self.add_item( MoveDirection.UP, null );
             return( true );
           } else if( shift ) {
-            add_item( MoveDirection.DOWN, null );
+            weak_self.add_item( MoveDirection.DOWN, null );
             return( true );
           }
           break;
         case Gdk.Key.BackSpace :
           if( control ) {
-            remove_item( false, true );
+            weak_self.remove_item( false, true );
             return( true );
           }
           break;
         case Gdk.Key.Delete :
           if( control ) {
-            remove_item( true, true );
+            weak_self.remove_item( true, true );
             return( true );
           }
           break;
         case Gdk.Key.Up   :
         case Gdk.Key.Left :
-          var pos = new NoteItemPos.from_pane( this );
-          var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( this ), (keyval == Gdk.Key.Up) );
+          var pos = new NoteItemPos.from_pane( weak_self );
+          var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( weak_self ), (keyval == Gdk.Key.Up) );
           if( prev_pane != null ) {
             if( control ) {
-              move_item( shift, ((keyval == Gdk.Key.Up) ? MoveDirection.UP : MoveDirection.LEFT), true );
+              weak_self.move_item( shift, ((keyval == Gdk.Key.Up) ? MoveDirection.UP : MoveDirection.LEFT), true );
               return( true );
-            } else if( (keyval != Gdk.Key.Up) || !handled_up() ) {
-              var text = get_text();
+            } else if( (keyval != Gdk.Key.Up) || !weak_self.handled_up() ) {
+              var text = weak_self.get_text();
               if( text != null ) {
                 TextIter iter;
                 text.buffer.get_iter_at_mark( out iter, text.buffer.get_insert() );
@@ -365,14 +369,14 @@ public class NoteItemPane : Box {
           return( false );
         case Gdk.Key.Down  :
         case Gdk.Key.Right :
-          var pos = new NoteItemPos.from_pane( this );
-          var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( this ), (keyval == Gdk.Key.Down) );
+          var pos = new NoteItemPos.from_pane( weak_self );
+          var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( weak_self ), (keyval == Gdk.Key.Down) );
           if( next_pane != null ) {
             if( control ) {
-              move_item( shift, ((keyval == Gdk.Key.Down) ? MoveDirection.DOWN : MoveDirection.RIGHT), true );
+              weak_self.move_item( shift, ((keyval == Gdk.Key.Down) ? MoveDirection.DOWN : MoveDirection.RIGHT), true );
               return( true );
-            } else if( (keyval != Gdk.Key.Down) || !handled_down() ) {
-              var text = get_text();
+            } else if( (keyval != Gdk.Key.Down) || !weak_self.handled_down() ) {
+              var text = weak_self.get_text();
               if( text != null ) {
                 TextIter iter;
                 text.buffer.get_iter_at_mark( out iter, text.buffer.get_insert() );
@@ -398,29 +402,32 @@ public class NoteItemPane : Box {
 
     text.add_controller( key );
 
+    weak NoteItemPane weak_self = this;
+
     key.key_pressed.connect((keyval, keycode, state) => {
+      if( weak_self == null ) return( false );
       var control = (bool)(state & Gdk.ModifierType.CONTROL_MASK);
       switch( keyval ) {
         case Gdk.Key.slash :
           if( control ) {
-            split_item();
+            weak_self.split_item();
             return( true );
           }
           break;
         case Gdk.Key.BackSpace :
-          var pos = new NoteItemPos.from_pane( this );
-          var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( this ) );
+          var pos = new NoteItemPos.from_pane( weak_self );
+          var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( weak_self ) );
           if( (prev_pane != null) && !control ) {
             TextIter cursor;
             text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );
-            if( cursor.is_start() && join_items() ) {
+            if( cursor.is_start() && weak_self.join_items() ) {
               return( true );
             }
           }
           break;
         case Gdk.Key.Up :
-          var pos = new NoteItemPos.from_pane( this );
-          var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( this ) );
+          var pos = new NoteItemPos.from_pane( weak_self );
+          var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( weak_self ) );
           if( (prev_pane != null) && !control ) {
             TextIter cursor;
             text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );
@@ -431,8 +438,8 @@ public class NoteItemPane : Box {
           }
           break;
         case Gdk.Key.Down :
-          var pos = new NoteItemPos.from_pane( this );
-          var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( this ) );
+          var pos = new NoteItemPos.from_pane( weak_self );
+          var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( weak_self ) );
           if( (next_pane != null) && !control ) {
             TextIter cursor;
             text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );
@@ -502,11 +509,14 @@ public class NoteItemPane : Box {
       text             = item.content
     };
 
+    weak NoteItemPane weak_self = this;
+
     buffer.changed.connect(() => {
-      if( !ignore_text_change ) {
-        win.undo.add_item( new UndoTextChanges( item ) );
+      if( weak_self == null ) return;
+      if( !weak_self.ignore_text_change ) {
+        weak_self.win.undo.add_item( new UndoTextChanges( weak_self.item ) );
       }
-      ignore_text_change = false;
+      weak_self.ignore_text_change = false;
     });
 
     if( lang_id != null ) {
@@ -553,14 +563,17 @@ public class NoteItemPane : Box {
     });
 
     focus.enter.connect(() => {
-      if( item.item_type.spell_checkable() ) {
-        set_spellchecker();
+      if( weak_self == null ) return;
+      if( weak_self.item.item_type.spell_checkable() ) {
+        weak_self.set_spellchecker();
       }
-      set_as_current( "pane (%s) getting focus".printf( item.content ) );
+      weak_self.set_as_current( "pane (%s) getting focus".printf( item.content ) );
     });
 
+    var save_item   = item;
+    var save_buffer = buffer;
     save.connect(() => {
-      item.content = buffer.text;
+      save_item.content = save_buffer.text;
     });
 
     _setting1_id = MosaicNote.settings.changed["editor-line-spacing"].connect(() => {
@@ -630,6 +643,10 @@ public class NoteItemPane : Box {
     if( _expanded_id != 0 ) {
       SignalHandler.disconnect( _item.row, _expanded_id );
       _expanded_id = 0;
+    }
+    if( _current_id != 0 ) {
+      SignalHandler.disconnect( this, _current_id );
+      _current_id = 0;
     }
 
   }
@@ -743,8 +760,11 @@ public class NoteItemPane : Box {
       selected   = (int)item.item_type
     };
 
+    weak NoteItemPane weak_self = this;
     item_type.notify["selected"].connect(() => {
-      change_item( (NoteItemType)item_type.selected );
+      if( weak_self != null ) {
+        weak_self.change_item( (NoteItemType)item_type.selected );
+      }
     });
 
     _header1 = create_header1();
@@ -843,10 +863,12 @@ public class NoteItemPane : Box {
   // become the current pane when it is clicked.
   protected void click_to_current( Widget widget ) {
     var click = new GestureClick();
+    weak NoteItemPane weak_self = this;
     click.released.connect((n_press, x, y) => {
-      if( !has_css_class( "active-item" ) ) {
-        set_as_current();
-        grab_item_focus( TextCursorPlacement.NO_CHANGE );
+      if( weak_self == null ) return;
+      if( !weak_self.has_css_class( "active-item" ) ) {
+        weak_self.set_as_current();
+        weak_self.grab_item_focus( TextCursorPlacement.NO_CHANGE );
       }
     });
     widget.add_controller( click );

@@ -53,6 +53,10 @@ public class NoteItemPaneAssets : NoteItemPane {
 
   }
 
+  ~NoteItemPaneAssets() {
+    stdout.printf( "NoteItemPaneAssets destructor called\n" );
+  }
+
   //-------------------------------------------------------------
   // Grabs the focus of the note item at the specified position.
   public override void grab_item_focus( TextCursorPlacement placement, int offset = 0 ) {
@@ -141,8 +145,11 @@ public class NoteItemPaneAssets : NoteItemPane {
       tooltip_text = _( "Add assets" )
     };
 
+    weak NoteItemPaneAssets weak_self = this;
     _add.clicked.connect(() => {
-      show_file_dialog();
+      if( weak_self != null ) {
+        weak_self.show_file_dialog();
+      }
     });
 
     return( _add );
@@ -206,19 +213,23 @@ public class NoteItemPaneAssets : NoteItemPane {
     _listbox.add_controller( list_drop );
     _listbox.add_controller( right_click );
 
+    weak NoteItemPaneAssets weak_self = this;
+
     _listbox.row_activated.connect((row) => {
-      var uri = assets_item.get_asset( row.get_index() ).orig_path;
+      if( weak_self == null ) return;
+      var uri = weak_self.assets_item.get_asset( row.get_index() ).orig_path;
       Utils.open_url( uri );
     });
 
     key.key_pressed.connect((keyval, keycode, state) => {
-      var row = _listbox.get_selected_row();
+      if( weak_self == null ) return( false );
+      var row = weak_self._listbox.get_selected_row();
       if( row != null ) {
         if( (keyval == Gdk.Key.Delete) || (keyval == Gdk.Key.BackSpace) ) {
           var index = row.get_index();
-          win.undo.add_item( new UndoItemAssetsRemove( this, assets_item, index ) );
-          assets_item.remove_asset( index );
-          _listbox.remove( row );
+          weak_self.win.undo.add_item( new UndoItemAssetsRemove( weak_self, weak_self.assets_item, index ) );
+          weak_self.assets_item.remove_asset( index );
+          weak_self._listbox.remove( row );
           return( true );
         }
       }
@@ -226,16 +237,18 @@ public class NoteItemPaneAssets : NoteItemPane {
     });
 
     focus.enter.connect(() => {
-      set_as_current();
-      _drop_box.visible = true;
+      if( weak_self == null ) return;
+      weak_self.set_as_current();
+      weak_self._drop_box.visible = true;
     });
     
     list_drag.prepare.connect((x, y) => {
-      var row = _listbox.get_row_at_y( (int)y );
+      if( weak_self == null ) return( null );
+      var row = weak_self._listbox.get_row_at_y( (int)y );
       if( row != null ) { 
-        _listbox.select_row( row );
+        weak_self._listbox.select_row( row );
         var val = Value( typeof(GLib.File) );
-        val = File.new_for_uri( assets_item.get_asset( row.get_index() ).orig_path );
+        val = File.new_for_uri( weak_self.assets_item.get_asset( row.get_index() ).orig_path );
         var cp = new Gdk.ContentProvider.for_value( val );
         return( cp );
       }
@@ -243,28 +256,32 @@ public class NoteItemPaneAssets : NoteItemPane {
     });
 
     list_drop.motion.connect((x, y) => {
-      var row = _listbox.get_row_at_y( (int)y );
+      if( weak_self == null ) return( Gdk.DragAction.COPY );
+      var row = weak_self._listbox.get_row_at_y( (int)y );
       if( row != null ) {
-        _listbox.drag_unhighlight_row();
-        _listbox.drag_highlight_row( row );
+        weak_self._listbox.drag_unhighlight_row();
+        weak_self._listbox.drag_highlight_row( row );
       }
       return( Gdk.DragAction.COPY );
     });
 
     list_drop.leave.connect(() => {
-      _listbox.drag_unhighlight_row();
+      if( weak_self != null ) {
+        weak_self._listbox.drag_unhighlight_row();
+      }
     });
 
     list_drop.drop.connect((val, x, y) => {
+      if( weak_self == null ) return( false );
       var file = (File)val.get_object();
       if( file != null ) {
-        var row = _listbox.get_row_at_y( (int)y );
+        var row = weak_self._listbox.get_row_at_y( (int)y );
         if( row != null ) {
           var index = row.get_index();
-          add_asset( file.get_uri(), true, index );
-          _listbox.drag_unhighlight_row();
-          _listbox.select_row( _listbox.get_row_at_index( index ) );
-          win.undo.add_item( new UndoItemAssetsAdd( this, assets_item, index ) );
+          weak_self.add_asset( file.get_uri(), true, index );
+          weak_self._listbox.drag_unhighlight_row();
+          weak_self._listbox.select_row( weak_self._listbox.get_row_at_index( index ) );
+          weak_self.win.undo.add_item( new UndoItemAssetsAdd( weak_self, weak_self.assets_item, index ) );
           return( true );
         }
       }
@@ -272,15 +289,16 @@ public class NoteItemPaneAssets : NoteItemPane {
     });
 
     right_click.pressed.connect((n_press, x, y) => {
-      var row = _listbox.get_row_at_y( (int)y );
+      if( weak_self == null ) return;
+      var row = weak_self._listbox.get_row_at_y( (int)y );
       if( row != null ) {
         Gdk.Rectangle rect = {(int)x, (int)y, 1, 1};
-        _listbox.select_row( row );
-        var popover = new PopoverMenu.from_model( create_contextual_menu( row.get_index() ) ) {
+        weak_self._listbox.select_row( row );
+        var popover = new PopoverMenu.from_model( weak_self.create_contextual_menu( row.get_index() ) ) {
           pointing_to = rect,
           position    = PositionType.TOP
         };
-        popover.set_parent( _listbox );
+        popover.set_parent( weak_self._listbox );
         popover.popup();
       }
     });
@@ -305,11 +323,12 @@ public class NoteItemPaneAssets : NoteItemPane {
     _drop_box.add_controller( box_drop );
 
     box_drop.drop.connect((val, x, y) => {
+      if( weak_self == null ) return( false );
       var file = (File)val.get_object();
       if( file != null ) {
-        add_asset( file.get_uri(), true );
-        _listbox.select_row( _listbox.get_row_at_index( assets_item.size() - 1 ) );
-        win.undo.add_item( new UndoItemAssetsAdd( this, assets_item, (assets_item.size() - 1) ) );
+        weak_self.add_asset( file.get_uri(), true );
+        weak_self._listbox.select_row( weak_self._listbox.get_row_at_index( weak_self.assets_item.size() - 1 ) );
+        weak_self.win.undo.add_item( new UndoItemAssetsAdd( weak_self, weak_self.assets_item, (weak_self.assets_item.size() - 1) ) );
         return( true );
       }
       return( false );
