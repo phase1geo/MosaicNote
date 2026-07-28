@@ -415,7 +415,7 @@ public class NoteItemPanes : Box {
         _current_item = weak_pane;
         item_selected( weak_pane );
       } else {
-        if( _current_item != pane ) {
+        if( _current_item != weak_pane ) {
           if( _current_item != null ) {
             _current_item.clear_current();
             update_all_footnotes();
@@ -579,6 +579,16 @@ public class NoteItemPanes : Box {
     // Hide the widget to avoid unnecessary layout calls
     this.visible = false;
 
+    var pane = get_pane( 0, 0 );
+    var frow = get_row( 0 );
+
+    if( pane != null ) {
+      stdout.printf( "A pane ref count: %u\n", pane.ref_count );
+    }
+    if( frow != null ) {
+      stdout.printf( "A row ref_count: %u\n", frow.ref_count );
+    }
+
     // Cleanup the signal handlers for all panes about to be removed
     var child = get_first_child() as NoteItemPaneRow;
     while( child != null ) {
@@ -586,8 +596,22 @@ public class NoteItemPanes : Box {
       child = child.get_next_sibling() as NoteItemPaneRow;
     }
 
+    if( pane != null ) {
+      stdout.printf( "B pane ref count: %u\n", pane.ref_count );
+    }
+    if( frow != null ) {
+      stdout.printf( "B row ref_count: %u\n", frow.ref_count );
+    }
+
     // Clear the pane box
     Utils.clear_box( this );
+
+    if( pane != null ) {
+      stdout.printf( "C pane ref count: %u\n", pane.ref_count );
+    }
+    if( frow != null ) {
+      stdout.printf( "C row ref_count: %u\n", frow.ref_count );
+    }
 
     _note = note;
     _rows = 0;

@@ -145,12 +145,14 @@ public class NoteItemPaneAssets : NoteItemPane {
       tooltip_text = _( "Add assets" )
     };
 
+    /* TEST
     weak NoteItemPaneAssets weak_self = this;
     _add.clicked.connect(() => {
       if( weak_self != null ) {
         weak_self.show_file_dialog();
       }
     });
+    */
 
     return( _add );
 
@@ -213,6 +215,7 @@ public class NoteItemPaneAssets : NoteItemPane {
     _listbox.add_controller( list_drop );
     _listbox.add_controller( right_click );
 
+    /* TEST
     weak NoteItemPaneAssets weak_self = this;
 
     _listbox.row_activated.connect((row) => {
@@ -302,6 +305,7 @@ public class NoteItemPaneAssets : NoteItemPane {
         popover.popup();
       }
     });
+    */
 
     var drop_label = new Label( _( "Drag file or URL here to add" ) ) {
       halign = Align.CENTER,
@@ -322,6 +326,7 @@ public class NoteItemPaneAssets : NoteItemPane {
     var box_drop = new DropTarget( typeof( File ), Gdk.DragAction.COPY );
     _drop_box.add_controller( box_drop );
 
+    /* TEST
     box_drop.drop.connect((val, x, y) => {
       if( weak_self == null ) return( false );
       var file = (File)val.get_object();
@@ -333,6 +338,7 @@ public class NoteItemPaneAssets : NoteItemPane {
       }
       return( false );
     });
+    */
 
     var box = new Box( Orientation.VERTICAL, 5 ) {
       margin_start  = 5,

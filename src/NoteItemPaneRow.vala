@@ -70,9 +70,12 @@ public class NoteItemPaneRow : Box {
       homogeneous = true
     };
 
+    weak NoteItemPaneRow weak_self = this;
+
     expand.clicked.connect(() => {
-      _row.expanded = !_row.expanded;
-      expand.label  = _row.expanded ? "\u23f7" : "\u23f5";
+      if( weak_self == null ) return;
+      weak_self._row.expanded = !weak_self._row.expanded;
+      expand.label  = weak_self._row.expanded ? "\u23f7" : "\u23f5";
     });
 
     append( lbox );
@@ -80,9 +83,14 @@ public class NoteItemPaneRow : Box {
 
   }
 
+  ~NoteItemPaneRow() {
+    stdout.printf( "NoteItemPaneRow destroyed\n" );
+  }
+
   //-------------------------------------------------------------
   // Called prior to destruction of row to cleanup signal handlers.
   public void cleanup() {
+    stdout.printf( "NoteItemPaneRow cleanup occurring\n" );
     var child = _box.get_first_child() as NoteItemPane;
     while( child != null ) {
       child.cleanup();

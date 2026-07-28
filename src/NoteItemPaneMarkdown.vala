@@ -562,52 +562,82 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   // Adds an optional description entry field for the code.
   protected override Widget create_header1() {
 
+    weak NoteItemPaneMarkdown weak_self = this;
+
     var bold = new Button() {
       has_frame = false,
       tooltip_markup = Utils.tooltip_with_accel( _( "Bold" ), "<Control>b" ),
       child = create_label( " <b>B</b> " )
     };
-    bold.clicked.connect( insert_bold );
+    bold.clicked.connect(() => {
+      if( weak_self != null ) {
+        weak_self.insert_bold();
+      }
+    });
 
     var italics = new Button() {
       has_frame = false,
       tooltip_markup = Utils.tooltip_with_accel( _( "Italic" ), "<Control>i" ),
       child = create_label( " <i>I</i> " )
     };
-    italics.clicked.connect( insert_italics );
+    italics.clicked.connect(() => {
+      if( weak_self != null ) {
+        weak_self.insert_italics();
+      }
+    });
 
     var strike = new Button() {
       has_frame = false,
       tooltip_markup = Utils.tooltip_with_accel( _( "Strikethrough" ), "<Control>minus" ),
       child = create_label( " <s>S</s>" )
     };
-    strike.clicked.connect( insert_strike );
+    strike.clicked.connect(() => {
+      if( weak_self != null ) {
+        weak_self.insert_strike();
+      }
+    });
 
     var code = new Button() {
       has_frame = false,
       tooltip_text = _( "Code Block" ),
       child = create_label( "{ }" )
     };
-    code.clicked.connect( insert_code );
+    code.clicked.connect(() => {
+      if( weak_self != null ) {
+        weak_self.insert_code();
+      }
+    });
 
     var hilite = new Button() {
       has_frame = false,
       tooltip_markup = Utils.tooltip_with_accel( _( "Highlight" ), "<Control>h" ),
       child = create_label( "<span background='#ffff0080'> <b>H</b> </span>" )
     };
-    hilite.clicked.connect( insert_highlight );
+    hilite.clicked.connect(() => {
+      if( weak_self != null ) {
+        weak_self.insert_highlight();
+      }
+    });
 
     var link = new Button.from_icon_name( "insert-link-symbolic" ) {
       has_frame = false,
       tooltip_markup = Utils.tooltip_with_accel( _( "Add Link" ), "<Control>l" )
     };
-    link.clicked.connect( insert_link );
+    link.clicked.connect(() => {
+      if( weak_self != null ) {
+        weak_self.insert_link();
+      }
+    });
 
     var footnote = new Button.with_label( "\u2020" ) {
       has_frame = false,
       tooltip_markup = Utils.tooltip_with_accel( _( "Add Footnote" ), "<Control>t" )
     };
-    footnote.clicked.connect( insert_footnote_ref );
+    footnote.clicked.connect(() => {
+      if( weak_self != null ) {
+        weak_self.insert_footnote_ref();
+      }
+    });
 
     var box = new Box( Orientation.HORIZONTAL, 5 );
     box.append( bold );
@@ -688,9 +718,19 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     _text = create_text( "mosaic-markdown", "mosaic-markdown" );
     _text.add_css_class( "markdown-text" );
 
+    weak NoteItemPaneMarkdown weak_self = this;
+
     var buffer = (GtkSource.Buffer)_text.buffer;
-    buffer.insert_text.connect( check_inserted_text );
-    buffer.cursor_moved.connect( handle_cursor_moved );
+    buffer.insert_text.connect((ref pos, text, len) => {
+      if( weak_self != null ) {
+        weak_self.check_inserted_text( ref pos, text, len );
+      }
+    });
+    buffer.cursor_moved.connect(() => {
+      if( weak_self != null ) {
+        weak_self.handle_cursor_moved();
+      }
+    });
 
     var click  = new GestureClick();
     var motion = new EventControllerMotion();
@@ -700,41 +740,43 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     _text.add_controller( key );
 
     motion.motion.connect((x, y) => {
+      if( weak_self == null ) return;
       TextIter iter;
       TextTag  link_tag;
-      if( _text.get_iter_at_location( out iter, (int)x, (int)y ) ) {
-        if( iter_within_link( iter, out link_tag ) ) {
+      if( weak_self._text.get_iter_at_location( out iter, (int)x, (int)y ) ) {
+        if( weak_self.iter_within_link( iter, out link_tag ) ) {
           MarkdownLinkType link_type;
           string link;
-          _text.set_cursor( _cursor_pointer );
-          get_link_info( iter, link_tag, out link_type, out link );
+          weak_self._text.set_cursor( weak_self._cursor_pointer );
+          weak_self.get_link_info( iter, link_tag, out link_type, out link );
           if( link_type == MarkdownLinkType.FOOTNOTE ) {
-            var footnotes = item.row.note.footnotes;
+            var footnotes = weak_self.item.row.note.footnotes;
             var tooltip   = "<i>Click to edit footnote</i>";
             if( footnotes.has_key( link ) ) {
               tooltip = footnotes.get( link ) + "\n\n" + tooltip;
             }
-            _text.tooltip_markup = tooltip;
+            weak_self._text.tooltip_markup = tooltip;
           }
           return;
         }
       }
-      _text.set_cursor( _cursor_text );
-      _text.tooltip_markup = null;
+      weak_self._text.set_cursor( weak_self._cursor_text );
+      weak_self._text.tooltip_markup = null;
     });
 
     click.released.connect((n_press, x, y) => {
+      if( weak_self == null ) return;
       if( n_press == 1 ) {
         TextIter start;
         TextTag  link_tag;
-        if( _text.get_iter_at_location( out start, (int)x, (int)y ) ) {
-          if( iter_within_link( start, out link_tag ) ) {
+        if( weak_self._text.get_iter_at_location( out start, (int)x, (int)y ) ) {
+          if( weak_self.iter_within_link( start, out link_tag ) ) {
             MarkdownLinkType link_type;
             string link;
-            get_link_info( start, link_tag, out link_type, out link );
+            weak_self.get_link_info( start, link_tag, out link_type, out link );
             switch( link_type ) {
-              case MarkdownLinkType.NOTE_LINK :  note_link_clicked( link );  break;
-              case MarkdownLinkType.FOOTNOTE  :  footnote_clicked( link );  break;
+              case MarkdownLinkType.NOTE_LINK :  weak_self.note_link_clicked( link );  break;
+              case MarkdownLinkType.FOOTNOTE  :  weak_self.footnote_clicked( link );  break;
               default                         :  Utils.open_url( link );  break;
             }
           }
@@ -743,48 +785,49 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     });
 
     key.key_pressed.connect((keyval, keycode, state) => {
+      if( weak_self == null ) return( false );
       var control = (bool)(state & Gdk.ModifierType.CONTROL_MASK);
       var shift   = (bool)(state & Gdk.ModifierType.SHIFT_MASK);
       switch( keyval ) {
         case Gdk.Key.d :
           if( control ) {
-            toggle_task();
+            weak_self.toggle_task();
             return( true );
           }
           break;
         case Gdk.Key.b :
           if( control ) {
-            insert_bold();
+            weak_self.insert_bold();
             return( true );
           }
           break;
         case Gdk.Key.i :
           if( control ) {
-            insert_italics();
+            weak_self.insert_italics();
             return( true );
           }
           break;
         case Gdk.Key.minus :
           if( control ) {
-            insert_strike();
+            weak_self.insert_strike();
             return( true );
           }
           break;
         case Gdk.Key.h :
           if( control ) {
-            insert_highlight();
+            weak_self.insert_highlight();
             return( true );
           }
           break;
         case Gdk.Key.l :
           if( control ) {
-            insert_link();
+            weak_self.insert_link();
             return( true );
           }
           break;
         case Gdk.Key.t :
           if( control ) {
-            insert_footnote_ref();
+            weak_self.insert_footnote_ref();
             return( true );
           }
           break;

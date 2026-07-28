@@ -122,12 +122,14 @@ public class NoteItemPane : Box {
     // Create the UI
     create_bar();
 
+    /* TEST
     // If we are being set as the current item, make sure that we are drawn as the current item
     _current_id = set_as_current.connect((msg) => {
       add_css_class( "active-item" );
       _stack.visible_child_name = item.row.expanded ? "selected" : "unselected";
       _stack.get_parent().visible = true;
     });
+    */
 
     // Set the stage for menu actions
     var actions = new SimpleActionGroup ();
@@ -317,6 +319,7 @@ public class NoteItemPane : Box {
 
     w.add_controller( key );
 
+    /* TEST
     weak NoteItemPane weak_self = this;
 
     key.key_pressed.connect((keyval, keycode, state) => {
@@ -392,6 +395,7 @@ public class NoteItemPane : Box {
       }
       return( false );
     });
+    */
   }
 
   //-------------------------------------------------------------
@@ -402,6 +406,7 @@ public class NoteItemPane : Box {
 
     text.add_controller( key );
 
+    /* TEST
     weak NoteItemPane weak_self = this;
 
     key.key_pressed.connect((keyval, keycode, state) => {
@@ -452,6 +457,7 @@ public class NoteItemPane : Box {
       }
       return( false );
     });
+    */
 
   }
 
@@ -509,6 +515,7 @@ public class NoteItemPane : Box {
       text             = item.content
     };
 
+    /* TEST
     weak NoteItemPane weak_self = this;
 
     buffer.changed.connect(() => {
@@ -518,6 +525,7 @@ public class NoteItemPane : Box {
       }
       weak_self.ignore_text_change = false;
     });
+    */
 
     if( lang_id != null ) {
       var lang_mgr = GtkSource.LanguageManager.get_default();
@@ -556,6 +564,7 @@ public class NoteItemPane : Box {
 
     text.add_controller( focus );
 
+    /* TEST
     _spell_id = _spell.recheck_all.connect(() => {
       if( item.item_type.spell_checkable() ) {
         _spell.recheck( get_text() );
@@ -575,6 +584,7 @@ public class NoteItemPane : Box {
     save.connect(() => {
       save_item.content = save_buffer.text;
     });
+    */
 
     _setting1_id = MosaicNote.settings.changed["editor-line-spacing"].connect(() => {
       set_line_spacing( text );
@@ -625,29 +635,38 @@ public class NoteItemPane : Box {
   public virtual void cleanup() {
 
     if( _spell_id != 0 ) {
+      stdout.printf( "Cleanup spell_id\n" );
       SignalHandler.disconnect( _spell, _spell_id );
       _spell_id = 0;
     }
     if( _setting1_id != 0 ) {
+      stdout.printf( "Cleanup setting1_id\n" );
       SignalHandler.disconnect( MosaicNote.settings, _setting1_id );
       _setting1_id = 0;
     }
     if( _setting2_id != 0 ) {
+      stdout.printf( "Cleanup setting2_id\n" );
       SignalHandler.disconnect( MosaicNote.settings, _setting2_id );
       _setting2_id = 0;
     }
     if( _setting3_id != 0 ) {
+      stdout.printf( "Cleanup setting3_id\n" );
       SignalHandler.disconnect( MosaicNote.settings, _setting3_id );
       _setting3_id = 0;
     }
     if( _expanded_id != 0 ) {
+      stdout.printf( "Cleanup expanded_id\n" );
       SignalHandler.disconnect( _item.row, _expanded_id );
       _expanded_id = 0;
     }
     if( _current_id != 0 ) {
+      stdout.printf( "Cleanup current_id\n" );
       SignalHandler.disconnect( this, _current_id );
       _current_id = 0;
     }
+
+    insert_action_group( "item", null );
+    _spell.detach();
 
   }
 
@@ -723,11 +742,13 @@ public class NoteItemPane : Box {
       menu_model = menu
     };
 
+    /* TEST
     more.notify["active"].connect(() => {
       if( !more.active ) {
         more.opacity = control_opacity;
       }
     });
+    */
 
     var rbox = new Box( Orientation.VERTICAL, 5 ) {
       margin_end    = 5,
@@ -739,6 +760,7 @@ public class NoteItemPane : Box {
     var rbox_motion = new EventControllerMotion();
     rbox.add_controller( rbox_motion );
 
+    /* TEST
     rbox_motion.enter.connect((x, y) => {
       more.opacity = 1.0;
     });
@@ -747,6 +769,7 @@ public class NoteItemPane : Box {
         more.opacity = control_opacity;
       }
     });
+    */
 
     string[] item_types = {};
     for( int i=0; i<NoteItemType.NUM; i++ ) {
@@ -760,12 +783,14 @@ public class NoteItemPane : Box {
       selected   = (int)item.item_type
     };
 
+    /* TEST
     weak NoteItemPane weak_self = this;
     item_type.notify["selected"].connect(() => {
       if( weak_self != null ) {
         weak_self.change_item( (NoteItemType)item_type.selected );
       }
     });
+    */
 
     _header1 = create_header1();
 
@@ -825,6 +850,7 @@ public class NoteItemPane : Box {
     var cbox_motion = new EventControllerMotion();
     cbox.add_controller( cbox_motion );
 
+    /* TEST
     cbox_motion.enter.connect((x, y) => {
       if( !more.active ) {
         more.opacity = control_opacity;
@@ -833,6 +859,7 @@ public class NoteItemPane : Box {
     cbox_motion.leave.connect(() => {
       more.opacity = 0.0;
     });
+    */
 
     append( cbox );
     append( rbox );
@@ -862,6 +889,7 @@ public class NoteItemPane : Box {
   // This function will make the given widget cause the pane to
   // become the current pane when it is clicked.
   protected void click_to_current( Widget widget ) {
+    /* TEST
     var click = new GestureClick();
     weak NoteItemPane weak_self = this;
     click.released.connect((n_press, x, y) => {
@@ -872,6 +900,7 @@ public class NoteItemPane : Box {
       }
     });
     widget.add_controller( click );
+    */
   }
 
   //-------------------------------------------------------------
