@@ -36,6 +36,7 @@ sources += files(
     # 'NoteSearch.vala',
     'NotesPanel.vala',
     'Preferences.vala',
+    'RemovableBox.vala',
     'SearchBox.vala',
     'Sidebar.vala',
     'SmartDateFilter.vala',

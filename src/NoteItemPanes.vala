@@ -132,7 +132,7 @@ public enum MoveDirection {
 // Contains all of the note item panes for a single note.  Handles
 // any resources that are shared by multiple panes (i.e., spellchecker).
 // Provides functionality for manipulating panes within the browser.
-public class NoteItemPanes : Box {
+public class NoteItemPanes : RemovableBox {
 
   private MainWindow    _win;
   private Note          _note;
@@ -154,10 +154,7 @@ public class NoteItemPanes : Box {
   // Default constructor
   public NoteItemPanes( MainWindow win ) {
 
-    Object(
-      orientation: Orientation.VERTICAL,
-      spacing: 5
-    );
+    base( Orientation.VERTICAL, 5 );
 
     _win = win;
 
@@ -175,7 +172,6 @@ public class NoteItemPanes : Box {
         child = child.get_next_sibling() as NoteItemPane;
       }
     });
-
 
     add_css_class( "themed" );
 
@@ -309,10 +305,8 @@ public class NoteItemPanes : Box {
       default                    :  return( null );
     }
 
-    weak NoteItemPane weak_pane = pane;
-
-    pane.add_item.connect((dir, type) => {
-      var pos     = new NoteItemPos.from_pane( weak_pane );
+    var add_item_id = pane.add_item.connect((dir, type) => {
+      var pos     = new NoteItemPos.from_pane( pane );
       var row_pos = pos.row;
       var col_pos = pos.col;
       var use_row = true;
@@ -324,17 +318,18 @@ public class NoteItemPanes : Box {
       }
       add_new_item( ((type == null) ? NoteItemType.MARKDOWN : type), row_pos, col_pos, use_row );
     });
+    add_signal( pane, add_item_id );
 
-    pane.remove_item.connect((forward, record_undo) => {
-      var pos      = new NoteItemPos.from_pane( weak_pane );
-      var pane_row = (NoteItemPaneRow)weak_pane.get_parent().get_parent();
+    var remove_item_id = pane.remove_item.connect((forward, record_undo) => {
+      var pos      = new NoteItemPos.from_pane( pane );
+      var pane_row = (NoteItemPaneRow)pane.get_parent().get_parent();
       var row_pos  = pos.row;
       var col_pos  = pos.col;
       var rows     = _rows;
       if( record_undo ) {
         _win.undo.add_item( new UndoItemDelete( _note, pos.row, pos.col ) );
       }
-      item_removed( weak_pane );
+      item_removed( pane );
       pane_row.delete_pane( pos.col );
       if( pane_row.size == 0 ) {
         remove( pane_row );
@@ -353,10 +348,11 @@ public class NoteItemPanes : Box {
         add_new_item( NoteItemType.MARKDOWN );
       }
     });
+    add_signal( pane, remove_item_id );
 
-    pane.remove_row.connect((forward, record_undo) => {
-      var pos      = new NoteItemPos.from_pane( weak_pane );
-      var pane_row = (NoteItemPaneRow)weak_pane.get_parent().get_parent();
+    var remove_row_id = pane.remove_row.connect((forward, record_undo) => {
+      var pos      = new NoteItemPos.from_pane( pane );
+      var pane_row = (NoteItemPaneRow)pane.get_parent().get_parent();
       var row_pos  = pos.row;
       var rows     = _rows;
       if( record_undo ) {
@@ -377,13 +373,15 @@ public class NoteItemPanes : Box {
         add_new_item( NoteItemType.MARKDOWN );
       }
     });
+    add_signal( pane, remove_row_id );
 
-    pane.change_item.connect((type) => {
+    var change_item_id = pane.change_item.connect((type) => {
       set_current_item_to_type( type );
     });
+    add_signal( pane, change_item_id );
 
-    pane.move_item.connect((move_row, dir, record_undo) => {
-      var pos   = new NoteItemPos.from_pane( weak_pane );
+    var move_item_id = pane.move_item.connect((move_row, dir, record_undo) => {
+      var pos   = new NoteItemPos.from_pane( pane );
       var moved = false;
 
       // If we need to move the entire current row, do that now
@@ -396,50 +394,54 @@ public class NoteItemPanes : Box {
       }
 
       // Make sure the pane is in view
-      show_pane( weak_pane );
+      show_pane( pane );
 
       // Give the pane focus again if it was moved
       if( moved ) {
-        weak_pane.grab_item_focus( TextCursorPlacement.NO_CHANGE );
+        pane.grab_item_focus( TextCursorPlacement.NO_CHANGE );
       }
 
       // Record the move
       if( record_undo && moved ) {
-        _win.undo.add_item( new UndoItemMove( weak_pane, move_row, dir ) );
+        _win.undo.add_item( new UndoItemMove( pane, move_row, dir ) );
       }
-
     });
+    add_signal( pane, move_item_id );
 
-    pane.set_as_current.connect((msg) => {
+    var current_id = pane.set_as_current.connect((msg) => {
       if( _current_item == null ) {
-        _current_item = weak_pane;
-        item_selected( weak_pane );
+        _current_item = pane;
+        item_selected( pane );
       } else {
-        if( _current_item != weak_pane ) {
+        if( _current_item != pane ) {
           if( _current_item != null ) {
             _current_item.clear_current();
             update_all_footnotes();
           }
-          _current_item = weak_pane;
-          item_selected( weak_pane );
+          _current_item = pane;
+          item_selected( pane );
         }
       }
-      show_pane( weak_pane );
+      show_pane( pane );
     });
+    add_signal( pane, current_id );
 
-    pane.note_link_clicked.connect((link) => {
+    var note_link_id = pane.note_link_clicked.connect((link) => {
       note_link_clicked( link );
     });
+    add_signal( pane, note_link_id );
 
-    pane.footnote_clicked.connect((link) => {
+    var footnote_id = pane.footnote_clicked.connect((link) => {
       footnote_clicked( link );
     });
+    add_signal( pane, footnote_id );
 
-    pane.show_image.connect(() => {
+    var show_image_id = pane.show_image.connect(() => {
       var items = new Array<NoteItem>();
       items.append_val( item );
       show_images( items, 0 );
     });
+    add_signal( pane, show_image_id );
 
     row_pane.add_pane( pane, col );
 
@@ -502,9 +504,6 @@ public class NoteItemPanes : Box {
 
     // Figure out how to make the move
     _note.plan_move( row, col, dir, out new_row, out new_col, out add_to_row );
-
-    stdout.printf( "In move_item, row: %d, col: %d, dir: %s, new_row: %d, row_col: %d, add: %s\n",
-      row, col, dir.to_string(), new_row, new_col, add_to_row.to_string() );
 
     // Move the note item
     _note.move_item( row, col, new_row, new_col, add_to_row );
@@ -582,36 +581,11 @@ public class NoteItemPanes : Box {
     var pane = get_pane( 0, 0 );
     var frow = get_row( 0 );
 
-    if( pane != null ) {
-      stdout.printf( "A pane ref count: %u\n", pane.ref_count );
-    }
-    if( frow != null ) {
-      stdout.printf( "A row ref_count: %u\n", frow.ref_count );
-    }
-
     // Cleanup the signal handlers for all panes about to be removed
-    var child = get_first_child() as NoteItemPaneRow;
-    while( child != null ) {
-      child.cleanup();
-      child = child.get_next_sibling() as NoteItemPaneRow;
-    }
-
-    if( pane != null ) {
-      stdout.printf( "B pane ref count: %u\n", pane.ref_count );
-    }
-    if( frow != null ) {
-      stdout.printf( "B row ref_count: %u\n", frow.ref_count );
-    }
+    base.cleanup();
 
     // Clear the pane box
     Utils.clear_box( this );
-
-    if( pane != null ) {
-      stdout.printf( "C pane ref count: %u\n", pane.ref_count );
-    }
-    if( frow != null ) {
-      stdout.printf( "C row ref_count: %u\n", frow.ref_count );
-    }
 
     _note = note;
     _rows = 0;

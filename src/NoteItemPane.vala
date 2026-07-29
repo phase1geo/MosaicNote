@@ -34,16 +34,9 @@ public enum TextCursorPlacement {
 //-------------------------------------------------------------
 // Base class for a single note item pane.  Contains shared functionality
 // related to panes containing text.
-public class NoteItemPane : Box {
+public class NoteItemPane : RemovableBox {
 
   private const double control_opacity = 0.1;
-
-  private ulong _spell_id    = 0;
-  private ulong _setting1_id = 0;
-  private ulong _setting2_id = 0;
-  private ulong _setting3_id = 0;
-  private ulong _expanded_id = 0;
-  private ulong _current_id  = 0;
 
   private MainWindow    _win;
   private NoteItem      _item;
@@ -105,15 +98,11 @@ public class NoteItemPane : Box {
 	// Default constructor
 	public NoteItemPane( MainWindow win, NoteItem item, SpellChecker? spell ) {
 
-    Object(
-      orientation: Orientation.HORIZONTAL,
-      spacing: 0,
-      // margin_top: 5,
-      // margin_bottom: 5,
-      margin_start: 5,
-      margin_end: 5,
-      halign: Align.FILL
-    );
+    base( Orientation.HORIZONTAL, 0 );
+
+    margin_start = 5;
+    margin_end   = 5;
+    halign       = Align.FILL;
 
     _win   = win;
     _item  = item;
@@ -122,14 +111,13 @@ public class NoteItemPane : Box {
     // Create the UI
     create_bar();
 
-    /* TEST
     // If we are being set as the current item, make sure that we are drawn as the current item
-    _current_id = set_as_current.connect((msg) => {
+    var current_id = set_as_current.connect((msg) => {
       add_css_class( "active-item" );
       _stack.visible_child_name = item.row.expanded ? "selected" : "unselected";
       _stack.get_parent().visible = true;
     });
-    */
+    add_signal( this, current_id );
 
     // Set the stage for menu actions
     var actions = new SimpleActionGroup ();
@@ -140,6 +128,18 @@ public class NoteItemPane : Box {
 
   ~NoteItemPane () {
     stdout.printf( "NoteItemPane destroyed\n" );
+  }
+
+  public override void cleanup() {
+
+    base.cleanup();
+
+    // Remove the action group
+    insert_action_group( "item", null );
+
+    // Make sure that the spell checker is not attached to us
+    _spell.detach();
+
   }
 
   //-------------------------------------------------------------
@@ -319,45 +319,41 @@ public class NoteItemPane : Box {
 
     w.add_controller( key );
 
-    /* TEST
-    weak NoteItemPane weak_self = this;
-
-    key.key_pressed.connect((keyval, keycode, state) => {
-      if( weak_self == null ) return( false );
+    var press_id = key.key_pressed.connect((keyval, keycode, state) => {
       var shift   = (bool)(state & Gdk.ModifierType.SHIFT_MASK);
       var control = (bool)(state & Gdk.ModifierType.CONTROL_MASK);
       switch( keyval ) {
         case Gdk.Key.Return :
           if( control && shift ) {
-            weak_self.add_item( MoveDirection.UP, null );
+            add_item( MoveDirection.UP, null );
             return( true );
           } else if( shift ) {
-            weak_self.add_item( MoveDirection.DOWN, null );
+            add_item( MoveDirection.DOWN, null );
             return( true );
           }
           break;
         case Gdk.Key.BackSpace :
           if( control ) {
-            weak_self.remove_item( false, true );
+            remove_item( false, true );
             return( true );
           }
           break;
         case Gdk.Key.Delete :
           if( control ) {
-            weak_self.remove_item( true, true );
+            remove_item( true, true );
             return( true );
           }
           break;
         case Gdk.Key.Up   :
         case Gdk.Key.Left :
-          var pos = new NoteItemPos.from_pane( weak_self );
-          var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( weak_self ), (keyval == Gdk.Key.Up) );
+          var pos = new NoteItemPos.from_pane( this );
+          var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( this ), (keyval == Gdk.Key.Up) );
           if( prev_pane != null ) {
             if( control ) {
-              weak_self.move_item( shift, ((keyval == Gdk.Key.Up) ? MoveDirection.UP : MoveDirection.LEFT), true );
+              move_item( shift, ((keyval == Gdk.Key.Up) ? MoveDirection.UP : MoveDirection.LEFT), true );
               return( true );
-            } else if( (keyval != Gdk.Key.Up) || !weak_self.handled_up() ) {
-              var text = weak_self.get_text();
+            } else if( (keyval != Gdk.Key.Up) || !handled_up() ) {
+              var text = get_text();
               if( text != null ) {
                 TextIter iter;
                 text.buffer.get_iter_at_mark( out iter, text.buffer.get_insert() );
@@ -372,14 +368,14 @@ public class NoteItemPane : Box {
           return( false );
         case Gdk.Key.Down  :
         case Gdk.Key.Right :
-          var pos = new NoteItemPos.from_pane( weak_self );
-          var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( weak_self ), (keyval == Gdk.Key.Down) );
+          var pos = new NoteItemPos.from_pane( this );
+          var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( this ), (keyval == Gdk.Key.Down) );
           if( next_pane != null ) {
             if( control ) {
-              weak_self.move_item( shift, ((keyval == Gdk.Key.Down) ? MoveDirection.DOWN : MoveDirection.RIGHT), true );
+              move_item( shift, ((keyval == Gdk.Key.Down) ? MoveDirection.DOWN : MoveDirection.RIGHT), true );
               return( true );
-            } else if( (keyval != Gdk.Key.Down) || !weak_self.handled_down() ) {
-              var text = weak_self.get_text();
+            } else if( (keyval != Gdk.Key.Down) || !handled_down() ) {
+              var text = get_text();
               if( text != null ) {
                 TextIter iter;
                 text.buffer.get_iter_at_mark( out iter, text.buffer.get_insert() );
@@ -395,7 +391,7 @@ public class NoteItemPane : Box {
       }
       return( false );
     });
-    */
+    add_signal( key, press_id );
   }
 
   //-------------------------------------------------------------
@@ -406,33 +402,29 @@ public class NoteItemPane : Box {
 
     text.add_controller( key );
 
-    /* TEST
-    weak NoteItemPane weak_self = this;
-
-    key.key_pressed.connect((keyval, keycode, state) => {
-      if( weak_self == null ) return( false );
+    var press_id = key.key_pressed.connect((keyval, keycode, state) => {
       var control = (bool)(state & Gdk.ModifierType.CONTROL_MASK);
       switch( keyval ) {
         case Gdk.Key.slash :
           if( control ) {
-            weak_self.split_item();
+            split_item();
             return( true );
           }
           break;
         case Gdk.Key.BackSpace :
-          var pos = new NoteItemPos.from_pane( weak_self );
-          var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( weak_self ) );
+          var pos = new NoteItemPos.from_pane( this );
+          var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( this ) );
           if( (prev_pane != null) && !control ) {
             TextIter cursor;
             text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );
-            if( cursor.is_start() && weak_self.join_items() ) {
+            if( cursor.is_start() && join_items() ) {
               return( true );
             }
           }
           break;
         case Gdk.Key.Up :
-          var pos = new NoteItemPos.from_pane( weak_self );
-          var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( weak_self ) );
+          var pos = new NoteItemPos.from_pane( this );
+          var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( this ) );
           if( (prev_pane != null) && !control ) {
             TextIter cursor;
             text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );
@@ -443,8 +435,8 @@ public class NoteItemPane : Box {
           }
           break;
         case Gdk.Key.Down :
-          var pos = new NoteItemPos.from_pane( weak_self );
-          var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( weak_self ) );
+          var pos = new NoteItemPos.from_pane( this );
+          var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( this ) );
           if( (next_pane != null) && !control ) {
             TextIter cursor;
             text.buffer.get_iter_at_mark( out cursor, text.buffer.get_insert() );
@@ -457,7 +449,7 @@ public class NoteItemPane : Box {
       }
       return( false );
     });
-    */
+    add_signal( key, press_id );
 
   }
 
@@ -515,17 +507,13 @@ public class NoteItemPane : Box {
       text             = item.content
     };
 
-    /* TEST
-    weak NoteItemPane weak_self = this;
-
-    buffer.changed.connect(() => {
-      if( weak_self == null ) return;
-      if( !weak_self.ignore_text_change ) {
-        weak_self.win.undo.add_item( new UndoTextChanges( weak_self.item ) );
+    var changed_id = buffer.changed.connect(() => {
+      if( !ignore_text_change ) {
+        win.undo.add_item( new UndoTextChanges( item ) );
       }
-      weak_self.ignore_text_change = false;
+      ignore_text_change = false;
     });
-    */
+    add_signal( buffer, changed_id );
 
     if( lang_id != null ) {
       var lang_mgr = GtkSource.LanguageManager.get_default();
@@ -564,37 +552,37 @@ public class NoteItemPane : Box {
 
     text.add_controller( focus );
 
-    /* TEST
-    _spell_id = _spell.recheck_all.connect(() => {
+    var spell_id = _spell.recheck_all.connect(() => {
       if( item.item_type.spell_checkable() ) {
         _spell.recheck( get_text() );
       }
     });
+    add_signal( _spell, spell_id );
 
-    focus.enter.connect(() => {
-      if( weak_self == null ) return;
-      if( weak_self.item.item_type.spell_checkable() ) {
-        weak_self.set_spellchecker();
+    var enter_id = focus.enter.connect(() => {
+      if( item.item_type.spell_checkable() ) {
+        set_spellchecker();
       }
-      weak_self.set_as_current( "pane (%s) getting focus".printf( item.content ) );
+      set_as_current( "pane (%s) getting focus".printf( item.content ) );
     });
+    add_signal( focus, enter_id );
 
-    var save_item   = item;
-    var save_buffer = buffer;
-    save.connect(() => {
-      save_item.content = save_buffer.text;
+    var save_id = save.connect(() => {
+      item.content = buffer.text;
     });
-    */
+    add_signal( this, save_id );
 
-    _setting1_id = MosaicNote.settings.changed["editor-line-spacing"].connect(() => {
+    var setting1_id = MosaicNote.settings.changed["editor-line-spacing"].connect(() => {
       set_line_spacing( text );
     });
+    add_signal( MosaicNote.settings, setting1_id );
 
     // Attach the spell checker temporarily
     if( item.item_type.spell_checkable() ) {
-      _setting2_id = MosaicNote.settings.changed["enable-spellchecker"].connect(() => {
+      var setting2_id = MosaicNote.settings.changed["enable-spellchecker"].connect(() => {
         set_spellchecker();
       });
+      add_signal( MosaicNote.settings, setting2_id );
     }
 
     var vim_key     = new EventControllerKey();
@@ -616,7 +604,7 @@ public class NoteItemPane : Box {
     */
 
     // Handle any changes to the Vim mode
-    _setting3_id = MosaicNote.settings.changed["editor-vim-mode"].connect(() => {
+    var setting3_id = MosaicNote.settings.changed["editor-vim-mode"].connect(() => {
       if( MosaicNote.settings.get_boolean( "editor-vim-mode" ) ) {
         text.add_controller( vim_key );
         vim_context.set_client_widget( text );
@@ -625,48 +613,9 @@ public class NoteItemPane : Box {
         vim_context.set_client_widget( null );
       }
     });
+    add_signal( MosaicNote.settings, setting3_id );
 
     return( text );
-
-  }
-
-  //-------------------------------------------------------------
-  // Called prior to the pane being destroyed.
-  public virtual void cleanup() {
-
-    if( _spell_id != 0 ) {
-      stdout.printf( "Cleanup spell_id\n" );
-      SignalHandler.disconnect( _spell, _spell_id );
-      _spell_id = 0;
-    }
-    if( _setting1_id != 0 ) {
-      stdout.printf( "Cleanup setting1_id\n" );
-      SignalHandler.disconnect( MosaicNote.settings, _setting1_id );
-      _setting1_id = 0;
-    }
-    if( _setting2_id != 0 ) {
-      stdout.printf( "Cleanup setting2_id\n" );
-      SignalHandler.disconnect( MosaicNote.settings, _setting2_id );
-      _setting2_id = 0;
-    }
-    if( _setting3_id != 0 ) {
-      stdout.printf( "Cleanup setting3_id\n" );
-      SignalHandler.disconnect( MosaicNote.settings, _setting3_id );
-      _setting3_id = 0;
-    }
-    if( _expanded_id != 0 ) {
-      stdout.printf( "Cleanup expanded_id\n" );
-      SignalHandler.disconnect( _item.row, _expanded_id );
-      _expanded_id = 0;
-    }
-    if( _current_id != 0 ) {
-      stdout.printf( "Cleanup current_id\n" );
-      SignalHandler.disconnect( this, _current_id );
-      _current_id = 0;
-    }
-
-    insert_action_group( "item", null );
-    _spell.detach();
 
   }
 
@@ -742,13 +691,12 @@ public class NoteItemPane : Box {
       menu_model = menu
     };
 
-    /* TEST
-    more.notify["active"].connect(() => {
+    var active_id = more.notify["active"].connect(() => {
       if( !more.active ) {
         more.opacity = control_opacity;
       }
     });
-    */
+    add_signal( more, active_id );
 
     var rbox = new Box( Orientation.VERTICAL, 5 ) {
       margin_end    = 5,
@@ -760,16 +708,17 @@ public class NoteItemPane : Box {
     var rbox_motion = new EventControllerMotion();
     rbox.add_controller( rbox_motion );
 
-    /* TEST
-    rbox_motion.enter.connect((x, y) => {
+    var enter_id = rbox_motion.enter.connect((x, y) => {
       more.opacity = 1.0;
     });
-    rbox_motion.leave.connect(() => {
+    add_signal( rbox_motion, enter_id );
+
+    var leave_id = rbox_motion.leave.connect(() => {
       if( !more.active ) {
         more.opacity = control_opacity;
       }
     });
-    */
+    add_signal( rbox_motion, leave_id );
 
     string[] item_types = {};
     for( int i=0; i<NoteItemType.NUM; i++ ) {
@@ -783,14 +732,10 @@ public class NoteItemPane : Box {
       selected   = (int)item.item_type
     };
 
-    /* TEST
-    weak NoteItemPane weak_self = this;
-    item_type.notify["selected"].connect(() => {
-      if( weak_self != null ) {
-        weak_self.change_item( (NoteItemType)item_type.selected );
-      }
+    var selected_id = item_type.notify["selected"].connect(() => {
+      change_item( (NoteItemType)item_type.selected );
     });
-    */
+    add_signal( item_type, selected_id );
 
     _header1 = create_header1();
 
@@ -850,23 +795,24 @@ public class NoteItemPane : Box {
     var cbox_motion = new EventControllerMotion();
     cbox.add_controller( cbox_motion );
 
-    /* TEST
-    cbox_motion.enter.connect((x, y) => {
+    var cbox_enter_id = cbox_motion.enter.connect((x, y) => {
       if( !more.active ) {
         more.opacity = control_opacity;
       }
     });
-    cbox_motion.leave.connect(() => {
+    add_signal( cbox_motion, cbox_enter_id );
+
+    var cbox_leave_id = cbox_motion.leave.connect(() => {
       more.opacity = 0.0;
     });
-    */
+    add_signal( cbox_motion, cbox_leave_id );
 
     append( cbox );
     append( rbox );
 
     click_to_current( this );
 
-    _expanded_id = item.row.notify["expanded"].connect(() => {
+    var expanded_id = item.row.notify["expanded"].connect(() => {
       var expanded  = item.row.expanded;
       pane.visible = expanded;
       type_label.visible = !expanded;
@@ -876,6 +822,7 @@ public class NoteItemPane : Box {
         grab_item_focus( TextCursorPlacement.NO_CHANGE );
       }
     });
+    add_signal( item.row, expanded_id );
 
   }
 
@@ -889,18 +836,15 @@ public class NoteItemPane : Box {
   // This function will make the given widget cause the pane to
   // become the current pane when it is clicked.
   protected void click_to_current( Widget widget ) {
-    /* TEST
     var click = new GestureClick();
-    weak NoteItemPane weak_self = this;
-    click.released.connect((n_press, x, y) => {
-      if( weak_self == null ) return;
-      if( !weak_self.has_css_class( "active-item" ) ) {
-        weak_self.set_as_current();
-        weak_self.grab_item_focus( TextCursorPlacement.NO_CHANGE );
+    var id = click.released.connect((n_press, x, y) => {
+      if( !has_css_class( "active-item" ) ) {
+        set_as_current();
+        grab_item_focus( TextCursorPlacement.NO_CHANGE );
       }
     });
+    add_signal( click, id );
     widget.add_controller( click );
-    */
   }
 
   //-------------------------------------------------------------

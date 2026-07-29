@@ -25,7 +25,7 @@ using Enchant;
 //-------------------------------------------------------------
 // My implementation of gtkspell that is compatible with Gtk4
 // and gtksourceview-5
-public class SpellChecker {
+public class SpellChecker : Object {
 
   private Broker       broker = null;
   private unowned Dict dict;

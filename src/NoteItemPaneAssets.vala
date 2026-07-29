@@ -57,6 +57,11 @@ public class NoteItemPaneAssets : NoteItemPane {
     stdout.printf( "NoteItemPaneAssets destructor called\n" );
   }
 
+  public override void cleanup() {
+    base.cleanup();
+    insert_action_group( "assets", null );
+  }
+
   //-------------------------------------------------------------
   // Grabs the focus of the note item at the specified position.
   public override void grab_item_focus( TextCursorPlacement placement, int offset = 0 ) {
@@ -145,14 +150,8 @@ public class NoteItemPaneAssets : NoteItemPane {
       tooltip_text = _( "Add assets" )
     };
 
-    /* TEST
-    weak NoteItemPaneAssets weak_self = this;
-    _add.clicked.connect(() => {
-      if( weak_self != null ) {
-        weak_self.show_file_dialog();
-      }
-    });
-    */
+    var add_id = _add.clicked.connect( show_file_dialog );
+    add_signal( _add, add_id );
 
     return( _add );
 
@@ -215,97 +214,92 @@ public class NoteItemPaneAssets : NoteItemPane {
     _listbox.add_controller( list_drop );
     _listbox.add_controller( right_click );
 
-    /* TEST
-    weak NoteItemPaneAssets weak_self = this;
-
-    _listbox.row_activated.connect((row) => {
-      if( weak_self == null ) return;
-      var uri = weak_self.assets_item.get_asset( row.get_index() ).orig_path;
+    var row_id = _listbox.row_activated.connect((row) => {
+      var uri = assets_item.get_asset( row.get_index() ).orig_path;
       Utils.open_url( uri );
     });
+    add_signal( _listbox, row_id );
 
-    key.key_pressed.connect((keyval, keycode, state) => {
-      if( weak_self == null ) return( false );
-      var row = weak_self._listbox.get_selected_row();
+    var press_id = key.key_pressed.connect((keyval, keycode, state) => {
+      var row = _listbox.get_selected_row();
       if( row != null ) {
         if( (keyval == Gdk.Key.Delete) || (keyval == Gdk.Key.BackSpace) ) {
           var index = row.get_index();
-          weak_self.win.undo.add_item( new UndoItemAssetsRemove( weak_self, weak_self.assets_item, index ) );
-          weak_self.assets_item.remove_asset( index );
-          weak_self._listbox.remove( row );
+          win.undo.add_item( new UndoItemAssetsRemove( this, assets_item, index ) );
+          assets_item.remove_asset( index );
+          _listbox.remove( row );
           return( true );
         }
       }
       return( false );
     });
+    add_signal( key, press_id );
 
-    focus.enter.connect(() => {
-      if( weak_self == null ) return;
-      weak_self.set_as_current();
-      weak_self._drop_box.visible = true;
+    var enter_id = focus.enter.connect(() => {
+      set_as_current();
+      _drop_box.visible = true;
     });
+    add_signal( focus, enter_id );
     
-    list_drag.prepare.connect((x, y) => {
-      if( weak_self == null ) return( null );
-      var row = weak_self._listbox.get_row_at_y( (int)y );
+    var drag_prepare_id = list_drag.prepare.connect((x, y) => {
+      var row = _listbox.get_row_at_y( (int)y );
       if( row != null ) { 
-        weak_self._listbox.select_row( row );
+        _listbox.select_row( row );
         var val = Value( typeof(GLib.File) );
-        val = File.new_for_uri( weak_self.assets_item.get_asset( row.get_index() ).orig_path );
+        val = File.new_for_uri( assets_item.get_asset( row.get_index() ).orig_path );
         var cp = new Gdk.ContentProvider.for_value( val );
         return( cp );
       }
       return( null );
     });
+    add_signal( list_drag, drag_prepare_id );
 
-    list_drop.motion.connect((x, y) => {
-      if( weak_self == null ) return( Gdk.DragAction.COPY );
-      var row = weak_self._listbox.get_row_at_y( (int)y );
+    var drop_motion_id = list_drop.motion.connect((x, y) => {
+      var row = _listbox.get_row_at_y( (int)y );
       if( row != null ) {
-        weak_self._listbox.drag_unhighlight_row();
-        weak_self._listbox.drag_highlight_row( row );
+        _listbox.drag_unhighlight_row();
+        _listbox.drag_highlight_row( row );
       }
       return( Gdk.DragAction.COPY );
     });
+    add_signal( list_drop, drop_motion_id );
 
-    list_drop.leave.connect(() => {
-      if( weak_self != null ) {
-        weak_self._listbox.drag_unhighlight_row();
-      }
+    var drop_leave_id = list_drop.leave.connect(() => {
+      _listbox.drag_unhighlight_row();
     });
+    add_signal( list_drop, drop_leave_id );
 
-    list_drop.drop.connect((val, x, y) => {
-      if( weak_self == null ) return( false );
+    var drop_drop_id = list_drop.drop.connect((val, x, y) => {
       var file = (File)val.get_object();
       if( file != null ) {
-        var row = weak_self._listbox.get_row_at_y( (int)y );
+        var row = _listbox.get_row_at_y( (int)y );
         if( row != null ) {
           var index = row.get_index();
-          weak_self.add_asset( file.get_uri(), true, index );
-          weak_self._listbox.drag_unhighlight_row();
-          weak_self._listbox.select_row( weak_self._listbox.get_row_at_index( index ) );
-          weak_self.win.undo.add_item( new UndoItemAssetsAdd( weak_self, weak_self.assets_item, index ) );
+          add_asset( file.get_uri(), true, index );
+          _listbox.drag_unhighlight_row();
+          _listbox.select_row( _listbox.get_row_at_index( index ) );
+          win.undo.add_item( new UndoItemAssetsAdd( this, assets_item, index ) );
           return( true );
         }
       }
       return( false );
     });
+    add_signal( list_drop, drop_drop_id );
 
-    right_click.pressed.connect((n_press, x, y) => {
-      if( weak_self == null ) return;
-      var row = weak_self._listbox.get_row_at_y( (int)y );
+    var right_click_id = right_click.pressed.connect((n_press, x, y) => {
+      var row = _listbox.get_row_at_y( (int)y );
       if( row != null ) {
         Gdk.Rectangle rect = {(int)x, (int)y, 1, 1};
-        weak_self._listbox.select_row( row );
-        var popover = new PopoverMenu.from_model( weak_self.create_contextual_menu( row.get_index() ) ) {
+        _listbox.select_row( row );
+        var popover = new PopoverMenu.from_model( create_contextual_menu( row.get_index() ) ) {
           pointing_to = rect,
           position    = PositionType.TOP
         };
-        popover.set_parent( weak_self._listbox );
+        popover.set_parent( _listbox );
         popover.popup();
       }
     });
-    */
+    add_signal( right_click, right_click_id );
 
     var drop_label = new Label( _( "Drag file or URL here to add" ) ) {
       halign = Align.CENTER,
@@ -326,19 +320,17 @@ public class NoteItemPaneAssets : NoteItemPane {
     var box_drop = new DropTarget( typeof( File ), Gdk.DragAction.COPY );
     _drop_box.add_controller( box_drop );
 
-    /* TEST
-    box_drop.drop.connect((val, x, y) => {
-      if( weak_self == null ) return( false );
+    var box_drop_id = box_drop.drop.connect((val, x, y) => {
       var file = (File)val.get_object();
       if( file != null ) {
-        weak_self.add_asset( file.get_uri(), true );
-        weak_self._listbox.select_row( weak_self._listbox.get_row_at_index( weak_self.assets_item.size() - 1 ) );
-        weak_self.win.undo.add_item( new UndoItemAssetsAdd( weak_self, weak_self.assets_item, (weak_self.assets_item.size() - 1) ) );
+        add_asset( file.get_uri(), true );
+        _listbox.select_row( _listbox.get_row_at_index( assets_item.size() - 1 ) );
+        win.undo.add_item( new UndoItemAssetsAdd( this, assets_item, (assets_item.size() - 1) ) );
         return( true );
       }
       return( false );
     });
-    */
+    add_signal( box_drop, box_drop_id );
 
     var box = new Box( Orientation.VERTICAL, 5 ) {
       margin_start  = 5,

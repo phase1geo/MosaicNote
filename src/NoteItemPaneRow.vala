@@ -21,7 +21,7 @@
 
 using Gtk;
 
-public class NoteItemPaneRow : Box {
+public class NoteItemPaneRow : RemovableBox {
 
   private const double control_opacity = 0.1;
 
@@ -39,7 +39,7 @@ public class NoteItemPaneRow : Box {
   // Constructor
   public NoteItemPaneRow( NoteItemRow note_row ) {
 
-    Object( orientation: Orientation.HORIZONTAL, spacing : 5 );
+    base( Orientation.HORIZONTAL, 5 );
 
     _row = note_row;
 
@@ -59,24 +59,25 @@ public class NoteItemPaneRow : Box {
     var lbox_motion = new EventControllerMotion();
     lbox.add_controller( lbox_motion );
 
-    lbox_motion.enter.connect((x, y) => {
+    var enter_id = lbox_motion.enter.connect((x, y) => {
       expand.opacity = 1.0;
     });
-    lbox_motion.leave.connect(() => {
+    add_signal( lbox_motion, enter_id );
+
+    var leave_id = lbox_motion.leave.connect(() => {
       expand.opacity = control_opacity;
     });
+    add_signal( lbox_motion, leave_id );
 
-    _box = new Gtk.Box( Orientation.HORIZONTAL, 5 ) {
+    _box = new RemovableBox( Orientation.HORIZONTAL, 5 ) {
       homogeneous = true
     };
 
-    weak NoteItemPaneRow weak_self = this;
-
-    expand.clicked.connect(() => {
-      if( weak_self == null ) return;
-      weak_self._row.expanded = !weak_self._row.expanded;
-      expand.label  = weak_self._row.expanded ? "\u23f7" : "\u23f5";
+    var expand_id = expand.clicked.connect(() => {
+      _row.expanded = !_row.expanded;
+      expand.label  = _row.expanded ? "\u23f7" : "\u23f5";
     });
+    add_signal( expand, expand_id );
 
     append( lbox );
     append( _box );
@@ -89,13 +90,9 @@ public class NoteItemPaneRow : Box {
 
   //-------------------------------------------------------------
   // Called prior to destruction of row to cleanup signal handlers.
-  public void cleanup() {
+  public override void cleanup() {
     stdout.printf( "NoteItemPaneRow cleanup occurring\n" );
-    var child = _box.get_first_child() as NoteItemPane;
-    while( child != null ) {
-      child.cleanup();
-      child = child.get_next_sibling() as NoteItemPane;
-    } 
+    base.cleanup();
   }
 
   //-------------------------------------------------------------
