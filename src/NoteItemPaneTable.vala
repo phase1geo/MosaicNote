@@ -24,8 +24,6 @@ using Gee;
 
 public class NoteItemPaneTable : NoteItemPane {
 
-  private ulong _description_id = 0;
-
   private Label      _h2_label;
   private ColumnView _table;
   private int        _col_id = 0;
@@ -66,13 +64,15 @@ public class NoteItemPaneTable : NoteItemPane {
 
   }
 
+  ~NoteItemPaneTable() {
+    stdout.printf( "NoteItemPaneTable destroyed\n" );
+  }
+
   //-------------------------------------------------------------
   // Removes all signal handlers prior to destruction.
   public override void cleanup() {
-    if( _description_id != 0 ) {
-      SignalHandler.disconnect( table_item, _description_id );
-      _description_id = 0;
-    }
+    base.cleanup();
+    insert_action_group( "table", null );
   }
 
   //-------------------------------------------------------------
@@ -96,10 +96,11 @@ public class NoteItemPaneTable : NoteItemPane {
       active = table_item.auto_number
     };
 
-    autonum_sw.notify["active"].connect(() => {
+    var active_id = autonum_sw.notify["active"].connect(() => {
       table_item.auto_number = autonum_sw.active;
       auto_number_changed();
     });
+    add_signal( autonum_sw, active_id );
 
     var autonum_box = new Box( Orientation.HORIZONTAL, 5 ) {
       margin_start  = 10,
@@ -129,7 +130,7 @@ public class NoteItemPaneTable : NoteItemPane {
       hexpand = true
     };
 
-    entry.notify["editing"].connect(() => {
+    var editing_id = entry.notify["editing"].connect(() => {
       if( !entry.editing ) {
         var text = (entry.text == default_text) ? "" : entry.text;
         if( table_item.description != text ) {
@@ -139,8 +140,9 @@ public class NoteItemPaneTable : NoteItemPane {
         }
       }
     });
+    add_signal( entry, editing_id );
 
-    save.connect(() => {
+    var save_id = save.connect(() => {
       var text = (entry.text == default_text) ? "" : entry.text;
       if( table_item.description != text ) {
         win.undo.add_item( new UndoItemDescChange( item, table_item.description ) );
@@ -148,14 +150,16 @@ public class NoteItemPaneTable : NoteItemPane {
         _h2_label.label = Utils.make_title( text );
       }
     });
+    add_signal( this, save_id );
 
-    _description_id = table_item.notify["description"].connect(() => {
+    var description_id = table_item.notify["description"].connect(() => {
       var text = (table_item.description == "") ? default_text : table_item.description;
       if( entry.text != text ) {
         entry.text = text;
         _h2_label.label = Utils.make_title( text );
       }
     });
+    add_signal( table_item, description_id );
 
     var menu = new GLib.Menu();
     var popup_menu = new PopoverMenu.from_model( menu );
@@ -235,12 +239,15 @@ public class NoteItemPaneTable : NoteItemPane {
     var col_id_int = _col_id++;
     var col_id     = col_id_int.to_string();
 
-    factory.setup.connect((obj) => {
+    var setup_id = factory.setup.connect((obj) => {
       row_setup( index, col_id, obj );
     });
-    factory.bind.connect((obj) => {
+    add_signal( factory, setup_id );
+
+    var bind_id = factory.bind.connect((obj) => {
       row_bind( index, obj );
     });
+    add_signal( factory, bind_id );
 
     // Create menu
     var edit_menu = new GLib.Menu();
@@ -264,19 +271,21 @@ public class NoteItemPaneTable : NoteItemPane {
       header_menu = head_menu
     };
 
-    column_title_changed.connect((id) => {
+    var title_id = column_title_changed.connect((id) => {
       if( id == col_id ) {
         col.title = table_col.header;
       }
     });
+    add_signal( this, title_id );
 
-    column_type_changed.connect((id) => {
+    var type_id = column_type_changed.connect((id) => {
       if( id == col_id ) {
         var col_index = get_cv_column_index( col_id );
         col.expand    = table_item.get_column( col_index ).data_type.is_expandable();
         col.resizable = table_item.get_column( col_index ).data_type.is_resizable();
       }
     });
+    add_signal( this, type_id );
 
     _table.insert_column( index, col );
 
@@ -324,7 +333,7 @@ public class NoteItemPaneTable : NoteItemPane {
       hexpand = true
     };
 
-    create.clicked.connect(() => {
+    var clicked_id = create.clicked.connect(() => {
       for( int i=0; i<(int)col_sb.value; i++ ) {
         table_item.insert_column( i, _( "Column %d" ).printf( i ), Gtk.Justification.LEFT, TableColumnType.TEXT );
       }
@@ -338,6 +347,7 @@ public class NoteItemPaneTable : NoteItemPane {
       header1.visible = true;
       stack.visible_child_name = "table";
     });
+    add_signal( create, clicked_id );
 
     var bbox = new Box( Orientation.HORIZONTAL, 5 );
     bbox.append( create );
@@ -773,10 +783,11 @@ public class NoteItemPaneTable : NoteItemPane {
     var title_focus = new EventControllerFocus();
     title_entry.add_controller( title_focus );
 
-    title_focus.leave.connect(() => {
+    var leave_id = title_focus.leave.connect(() => {
       column.header = title_entry.text;
       column_title_changed( col_id );
     });
+    add_signal( title_focus, leave_id );
 
     var type_label = new Label( _( "Content Type:" ) ) {
       halign = Align.START,
@@ -797,10 +808,11 @@ public class NoteItemPaneTable : NoteItemPane {
     };
     grid.attach( type_menu, 1, 1 );
 
-    type_menu.notify["selected"].connect(() => {
+    var selected_id = type_menu.notify["selected"].connect(() => {
       column.data_type = (TableColumnType)type_menu.selected;
       column_type_changed( col_id );
     });
+    add_signal( type_menu, selected_id );
 
     var justify_label = new Label( _( "Justify:" ) ) {
       halign = Align.START,
@@ -822,7 +834,7 @@ public class NoteItemPaneTable : NoteItemPane {
       default                   :  assert_not_reached();
     }
 
-    justify_menu.notify["selected"].connect(() => {
+    var justify_id = justify_menu.notify["selected"].connect(() => {
       switch( justify_menu.selected ) {
         case 0 :  column.justify = Justification.LEFT;    break;
         case 1 :  column.justify = Justification.CENTER;  break;
@@ -830,6 +842,7 @@ public class NoteItemPaneTable : NoteItemPane {
       }
       column_justify_changed( col_id );
     });
+    add_signal( justify_menu, justify_id );
 
     var dialog = new Window() {
       decorated = true,

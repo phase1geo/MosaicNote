@@ -23,9 +23,6 @@ using Gtk;
 
 public class NoteItemPaneUML : NoteItemPane {
 
-  private ulong _description_id     = 0;
-  private ulong _diagram_updated_id = 0;
-
   private Label          _h2_label;
   private GtkSource.View _text;
   private Picture        _image;
@@ -44,25 +41,15 @@ public class NoteItemPaneUML : NoteItemPane {
     base( win, item, spell );
   }
 
-  //-------------------------------------------------------------
-  // Cleans up signal handlers prior to destruction.
-  public override void cleanup() {
-    base.cleanup();
-    if( _description_id != 0 ) {
-      SignalHandler.disconnect( uml_item, _description_id );
-      _description_id = 0;
-    }
-    if( _diagram_updated_id != 0 ) {
-      SignalHandler.disconnect( uml_item, _diagram_updated_id );
-      _diagram_updated_id = 0;
-    }
-  }
-
   public override GtkSource.View? get_text() {
     if( _stack.visible_child_name == "input" ) {
       return( _text );
     }
     return( null );
+  }
+
+  ~NoteItemPaneUML() {
+    stdout.printf( "NoteItemPaneUML destroyed\n" );
   }
 
   //-------------------------------------------------------------
@@ -87,7 +74,7 @@ public class NoteItemPaneUML : NoteItemPane {
       hexpand = true
     };
 
-    entry.notify["editing"].connect(() => {
+    var editing_id = entry.notify["editing"].connect(() => {
       if( !entry.editing ) {
         var text = (entry.text == default_text) ? "" : entry.text;
         if( uml_item.description != text ) {
@@ -97,8 +84,9 @@ public class NoteItemPaneUML : NoteItemPane {
         }
       }
     });
+    add_signal( entry, editing_id );
 
-    save.connect(() => {
+    var save_id = save.connect(() => {
       var text = (entry.text == default_text) ? "" : entry.text;
       if( uml_item.description != text ) {
         win.undo.add_item( new UndoItemDescChange( item, uml_item.description ) );
@@ -106,14 +94,16 @@ public class NoteItemPaneUML : NoteItemPane {
         _h2_label.label = Utils.make_title( text );
       }
     });
+    add_signal( this, save_id );
 
-    _description_id = uml_item.notify["description"].connect(() => {
+    var description_id = uml_item.notify["description"].connect(() => {
       var text = (uml_item.description == "") ? default_text : uml_item.description;
       if( entry.text != text ) {
         entry.text = text;
         _h2_label.label = Utils.make_title( text );
       }
     });
+    add_signal( uml_item, description_id );
 
     var help = new Button.from_icon_name( "dialog-information-symbolic" ) {
       halign = Align.END,
@@ -131,7 +121,7 @@ public class NoteItemPaneUML : NoteItemPane {
       tooltip_text = _( "Generate diagram" )
     };
 
-    show.clicked.connect(() => {
+    var show_id = show.clicked.connect(() => {
       _hbbox.visible = false;
       if( item.content == _text.buffer.text ) {
         _stack.visible_child_name = "image";
@@ -140,6 +130,7 @@ public class NoteItemPaneUML : NoteItemPane {
         item.content = _text.buffer.text;
       }
     });
+    add_signal( show, show_id );
 
     _hbbox = new Box( Orientation.HORIZONTAL, 5 ) {
       halign = Align.END
@@ -217,7 +208,7 @@ public class NoteItemPaneUML : NoteItemPane {
     _stack.add_named( _image,  "image" );
     _stack.set_size_request( -1, 500 );
 
-    _diagram_updated_id = uml_item.diagram_updated.connect((filename) => {
+    var diagram_updated_id = uml_item.diagram_updated.connect((filename) => {
       if( filename != null ) {
         _image.file = File.new_for_path( filename );
         _stack.visible_child_name = "image";
@@ -227,8 +218,9 @@ public class NoteItemPaneUML : NoteItemPane {
         _hbbox.visible = true;
       }
     });
+    add_signal( uml_item, diagram_updated_id );
 
-    image_click.pressed.connect((n_press, x, y) => {
+    var click_id = image_click.pressed.connect((n_press, x, y) => {
       if( n_press == 1 ) {
         _image.grab_focus();
       } else if( n_press == 2 ) {
@@ -238,17 +230,20 @@ public class NoteItemPaneUML : NoteItemPane {
         _text.grab_focus();
       }
     });
+    add_signal( image_click, click_id );
 
-    image_focus.enter.connect(() => {
+    var enter_id = image_focus.enter.connect(() => {
       set_as_current();
     });
+    add_signal( image_focus, enter_id );
 
-    image_drag.prepare.connect((d) => {
+    var prepare_id = image_drag.prepare.connect((d) => {
       var val = Value( typeof(GLib.File) );
       val = _image.file;
       var cp = new Gdk.ContentProvider.for_value( val );
       return( cp );
     });
+    add_signal( image_drag, prepare_id );
 
     // Load the image and make it visible (if it exists); otherwise, display the input field.
     if( FileUtils.test( uml_item.get_resource_filename(), FileTest.EXISTS ) ) {
