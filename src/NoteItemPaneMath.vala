@@ -28,8 +28,6 @@ using Gee;
 // links.
 public class NoteItemPaneMath : NoteItemPane {
 
-  private ulong _description_id = 0;
-
   private WebKit.WebView _web;
   private GtkSource.View _text;
   private Frame          _text_frame;
@@ -45,21 +43,16 @@ public class NoteItemPaneMath : NoteItemPane {
     }
   }
 
+  ~NoteItemPaneMath() {
+    stdout.printf( "NoteItemPaneMath destroyed\n" );
+  }
+
   //-------------------------------------------------------------
 	// Default constructor
 	public NoteItemPaneMath( MainWindow win, NoteItem item, SpellChecker? spell ) {
     base( win, item, spell );
     _cursor_pointer = new Gdk.Cursor.from_name( "pointer", null );
     _cursor_text    = new Gdk.Cursor.from_name( "text", null );
-  }
-
-  //-------------------------------------------------------------
-  // Cleans up signal connections prior to destruction.
-  public override void cleanup() {
-    if( _description_id != 0 ) {
-      SignalHandler.disconnect( math_item, _description_id );
-      _description_id = 0;
-    }
   }
 
   //-------------------------------------------------------------
@@ -94,7 +87,7 @@ public class NoteItemPaneMath : NoteItemPane {
       hexpand = true
     };
 
-    entry.notify["editing"].connect(() => {
+    var editing_id = entry.notify["editing"].connect(() => {
       if( !entry.editing ) {
         var text = (entry.text == default_text) ? "" : entry.text;
         if( math_item.description != text ) {
@@ -104,8 +97,9 @@ public class NoteItemPaneMath : NoteItemPane {
         }
       }
     });
+    add_signal( entry, editing_id );
 
-    save.connect(() => {
+    var save_id = save.connect(() => {
       var text = (entry.text == default_text) ? "" : entry.text;
       if( math_item.description != text ) {
         win.undo.add_item( new UndoItemDescChange( item, math_item.description ) );
@@ -113,14 +107,16 @@ public class NoteItemPaneMath : NoteItemPane {
         _h2_label.label = Utils.make_title( text );
       }
     });
+    add_signal( this, save_id );
 
-    _description_id = math_item.notify["description"].connect(() => {
+    var description_id = math_item.notify["description"].connect(() => {
       var text = (math_item.description == "") ? default_text : math_item.description;
       if( entry.text != text ) {
         entry.text = text;
         _h2_label.label = Utils.make_title( text );
       }
     });
+    add_signal( math_item, description_id );
 
     _help = new Button.from_icon_name( "dialog-information-symbolic" ) {
       halign = Align.END,
@@ -193,9 +189,10 @@ public class NoteItemPaneMath : NoteItemPane {
 
     _text = create_text();
 
-    _text.buffer.changed.connect(() => {
+    var changed_id = _text.buffer.changed.connect(() => {
       load_html( _text.buffer.text );
     });
+    add_signal( _text.buffer, changed_id );
 
     _text_frame = new Frame( _( "AsciiMath Input" ) ) {
       child        = _text,
@@ -218,13 +215,14 @@ public class NoteItemPaneMath : NoteItemPane {
     var web_click = new GestureClick();
     _web.add_controller( web_click );
 
-    web_click.pressed.connect((n_press, x, y) => {
+    var click_id = web_click.pressed.connect((n_press, x, y) => {
       set_as_current();
       _text_frame.visible = true;
       _text.grab_focus();
     });
+    add_signal( web_click, click_id );
 
-    save.connect(() => {
+    var save_id = save.connect(() => {
       if( _text.buffer.text != _prev_content ) {
         _prev_content = _text.buffer.text;
         _web.get_snapshot.begin( WebKit.SnapshotRegion.FULL_DOCUMENT, WebKit.SnapshotOptions.TRANSPARENT_BACKGROUND, null, (obj, res) => {
@@ -239,6 +237,7 @@ public class NoteItemPaneMath : NoteItemPane {
         });
       }
     });
+    add_signal( this, save_id );
 
     if( math_item.content != "" ) {
       load_html( math_item.content );

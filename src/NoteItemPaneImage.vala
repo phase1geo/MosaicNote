@@ -41,14 +41,14 @@ public class NoteItemPaneImage : NoteItemPane {
     base( win, item, spell );
   }
 
+  ~NoteItemPaneImage() {
+    stdout.printf( "NoteItemPaneImage destroyed\n" );
+  }
+
   //-------------------------------------------------------------
   // Removes all signal connections prior to destruction.
   public override void cleanup() {
     base.cleanup();
-    if( _description_id != 0 ) {
-      SignalHandler.disconnect( image_item, _description_id );
-      _description_id = 0;
-    }
   }
 
   //-------------------------------------------------------------
@@ -201,7 +201,7 @@ public class NoteItemPaneImage : NoteItemPane {
       hexpand = true
     };
 
-    entry.notify["editing"].connect(() => {
+    var editing_id = entry.notify["editing"].connect(() => {
       if( !entry.editing ) {
         var text = (entry.text == default_text) ? "" : entry.text;
         if( image_item.description != text ) {
@@ -211,6 +211,7 @@ public class NoteItemPaneImage : NoteItemPane {
         }
       }
     });
+    add_signal( entry, editing_id );
 
     var open = new Button.from_icon_name( "image-x-generic-symbolic" ) {
       halign       = Align.END,
@@ -218,9 +219,10 @@ public class NoteItemPaneImage : NoteItemPane {
       tooltip_text = _( "Change Image From File" )
     };
 
-    open.clicked.connect(() => {
+    var open_id = open.clicked.connect(() => {
       image_dialog( image_item );
     });
+    add_signal( open, open_id );
 
     var screenshot = new Button.from_icon_name( "insert-image" ) {
       halign = Align.END,
@@ -228,16 +230,17 @@ public class NoteItemPaneImage : NoteItemPane {
       tooltip_text = _( "Change Image From Screenshot" )
     };
 
-    screenshot.clicked.connect(() => {
+    var screenshot_id = screenshot.clicked.connect(() => {
       do_screenshot( image_item );
     });
+    add_signal( screenshot, screenshot_id );
 
     var box = new Box( Orientation.HORIZONTAL, 5 );
     box.append( entry );
     box.append( open );
     box.append( screenshot );
 
-    save.connect(() => {
+    var save_id = save.connect(() => {
       var text = (entry.text == default_text) ? "" : entry.text;
       if( image_item.description != text ) {
         win.undo.add_item( new UndoItemDescChange( item, image_item.description ) );
@@ -245,14 +248,16 @@ public class NoteItemPaneImage : NoteItemPane {
         _h2_label.label = Utils.make_title( text );
       }
     });
+    add_signal( this, save_id );
 
-    _description_id = image_item.notify["description"].connect(() => {
+    var description_id = image_item.notify["description"].connect(() => {
       var text = (image_item.description == "") ? default_text : image_item.description;
       if( entry.text != text ) {
         entry.text = text;
         _h2_label.label = Utils.make_title( text );
       }
     });
+    add_signal( image_item, description_id );
 
     return( box );
 
@@ -316,26 +321,29 @@ public class NoteItemPaneImage : NoteItemPane {
     box.set_size_request( -1, 500 );
     box.add_css_class( "themed" );
 
-    image_click.pressed.connect((n_press, x, y) => {
+    var click_id = image_click.pressed.connect((n_press, x, y) => {
       if( n_press == 1 ) {
         _image.grab_focus();
       } else if( n_press == 2 ) {
         show_image();
       }
     });
+    add_signal( image_click, click_id );
 
-    image_focus.enter.connect(() => {
+    var enter_id = image_focus.enter.connect(() => {
       set_as_current();
     });
+    add_signal( image_focus, enter_id );
 
-    image_drag.prepare.connect((d) => {
+    var drag_prepare_id = image_drag.prepare.connect((d) => {
       var val = Value( typeof(GLib.File) );
       val = _image.file;
       var cp = new Gdk.ContentProvider.for_value( val );
       return( cp );
     });
+    add_signal( image_drag, drag_prepare_id );
 
-    image_drop.drop.connect((val, x, y) => {
+    var drop_drop_id = image_drop.drop.connect((val, x, y) => {
       var file = (val as GLib.File);
       if( file != null ) {
         uint8[] contents = {};
@@ -351,10 +359,12 @@ public class NoteItemPaneImage : NoteItemPane {
       }
       return( false );
     });
+    add_signal( image_drop, drop_drop_id );
 
-    image_item.notify["uri"].connect(() => {
+    var uri_id = image_item.notify["uri"].connect(() => {
       _image.file = File.new_for_path( image_item.get_resource_filename() );
     });
+    add_signal( image_item, uri_id );
 
     handle_key_events( _image );
 
