@@ -374,22 +374,6 @@ public class NoteItemPaneTable : NoteItemPane {
     };
     _table.add_css_class( "table-border" );
 
-    // This should force the table to be resized once the text widgets have been
-    // realized.
-    _table.map.connect(() => {
-      Timeout.add( 1000, () => {
-        stdout.printf( "HERE\n" );
-        _table.queue_draw();
-        /*
-        var root = _table.get_root();
-        if( root != null ) {
-          ((Widget)root).queue_allocate();
-        }
-        */
-        return( false );
-      });
-    });
-
     var stack = new Stack();
 
     var maker = create_table_maker( stack );
@@ -765,7 +749,18 @@ public class NoteItemPaneTable : NoteItemPane {
   private void bind_text( int column, ListItem li ) {
     var row  = (NoteItemTableRow)li.item;
     var text = (TextView)li.child.get_last_child();
-    text.buffer.text = row.get_value( column );
+    var val  = row.get_value( column );
+
+    text.buffer.text = val;
+
+    // Force a re-measure once GtkTextView's own lazy layout validation
+    // has had a chance to run, in case its natural size changes after
+    // validation without automatically triggering a resize.
+    Idle.add(() => {
+      text.queue_resize();
+      li.child.queue_resize();
+      return( false );
+    }, GLib.Priority.LOW );
   }
 
   //-------------------------------------------------------------
