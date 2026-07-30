@@ -27,17 +27,17 @@ public class NoteItemPaneTable : NoteItemPane {
   private Label      _h2_label;
   private ColumnView _table;
   private int        _col_id = 0;
-#if !GTK412
-  private HashMap<string,ColumnViewColumn> _col_map;
-#endif
+  private int        _row_id = 0;
+  private HashMap<string, ListItem> _row_map;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_format_column",        action_format_column,        "s" },
     { "action_insert_column_before", action_insert_column_before, "s" },
     { "action_insert_column_after",  action_insert_column_after,  "s" },
     { "action_delete_column",        action_delete_column,        "s" },
-    { "action_insert_row",           action_insert_row,           "i" },
-    { "action_delete_row",           action_delete_row,           "i" },
+    { "action_insert_row_above",     action_insert_row_above,     "s" },
+    { "action_insert_row_below",     action_insert_row_below,     "s" },
+    { "action_delete_row",           action_delete_row,           "s" },
   };
 
   private signal void auto_number_changed();
@@ -56,6 +56,8 @@ public class NoteItemPaneTable : NoteItemPane {
 	public NoteItemPaneTable( MainWindow win, NoteItem item, SpellChecker spell ) {
 
     base( win, item, spell );
+
+    _row_map = new HashMap<string, ListItem>();
 
     // Set the stage for menu actions
     var actions = new SimpleActionGroup ();
@@ -202,7 +204,6 @@ public class NoteItemPaneTable : NoteItemPane {
     return( _h2_label );
   }
 
-#if GTK412
   //-------------------------------------------------------------
   // Returns the index of the column with the given ID.
   private int get_cv_column_index( string col_id ) {
@@ -215,19 +216,6 @@ public class NoteItemPaneTable : NoteItemPane {
     }
     return( -1 );
   }
-#else
-  private int get_cv_column_index( string col_id ) {
-    var store    = (GLib.ListStore)_table.columns;
-    var find_col = _col_map.get( col_id );
-    for( int i=0; i<store.get_n_items(); i++ ) {
-      var col = (store.get_item( i ) as ColumnViewColumn);
-      if( col == find_col ) {
-        return( i );
-      }
-    }
-    return( -1 );
-  }
-#endif
 
   //-------------------------------------------------------------
   // Adds a new ColumnView column this will need to be called
@@ -240,12 +228,17 @@ public class NoteItemPaneTable : NoteItemPane {
     var col_id     = col_id_int.to_string();
 
     var setup_id = factory.setup.connect((obj) => {
-      row_setup( index, col_id, obj );
+      row_setup( col_id, obj );
     });
     add_signal( factory, setup_id );
 
+    var teardown_id = factory.teardown.connect((obj) => {
+      row_teardown( obj );
+    });
+    add_signal( factory, teardown_id );
+
     var bind_id = factory.bind.connect((obj) => {
-      row_bind( index, obj );
+      row_bind( col_id, obj );
     });
     add_signal( factory, bind_id );
 
@@ -263,9 +256,7 @@ public class NoteItemPaneTable : NoteItemPane {
     head_menu.append_section( null, del_menu );
 
     var col = new ColumnViewColumn( table_col.header, factory ) {
-#if GTK412
       id          = col_id,
-#endif
       expand      = table_item.get_column( index ).data_type.is_expandable(),
       resizable   = table_item.get_column( index ).data_type.is_resizable(),
       header_menu = head_menu
@@ -288,10 +279,6 @@ public class NoteItemPaneTable : NoteItemPane {
     add_signal( this, type_id );
 
     _table.insert_column( index, col );
-
-#if !GTK412
-    _col_map.set( col_id, col );
-#endif
 
     return( col_id );
 
@@ -379,19 +366,29 @@ public class NoteItemPaneTable : NoteItemPane {
 
     var selector = new SingleSelection( table_item.model );
 
-#if !GTK412
-    _col_map = new HashMap<string,ColumnViewColumn>();
-#endif    
-
     _table = new ColumnView( selector ) {
-#if GTK412
       // tab_behavior = ListTabBehavior.ALL,
-#endif
       halign = Align.FILL,
       show_row_separators = true,
       show_column_separators = true
     };
     _table.add_css_class( "table-border" );
+
+    // This should force the table to be resized once the text widgets have been
+    // realized.
+    _table.map.connect(() => {
+      Timeout.add( 1000, () => {
+        stdout.printf( "HERE\n" );
+        _table.queue_draw();
+        /*
+        var root = _table.get_root();
+        if( root != null ) {
+          ((Widget)root).queue_allocate();
+        }
+        */
+        return( false );
+      });
+    });
 
     var stack = new Stack();
 
@@ -455,6 +452,8 @@ public class NoteItemPaneTable : NoteItemPane {
       bottom_margin = 5
     };
 
+    text.extra_menu = create_row_contextual_menu( li );
+
     var focus_controller = new EventControllerFocus();
     focus_controller.enter.connect(() => {
       _table.model.select_item( li.get_position(), true );
@@ -472,13 +471,19 @@ public class NoteItemPaneTable : NoteItemPane {
       }
     });
 
+    var save_id = li.get_data<ulong>( "save-id" );
+    if( save_id != 0 ) {
+      SignalHandler.disconnect( this, save_id );
+    }
+
     // If we need to save, check to see if a table cell has focus and
     // save its contents to the note item
-    save.connect(() => {
+    save_id = save.connect(() => {
       if( focus_controller.contains_focus ) {
         save_to_cell( li, column, text.buffer.text );
       }
     });
+    li.set_data<ulong>( "save-id", save_id );
 
     text.add_controller( focus_controller );
     text.add_controller( key_controller );
@@ -572,9 +577,17 @@ public class NoteItemPaneTable : NoteItemPane {
 
   //-------------------------------------------------------------
   // Row factory setup function
-  private void row_setup( int column, string col_id, Object obj ) {
+  private void row_setup( string col_id, Object obj ) {
 
-    var li = (ListItem)obj;
+    stdout.printf( "In row_setup\n" );
+
+    var li         = (ListItem)obj;
+    var column     = get_cv_column_index( col_id );
+    var row_id_int = _row_id++;
+    var row_id     = row_id_int.to_string();
+
+    _row_map.set( row_id, li );
+    li.set_data<string>( "row-id", row_id );
 
     var box = new Box( Orientation.HORIZONTAL, 5 ) {
       margin_start  = 5,
@@ -596,7 +609,7 @@ public class NoteItemPaneTable : NoteItemPane {
 
     li.child = box;
 
-    auto_number_changed.connect(() => {
+    var auto_number_id = auto_number_changed.connect(() => {
       var col_index = get_cv_column_index( col_id );
       if( col_index == 0 ) {
         var b = (Box)li.child;
@@ -607,8 +620,9 @@ public class NoteItemPaneTable : NoteItemPane {
         }
       }
     });
+    li.set_data<ulong>( "auto-number-id", auto_number_id );
 
-    column_justify_changed.connect((id) => {
+    var justify_id = column_justify_changed.connect((id) => {
       if( id == col_id ) {
         var justify = table_item.get_column( column ).justify;
         var child   = li.child.get_last_child();
@@ -620,8 +634,9 @@ public class NoteItemPaneTable : NoteItemPane {
         }
       }
     });
+    li.set_data<ulong>( "justify-id", justify_id );
 
-    column_type_changed.connect((id) => {
+    var type_id = column_type_changed.connect((id) => {
       if( id == col_id ) {
         var b = (Box)li.child;
         b.remove( b.get_last_child() );
@@ -633,6 +648,7 @@ public class NoteItemPaneTable : NoteItemPane {
         }
       }
     });
+    li.set_data<ulong>( "type-id", type_id );
 
     var left_click = new GestureClick() {
       button = Gdk.BUTTON_PRIMARY
@@ -641,7 +657,7 @@ public class NoteItemPaneTable : NoteItemPane {
       button = Gdk.BUTTON_SECONDARY
     };
 
-    left_click.pressed.connect((n, x, y) => {
+    var left_id = left_click.pressed.connect((n, x, y) => {
       var child = li.child.get_last_child();
       switch( table_item.get_column( column ).data_type ) {
         case TableColumnType.TEXT     :  Idle.add(() => { child.grab_focus(); return( false ); });  break;
@@ -650,11 +666,15 @@ public class NoteItemPaneTable : NoteItemPane {
         default                       :  assert_not_reached();
       }
     });
-    right_click.pressed.connect((n, x, y) => {
-      var pos = li.get_position();
-      _table.model.select_item( pos, true );
-      show_row_contextual_menu( box, pos );
+    li.set_data<ulong>( "left-id", left_id );
+    li.set_data<Object>( "left-click", left_click );
+
+    var right_id = right_click.pressed.connect((n, x, y) => {
+      _table.model.select_item( li.get_position(), true );
+      show_row_contextual_menu( box, li );
     });
+    li.set_data<ulong>( "right-id", right_id );
+    li.set_data<Object>( "right-click", right_click );
 
     box.add_controller( left_click );
     box.add_controller( right_click );
@@ -662,14 +682,63 @@ public class NoteItemPaneTable : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Called whenever a row is removed from the table.
+  private void row_teardown( Object obj ) {
+
+    stdout.printf( "In row_teardown\n" );
+
+    var li = (ListItem)obj;
+
+    var auto_number_id = li.get_data<ulong>( "auto-number-id" );
+    if( auto_number_id != 0 ) {
+      SignalHandler.disconnect( this, auto_number_id );
+    }
+
+    var justify_id = li.get_data<ulong>( "justify-id" );
+    if( justify_id != 0 ) {
+      SignalHandler.disconnect( this, justify_id );
+    }
+
+    var type_id = li.get_data<ulong>( "type-id" );
+    if( type_id != 0 ) {
+      SignalHandler.disconnect( this, type_id );
+    }
+
+    var save_id = li.get_data<ulong>( "save-id" );
+    if( save_id != 0 ) {
+      SignalHandler.disconnect( this, save_id );
+    }
+
+    var left_id = li.get_data<ulong>( "left-id" );
+    var left_click = li.get_data<Object>( "left-click" );
+    if( left_id != 0 ) {
+      SignalHandler.disconnect( left_click, left_id );
+    }
+
+    var right_id = li.get_data<ulong>( "right-id" );
+    var right_click = li.get_data<Object>( "right-click" );
+    if( right_id != 0 ) {
+      SignalHandler.disconnect( right_click, right_id );
+    }
+
+    var row_id = li.get_data<string>( "row-id" );
+    if( row_id != null ) {
+      _row_map.unset( row_id );
+    }
+
+  }
+
+  //-------------------------------------------------------------
   // Creates the contextual menu for manipulating rows.
-  private GLib.Menu create_row_contextual_menu( uint row_num ) {
+  private GLib.Menu create_row_contextual_menu( ListItem li ) {
+
+    var row_id = li.get_data<string>( "row-id" );
 
     var add_menu = new GLib.Menu();
-    add_menu.append( _( "Insert row above" ), "table.action_insert_row(%u)".printf( row_num ) );
-    add_menu.append( _( "Insert row below" ), "table.action_insert_row(%u)".printf( row_num + 1 ) );
+    add_menu.append( _( "Insert row above" ), "table.action_insert_row_above('%s')".printf( row_id ) );
+    add_menu.append( _( "Insert row below" ), "table.action_insert_row_below('%s')".printf( row_id ) );
     var del_menu = new GLib.Menu();
-    del_menu.append( _( "Remove row" ), "table.action_delete_row(%u)".printf( row_num ) );
+    del_menu.append( _( "Remove row" ), "table.action_delete_row('%s')".printf( row_id ) );
     var menu = new GLib.Menu();
     menu.append_section( null, add_menu );
     menu.append_section( null, del_menu );
@@ -680,9 +749,9 @@ public class NoteItemPaneTable : NoteItemPane {
 
   //-------------------------------------------------------------
   // Creates and displays the contextual menu for manipulating rows.
-  private void show_row_contextual_menu( Box box, uint row_num ) {
+  private void show_row_contextual_menu( Box box, ListItem li ) {
 
-    var menu = create_row_contextual_menu( row_num );
+    var menu = create_row_contextual_menu( li );
     var popover = new PopoverMenu.from_model( menu ) {
       has_arrow = false
     };
@@ -697,7 +766,6 @@ public class NoteItemPaneTable : NoteItemPane {
     var row  = (NoteItemTableRow)li.item;
     var text = (TextView)li.child.get_last_child();
     text.buffer.text = row.get_value( column );
-    text.extra_menu  = create_row_contextual_menu( li.get_position() );
   }
 
   //-------------------------------------------------------------
@@ -731,9 +799,10 @@ public class NoteItemPaneTable : NoteItemPane {
 
   //-------------------------------------------------------------
   // Row factory bind function
-  private void row_bind( int column, Object obj ) {
+  private void row_bind( string col_id, Object obj ) {
 
-    var li = (ListItem)obj;
+    var li     = (ListItem)obj;
+    var column = get_cv_column_index( col_id );
 
     if( (column == 0) && table_item.auto_number ) {
       var lbl = (Label)li.child.get_first_child().get_first_child();
@@ -918,10 +987,24 @@ public class NoteItemPaneTable : NoteItemPane {
 
   //-------------------------------------------------------------
   // Inserts a new row before the passed row position.
-  private void action_insert_row( SimpleAction action, Variant? variant ) {
+  private void action_insert_row_above( SimpleAction action, Variant? variant ) {
     if( variant != null ) {
-      var index = variant.get_int32();
+      var row_id = variant.get_string();
+      var row_li = _row_map.get( row_id );
+      var index  = (int)row_li.get_position();
       table_item.insert_row( index );
+      win.undo.add_item( new UndoItemTableInsRow( table_item, index ) );
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Inserts a new row before the passed row position.
+  private void action_insert_row_below( SimpleAction action, Variant? variant ) {
+    if( variant != null ) {
+      var row_id = variant.get_string();
+      var row_li = _row_map.get( row_id );
+      var index  = (int)row_li.get_position() + 1;
+      table_item.insert_row( (int)index );
       win.undo.add_item( new UndoItemTableInsRow( table_item, index ) );
     }
   }
@@ -930,7 +1013,9 @@ public class NoteItemPaneTable : NoteItemPane {
   // Deletes the row at the passed row position.
   private void action_delete_row( SimpleAction action, Variant? variant ) {
     if( variant != null ) {
-      var index = variant.get_int32();
+      var row_id = variant.get_string();
+      var row_li = _row_map.get( row_id );
+      var index  = (int)row_li.get_position();
       win.undo.add_item( new UndoItemTableDelRow( table_item, index ) );
       table_item.delete_row( index );
     }
