@@ -571,7 +571,9 @@ public class NoteItemPaneTable : NoteItemPane {
     var row_id     = row_id_int.to_string();
 
     _row_map.set( row_id, li );
+
     li.set_data<string>( "row-id", row_id );
+    li.set_data<bool>( "init-resize", true );
 
     var box = new Box( Orientation.HORIZONTAL, 5 ) {
       margin_start  = 5,
@@ -756,11 +758,14 @@ public class NoteItemPaneTable : NoteItemPane {
     // Force a re-measure once GtkTextView's own lazy layout validation
     // has had a chance to run, in case its natural size changes after
     // validation without automatically triggering a resize.
-    Idle.add(() => {
-      text.queue_resize();
-      li.child.queue_resize();
-      return( false );
-    }, GLib.Priority.LOW );
+    if( li.get_data<bool>( "init-resize" ) ) {
+      Idle.add(() => {
+        text.queue_resize();
+        li.child.queue_resize();
+        return( false );
+      }, GLib.Priority.LOW );
+      li.set_data<bool>( "init-resize", false );
+    }
   }
 
   //-------------------------------------------------------------
