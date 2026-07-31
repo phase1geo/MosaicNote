@@ -60,3 +60,11 @@ listview row:selected {
   border-width: 1px;
   border-color: #888;
 }
+
+columnview.column-separators listview row {
+  padding: 0 0 0 0px;
+}
+
+columnview.column-separators listview row > cell:not(:first-child) {
+  border-left: 1px solid alpha(currentColor, 0.15);
+}
