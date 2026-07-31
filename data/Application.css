@@ -68,3 +68,11 @@ columnview.column-separators listview row {
 columnview.column-separators listview row > cell:not(:first-child) {
   border-left: 1px solid alpha(currentColor, 0.15);
 }
+
+columnview.column-separators * {
+  border-right: 0px;
+}
+
+columnview.column-separators header button:not(:first-child) {
+  border-left: 1px solid alpha(currentColor, 0.15);
+}
