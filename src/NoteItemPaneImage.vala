@@ -98,22 +98,25 @@ public class NoteItemPaneImage : NoteItemPane {
   // Perform the screenshot.
   private async void do_screenshot_portal() {
 
+    DBusConnection? bus = null;
+    uint subscribe_id = 0;
+
     // We will hide the MosaicNote window to capture the screenshot
     win.hide();
     yield screenshot_wait_ms( 200 );
 
     try {
 
-      var bus = Bus.get_sync (BusType.SESSION);
+      bus = Bus.get_sync( BusType.SESSION );
 
-      var proxy = new DBusProxy.sync (
-                bus,
-                DBusProxyFlags.NONE,
-                null,
-                "org.freedesktop.portal.Desktop",
-                "/org/freedesktop/portal/desktop",
-                "org.freedesktop.portal.Screenshot",
-                null
+      var proxy = new DBusProxy.sync(
+        bus,
+        DBusProxyFlags.NONE,
+        null,
+        "org.freedesktop.portal.Desktop",
+        "/org/freedesktop/portal/desktop",
+        "org.freedesktop.portal.Screenshot",
+        null
       );
 
       // Predict the Request handle so we can subscribe to its Response
@@ -127,14 +130,17 @@ public class NoteItemPaneImage : NoteItemPane {
       var sender = bus.get_unique_name().substring( 1 ).replace( ".", "_" );
       var handle = "/org/freedesktop/portal/desktop/request/%s/%s".printf( sender, token );
 
-      bus.signal_subscribe(
+      subscribe_id = bus.signal_subscribe(
         "org.freedesktop.portal.Desktop",
         "org.freedesktop.portal.Request",
         "Response",
         handle,
         null,
         DBusSignalFlags.NONE,
-        handle_screenshot_callback
+        (connection, sender_name, object_path, interface_name, signal_name, parameters) => {
+          connection.signal_unsubscribe( subscribe_id );
+          handle_screenshot_callback( connection, sender_name, object_path, interface_name, signal_name, parameters );
+        }
       );
 
       VariantDict options = new VariantDict( new Variant( "a{sv}" ) );
@@ -153,6 +159,9 @@ public class NoteItemPaneImage : NoteItemPane {
       );
 
     } catch (Error e) {
+      if( (bus != null) && (subscribe_id != 0) ) {
+        bus.signal_unsubscribe( subscribe_id );
+      }
       warning ("Screenshot failed: %s", e.message);
       win.show();
     }
