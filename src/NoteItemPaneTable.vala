@@ -73,8 +73,20 @@ public class NoteItemPaneTable : NoteItemPane {
   //-------------------------------------------------------------
   // Removes all signal handlers prior to destruction.
   public override void cleanup() {
+
+    // Disconnect global signals
     base.cleanup();
+
+    // Remove action group
     insert_action_group( "table", null );
+
+    // Force the rows to unbind
+    _row_map.map_iterator().foreach((k, v) => {
+      row_unbind( v );
+      return( true );
+    });
+    _row_map.clear();
+
   }
 
   //-------------------------------------------------------------
@@ -241,6 +253,11 @@ public class NoteItemPaneTable : NoteItemPane {
       row_bind( col_id, obj );
     });
     add_signal( factory, bind_id );
+
+    var unbind_id = factory.unbind.connect((obj) => {
+      row_unbind( obj );
+    });
+    add_signal( factory, unbind_id );
 
     // Create menu
     var edit_menu = new GLib.Menu();
@@ -439,35 +456,10 @@ public class NoteItemPaneTable : NoteItemPane {
     text.extra_menu = create_row_contextual_menu( li );
 
     var focus_controller = new EventControllerFocus();
-    focus_controller.enter.connect(() => {
-      _table.model.select_item( li.get_position(), true );
-    });
-    focus_controller.leave.connect(() => {
-      save_to_cell( li, column, text.buffer.text );
-    });
+    li.set_data<EventControllerFocus>( "focus-controller", focus_controller );
 
     var key_controller = new EventControllerKey();
-    key_controller.key_pressed.connect((keyval, keycode, state) => {
-      switch( keyval ) {
-        case Gdk.Key.Tab          :  _table.child_focus( DirectionType.TAB_FORWARD );   return( true );
-        case Gdk.Key.ISO_Left_Tab :  _table.child_focus( DirectionType.TAB_BACKWARD );  return( true );
-        default                   :  return( false );
-      }
-    });
-
-    var save_id = li.get_data<ulong>( "save-id" );
-    if( save_id != 0 ) {
-      SignalHandler.disconnect( this, save_id );
-    }
-
-    // If we need to save, check to see if a table cell has focus and
-    // save its contents to the note item
-    save_id = save.connect(() => {
-      if( focus_controller.contains_focus ) {
-        save_to_cell( li, column, text.buffer.text );
-      }
-    });
-    li.set_data<ulong>( "save-id", save_id );
+    li.set_data<EventControllerKey>( "key-controller", key_controller );
 
     text.add_controller( focus_controller );
     text.add_controller( key_controller );
@@ -563,8 +555,6 @@ public class NoteItemPaneTable : NoteItemPane {
   // Row factory setup function
   private void row_setup( string col_id, Object obj ) {
 
-    stdout.printf( "In row_setup\n" );
-
     var li         = (ListItem)obj;
     var column     = get_cv_column_index( col_id );
     var row_id_int = _row_id++;
@@ -581,6 +571,7 @@ public class NoteItemPaneTable : NoteItemPane {
       margin_top    = 5,
       margin_bottom = 5
     };
+    li.set_data<Box>( "row-box", box );
 
     if( (column == 0) && table_item.auto_number ) {
       box.append( setup_auto_number() );
@@ -595,71 +586,14 @@ public class NoteItemPaneTable : NoteItemPane {
 
     li.child = box;
 
-    var auto_number_id = auto_number_changed.connect(() => {
-      var col_index = get_cv_column_index( col_id );
-      if( col_index == 0 ) {
-        var b = (Box)li.child;
-        if( table_item.auto_number ) {
-          b.prepend( setup_auto_number( "%u.".printf( li.get_position() + 1 ) ) );
-        } else {
-          b.remove( b.get_first_child() );
-        }
-      }
-    });
-    li.set_data<ulong>( "auto-number-id", auto_number_id );
-
-    var justify_id = column_justify_changed.connect((id) => {
-      if( id == col_id ) {
-        var justify = table_item.get_column( column ).justify;
-        var child   = li.child.get_last_child();
-        switch( table_item.get_column( column ).data_type ) {
-          case TableColumnType.TEXT     :  ((TextView)child).justification = justify;  break;
-          case TableColumnType.CHECKBOX :  ((CheckButton)child).halign = align_from_justify( justify );  break;
-          case TableColumnType.DATE     :  ((MenuButton)child.get_first_child().get_first_child()).halign = align_from_justify( justify );  break;
-          default                       :  assert_not_reached();
-        }
-      }
-    });
-    li.set_data<ulong>( "justify-id", justify_id );
-
-    var type_id = column_type_changed.connect((id) => {
-      if( id == col_id ) {
-        var b = (Box)li.child;
-        b.remove( b.get_last_child() );
-        switch( table_item.get_column( column ).data_type ) {
-          case TableColumnType.TEXT     :  b.append( setup_text( column, li ) );      break;
-          case TableColumnType.CHECKBOX :  b.append( setup_checkbox( column, li ) );  break;
-          case TableColumnType.DATE     :  b.append( setup_date( column, li ) );      break;
-          default                       :  assert_not_reached();
-        }
-      }
-    });
-    li.set_data<ulong>( "type-id", type_id );
-
     var left_click = new GestureClick() {
       button = Gdk.BUTTON_PRIMARY
     };
+    li.set_data<Object>( "left-click", left_click );
+
     var right_click = new GestureClick() {
       button = Gdk.BUTTON_SECONDARY
     };
-
-    var left_id = left_click.pressed.connect((n, x, y) => {
-      var child = li.child.get_last_child();
-      switch( table_item.get_column( column ).data_type ) {
-        case TableColumnType.TEXT     :  Idle.add(() => { child.grab_focus(); return( false ); });  break;
-        case TableColumnType.CHECKBOX :  child.grab_focus();  break;
-        case TableColumnType.DATE     :  child.get_first_child().get_first_child().grab_focus();  break;
-        default                       :  assert_not_reached();
-      }
-    });
-    li.set_data<ulong>( "left-id", left_id );
-    li.set_data<Object>( "left-click", left_click );
-
-    var right_id = right_click.pressed.connect((n, x, y) => {
-      _table.model.select_item( li.get_position(), true );
-      show_row_contextual_menu( box, li );
-    });
-    li.set_data<ulong>( "right-id", right_id );
     li.set_data<Object>( "right-click", right_click );
 
     box.add_controller( left_click );
@@ -671,41 +605,7 @@ public class NoteItemPaneTable : NoteItemPane {
   // Called whenever a row is removed from the table.
   private void row_teardown( Object obj ) {
 
-    stdout.printf( "In row_teardown\n" );
-
     var li = (ListItem)obj;
-
-    var auto_number_id = li.get_data<ulong>( "auto-number-id" );
-    if( auto_number_id != 0 ) {
-      SignalHandler.disconnect( this, auto_number_id );
-    }
-
-    var justify_id = li.get_data<ulong>( "justify-id" );
-    if( justify_id != 0 ) {
-      SignalHandler.disconnect( this, justify_id );
-    }
-
-    var type_id = li.get_data<ulong>( "type-id" );
-    if( type_id != 0 ) {
-      SignalHandler.disconnect( this, type_id );
-    }
-
-    var save_id = li.get_data<ulong>( "save-id" );
-    if( save_id != 0 ) {
-      SignalHandler.disconnect( this, save_id );
-    }
-
-    var left_id = li.get_data<ulong>( "left-id" );
-    var left_click = li.get_data<Object>( "left-click" );
-    if( left_id != 0 ) {
-      SignalHandler.disconnect( left_click, left_id );
-    }
-
-    var right_id = li.get_data<ulong>( "right-id" );
-    var right_click = li.get_data<Object>( "right-click" );
-    if( right_id != 0 ) {
-      SignalHandler.disconnect( right_click, right_id );
-    }
 
     var row_id = li.get_data<string>( "row-id" );
     if( row_id != null ) {
@@ -749,11 +649,42 @@ public class NoteItemPaneTable : NoteItemPane {
   //-------------------------------------------------------------
   // Binds the associated text to the listitem value.
   private void bind_text( int column, ListItem li ) {
+
     var row  = (NoteItemTableRow)li.item;
     var text = (TextView)li.child.get_last_child();
     var val  = row.get_value( column );
 
     text.buffer.text = val;
+
+    var focus_controller = li.get_data<EventControllerFocus>( "focus-controller" );
+    var enter_id = focus_controller.enter.connect(() => {
+      _table.model.select_item( li.get_position(), true );
+    });
+    li.set_data<ulong>( "focus-enter-id", enter_id );
+
+    var leave_id = focus_controller.leave.connect(() => {
+      save_to_cell( li, column, text.buffer.text );
+    });
+    li.set_data<ulong>( "focus-leave-id", leave_id );
+
+    // If we need to save, check to see if a table cell has focus and
+    // save its contents to the note item
+    var save_id = save.connect(() => {
+      if( focus_controller.contains_focus ) {
+        save_to_cell( li, column, text.buffer.text );
+      }
+    });
+    li.set_data<ulong>( "save-id", save_id );
+
+    var key_controller = li.get_data<EventControllerKey>( "key-controller" );
+    var key_press_id = key_controller.key_pressed.connect((keyval, keycode, state) => {
+      switch( keyval ) {
+        case Gdk.Key.Tab          :  _table.child_focus( DirectionType.TAB_FORWARD );   return( true );
+        case Gdk.Key.ISO_Left_Tab :  _table.child_focus( DirectionType.TAB_BACKWARD );  return( true );
+        default                   :  return( false );
+      }
+    });
+    li.set_data<ulong>( "key-press-id", key_press_id );
 
     // Force a re-measure once GtkTextView's own lazy layout validation
     // has had a chance to run, in case its natural size changes after
@@ -766,6 +697,7 @@ public class NoteItemPaneTable : NoteItemPane {
       }, GLib.Priority.LOW );
       li.set_data<bool>( "init-resize", false );
     }
+
   }
 
   //-------------------------------------------------------------
@@ -809,11 +741,129 @@ public class NoteItemPaneTable : NoteItemPane {
       lbl.label = "%u.".printf( li.get_position() + 1 );
     }
 
+    var auto_number_id = auto_number_changed.connect(() => {
+      var col_index = get_cv_column_index( col_id );
+      if( col_index == 0 ) {
+        var b = (Box)li.child;
+        if( table_item.auto_number ) {
+          b.prepend( setup_auto_number( "%u.".printf( li.get_position() + 1 ) ) );
+        } else {
+          b.remove( b.get_first_child() );
+        }
+      }
+    });
+    li.set_data<ulong>( "auto-number-id", auto_number_id );
+
+    var justify_id = column_justify_changed.connect((id) => {
+      if( id == col_id ) {
+        var justify = table_item.get_column( column ).justify;
+        var child   = li.child.get_last_child();
+        switch( table_item.get_column( column ).data_type ) {
+          case TableColumnType.TEXT     :  ((TextView)child).justification = justify;  break;
+          case TableColumnType.CHECKBOX :  ((CheckButton)child).halign = align_from_justify( justify );  break;
+          case TableColumnType.DATE     :  ((MenuButton)child.get_first_child().get_first_child()).halign = align_from_justify( justify );  break;
+          default                       :  assert_not_reached();
+        }
+      }
+    });
+    li.set_data<ulong>( "justify-id", justify_id );
+
+    var type_id = column_type_changed.connect((id) => {
+      if( id == col_id ) {
+        var b = (Box)li.child;
+        b.remove( b.get_last_child() );
+        switch( table_item.get_column( column ).data_type ) {
+          case TableColumnType.TEXT     :  b.append( setup_text( column, li ) );      break;
+          case TableColumnType.CHECKBOX :  b.append( setup_checkbox( column, li ) );  break;
+          case TableColumnType.DATE     :  b.append( setup_date( column, li ) );      break;
+          default                       :  assert_not_reached();
+        }
+      }
+    });
+    li.set_data<ulong>( "type-id", type_id );
+
+    var left_click = (GestureClick)li.get_data<Object>( "left-click" );
+    var left_id    = left_click.pressed.connect((n, x, y) => {
+      var child = li.child.get_last_child();
+      switch( table_item.get_column( column ).data_type ) {
+        case TableColumnType.TEXT     :  Idle.add(() => { child.grab_focus(); return( false ); });  break;
+        case TableColumnType.CHECKBOX :  child.grab_focus();  break;
+        case TableColumnType.DATE     :  child.get_first_child().get_first_child().grab_focus();  break;
+        default                       :  assert_not_reached();
+      }
+    });
+    li.set_data<ulong>( "left-id", left_id );
+
+    var right_click = (GestureClick)li.get_data<Object>( "right-click" );
+    var box         = li.get_data<Box>( "row-box" );
+    var right_id    = right_click.pressed.connect((n, x, y) => {
+      _table.model.select_item( li.get_position(), true );
+      show_row_contextual_menu( box, li );
+    });
+    li.set_data<ulong>( "right-id", right_id );
+
     switch( table_item.get_column( column ).data_type ) {
       case TableColumnType.TEXT     :  bind_text( column, li );      break;
       case TableColumnType.CHECKBOX :  bind_checkbox( column, li );  break;
       case TableColumnType.DATE     :  bind_date( column, li );      break;
       default                       :  assert_not_reached();
+    }
+
+  }
+
+  //-------------------------------------------------------------
+  // Undoes the lasting effects of row_bind.
+  private void row_unbind( Object obj ) {
+
+    var li = (ListItem)obj;
+
+    var auto_number_id = li.get_data<ulong>( "auto-number-id" );
+    if( auto_number_id != 0 ) {
+      SignalHandler.disconnect( this, auto_number_id );
+    }
+
+    var justify_id = li.get_data<ulong>( "justify-id" );
+    if( justify_id != 0 ) {
+      SignalHandler.disconnect( this, justify_id );
+    }
+
+    var type_id = li.get_data<ulong>( "type-id" );
+    if( type_id != 0 ) {
+      SignalHandler.disconnect( this, type_id );
+    }
+
+    var save_id = li.get_data<ulong>( "save-id" );
+    if( save_id != 0 ) {
+      SignalHandler.disconnect( this, save_id );
+    }
+
+    var left_id = li.get_data<ulong>( "left-id" );
+    var left_click = li.get_data<Object>( "left-click" );
+    if( left_id != 0 ) {
+      SignalHandler.disconnect( left_click, left_id );
+    }
+
+    var right_id = li.get_data<ulong>( "right-id" );
+    var right_click = li.get_data<Object>( "right-click" );
+    if( right_id != 0 ) {
+      SignalHandler.disconnect( right_click, right_id );
+    }
+
+    var focus_controller = li.get_data<EventControllerFocus>( "focus-controller" );
+    var focus_enter_id   = li.get_data<ulong>( "focus-enter-id" );
+    if( focus_enter_id != 0 ) {
+      SignalHandler.disconnect( focus_controller, focus_enter_id );
+    }
+
+    var focus_leave_id   = li.get_data<ulong>( "focus-leave-id" );
+    if( focus_leave_id != 0 ) {
+      SignalHandler.disconnect( focus_controller, focus_leave_id );
+    }
+
+    var key_controller = li.get_data<EventControllerKey>( "key-controller" );
+    var key_press_id   = li.get_data<ulong>( "key-press-id" );
+    if( key_press_id != 0 ) {
+      SignalHandler.disconnect( key_controller, key_press_id );
     }
 
   }
