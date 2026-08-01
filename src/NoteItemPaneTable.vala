@@ -42,7 +42,7 @@ public class NoteItemPaneTable : NoteItemPane {
 
   private signal void auto_number_changed();
   public signal void column_title_changed( string id );
-  public signal void column_type_changed( string id );
+  public signal void column_type_changed( string id, TableColumnType old_type );
   public signal void column_justify_changed( string id );
 
   public NoteItemTable table_item {
@@ -286,7 +286,7 @@ public class NoteItemPaneTable : NoteItemPane {
     });
     add_signal( this, title_id );
 
-    var type_id = column_type_changed.connect((id) => {
+    var type_id = column_type_changed.connect((id, old_type) => {
       if( id == col_id ) {
         var col_index = get_cv_column_index( col_id );
         col.expand    = table_item.get_column( col_index ).data_type.is_expandable();
@@ -456,10 +456,10 @@ public class NoteItemPaneTable : NoteItemPane {
     text.extra_menu = create_row_contextual_menu( li );
 
     var focus_controller = new EventControllerFocus();
-    li.set_data<EventControllerFocus>( "focus-controller", focus_controller );
+    li.set_data<EventControllerFocus>( "text-focus-controller", focus_controller );
 
     var key_controller = new EventControllerKey();
-    li.set_data<EventControllerKey>( "key-controller", key_controller );
+    li.set_data<EventControllerKey>( "text-key-controller", key_controller );
 
     text.add_controller( focus_controller );
     text.add_controller( key_controller );
@@ -488,10 +488,7 @@ public class NoteItemPaneTable : NoteItemPane {
       halign = align_from_justify( ((NoteItemTable)item).get_column( column ).justify ),
       hexpand = true
     };
-
-    cb.notify["active"].connect(() => {
-      save_to_cell( li, column, cb.active.to_string() );
-    });
+    li.set_data<CheckButton>( "check-cb", cb );
 
     return( cb );
 
@@ -504,10 +501,12 @@ public class NoteItemPaneTable : NoteItemPane {
     var cal = new Calendar() {
       halign = Align.END
     };
+    li.set_data<Calendar>( "date-cal", cal );
 
     var clear = new Button.with_label( _( "Clear date" ) ) {
       has_frame = false
     };
+    li.set_data<Button>( "date-clear", clear );
 
     var cbox = new Box( Orientation.VERTICAL, 5 );
     cbox.append( cal );
@@ -526,20 +525,7 @@ public class NoteItemPaneTable : NoteItemPane {
       has_frame         = false,
       direction         = ArrowType.NONE
     };
-
-    clear.clicked.connect(() => {
-      mb.label     = null;
-      mb.icon_name = "x-office-calendar-symbolic";
-      save_to_cell( li, column, "" );
-      popup.popdown();
-    });
-
-    cal.day_selected.connect(() => {
-      var date = cal.get_date();
-      mb.label = date.format( "%b %e, %Y" );
-      save_to_cell( li, column, date.format_iso8601() );
-      popup.popdown();
-    });
+    li.set_data<MenuButton>( "date-mb", mb );
 
     var box = new Box( Orientation.HORIZONTAL, 5 ) {
       halign = Align.FILL,
@@ -656,16 +642,16 @@ public class NoteItemPaneTable : NoteItemPane {
 
     text.buffer.text = val;
 
-    var focus_controller = li.get_data<EventControllerFocus>( "focus-controller" );
+    var focus_controller = li.get_data<EventControllerFocus>( "text-focus-controller" );
     var enter_id = focus_controller.enter.connect(() => {
       _table.model.select_item( li.get_position(), true );
     });
-    li.set_data<ulong>( "focus-enter-id", enter_id );
+    li.set_data<ulong>( "text-focus-enter-id", enter_id );
 
     var leave_id = focus_controller.leave.connect(() => {
       save_to_cell( li, column, text.buffer.text );
     });
-    li.set_data<ulong>( "focus-leave-id", leave_id );
+    li.set_data<ulong>( "text-focus-leave-id", leave_id );
 
     // If we need to save, check to see if a table cell has focus and
     // save its contents to the note item
@@ -676,7 +662,7 @@ public class NoteItemPaneTable : NoteItemPane {
     });
     li.set_data<ulong>( "save-id", save_id );
 
-    var key_controller = li.get_data<EventControllerKey>( "key-controller" );
+    var key_controller = li.get_data<EventControllerKey>( "text-key-controller" );
     var key_press_id = key_controller.key_pressed.connect((keyval, keycode, state) => {
       switch( keyval ) {
         case Gdk.Key.Tab          :  _table.child_focus( DirectionType.TAB_FORWARD );   return( true );
@@ -684,7 +670,7 @@ public class NoteItemPaneTable : NoteItemPane {
         default                   :  return( false );
       }
     });
-    li.set_data<ulong>( "key-press-id", key_press_id );
+    li.set_data<ulong>( "text-key-press-id", key_press_id );
 
     // Force a re-measure once GtkTextView's own lazy layout validation
     // has had a chance to run, in case its natural size changes after
@@ -701,21 +687,71 @@ public class NoteItemPaneTable : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Undoes the binding in bind_text.
+  private void unbind_text( ListItem li ) {
+
+    var focus_controller = li.get_data<EventControllerFocus>( "text-focus-controller" );
+    var focus_enter_id   = li.get_data<ulong>( "text-focus-enter-id" );
+    if( focus_enter_id != 0 ) {
+      SignalHandler.disconnect( focus_controller, focus_enter_id );
+      li.set_data<ulong>( "text-focus-enter-id", 0 );
+    }
+
+    var focus_leave_id   = li.get_data<ulong>( "text-focus-leave-id" );
+    if( focus_leave_id != 0 ) {
+      SignalHandler.disconnect( focus_controller, focus_leave_id );
+      li.set_data<ulong>( "text-focus-leave-id", 0 );
+    }
+
+    var key_controller = li.get_data<EventControllerKey>( "text-key-controller" );
+    var key_press_id   = li.get_data<ulong>( "text-key-press-id" );
+    if( key_press_id != 0 ) {
+      SignalHandler.disconnect( key_controller, key_press_id );
+      li.set_data<ulong>( "text-key-press-id", 0 );
+    }
+
+  }
+
+  //-------------------------------------------------------------
   // Binds the associated checkbutton to the listitem value.
   private void bind_checkbox( int column, ListItem li ) {
+
     var row      = (NoteItemTableRow)li.item;
-    var checkbox = (CheckButton)li.child.get_last_child();
+    var checkbox = li.get_data<CheckButton>( "check-cb" );
+
     checkbox.active = bool.parse( row.get_value( column ) );
+
+    var notify_id = checkbox.notify["active"].connect(() => {
+      save_to_cell( li, column, checkbox.active.to_string() );
+    });
+    li.set_data<ulong>( "check-cb-notify-id", notify_id );
+
+  }
+
+  //-------------------------------------------------------------
+  // Undoes any binding done in the bind_checkbox method.
+  private void unbind_checkbox( ListItem li ) {
+
+    var cb = li.get_data<CheckButton>( "check-cb" );
+    var notify_id = li.get_data<ulong>( "check-cb-notify-id" );
+    if( notify_id != 0 ) {
+      SignalHandler.disconnect( cb, notify_id );
+      li.set_data<ulong>( "check-cb-notify-id", 0 );
+    }
+
   }
 
   //-------------------------------------------------------------
   // Updates the date widget to the current value.
   private void bind_date( int column, ListItem li ) {
-    var row = (NoteItemTableRow)li.item;
-    var mb  = (MenuButton)li.child.get_first_child().get_first_child();
-    var pop = mb.popover;
-    var cal = (Calendar)pop.child.get_first_child();
-    var dt  = new DateTime.from_iso8601( row.get_value( column ), null );
+
+    var row   = (NoteItemTableRow)li.item;
+    var mb    = li.get_data<MenuButton>( "date-mb" );
+    var cal   = li.get_data<Calendar>( "date-cal" );
+    var clear = li.get_data<Button>( "date-clear" );
+    var pop   = mb.popover;
+    var dt    = new DateTime.from_iso8601( row.get_value( column ), null );
+
     if( dt == null ) {
       dt = new DateTime.now_local();
       mb.label = null;
@@ -724,9 +760,47 @@ public class NoteItemPaneTable : NoteItemPane {
       mb.icon_name = null;
       mb.label = dt.format( "%b %e, %Y" );
     }
+
     cal.day   = dt.get_day_of_month();
     cal.month = dt.get_month();
     cal.year  = dt.get_year();
+
+    var clear_id = clear.clicked.connect(() => {
+      mb.label     = null;
+      mb.icon_name = "x-office-calendar-symbolic";
+      save_to_cell( li, column, "" );
+      mb.popover.popdown();
+    });
+    li.set_data<ulong>( "date-clear-click-id", clear_id );
+
+    var select_id = cal.day_selected.connect(() => {
+      var date = cal.get_date();
+      mb.label = date.format( "%b %e, %Y" );
+      save_to_cell( li, column, date.format_iso8601() );
+      mb.popover.popdown();
+    });
+    li.set_data<ulong>( "date-cal-select-id", select_id );
+
+  }
+
+  //-------------------------------------------------------------
+  // Unbinds the date.
+  private void unbind_date( ListItem li ) {
+
+    var clear     = li.get_data<Button>( "date-clear" );
+    var clear_id  = li.get_data<ulong>( "date-clear-click-id" );
+    if( clear_id != 0 ) {
+      SignalHandler.disconnect( clear, clear_id );
+      li.set_data<ulong>( "date-clear-click-id", 0 );
+    }
+
+    var cal       = li.get_data<Calendar>( "date-cal" );
+    var select_id = li.get_data<ulong>( "date-cal-select-id" );
+    if( select_id != 0 ) {
+      SignalHandler.disconnect( cal, select_id );
+      li.set_data<ulong>( "date-cal-select-id", 0 );
+    }
+
   }
 
   //-------------------------------------------------------------
@@ -768,15 +842,30 @@ public class NoteItemPaneTable : NoteItemPane {
     });
     li.set_data<ulong>( "justify-id", justify_id );
 
-    var type_id = column_type_changed.connect((id) => {
+    var type_id = column_type_changed.connect((id, old_type) => {
       if( id == col_id ) {
         var b = (Box)li.child;
         b.remove( b.get_last_child() );
+        switch( old_type ) {
+          case TableColumnType.TEXT     :  unbind_text( li );      break;
+          case TableColumnType.CHECKBOX :  unbind_checkbox( li );  break;
+          case TableColumnType.DATE     :  unbind_date( li );      break;
+          default                       :  break;
+        }
         switch( table_item.get_column( column ).data_type ) {
-          case TableColumnType.TEXT     :  b.append( setup_text( column, li ) );      break;
-          case TableColumnType.CHECKBOX :  b.append( setup_checkbox( column, li ) );  break;
-          case TableColumnType.DATE     :  b.append( setup_date( column, li ) );      break;
-          default                       :  assert_not_reached();
+          case TableColumnType.TEXT :
+            b.append( setup_text( column, li ) );
+            bind_text( column, li );
+            break;
+          case TableColumnType.CHECKBOX :
+            b.append( setup_checkbox( column, li ) );
+            bind_checkbox( column, li );
+            break;
+          case TableColumnType.DATE :
+            b.append( setup_date( column, li ) );
+            bind_date( column, li );
+            break;
+          default :  assert_not_reached();
         }
       }
     });
@@ -849,22 +938,9 @@ public class NoteItemPaneTable : NoteItemPane {
       SignalHandler.disconnect( right_click, right_id );
     }
 
-    var focus_controller = li.get_data<EventControllerFocus>( "focus-controller" );
-    var focus_enter_id   = li.get_data<ulong>( "focus-enter-id" );
-    if( focus_enter_id != 0 ) {
-      SignalHandler.disconnect( focus_controller, focus_enter_id );
-    }
-
-    var focus_leave_id   = li.get_data<ulong>( "focus-leave-id" );
-    if( focus_leave_id != 0 ) {
-      SignalHandler.disconnect( focus_controller, focus_leave_id );
-    }
-
-    var key_controller = li.get_data<EventControllerKey>( "key-controller" );
-    var key_press_id   = li.get_data<ulong>( "key-press-id" );
-    if( key_press_id != 0 ) {
-      SignalHandler.disconnect( key_controller, key_press_id );
-    }
+    unbind_text( li );
+    unbind_checkbox( li );
+    unbind_date( li );
 
   }
 
@@ -928,8 +1004,9 @@ public class NoteItemPaneTable : NoteItemPane {
     grid.attach( type_menu, 1, 1 );
 
     var selected_id = type_menu.notify["selected"].connect(() => {
+      var old_type = column.data_type;
       column.data_type = (TableColumnType)type_menu.selected;
-      column_type_changed( col_id );
+      column_type_changed( col_id, old_type );
     });
     add_signal( type_menu, selected_id );
 

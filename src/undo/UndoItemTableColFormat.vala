@@ -63,7 +63,7 @@ public class UndoItemTableColFormat : UndoItem {
       var tmp = col.data_type;
       col.data_type = _type;
       _type = tmp;
-      _pane.column_type_changed( _id );
+      _pane.column_type_changed( _id, tmp );
     }
     if( col.header != _header ) {
       var tmp = col.header;
