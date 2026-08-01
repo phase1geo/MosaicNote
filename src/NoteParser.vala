@@ -154,7 +154,7 @@ public class NoteParser {
           var row = new NoteItemRow( note );
           var code_item = new NoteItemCode( row ) {
             lang    = language,
-            content = code
+            content = code.strip()
           };
           row.add_item( code_item );
           note.add_row( row );
