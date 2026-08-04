@@ -618,6 +618,16 @@ public class NotePanel : Box {
   }
 
   //-------------------------------------------------------------
+  // Performs search of the current note's items.
+  public void do_note_search( NoteSearchFunc command ) {
+
+    command( null, "title", _title.text );
+
+    _contents.do_search( command );
+
+  }
+
+  //-------------------------------------------------------------
   // Should be called for widgets that are not associated with
   // note item panes.
   private void handle_nonitem_focus( Widget w ) {

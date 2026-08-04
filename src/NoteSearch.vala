@@ -22,17 +22,19 @@
 using Gdk;
 using Gtk;
 
+public delegate void NoteSearchFunc( NoteItem? item, string element, string str );
+
 public class SearchMatch {
 
-  public Node? node  { set; get; default = null; }
-  public bool  name  { set; get; default = true; }
-  public int   start { set; get; default = -1; }
-  public int   end   { set; get; default = -1; }
+  public NoteItemPane? pane    { set; get; default = null; }
+  public string        element { set; get; default = ""; }
+  public int           start   { set; get; default = -1; }
+  public int           end     { set; get; default = -1; }
 
   public SearchMatch() {}
 
   public string to_string() {
-    return( (node == null) ? "none" : "name: %s, str: %s, start: %d, end: %d".printf( name.to_string(), (name ? node.name.text.text : node.note.text.text), start, end ) );
+    return( (pane == null) ? "none" : "element: %s, start: %d, end: %d".printf( element, start, end ) );
   }
 
 }
@@ -49,6 +51,7 @@ public class NoteSearch : Box {
   private SearchMatch  _next;
   private SearchMatch  _prev;
   private int          _ignore_update;
+  private Array<SearchMatch> _matches;
 
   //-------------------------------------------------------------
   // Default constructor
@@ -64,8 +67,7 @@ public class NoteSearch : Box {
 
     _panel = panel;
 
-    _next = new SearchMatch();
-    _prev = new SearchMatch();
+    _matches = new Array<SearchMatch>();
     _ignore_update = 0;
 
     add_search_entry();
@@ -115,11 +117,22 @@ public class NoteSearch : Box {
   }
 
   //-------------------------------------------------------------
-  // Performs the text search
+  // Performs the text search on the entire contents of the
+  // current note.
   private void search() {
 
+    _matches.remove_range( 0, _matches.length );
+
+    var pattern = _search_entry.text;
+
     // Perform search
-    _panel.do_search( _search_entry.text );
+    _panel.do_note_search((item, element, str) => {
+      var start = str.index_of( pattern, 0 );
+      while( start != -1 ) {
+        _matches.append_val( new SearchMatch( item, element, start, (start + pattern.length) ) );
+        start += pattern.length;
+      }
+    });
 
     // Update the UI state
     update_next_previous();

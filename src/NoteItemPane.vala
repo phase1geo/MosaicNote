@@ -885,6 +885,13 @@ public class NoteItemPane : RemovableBox {
   }
 
   //-------------------------------------------------------------
+  // Performs text search of each stored string element, calling
+  // command for each string.
+  public virtual void do_search( NoteSearchFunc command ) {
+    command( this, "content", _item.content );
+  }
+
+  //-------------------------------------------------------------
   // Adds an item above this item
   private void action_add_item_above() {
     add_item( MoveDirection.UP, NoteItemType.MARKDOWN );
