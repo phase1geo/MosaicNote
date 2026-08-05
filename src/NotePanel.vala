@@ -231,6 +231,9 @@ public class NotePanel : Box {
     _search_bar = new NoteSearch( this ) {
       visible = false
     };
+    _search_bar.close_requested.connect(() => {
+      show_note_search( false );
+    });
 
     _tags = new TagBox( _win );
     _tags.added.connect((tag) => {
@@ -644,6 +647,12 @@ public class NotePanel : Box {
   public void show_note_search( bool show ) {
     _search_bar.change_display( show );
     _search_bar.visible = show;
+    if( !show ) {
+      var current = _content.get_current_pane();
+      if( current != null ) {
+        current.set_as_current();
+      }
+    }
   }
 
   //-------------------------------------------------------------

@@ -91,7 +91,6 @@ public class NoteItemPaneRow : RemovableBox {
   //-------------------------------------------------------------
   // Called prior to destruction of row to cleanup signal handlers.
   public override void cleanup() {
-    stdout.printf( "NoteItemPaneRow cleanup occurring\n" );
     base.cleanup();
   }
 
@@ -154,13 +153,11 @@ public class NoteItemPaneRow : RemovableBox {
   //-------------------------------------------------------------
   // Performs note search over all panes within this row.
   public void do_search( NoteSearchFunc command ) {
-    stdout.printf( "Searching row\n" );
     var child = _box.get_first_child() as NoteItemPane;
     while( child != null ) {
       child.do_search( command );
       child = child.get_next_sibling() as NoteItemPane;
     }
-    stdout.printf( "  ROW done\n" );
   }
 
 }

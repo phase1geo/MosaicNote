@@ -166,7 +166,10 @@ public class NoteParser {
           if( start_index != index ) {
             parse_markdown_image( note, lines[start_index:index] );
           }
-          language = stripped.substring( stripped.index_of_nth_char( 4 ) ).down();
+          var lang_start = stripped.index_of_nth_char( 4 );
+          if( lang_start < stripped.length ) {
+            language = stripped.substring( lang_start ).down();
+          }
           in_code_block = true;
         }
       } else if( in_code_block ) {
@@ -404,7 +407,7 @@ public class NoteParser {
           } else if( line.has_prefix( "---" ) || line.has_prefix( "***" ) ) {
             add_markdown_item( note, new_lines );
             new_lines = {};
-          } else {
+          } else if( line.strip() != "" ) {
             new_lines += line;
           }
         }

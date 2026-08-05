@@ -62,6 +62,8 @@ public class NoteSearch : Box {
 
   private delegate void NoteSearchCallback( string match, int start, int end );
 
+  public signal void close_requested();
+
   //-------------------------------------------------------------
   // Default constructor
   public NoteSearch( NotePanel panel ) {
@@ -121,6 +123,17 @@ public class NoteSearch : Box {
     _search_entry.search_changed.connect( search );
     _search_entry.activate.connect( search_next );
 
+    var key = new EventControllerKey();
+    _search_entry.add_controller( key );
+
+    key.key_pressed.connect((keyval, keymod, state) => {
+      if( keyval == Gdk.Key.Escape ) {
+        close_requested();
+        return( true );
+      }
+      return( false );
+    });
+
     append( _search_entry );
 
   }
@@ -166,7 +179,6 @@ public class NoteSearch : Box {
 
     var text = (win as TextView);
     if( text != null ) {
-      stdout.printf( "HERE!\n" );
       TextIter start_iter, end_iter;
       text.buffer.get_start_iter( out start_iter );
       text.buffer.get_end_iter( out end_iter );
@@ -456,6 +468,17 @@ public class NoteSearch : Box {
     _replace_entry.search_changed.connect( replace_text_changed );
 
     focus.enter.connect( replace_focus_in );
+
+    var key = new EventControllerKey();
+    _search_entry.add_controller( key );
+
+    key.key_pressed.connect((keyval, keymod, state) => {
+      if( keyval == Gdk.Key.Escape ) {
+        close_requested();
+        return( true );
+      }
+      return( false );
+    });
 
     append( _replace_entry );
 
