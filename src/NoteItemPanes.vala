@@ -258,10 +258,10 @@ public class NoteItemPanes : RemovableBox {
   // command on its text.
   public void do_search( NoteSearchFunc command ) {
 
-    var child = (get_first_child() as NoteItemPane);
+    var child = (get_first_child() as NoteItemPaneRow);
     while( child != null ) {
       child.do_search( command );
-      child = (child.get_next_sibling() as NoteItemPane);
+      child = (child.get_next_sibling() as NoteItemPaneRow);
     }
 
   }

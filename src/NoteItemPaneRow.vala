@@ -151,4 +151,16 @@ public class NoteItemPaneRow : RemovableBox {
     return( Utils.get_child_index( _box, pane ) );
   }
 
+  //-------------------------------------------------------------
+  // Performs note search over all panes within this row.
+  public void do_search( NoteSearchFunc command ) {
+    stdout.printf( "Searching row\n" );
+    var child = _box.get_first_child() as NoteItemPane;
+    while( child != null ) {
+      child.do_search( command );
+      child = child.get_next_sibling() as NoteItemPane;
+    }
+    stdout.printf( "  ROW done\n" );
+  }
+
 }

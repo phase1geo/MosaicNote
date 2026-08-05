@@ -354,6 +354,16 @@ public class NoteItemPaneAssets : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Performs text search over stored asset paths.
+  public override void do_search( NoteSearchFunc command ) {
+    stdout.printf( "searching NoteItemPaneAssets\n" );
+    for( int i=0; i<assets_item.size(); i++ ) {
+      var asset = assets_item.get_asset( i );
+      command( this, "asset:%d".printf( i ), asset.orig_path, _listbox.get_row_at_index( i ).get_child() );
+    }
+  }
+
+  //-------------------------------------------------------------
   // Copies the file link of the specified row to the clipboard.
   private void action_copy_filepath( SimpleAction action, Variant? variant ) {
     if( variant != null ) {

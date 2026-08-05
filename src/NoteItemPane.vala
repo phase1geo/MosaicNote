@@ -507,6 +507,10 @@ public class NoteItemPane : RemovableBox {
       text             = item.content
     };
 
+    var search_tag = buffer.create_tag( "note-match" );
+    search_tag.background = "orange";
+    search_tag.foreground = "black";
+
     var changed_id = buffer.changed.connect(() => {
       if( !ignore_text_change ) {
         win.undo.add_item( new UndoTextChanges( item ) );
@@ -888,7 +892,7 @@ public class NoteItemPane : RemovableBox {
   // Performs text search of each stored string element, calling
   // command for each string.
   public virtual void do_search( NoteSearchFunc command ) {
-    command( this, "content", _item.content );
+    assert( false );
   }
 
   //-------------------------------------------------------------

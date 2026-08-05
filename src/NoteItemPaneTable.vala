@@ -412,6 +412,25 @@ public class NoteItemPaneTable : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Performs note search over this table contents.
+  public override void do_search( NoteSearchFunc command ) {
+    command( this, "desc", table_item.description, _h2_label );
+    bool[] check_cols = {};
+    var columns = table_item.columns();
+    for( int i=0; i<columns; i++ ) {
+      check_cols += (table_item.get_column( i ).data_type == TableColumnType.TEXT);
+    }
+    for( int i=0; i<table_item.rows(); i++ ) {
+      var row = table_item.get_row( i );
+      for( int j=0; j<columns; j++ ) {
+        if( check_cols[j] ) {
+          command( this, "cell:%d:%d".printf( i, j ), row.get_value( j ), _table );  // TODO
+        }
+      }
+    }
+  }
+
+  //-------------------------------------------------------------
   // Saves the given text value to the cell associated with the given
   // list item and column index.
   private void save_to_cell( ListItem li, int column, string val ) {

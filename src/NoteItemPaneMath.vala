@@ -255,6 +255,13 @@ public class NoteItemPaneMath : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Performs note search over this item.
+  public override void do_search( NoteSearchFunc command ) {
+    command( this, "desc", math_item.description, _h2_label );
+    _text_frame.visible = command( this, "text", math_item.content, _text );
+  }
+
+  //-------------------------------------------------------------
   // Overrides the copy to clipboard functionality.
   protected override void copy_to_clipboard( Gdk.Clipboard clipboard ) {
     Idle.add(() => {

@@ -382,6 +382,12 @@ public class NoteItemPaneImage : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Performs note search over this item.
+  public override void do_search( NoteSearchFunc command ) {
+    command( this, "desc", image_item.description, _h2_label );
+  }
+
+  //-------------------------------------------------------------
   // Overrides the copy to clipboard functionality.
   protected override void copy_to_clipboard( Gdk.Clipboard clipboard ) {
     try {

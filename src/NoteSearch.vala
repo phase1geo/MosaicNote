@@ -22,7 +22,7 @@
 using Gdk;
 using Gtk;
 
-public delegate void NoteSearchFunc( NoteItem? item, string element, string str );
+public delegate bool NoteSearchFunc( NoteItemPane? pane, string element, string str, Widget win );
 
 public class SearchMatch {
 
@@ -31,7 +31,14 @@ public class SearchMatch {
   public int           start   { set; get; default = -1; }
   public int           end     { set; get; default = -1; }
 
-  public SearchMatch() {}
+  //-------------------------------------------------------------
+  // Constructor
+  public SearchMatch( NoteItemPane? p, string elem, int s, int e ) {
+    pane    = p;
+    element = elem;
+    start   = s;
+    end     = e;
+  }
 
   public string to_string() {
     return( (pane == null) ? "none" : "element: %s, start: %d, end: %d".printf( element, start, end ) );
@@ -52,6 +59,8 @@ public class NoteSearch : Box {
   private SearchMatch  _prev;
   private int          _ignore_update;
   private Array<SearchMatch> _matches;
+
+  private delegate void NoteSearchCallback( string match, int start, int end );
 
   //-------------------------------------------------------------
   // Default constructor
@@ -117,6 +126,65 @@ public class NoteSearch : Box {
   }
 
   //-------------------------------------------------------------
+  // Finds all matched text, adds matches to the _matches array,
+  // and runs the callback function for each match.
+  private bool find_matched_text( NoteItemPane? pane, string element, string pattern, string str, NoteSearchCallback callback ) {
+    if( pattern != "" ) {
+      var start       = str.index_of( pattern, 0 );
+      var start_index = (int)_matches.length;
+      while( start != -1 ) {
+        _matches.append_val( new SearchMatch( pane, element, start, (start + pattern.length) ) );
+        start = str.index_of( pattern, (start + pattern.length) );
+      }
+      for( int i=((int)_matches.length - 1); i>=start_index; i-- ) {
+        callback( pattern, _matches.index( i ).start, _matches.index( i ).end );
+      }
+      return( start_index != _matches.length );
+    }
+    return( false );
+  }
+
+  //-------------------------------------------------------------
+  // Helper function for search function which handles any match
+  // checks.  This function is also responsible for clearing
+  // highlights and adding highlights to the specified widget
+  // for matched text.
+  private bool search_match( NoteItemPane? pane, string element, string pattern, string str, Widget win ) {
+
+    // Clear any matched patterns in the widget
+    var label = (win as Label);
+    if( label != null ) {
+      label.label = str;
+      label.use_markup = false;
+      return(
+        find_matched_text( pane, element, pattern, str, (match, start, end) => {
+          label.label = label.label.splice( start, end, "<span background=\"orange\" foreground=\"black\">%s</span>".printf( match ) );
+          label.use_markup = true;
+        })
+      );
+    }
+
+    var text = (win as TextView);
+    if( text != null ) {
+      stdout.printf( "HERE!\n" );
+      TextIter start_iter, end_iter;
+      text.buffer.get_start_iter( out start_iter );
+      text.buffer.get_end_iter( out end_iter );
+      text.buffer.remove_tag_by_name( "note-match", start_iter, end_iter );
+      return(
+        find_matched_text( pane, element, pattern, str, (match, start, end) => {
+          text.buffer.get_iter_at_offset( out start_iter, str.slice( 0, start ).char_count() );
+          text.buffer.get_iter_at_offset( out end_iter,   str.slice( 0, end ).char_count() );
+          text.buffer.apply_tag_by_name( "note-match", start_iter, end_iter );
+        })
+      );
+    }
+
+    return( false );
+
+  }
+
+  //-------------------------------------------------------------
   // Performs the text search on the entire contents of the
   // current note.
   private void search() {
@@ -126,13 +194,14 @@ public class NoteSearch : Box {
     var pattern = _search_entry.text;
 
     // Perform search
-    _panel.do_note_search((item, element, str) => {
-      var start = str.index_of( pattern, 0 );
-      while( start != -1 ) {
-        _matches.append_val( new SearchMatch( item, element, start, (start + pattern.length) ) );
-        start += pattern.length;
-      }
+    _panel.do_note_search((pane, element, str, win) => {
+      return( search_match( pane, element, pattern, str, win ) );
     });
+
+    stdout.printf( "matches:\n" );
+    for( int i=0; i<_matches.length; i++ ) {
+      stdout.printf( "  match[%d]: %s\n", i, _matches.index( i ).to_string() );
+    }
 
     // Update the UI state
     update_next_previous();
@@ -164,6 +233,7 @@ public class NoteSearch : Box {
   // Updates the UI state
   private void update_state() {
 
+    /*
     var found = (_next.node != null) || (_prev.node != null) || is_match_selected();
 
     _search_next.set_sensitive( _next.node != null );
@@ -172,6 +242,7 @@ public class NoteSearch : Box {
     _replace_entry.can_focus = found;
     _replace_current.set_sensitive( (_replace_entry.text != "") && is_match_selected() );
     _replace_all.set_sensitive( (_replace_entry.text != "") && found );
+    */
 
   }
 
@@ -190,6 +261,7 @@ public class NoteSearch : Box {
   // Finds the match after the currently selected node
   private void find_next_match() {
 
+    /*
     _next.node  = _ot.selected;
     _next.name  = true;
     _next.start = -1;
@@ -232,6 +304,7 @@ public class NoteSearch : Box {
         }
       }
     }
+    */
 
   }
 
@@ -239,6 +312,7 @@ public class NoteSearch : Box {
   // Finds the match after the currently selected node
   private void find_prev_match() {
 
+    /*
     _prev.node  = _ot.selected;
     _prev.name  = false;
     _prev.start = -1;
@@ -279,6 +353,7 @@ public class NoteSearch : Box {
         }
       }
     }
+    */
 
   }
 
@@ -292,6 +367,7 @@ public class NoteSearch : Box {
   // Selects the matched text
   private void select_matched_text( SearchMatch match ) {
 
+    /*
     if( match.node == null ) return;
 
     var selchange = (match.node != _ot.selected);
@@ -314,6 +390,7 @@ public class NoteSearch : Box {
     if( !curchange ) {
       _ot.cursor_changed();
     }
+    */
 
   }
 
@@ -346,6 +423,7 @@ public class NoteSearch : Box {
   // Returns true if the selected text is a matched pattern
   private bool is_match_selected() {
 
+    /*
     var pattern = _search_entry.text;
 
     if( (_ot.selected != null) && (pattern != "") ) {
@@ -356,6 +434,7 @@ public class NoteSearch : Box {
       }
       return( (seltext != null) && (seltext == pattern) );
     }
+    */
 
     return( false );
 
@@ -372,7 +451,7 @@ public class NoteSearch : Box {
     };
 
     var focus = new EventControllerFocus();
-    _replace_entry.add_controller( focus_controller );
+    _replace_entry.add_controller( focus );
 
     _replace_entry.search_changed.connect( replace_text_changed );
 
@@ -412,7 +491,7 @@ public class NoteSearch : Box {
   private void replace_current() {
 
     // Replace the current match
-    _panel.replace_current( _replace_entry.text );
+    // _panel.replace_current( _replace_entry.text );
 
     // Jump to the next match
     select_matched_text( _next );
@@ -434,7 +513,7 @@ public class NoteSearch : Box {
   // Performs the replacement for all text that matches the search text
   private void replace_all() {
 
-    _panel.replace_all( _search_entry.text, _replace_entry.text );
+    // _panel.replace_all( _search_entry.text, _replace_entry.text );
 
   }
 

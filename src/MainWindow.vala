@@ -109,6 +109,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     { "action_preferences",      action_preferences },
     { "action_about",            action_about },
     { "action_search",           action_search },
+    { "action_note_search",      action_note_search },
     { "action_next_panels",      action_next_panels },
     { "action_prev_panels",      action_prev_panels },
     { "action_set_panel_mode",   action_set_panel_mode, "i" },
@@ -520,6 +521,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     app.set_accels_for_action( "win.action_shortcuts",   { "<Control>question" } );
     app.set_accels_for_action( "win.action_preferences", { "<Control>comma" } );
     app.set_accels_for_action( "win.action_search",      { "<Control>f" } );
+    app.set_accels_for_action( "win.action_note_search", { "<Control>slash" } );
     app.set_accels_for_action( "win.action_next_panels", { "<Control>k" } );
     app.set_accels_for_action( "win.action_prev_panels", { "<Control><Shift>k" } );
     app.set_accels_for_action( "win.action_undo",        { "<Control>z" } );
@@ -663,6 +665,12 @@ public class MainWindow : Gtk.ApplicationWindow {
   // Activates the note search UI.
   private void action_search() {
     _search_mb.active = true;
+  }
+
+  //-------------------------------------------------------------
+  // Performs note search and replace.
+  private void action_note_search() {
+    _note.note_search.active = true;
   }
 
   //-------------------------------------------------------------

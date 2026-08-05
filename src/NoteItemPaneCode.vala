@@ -213,6 +213,13 @@ public class NoteItemPaneCode : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Performs note search of this item.
+  public override void do_search( NoteSearchFunc command ) {
+    command( this, "desc", code_item.description, _h2_label );
+    command( this, "text", code_item.content, _text );
+  }
+
+  //-------------------------------------------------------------
   // Performs search for this string.
   protected override int search( string pattern ) {
 

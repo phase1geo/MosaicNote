@@ -815,4 +815,8 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
   }
 
+  public override void do_search( NoteSearchFunc command ) {
+    command( this, "text", item.content, _text );
+  }
+
 }
