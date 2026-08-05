@@ -232,7 +232,7 @@ public class NotePanel : Box {
       visible = false
     };
     _search_bar.close_requested.connect(() => {
-      show_note_search( false );
+      _note_search.active = false;
     });
 
     _tags = new TagBox( _win );
