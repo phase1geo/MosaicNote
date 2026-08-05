@@ -359,7 +359,8 @@ public class NoteItemPaneAssets : NoteItemPane {
     stdout.printf( "searching NoteItemPaneAssets\n" );
     for( int i=0; i<assets_item.size(); i++ ) {
       var asset = assets_item.get_asset( i );
-      command( this, "asset:%d".printf( i ), asset.orig_path, _listbox.get_row_at_index( i ).get_child() );
+      var label = Filename.display_basename( asset.orig_path ).replace( "%20", " " );
+      command( this, "asset:%d".printf( i ), label, _listbox.get_row_at_index( i ).get_child() );
     }
   }
 

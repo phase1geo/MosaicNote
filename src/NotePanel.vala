@@ -687,6 +687,7 @@ public class NotePanel : Box {
     if( note != null ) {
 
       _note = note;
+      _note_search.active = false;
 
       _title.text = note.title;
       _tags.clear_tags();
