@@ -166,7 +166,7 @@ public class NoteParser {
           if( start_index != index ) {
             parse_markdown_image( note, lines[start_index:index] );
           }
-          language = stripped.substring( stripped.index_of_nth_char( 3 ) );
+          language = stripped.substring( stripped.index_of_nth_char( 4 ) ).down();
           in_code_block = true;
         }
       } else if( in_code_block ) {

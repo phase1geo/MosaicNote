@@ -336,7 +336,7 @@ public class Note : Object {
       if( (note.items() == 1) && (note.get_item( 0, 0 ).item_type == NoteItemType.MARKDOWN) ) {
         first_md.content = first_md.content.slice( 0, byte_offset ) +
                            note.get_item( 0, 0 ).content +
-                           first_md.content.slice( byte_offset, -1 );
+                           first_md.content.slice( byte_offset, first_md.content.length );
 
       } else {
 
@@ -387,9 +387,12 @@ public class Note : Object {
                   add_row( current_row, current_col++ );
                 }
                 var note_item = note.get_item( i, j );
-                current_row.add_item( note_item.item_type.create( current_row ) );
+                var new_item  = note_item.item_type.create( current_row );
+                new_item.copy( note_item );
+                current_row.add_item( new_item );
               }
             }
+            current_index++;
           }
         }
 
