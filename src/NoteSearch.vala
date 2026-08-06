@@ -52,6 +52,7 @@ public class NoteSearch : Box {
   private SearchEntry  _search_entry;
   private Button       _search_next;
   private Button       _search_prev;
+  private Label        _search_matches;
   private SearchEntry  _replace_entry;
   private Button       _replace_current;
   private Button       _replace_all;
@@ -59,7 +60,8 @@ public class NoteSearch : Box {
   private SearchMatch  _prev;
   private int          _ignore_update;
   private Array<SearchMatch> _matches;
-  private int                _match_index = -1;
+  private int                _match_index    = -1;
+  private bool               _case_sensitive = false;
 
   private delegate void NoteSearchCallback( string match, int start, int end );
 
@@ -70,6 +72,7 @@ public class NoteSearch : Box {
   public NoteSearch( NotePanel panel ) {
 
     Object(
+      orientation: Orientation.VERTICAL,
       spacing: 5,
       margin_start: 5,
       margin_end: 5,
@@ -81,14 +84,23 @@ public class NoteSearch : Box {
 
     _matches = new Array<SearchMatch>();
     _ignore_update = 0;
+    _case_sensitive = MosaicNote.settings.get_boolean( "search-case-sensitive" );
 
-    add_search_entry();
-    add_search_next();
-    add_search_previous();
-    add_spacer();
-    add_replace_entry();
-    add_replace_current();
-    add_replace_all();
+    var search_box = new Box( Orientation.HORIZONTAL, 5 );
+    add_search_entry( search_box );
+    add_search_case( search_box );
+    add_search_next( search_box );
+    add_search_previous( search_box );
+    add_search_matches( search_box );
+    add_search_replace( search_box );
+
+    var replace_box = new Box( Orientation.HORIZONTAL, 5 );
+    add_replace_entry( replace_box );
+    add_replace_current( replace_box );
+    add_replace_all( replace_box );
+
+    append( search_box );
+    append( replace_box );
 
   }
 
@@ -108,7 +120,7 @@ public class NoteSearch : Box {
 
   //-------------------------------------------------------------
   // Creates the search entry field and adds it to this box
-  private void add_search_entry() {
+  private void add_search_entry( Box box ) {
 
     _search_entry = new Gtk.SearchEntry() {
       halign = Align.FILL,
@@ -122,15 +134,24 @@ public class NoteSearch : Box {
     var key = new EventControllerKey();
     _search_entry.add_controller( key );
 
-    key.key_pressed.connect((keyval, keymod, state) => {
-      if( keyval == Gdk.Key.Escape ) {
-        close_requested();
-        return( true );
+    key.key_pressed.connect((keyval, keycode, state) => {
+      bool shift = (bool)(state & Gdk.ModifierType.SHIFT_MASK);
+      switch( keyval ) {
+        case Gdk.Key.Escape :
+          close_requested();
+          return( true );
+        case Gdk.Key.Return :
+          if( shift ) {
+            search_previous();
+          } else {
+            search_next();
+          }
+          return( true );
+        default :  return( false );
       }
-      return( false );
     });
 
-    append( _search_entry );
+    box.append( _search_entry );
 
   }
 
@@ -204,7 +225,11 @@ public class NoteSearch : Box {
 
     // Perform search
     _panel.do_note_search((pane, element, str, win) => {
-      return( search_match( pane, element, pattern, str, win ) );
+      if( _case_sensitive ) {
+        return( search_match( pane, element, pattern, str, win ) );
+      } else {
+        return( search_match( pane, element, pattern.down(), str.down(), win ) );
+      }
     });
 
     // Update the UI state
@@ -223,6 +248,7 @@ public class NoteSearch : Box {
 
     _search_next.set_sensitive( is_next );
     _search_prev.set_sensitive( is_prev );
+    _search_matches.label = _( "%u matches" ).printf( _matches.length );
     _replace_entry.editable  = found;
     _replace_entry.can_focus = found;
     _replace_current.set_sensitive( (_replace_entry.text != "") && is_selected );
@@ -231,13 +257,35 @@ public class NoteSearch : Box {
   }
 
   //-------------------------------------------------------------
+  // Creates the search case-sensitivity UI.
+  private void add_search_case( Box box ) {
+
+    var btn = new ToggleButton() {
+      label        = "Aa",
+      has_frame    = false,
+      active       = _case_sensitive,
+      tooltip_text = _( "Toggle case-sensitivity" )
+    };
+
+    btn.notify["active"].connect(() => {
+      _case_sensitive = btn.active;
+      MosaicNote.settings.set_boolean( "search-case-sensitive", _case_sensitive );
+      _search_entry.grab_focus();
+      search();
+    });
+
+    box.append( btn );
+
+  }
+
+  //-------------------------------------------------------------
   // Creates the search next field and adds it to this box
-  private void add_search_next() {
+  private void add_search_next( Box box ) {
 
     _search_next = new Gtk.Button.from_icon_name( "go-down-symbolic" );
     _search_next.clicked.connect( search_next );
 
-    append( _search_next );
+    box.append( _search_next );
 
   }
 
@@ -281,13 +329,13 @@ public class NoteSearch : Box {
   }
 
   //-------------------------------------------------------------
-  // Creates the search previous field and adds it to this box
-  private void add_search_previous() {
+  // Creates the search previous field and adds it to the box
+  private void add_search_previous( Box box ) {
 
     _search_prev = new Gtk.Button.from_icon_name( "go-up-symbolic" );
     _search_prev.clicked.connect( search_previous );
 
-    append( _search_prev );
+    box.append( _search_prev );
 
   }
 
@@ -298,11 +346,37 @@ public class NoteSearch : Box {
   }
 
   //-------------------------------------------------------------
-  // Adds a spacer between the search and replace portions of the
-  // search bar
-  private void add_spacer() {
-    var lbl = new Label( " " );
-    append( lbl );
+  // Creates the search match number and adds it to the box.
+  private void add_search_matches( Box box ) {
+
+    _search_matches = new Label( "" );
+
+    box.append( _search_matches );
+
+  }
+
+  //-------------------------------------------------------------
+  // Creates the show/hide replace button.
+  private void add_search_replace( Box box ) {
+
+    var btn = new ToggleButton() {
+      icon_name = "edit-find-replace-symbolic",
+      tooltip_text = _( "Show/Hide Replace Tools" )
+    };
+
+    btn.notify["active"].connect(() => {
+      _replace_entry.visible   = btn.active;
+      _replace_current.visible = btn.active;
+      _replace_all.visible     = btn.active;
+      if( !btn.active || (_search_entry.text == "") ) {
+        _search_entry.grab_focus();
+      } else {
+        _replace_entry.grab_focus();
+      }
+    });
+
+    box.append( btn );
+
   }
 
   //-------------------------------------------------------------
@@ -328,11 +402,12 @@ public class NoteSearch : Box {
 
   //-------------------------------------------------------------
   // Adds the replace text entry field and adds it to this box
-  private void add_replace_entry() {
+  private void add_replace_entry( Box box ) {
 
     _replace_entry = new Gtk.SearchEntry() {
       halign            = Align.FILL,
       hexpand           = true,
+      visible           = false,
       placeholder_text  = _( "Replace with…")
     };
 
@@ -354,7 +429,7 @@ public class NoteSearch : Box {
       return( false );
     });
 
-    append( _replace_entry );
+    box.append( _replace_entry );
 
   }
 
@@ -374,23 +449,27 @@ public class NoteSearch : Box {
 
   //-------------------------------------------------------------
   // Adds the replace current button and adds it to this box
-  private void add_replace_current() {
+  private void add_replace_current( Box box ) {
 
-    _replace_current = new Gtk.Button.with_label( _( "Replace" ) );
+    _replace_current = new Gtk.Button.with_label( _( "Replace" ) ) {
+      visible = false
+    };
     _replace_current.clicked.connect( replace_current );
 
-    append( _replace_current );
+    box.append( _replace_current );
 
   }
 
   //-------------------------------------------------------------
   // Adds the replace all button and adds it to this box
-  private void add_replace_all() {
+  private void add_replace_all( Box box ) {
 
-    _replace_all = new Gtk.Button.with_label( _( "Replace All" ) );
+    _replace_all = new Gtk.Button.with_label( _( "Replace All" ) ) {
+      visible = false
+    };
     _replace_all.clicked.connect( replace_all );
 
-    append( _replace_all );
+    box.append( _replace_all );
 
   }
 
@@ -451,9 +530,6 @@ public class NoteSearch : Box {
 
     // Effectively clear the search
     search();
-
-    // Update the UI state
-    update_state();
 
   }
 
