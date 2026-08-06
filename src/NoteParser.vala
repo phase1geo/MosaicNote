@@ -166,7 +166,7 @@ public class NoteParser {
           if( start_index != index ) {
             parse_markdown_image( note, lines[start_index:index] );
           }
-          var lang_start = stripped.index_of_nth_char( 4 );
+          var lang_start = stripped.index_of_nth_char( 3 );
           if( lang_start < stripped.length ) {
             language = stripped.substring( lang_start ).down();
           }
