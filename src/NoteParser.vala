@@ -187,13 +187,14 @@ public class NoteParser {
   //-------------------------------------------------------------
   // Repairs the given URI if it is not valid.
   private string fix_uri( string uri ) {
+    var parts = uri.split( " " );
     try {
-      if( !Uri.is_valid( uri, UriFlags.PARSE_RELAXED ) ) {
-        return( "file://" + uri );
+      if( !Uri.is_valid( parts[0], UriFlags.PARSE_RELAXED ) ) {
+        return( "file://" + parts[0] );
       }
-      return( uri );
+      return( parts[0] );
     } catch( UriError e ) {
-      return( "file://" + uri );
+      return( "file://" + parts[0] );
     }
   }
 
@@ -212,10 +213,13 @@ public class NoteParser {
           parse_markdown_table( note, lines[start_index:index] );
         }
         var row = new NoteItemRow( note );
+        var fixed_uri = fix_uri( match.fetch( 2 ) );
+        stdout.printf( "fixed_uri: %s\n", fixed_uri );
         var image_item = new NoteItemImage( row ) {
-          uri = fix_uri( match.fetch( 2 ) ),
+          uri = fixed_uri,
           description = match.fetch( 1 )
         };
+        stdout.printf( "image_item created\n" );
         row.add_item( image_item );
         note.add_row( row );
         start_index = index + 1;

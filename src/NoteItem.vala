@@ -354,11 +354,14 @@ public class NoteItem : Object {
   //-------------------------------------------------------------
 	// Returns the filename of the resource file associated with this note item
   protected string get_resource_path( string extension, int? extra_id = null ) {
-    if( extra_id == null ) {
-    	return( Path.build_filename( get_resource_dir(), "resource-%d.%s".printf( id, extension ) ) );
-    } else {
-      return( Path.build_filename( get_resource_dir(), "resource-%d-%d.%s".printf( id, extra_id, extension ) ) );
+    var filename = "resource-%d".printf( id );
+    if( extra_id != null ) {
+      filename += "-%d".printf( extra_id );
     }
+    if( extension != "" ) {
+      filename += ".%s".printf( extension );
+    }
+    return( Path.build_filename( get_resource_dir(), filename ) );
   }
 
   //-------------------------------------------------------------
