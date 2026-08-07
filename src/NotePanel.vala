@@ -514,7 +514,7 @@ public class NotePanel : Box {
 
   //-------------------------------------------------------------
   // Adds the list of footnotes in the note.
-  private void add_footnotes() {
+  public void add_footnotes() {
     Utils.clear_listbox( _footnotes );
     if( _note.footnotes.size == 0 ) {
       _footnotes.get_parent().visible = false;
@@ -536,7 +536,8 @@ public class NotePanel : Box {
         });
         var description = new EditableLabel( v ) {
           halign = Align.FILL,
-          hexpand = true
+          hexpand = true,
+          text = v
         };
         description.notify["editing"].connect(() => {
           if( !description.editing ) {
@@ -689,7 +690,6 @@ public class NotePanel : Box {
 
     // If we had a previously displayed note, save it before populating with the new note
     if( _note != null ) {
-      stdout.printf( "CALLING SAVE\n" );
       save();
     }
 

@@ -207,6 +207,11 @@ public class Note : Object {
       _rows.append_val( new_row );
     }
 
+    note._footnotes.map_iterator().foreach((k, v) => {
+      _footnotes.set( k, v );
+      return( true );
+    });
+
   }
 
   //-------------------------------------------------------------
@@ -398,6 +403,12 @@ public class Note : Object {
 
       }
     }
+
+    // Merge footnotes
+    note._footnotes.map_iterator().foreach((k, v) => {
+      add_footnote( k, v );
+      return( true );
+    });
 
   }
 

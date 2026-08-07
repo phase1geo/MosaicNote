@@ -131,7 +131,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     var within_link = false;
     var tags = iter.get_tags();
     tags.foreach((tag) => {
-      if( (tag.name == null) && tag.foreground_set && tag.underline_set ) {
+      if( (tag.name == null) && tag.underline_set ) {
         within_link = true;
         found_tag = tag;
       }
@@ -213,6 +213,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
         // Update the note items panel
         win.note.items.populate( item.row.note );
+        win.note.add_footnotes();
 
         // Set the insertion cursor to the correct location, give the new pane focus, and
         // grab keyboard focus
