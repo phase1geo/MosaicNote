@@ -214,12 +214,10 @@ public class NoteParser {
         }
         var row = new NoteItemRow( note );
         var fixed_uri = fix_uri( match.fetch( 2 ) );
-        stdout.printf( "fixed_uri: %s, description: %s\n", fixed_uri, match.fetch( 1 ) );
         var image_item = new NoteItemImage( row ) {
           uri = fixed_uri,
           description = match.fetch( 1 )
         };
-        stdout.printf( "image_item created\n" );
         row.add_item( image_item );
         note.add_row( row );
         start_index = index + 1;
@@ -270,6 +268,13 @@ public class NoteParser {
   }
 
   //-------------------------------------------------------------
+  // Checks to see if the given string is a number.
+  private bool is_number( string text ) {
+    double value;
+    return( double.try_parse( text, out value ) );
+  }
+
+  //-------------------------------------------------------------
   // Parses the data in the first row to figure out what type of
   // data is being stored in each column
   private void parse_markdown_table_first_row( NoteItemTable item, string[] columns ) {
@@ -285,7 +290,7 @@ public class NoteParser {
         column.data_type = TableColumnType.CHECKBOX; 
       } else {
         date.set_parse( stripped );
-        if( date.valid() ) {
+        if( date.valid() && !is_number( stripped ) ) {
           column.data_type = TableColumnType.DATE;
         } else {
           column.data_type = TableColumnType.TEXT;
@@ -330,19 +335,19 @@ public class NoteParser {
         if( in_header ) {
           row = new NoteItemRow( note );
           table_item = new NoteItemTable( row, (columns.length - 2) );
-          parse_markdown_table_header( table_item, columns[1:columns.length-2] );
+          parse_markdown_table_header( table_item, columns[1:columns.length-1] );
           in_header = false;
           in_align  = true;
         } else if( in_align ) {
-          parse_markdown_table_align( table_item, columns[1:columns.length-2] );
+          parse_markdown_table_align( table_item, columns[1:columns.length-1] );
           in_align     = false;
           in_first_row = true;
         } else if( in_first_row ) {
-          parse_markdown_table_first_row( table_item, columns[1:columns.length-2] );
-          parse_markdown_table_row( table_item, columns[1:columns.length-2] );
+          parse_markdown_table_first_row( table_item, columns[1:columns.length-1] );
+          parse_markdown_table_row( table_item, columns[1:columns.length-1] );
           in_first_row = false;
         } else {
-          parse_markdown_table_row( table_item, columns[1:columns.length-2] );
+          parse_markdown_table_row( table_item, columns[1:columns.length-1] );
         }
         start_index = index + 1;
       } else if( table_item != null ) {
@@ -353,6 +358,11 @@ public class NoteParser {
         start_index = index;
       }
       index++;
+    }
+
+    if( table_item != null ) {
+      row.add_item( table_item );
+      note.add_row( row );
     }
 
     if( start_index != index ) {

@@ -312,7 +312,7 @@ public class NoteItemTableRow : Object {
       var col = columns.index( i );
       cells += col.data_type.to_markdown( _values.index( i ) );
     }
-    return( "| " + string.joinv( "|", cells ) + " |" );
+    return( "| " + string.joinv( " | ", cells ) + " |" );
   }
 
   //-------------------------------------------------------------
@@ -411,11 +411,16 @@ public class NoteItemTable : NoteItem {
     var table = (item as NoteItemTable);
     if( table != null ) {
       _columns.remove_range( 0, _columns.length );
-      _rows.remove_all();
       for( int col=0; col<table.columns(); col++ ) {
         var column = new NoteItemTableColumn.copy( table.get_column( col ) );
         _columns.insert_val( col, column );
         column.changed.connect( handle_change );
+      }
+      _rows.remove_all();
+      for( int row=0; row<table.rows(); row++ ) {
+        var table_row = new NoteItemTableRow( table.columns() );
+        table_row.copy( table.get_row( row ) );
+        _rows.append( table_row );
       }
       _description = table.description;
     }
@@ -560,7 +565,7 @@ public class NoteItemTable : NoteItem {
       columns += _columns.index( i ).header;
       justs   += _columns.index( i ).justify_string();
     }
-    return( "| " + string.joinv( "|", columns ) + " |\n| " + string.joinv( "|", justs ) + " |\n" );
+    return( "| " + string.joinv( " | ", columns ) + " |\n| " + string.joinv( " | ", justs ) + " |\n" );
   }
 
   //-------------------------------------------------------------
