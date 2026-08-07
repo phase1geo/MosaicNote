@@ -52,6 +52,16 @@ public class NoteItemMath : NoteItem {
 	}
 
   //-------------------------------------------------------------
+  // Copies the contents of the given note item to this item.
+  public override void copy( NoteItem item ) {
+    base.copy( item );
+    var math_item = (item as NoteItemMath);
+    if( math_item != null ) {
+      this._description = math_item._description;
+    }
+  }
+
+  //-------------------------------------------------------------
   // Searches the description and math expression for the given
   // search string.
   public override bool search( string pattern ) {

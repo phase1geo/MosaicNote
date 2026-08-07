@@ -48,6 +48,7 @@ public class NoteItemImage : NoteItem {
 		}
 		set {
 			if( _description != value ) {
+        stdout.printf( "Setting description to %s\n", value );
 				_description = value;
 				modified = true;
 				changed();
@@ -75,6 +76,7 @@ public class NoteItemImage : NoteItem {
     var image = (item as NoteItemImage);
     if( image != null ) {
       this.uri = image.uri;
+      this.description = image.description;
     } else if( Utils.is_url( item.content ) ) {
     	this.uri = item.content;
     	this.content = "";

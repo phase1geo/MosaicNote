@@ -205,6 +205,7 @@ public class NoteItemPaneImage : NoteItemPane {
 
     var default_text = _( "Description (Optional)" );
 
+    stdout.printf( "image_item.description: %s\n", image_item.description );
     var entry = new EditableLabel( (image_item.description == "") ? default_text : image_item.description ) {
       halign = Align.FILL,
       hexpand = true

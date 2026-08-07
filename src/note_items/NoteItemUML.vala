@@ -54,6 +54,16 @@ public class NoteItemUML : NoteItem {
   }
 
   //-------------------------------------------------------------
+  // Copies the contents of the given note item to this item.
+  public override void copy( NoteItem item ) {
+    base.copy( item );
+    var uml = (item as NoteItemUML);
+    if( uml != null ) {
+      _description = uml.description;
+    }
+  }
+
+  //-------------------------------------------------------------
   // Searches the description and content fields for the given
   // search pattern.
   public override bool search( string pattern ) {

@@ -214,7 +214,7 @@ public class NoteParser {
         }
         var row = new NoteItemRow( note );
         var fixed_uri = fix_uri( match.fetch( 2 ) );
-        stdout.printf( "fixed_uri: %s\n", fixed_uri );
+        stdout.printf( "fixed_uri: %s, description: %s\n", fixed_uri, match.fetch( 1 ) );
         var image_item = new NoteItemImage( row ) {
           uri = fixed_uri,
           description = match.fetch( 1 )

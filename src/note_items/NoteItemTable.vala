@@ -417,6 +417,7 @@ public class NoteItemTable : NoteItem {
         _columns.insert_val( col, column );
         column.changed.connect( handle_change );
       }
+      _description = table.description;
     }
   }
 
