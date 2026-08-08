@@ -207,6 +207,11 @@ public class Note : Object {
       _rows.append_val( new_row );
     }
 
+    note._footnotes.map_iterator().foreach((k, v) => {
+      _footnotes.set( k, v );
+      return( true );
+    });
+
   }
 
   //-------------------------------------------------------------
@@ -323,7 +328,7 @@ public class Note : Object {
   //   appended to the current Markdown item.
   // - If the last item in the note is a Markdown item, it should be
   //   prepended to the split Markdown item.
-  public void insert_note( Note note, int row, int col, int char_offset ) {
+  public bool insert_note( Note note, int row, int col, int char_offset ) {
 
     var first_row   = get_row( row );
     var first_md    = get_item( row, col ) as NoteItemMarkdown;
@@ -336,7 +341,8 @@ public class Note : Object {
       if( (note.items() == 1) && (note.get_item( 0, 0 ).item_type == NoteItemType.MARKDOWN) ) {
         first_md.content = first_md.content.slice( 0, byte_offset ) +
                            note.get_item( 0, 0 ).content +
-                           first_md.content.slice( byte_offset, -1 );
+                           first_md.content.slice( byte_offset, first_md.content.length );
+        return( false );
 
       } else {
 
@@ -387,14 +393,27 @@ public class Note : Object {
                   add_row( current_row, current_col++ );
                 }
                 var note_item = note.get_item( i, j );
-                current_row.add_item( note_item.item_type.create( current_row ) );
+                var new_item  = note_item.item_type.create( current_row );
+                new_item.copy( note_item );
+                current_row.add_item( new_item );
               }
             }
+            current_index++;
           }
         }
 
+        return( true );
+
       }
     }
+
+    // Merge footnotes
+    note._footnotes.map_iterator().foreach((k, v) => {
+      add_footnote( k, v );
+      return( true );
+    });
+
+    return( false );
 
   }
 
@@ -554,19 +573,23 @@ public class Note : Object {
 
   //-------------------------------------------------------------
   // Adds a new footnote.
-  public void add_footnote( string id, string description ) {
+  public bool add_footnote( string id, string description ) {
     if( !_footnotes.has( id, description ) ) {
       _footnotes.set( id, description );
       _modified = true;
+      return( true );
     }
+    return( false );
   }
 
   //-------------------------------------------------------------
   // Removes an existing footnote.
-  public void remove_footnote( string id ) {
+  public bool remove_footnote( string id ) {
     if( _footnotes.unset( id ) ) {
       _modified = true;
+      return( true );
     }
+    return( false );
   }
 
   //-------------------------------------------------------------

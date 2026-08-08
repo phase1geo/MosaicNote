@@ -72,6 +72,7 @@ public class NoteItemCode : NoteItem {
     var code = (item as NoteItemCode);
     if( code != null ) {
       this._lang = code._lang;
+      this._description = code._description;
     }
   }
 

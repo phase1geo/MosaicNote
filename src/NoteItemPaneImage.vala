@@ -205,6 +205,7 @@ public class NoteItemPaneImage : NoteItemPane {
 
     var default_text = _( "Description (Optional)" );
 
+    stdout.printf( "image_item.description: %s\n", image_item.description );
     var entry = new EditableLabel( (image_item.description == "") ? default_text : image_item.description ) {
       halign = Align.FILL,
       hexpand = true
@@ -379,6 +380,12 @@ public class NoteItemPaneImage : NoteItemPane {
 
     return( box );
 
+  }
+
+  //-------------------------------------------------------------
+  // Performs note search over this item.
+  public override void do_search( NoteSearchFunc command ) {
+    command( this, "desc", image_item.description, _h2_label );
   }
 
   //-------------------------------------------------------------

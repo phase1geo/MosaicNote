@@ -166,7 +166,10 @@ public class NoteParser {
           if( start_index != index ) {
             parse_markdown_image( note, lines[start_index:index] );
           }
-          language = stripped.substring( stripped.index_of_nth_char( 3 ) );
+          var lang_start = stripped.index_of_nth_char( 3 );
+          if( lang_start < stripped.length ) {
+            language = stripped.substring( lang_start ).down();
+          }
           in_code_block = true;
         }
       } else if( in_code_block ) {
@@ -184,13 +187,14 @@ public class NoteParser {
   //-------------------------------------------------------------
   // Repairs the given URI if it is not valid.
   private string fix_uri( string uri ) {
+    var parts = uri.split( " " );
     try {
-      if( !Uri.is_valid( uri, UriFlags.PARSE_RELAXED ) ) {
-        return( "file://" + uri );
+      if( !Uri.is_valid( parts[0], UriFlags.PARSE_RELAXED ) ) {
+        return( "file://" + parts[0] );
       }
-      return( uri );
+      return( parts[0] );
     } catch( UriError e ) {
-      return( "file://" + uri );
+      return( "file://" + parts[0] );
     }
   }
 
@@ -209,8 +213,9 @@ public class NoteParser {
           parse_markdown_table( note, lines[start_index:index] );
         }
         var row = new NoteItemRow( note );
+        var fixed_uri = fix_uri( match.fetch( 2 ) );
         var image_item = new NoteItemImage( row ) {
-          uri = fix_uri( match.fetch( 2 ) ),
+          uri = fixed_uri,
           description = match.fetch( 1 )
         };
         row.add_item( image_item );
@@ -263,6 +268,13 @@ public class NoteParser {
   }
 
   //-------------------------------------------------------------
+  // Checks to see if the given string is a number.
+  private bool is_number( string text ) {
+    double value;
+    return( double.try_parse( text, out value ) );
+  }
+
+  //-------------------------------------------------------------
   // Parses the data in the first row to figure out what type of
   // data is being stored in each column
   private void parse_markdown_table_first_row( NoteItemTable item, string[] columns ) {
@@ -278,7 +290,7 @@ public class NoteParser {
         column.data_type = TableColumnType.CHECKBOX; 
       } else {
         date.set_parse( stripped );
-        if( date.valid() ) {
+        if( date.valid() && !is_number( stripped ) ) {
           column.data_type = TableColumnType.DATE;
         } else {
           column.data_type = TableColumnType.TEXT;
@@ -323,19 +335,19 @@ public class NoteParser {
         if( in_header ) {
           row = new NoteItemRow( note );
           table_item = new NoteItemTable( row, (columns.length - 2) );
-          parse_markdown_table_header( table_item, columns[1:columns.length-2] );
+          parse_markdown_table_header( table_item, columns[1:columns.length-1] );
           in_header = false;
           in_align  = true;
         } else if( in_align ) {
-          parse_markdown_table_align( table_item, columns[1:columns.length-2] );
+          parse_markdown_table_align( table_item, columns[1:columns.length-1] );
           in_align     = false;
           in_first_row = true;
         } else if( in_first_row ) {
-          parse_markdown_table_first_row( table_item, columns[1:columns.length-2] );
-          parse_markdown_table_row( table_item, columns[1:columns.length-2] );
+          parse_markdown_table_first_row( table_item, columns[1:columns.length-1] );
+          parse_markdown_table_row( table_item, columns[1:columns.length-1] );
           in_first_row = false;
         } else {
-          parse_markdown_table_row( table_item, columns[1:columns.length-2] );
+          parse_markdown_table_row( table_item, columns[1:columns.length-1] );
         }
         start_index = index + 1;
       } else if( table_item != null ) {
@@ -346,6 +358,11 @@ public class NoteParser {
         start_index = index;
       }
       index++;
+    }
+
+    if( table_item != null ) {
+      row.add_item( table_item );
+      note.add_row( row );
     }
 
     if( start_index != index ) {
@@ -404,7 +421,7 @@ public class NoteParser {
           } else if( line.has_prefix( "---" ) || line.has_prefix( "***" ) ) {
             add_markdown_item( note, new_lines );
             new_lines = {};
-          } else {
+          } else if( line.strip() != "" ) {
             new_lines += line;
           }
         }

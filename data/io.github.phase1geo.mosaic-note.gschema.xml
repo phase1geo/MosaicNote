@@ -101,5 +101,9 @@
       <default>true</default>
       <summary>If true, a note block will be split when a block indentifier character is inserted on a new line</summary>
     </key>
+    <key name="search-case-sensitive" type="b">
+      <default>false</default>
+      <summary>If true, enables case-sensitive matching when searching within a note.</summary>
+    </key>
   </schema>
 </schemalist>

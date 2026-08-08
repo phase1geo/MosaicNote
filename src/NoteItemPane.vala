@@ -507,6 +507,10 @@ public class NoteItemPane : RemovableBox {
       text             = item.content
     };
 
+    var search_tag = buffer.create_tag( "note-match" );
+    search_tag.background = "orange";
+    search_tag.foreground = "black";
+
     var changed_id = buffer.changed.connect(() => {
       if( !ignore_text_change ) {
         win.undo.add_item( new UndoTextChanges( item ) );
@@ -885,6 +889,13 @@ public class NoteItemPane : RemovableBox {
   }
 
   //-------------------------------------------------------------
+  // Performs text search of each stored string element, calling
+  // command for each string.
+  public virtual void do_search( NoteSearchFunc command ) {
+    assert( false );
+  }
+
+  //-------------------------------------------------------------
   // Adds an item above this item
   private void action_add_item_above() {
     add_item( MoveDirection.UP, NoteItemType.MARKDOWN );
@@ -982,6 +993,13 @@ public class NoteItemPane : RemovableBox {
   private void action_copy_item_to_clipboard() {
     save();
     copy_to_clipboard( Gdk.Display.get_default().get_clipboard() );
+  }
+
+  //-------------------------------------------------------------
+  // Performs text search for this item panel (regardless of where the
+  // search text exists in the pane).  Returns the total number of matches.
+  protected virtual int search( string pattern ) {
+    return( 0 );
   }
 
 }

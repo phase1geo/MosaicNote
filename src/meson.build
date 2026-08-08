@@ -33,7 +33,7 @@ sources += files(
     'NoteItemRow.vala',
     'NotePanel.vala',
     'NoteParser.vala',
-    # 'NoteSearch.vala',
+    'NoteSearch.vala',
     'NotesPanel.vala',
     'Preferences.vala',
     'RemovableBox.vala',

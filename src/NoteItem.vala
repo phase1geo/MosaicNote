@@ -354,11 +354,14 @@ public class NoteItem : Object {
   //-------------------------------------------------------------
 	// Returns the filename of the resource file associated with this note item
   protected string get_resource_path( string extension, int? extra_id = null ) {
-    if( extra_id == null ) {
-    	return( Path.build_filename( get_resource_dir(), "resource-%d.%s".printf( id, extension ) ) );
-    } else {
-      return( Path.build_filename( get_resource_dir(), "resource-%d-%d.%s".printf( id, extra_id, extension ) ) );
+    var filename = "resource-%d".printf( id );
+    if( extra_id != null ) {
+      filename += "-%d".printf( extra_id );
     }
+    if( extension != "" ) {
+      filename += ".%s".printf( extension );
+    }
+    return( Path.build_filename( get_resource_dir(), filename ) );
   }
 
   //-------------------------------------------------------------
@@ -372,12 +375,24 @@ public class NoteItem : Object {
   protected bool save_as_resource( File from_file, bool link, int? extra_id = null ) {
     Utils.create_dir( get_resource_dir() );
     var to_file = File.new_for_path( get_resource_path( Utils.get_extension( from_file.get_uri() ), extra_id ) );
+    var scheme  = from_file.get_uri_scheme();
     try {
-      if( link && (from_file.get_uri_scheme() == "file") ) {
-        FileUtils.remove( to_file.get_path() );
-        return( to_file.make_symbolic_link( from_file.get_path() ) );
-      } else {
-        return( from_file.copy( to_file, FileCopyFlags.OVERWRITE ) );
+      switch( scheme ) {
+        case "file" :
+          if( link ) {
+            FileUtils.remove( to_file.get_path() );
+            return( to_file.make_symbolic_link( from_file.get_path() ) );
+          } else {
+            return( from_file.copy( to_file, FileCopyFlags.OVERWRITE ) );
+          }
+        case "https" :
+        case "http"  :
+          var session = new Soup.Session();
+          var message = new Soup.Message( "GET", from_file.get_uri() );
+          var stream  = session.send( message, null );
+          var outstrm = to_file.replace( null, false, FileCreateFlags.NONE );
+          return( outstrm.splice( stream, OutputStreamSpliceFlags.CLOSE_SOURCE | OutputStreamSpliceFlags.CLOSE_TARGET ) >= 0 );
+        default :  return( false );
       }
     } catch( Error e ) {
       stdout.printf( "ERROR: %s\n", e.message );

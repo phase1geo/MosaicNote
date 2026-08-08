@@ -22,17 +22,26 @@
 using Gdk;
 using Gtk;
 
+public delegate bool NoteSearchFunc( NoteItemPane? pane, string element, string str, Widget win );
+
 public class SearchMatch {
 
-  public Node? node  { set; get; default = null; }
-  public bool  name  { set; get; default = true; }
-  public int   start { set; get; default = -1; }
-  public int   end   { set; get; default = -1; }
+  public NoteItemPane? pane  { set; get; default = null; }
+  public Widget        win   { set; get; default = null; }
+  public int           start { set; get; default = -1; }
+  public int           end   { set; get; default = -1; }
 
-  public SearchMatch() {}
+  //-------------------------------------------------------------
+  // Constructor
+  public SearchMatch( NoteItemPane? p, Widget w, int s, int e ) {
+    pane  = p;
+    win   = w;
+    start = s;
+    end   = e;
+  }
 
   public string to_string() {
-    return( (node == null) ? "none" : "name: %s, str: %s, start: %d, end: %d".printf( name.to_string(), (name ? node.name.text.text : node.note.text.text), start, end ) );
+    return( (pane == null) ? "none" : "start: %d, end: %d".printf( start, end ) );
   }
 
 }
@@ -43,18 +52,27 @@ public class NoteSearch : Box {
   private SearchEntry  _search_entry;
   private Button       _search_next;
   private Button       _search_prev;
+  private Label        _search_matches;
   private SearchEntry  _replace_entry;
   private Button       _replace_current;
   private Button       _replace_all;
   private SearchMatch  _next;
   private SearchMatch  _prev;
   private int          _ignore_update;
+  private Array<SearchMatch> _matches;
+  private int                _match_index    = -1;
+  private bool               _case_sensitive = false;
+
+  private delegate void NoteSearchCallback( string match, int start, int end );
+
+  public signal void close_requested();
 
   //-------------------------------------------------------------
   // Default constructor
   public NoteSearch( NotePanel panel ) {
 
     Object(
+      orientation: Orientation.VERTICAL,
       spacing: 5,
       margin_start: 5,
       margin_end: 5,
@@ -64,22 +82,25 @@ public class NoteSearch : Box {
 
     _panel = panel;
 
-    _next = new SearchMatch();
-    _prev = new SearchMatch();
+    _matches = new Array<SearchMatch>();
     _ignore_update = 0;
+    _case_sensitive = MosaicNote.settings.get_boolean( "search-case-sensitive" );
 
-    add_search_entry();
-    add_search_next();
-    add_search_previous();
-    add_spacer();
-    add_replace_entry();
-    add_replace_current();
-    add_replace_all();
+    var search_box = new Box( Orientation.HORIZONTAL, 5 );
+    add_search_entry( search_box );
+    add_search_case( search_box );
+    add_search_next( search_box );
+    add_search_previous( search_box );
+    add_search_matches( search_box );
+    add_search_replace( search_box );
 
-    /*
-    _ot.selected_changed.connect( update_next_previous );
-    _ot.cursor_changed.connect( update_next_previous );
-    */
+    var replace_box = new Box( Orientation.HORIZONTAL, 5 );
+    add_replace_entry( replace_box );
+    add_replace_current( replace_box );
+    add_replace_all( replace_box );
+
+    append( search_box );
+    append( replace_box );
 
   }
 
@@ -99,7 +120,7 @@ public class NoteSearch : Box {
 
   //-------------------------------------------------------------
   // Creates the search entry field and adds it to this box
-  private void add_search_entry() {
+  private void add_search_entry( Box box ) {
 
     _search_entry = new Gtk.SearchEntry() {
       halign = Align.FILL,
@@ -110,37 +131,107 @@ public class NoteSearch : Box {
     _search_entry.search_changed.connect( search );
     _search_entry.activate.connect( search_next );
 
-    append( _search_entry );
+    var key = new EventControllerKey();
+    _search_entry.add_controller( key );
 
-  }
-
-  //-------------------------------------------------------------
-  // Performs the text search
-  private void search() {
-
-    // Perform search
-    _panel.do_search( _search_entry.text );
-
-    // Update the UI state
-    update_next_previous();
-
-  }
-
-  //-------------------------------------------------------------
-  // Called whenever the cursor changes position or the selected
-  // node changes
-  private void update_next_previous() {
-
-    if( _ignore_update > 0 ) {
-      if( _ignore_update == 1 ) {
-        _ignore_update = 0;
+    key.key_pressed.connect((keyval, keycode, state) => {
+      bool shift = (bool)(state & Gdk.ModifierType.SHIFT_MASK);
+      switch( keyval ) {
+        case Gdk.Key.Escape :
+          close_requested();
+          return( true );
+        case Gdk.Key.Return :
+          if( shift ) {
+            search_previous();
+          } else {
+            search_next();
+          }
+          return( true );
+        default :  return( false );
       }
-      return;
+    });
+
+    box.append( _search_entry );
+
+  }
+
+  //-------------------------------------------------------------
+  // Finds all matched text, adds matches to the _matches array,
+  // and runs the callback function for each match.
+  private bool find_matched_text( NoteItemPane? pane, Widget win, string pattern, string str, NoteSearchCallback callback ) {
+    if( pattern != "" ) {
+      var start       = str.index_of( pattern, 0 );
+      var start_index = (int)_matches.length;
+      while( start != -1 ) {
+        _matches.append_val( new SearchMatch( pane, win, start, (start + pattern.length) ) );
+        start = str.index_of( pattern, (start + pattern.length) );
+      }
+      for( int i=((int)_matches.length - 1); i>=start_index; i-- ) {
+        callback( pattern, _matches.index( i ).start, _matches.index( i ).end );
+      }
+      return( start_index != _matches.length );
+    }
+    return( false );
+  }
+
+  //-------------------------------------------------------------
+  // Helper function for search function which handles any match
+  // checks.  This function is also responsible for clearing
+  // highlights and adding highlights to the specified widget
+  // for matched text.
+  private bool search_match( NoteItemPane? pane, string element, string pattern, string str, Widget win ) {
+
+    // Clear any matched patterns in the widget
+    var label = (win as Label);
+    if( label != null ) {
+      label.label = str;
+      label.use_markup = false;
+      return(
+        find_matched_text( pane, win, pattern, str, (match, start, end) => {
+          label.label = label.label.splice( start, end, "<span background=\"orange\" foreground=\"black\">%s</span>".printf( match ) );
+          label.use_markup = true;
+        })
+      );
     }
 
-    // Get the next and previous matches
-    find_next_match();
-    find_prev_match();
+    var text = (win as TextView);
+    if( text != null ) {
+      stdout.printf( "In search_match for text\n" );
+      TextIter start_iter, end_iter;
+      text.buffer.get_start_iter( out start_iter );
+      text.buffer.get_end_iter( out end_iter );
+      text.buffer.remove_tag_by_name( "note-match", start_iter, end_iter );
+      return(
+        find_matched_text( pane, win, pattern, str, (match, start, end) => {
+          text.buffer.get_iter_at_offset( out start_iter, str.slice( 0, start ).char_count() );
+          text.buffer.get_iter_at_offset( out end_iter,   str.slice( 0, end ).char_count() );
+          text.buffer.apply_tag_by_name( "note-match", start_iter, end_iter );
+        })
+      );
+    }
+
+    return( false );
+
+  }
+
+  //-------------------------------------------------------------
+  // Performs the text search on the entire contents of the
+  // current note.
+  private void search() {
+
+    _matches.remove_range( 0, _matches.length );
+    _match_index = -1;
+
+    var pattern = _search_entry.text;
+
+    // Perform search
+    _panel.do_note_search((pane, element, str, win) => {
+      if( _case_sensitive ) {
+        return( search_match( pane, element, pattern, str, win ) );
+      } else {
+        return( search_match( pane, element, pattern.down(), str.down(), win ) );
+      }
+    });
 
     // Update the UI state
     update_state();
@@ -151,197 +242,159 @@ public class NoteSearch : Box {
   // Updates the UI state
   private void update_state() {
 
-    var found = (_next.node != null) || (_prev.node != null) || is_match_selected();
+    var is_next     = ((_match_index + 1) < _matches.length);
+    var is_prev     = ((_match_index - 1) >= 0);
+    var is_selected = is_match_selected();
+    var found       = is_next || is_prev || is_selected;
 
-    _search_next.set_sensitive( _next.node != null );
-    _search_prev.set_sensitive( _prev.node != null );
+    _search_next.set_sensitive( is_next );
+    _search_prev.set_sensitive( is_prev );
+    _search_matches.label = _( "%u matches" ).printf( _matches.length );
     _replace_entry.editable  = found;
     _replace_entry.can_focus = found;
-    _replace_current.set_sensitive( (_replace_entry.text != "") && is_match_selected() );
+    _replace_current.set_sensitive( (_replace_entry.text != "") && is_selected );
     _replace_all.set_sensitive( (_replace_entry.text != "") && found );
 
   }
 
   //-------------------------------------------------------------
+  // Creates the search case-sensitivity UI.
+  private void add_search_case( Box box ) {
+
+    var btn = new ToggleButton() {
+      label        = "Aa",
+      has_frame    = false,
+      active       = _case_sensitive,
+      tooltip_text = _( "Toggle case-sensitivity" )
+    };
+
+    btn.notify["active"].connect(() => {
+      _case_sensitive = btn.active;
+      MosaicNote.settings.set_boolean( "search-case-sensitive", _case_sensitive );
+      _search_entry.grab_focus();
+      search();
+    });
+
+    box.append( btn );
+
+  }
+
+  //-------------------------------------------------------------
   // Creates the search next field and adds it to this box
-  private void add_search_next() {
+  private void add_search_next( Box box ) {
 
     _search_next = new Gtk.Button.from_icon_name( "go-down-symbolic" );
     _search_next.clicked.connect( search_next );
 
-    append( _search_next );
-
-  }
-
-  //-------------------------------------------------------------
-  // Finds the match after the currently selected node
-  private void find_next_match() {
-
-    _next.node  = _ot.selected;
-    _next.name  = true;
-    _next.start = -1;
-
-    var start = 0;
-
-    if( _next.node != null ) {
-      switch( _next.node.mode ) {
-        case NodeMode.EDITABLE :
-          _next.name = true;
-          start = _next.node.name.is_selected() ? _next.node.name.selend : _next.node.name.cursor + 1;
-          break;
-        case NodeMode.NOTEEDIT :
-          _next.name = false;
-          start = _next.node.note.is_selected() ? _next.node.note.selend : _next.node.note.cursor + 1;
-          break;
-      }
-    } else if( _ot.root.children.length > 0 ) {
-      _next.node = _ot.root.children.index( 0 );
-    } else {
-      return;
-    }
-
-    if( _next.name ) {
-      _next.node.name.text.get_search_match( start, true, ref _next );
-    } else {
-      _next.node.note.text.get_search_match( start, true, ref _next );
-    }
-
-    while( (_next.node != null) && (_next.start == -1) ) {
-      _next.name = !_next.name;
-      if( _next.name ) {
-        _next.node = _next.node.get_next_node();
-      }
-      if( _next.node != null ) {
-        if( _next.name ) {
-          _next.node.name.text.get_search_match( 0, true, ref _next );
-        } else {
-          _next.node.note.text.get_search_match( 0, true, ref _next );
-        }
-      }
-    }
-
-  }
-
-  //-------------------------------------------------------------
-  // Finds the match after the currently selected node
-  private void find_prev_match() {
-
-    _prev.node  = _ot.selected;
-    _prev.name  = false;
-    _prev.start = -1;
-
-    var start = 0;
-
-    if( _prev.node != null ) {
-      switch( _prev.node.mode ) {
-        case NodeMode.EDITABLE :
-          _prev.name = true;
-          start = _prev.node.name.is_selected() ? _prev.node.name.selstart : _prev.node.name.cursor;
-          break;
-        case NodeMode.NOTEEDIT :
-          _prev.name = false;
-          start = _prev.node.note.is_selected() ? _prev.node.name.selstart : _prev.node.note.cursor;
-          break;
-      }
-    } else {
-      return;
-    }
-
-    if( _prev.name ) {
-      _prev.node.name.text.get_search_match( start, false, ref _prev );
-    } else {
-      _prev.node.note.text.get_search_match( start, false, ref _prev );
-    }
-
-    while( (_prev.node != null) && (_prev.start == -1) ) {
-      _prev.name = !_prev.name;
-      if( !_prev.name ) {
-        _prev.node = _prev.node.get_previous_node();
-      }
-      if( _prev.node != null ) {
-        if( _prev.name ) {
-          _prev.node.name.text.get_search_match( _prev.node.name.text.text.length, false, ref _prev );
-        } else {
-          _prev.node.note.text.get_search_match( _prev.node.name.text.text.length, false, ref _prev );
-        }
-      }
-    }
+    box.append( _search_next );
 
   }
 
   //-------------------------------------------------------------
   // Perform the search for the next text match
   private void search_next() {
-    select_matched_text( _next );
+    select_matched_text( _match_index + 1 );
   }
 
   //-------------------------------------------------------------
   // Selects the matched text
-  private void select_matched_text( SearchMatch match ) {
+  private void select_matched_text( int index ) {
 
-    if( match.node == null ) return;
+    if( (index < 0) || (index >= _matches.length) ) return;
 
-    var selchange = (match.node != _ot.selected);
-    var curchange = (match.name ? match.node.name.cursor : match.node.note.cursor) != match.end;
+    var match = _matches.index( index );
+    var pane  = _matches.index( index ).pane;
+    var win   = _matches.index( index ).win;
 
-    // Set the matched node to edit mode and select the matched text
-    _ignore_update = selchange ? 1 : 0;
-    _ot.selected   = match.node;
-    _ot.edit_selected( match.name );
-
-    if( match.name ) {
-      _ot.selected.name.change_selection( match.start, match.end );
-      _ot.selected.name.set_cursor_only( match.end );
-    } else {
-      _ot.selected.note.change_selection( match.start, match.end );
-      _ot.selected.note.set_cursor_only( match.end );
+    if( match.win != null ) {
+      var text = (match.win as TextView);
+      if( text != null ) {
+        TextIter start_iter, end_iter;
+        var str = text.buffer.text;
+        text.buffer.get_iter_at_offset( out start_iter, str.slice( 0, match.start ).char_count() );
+        text.buffer.get_iter_at_offset( out end_iter,   str.slice( 0, match.end ).char_count() );
+        text.buffer.select_range( end_iter, start_iter );
+      }
     }
 
-    // Make sure that we update the search bar
-    if( !curchange ) {
-      _ot.cursor_changed();
+    // Set the match pane to be the current one
+    if( pane != null ) {
+      pane.set_as_current();
     }
+
+    _match_index = index;
+
+    // Update button states
+    update_state();
 
   }
 
   //-------------------------------------------------------------
-  // Creates the search previous field and adds it to this box
-  private void add_search_previous() {
+  // Creates the search previous field and adds it to the box
+  private void add_search_previous( Box box ) {
 
     _search_prev = new Gtk.Button.from_icon_name( "go-up-symbolic" );
     _search_prev.clicked.connect( search_previous );
 
-    append( _search_prev );
+    box.append( _search_prev );
 
   }
 
   //-------------------------------------------------------------
   // Perform the search for the previous text match
   private void search_previous() {
-    select_matched_text( _prev );
+    select_matched_text( _match_index - 1 );
   }
 
   //-------------------------------------------------------------
-  // Adds a spacer between the search and replace portions of the
-  // search bar
-  private void add_spacer() {
-    var lbl = new Label( " " );
-    append( lbl );
+  // Creates the search match number and adds it to the box.
+  private void add_search_matches( Box box ) {
+
+    _search_matches = new Label( "" );
+
+    box.append( _search_matches );
+
+  }
+
+  //-------------------------------------------------------------
+  // Creates the show/hide replace button.
+  private void add_search_replace( Box box ) {
+
+    var btn = new ToggleButton() {
+      icon_name = "edit-find-replace-symbolic",
+      tooltip_text = _( "Show/Hide Replace Tools" )
+    };
+
+    btn.notify["active"].connect(() => {
+      _replace_entry.visible   = btn.active;
+      _replace_current.visible = btn.active;
+      _replace_all.visible     = btn.active;
+      if( !btn.active || (_search_entry.text == "") ) {
+        _search_entry.grab_focus();
+      } else {
+        _replace_entry.grab_focus();
+      }
+    });
+
+    box.append( btn );
+
   }
 
   //-------------------------------------------------------------
   // Returns true if the selected text is a matched pattern
   private bool is_match_selected() {
 
-    var pattern = _search_entry.text;
-
-    if( (_ot.selected != null) && (pattern != "") ) {
-      string? seltext = null;
-      switch( _ot.selected.mode ) {
-        case NodeMode.EDITABLE :  seltext = _ot.selected.name.get_selected_text();  break;
-        case NodeMode.NOTEEDIT :  seltext = _ot.selected.note.get_selected_text();  break;
+    if( _match_index >= 0 ) {
+      var match = _matches.index( _match_index );
+      if( match.win != null ) {
+        var text = (match.win as TextView);
+        if( text != null ) {
+          TextIter selstart, selend;
+          if( text.buffer.get_selection_bounds( out selstart, out selend ) ) {
+            return( text.buffer.get_text( selstart, selend, false ) == _search_entry.text );
+          }
+        }
       }
-      return( (seltext != null) && (seltext == pattern) );
     }
 
     return( false );
@@ -350,22 +403,34 @@ public class NoteSearch : Box {
 
   //-------------------------------------------------------------
   // Adds the replace text entry field and adds it to this box
-  private void add_replace_entry() {
+  private void add_replace_entry( Box box ) {
 
     _replace_entry = new Gtk.SearchEntry() {
       halign            = Align.FILL,
       hexpand           = true,
+      visible           = false,
       placeholder_text  = _( "Replace with…")
     };
 
     var focus = new EventControllerFocus();
-    _replace_entry.add_controller( focus_controller );
+    _replace_entry.add_controller( focus );
 
     _replace_entry.search_changed.connect( replace_text_changed );
 
     focus.enter.connect( replace_focus_in );
 
-    append( _replace_entry );
+    var key = new EventControllerKey();
+    _search_entry.add_controller( key );
+
+    key.key_pressed.connect((keyval, keymod, state) => {
+      if( keyval == Gdk.Key.Escape ) {
+        close_requested();
+        return( true );
+      }
+      return( false );
+    });
+
+    box.append( _replace_entry );
 
   }
 
@@ -373,7 +438,7 @@ public class NoteSearch : Box {
   // Called when the search box loses focus
   private void replace_focus_in() {
     if( !is_match_selected() ) {
-      select_matched_text( _next );
+      select_matched_text( _match_index + 1 );
     }
   }
 
@@ -385,12 +450,49 @@ public class NoteSearch : Box {
 
   //-------------------------------------------------------------
   // Adds the replace current button and adds it to this box
-  private void add_replace_current() {
+  private void add_replace_current( Box box ) {
 
-    _replace_current = new Gtk.Button.with_label( _( "Replace" ) );
+    _replace_current = new Gtk.Button.with_label( _( "Replace" ) ) {
+      visible = false
+    };
     _replace_current.clicked.connect( replace_current );
 
-    append( _replace_current );
+    box.append( _replace_current );
+
+  }
+
+  //-------------------------------------------------------------
+  // Adds the replace all button and adds it to this box
+  private void add_replace_all( Box box ) {
+
+    _replace_all = new Gtk.Button.with_label( _( "Replace All" ) ) {
+      visible = false
+    };
+    _replace_all.clicked.connect( replace_all );
+
+    box.append( _replace_all );
+
+  }
+
+  //-------------------------------------------------------------
+  // Replaces the text at the given match index.
+  private void replace_match( int index, string new_text ) {
+
+    var match = _matches.index( index );
+
+    var text = (match.win as TextView);
+    if( text != null ) {
+      TextIter start, end;
+      var start_offset = text.buffer.text.slice( 0, match.start ).char_count();
+      var end_offset   = text.buffer.text.slice( 0, match.end ).char_count();
+      text.buffer.get_iter_at_offset( out start, start_offset );
+      text.buffer.get_iter_at_offset( out end,   end_offset );
+      text.buffer.begin_user_action();
+      text.buffer.delete_range( start, end );
+      text.buffer.get_iter_at_offset( out start, start_offset );
+      text.buffer.insert_text( ref start, new_text, new_text.length );
+      text.buffer.end_user_action();
+    }
 
   }
 
@@ -399,21 +501,19 @@ public class NoteSearch : Box {
   private void replace_current() {
 
     // Replace the current match
-    _panel.replace_current( _replace_entry.text );
+    replace_match( _match_index, _replace_entry.text );
 
-    // Jump to the next match
-    select_matched_text( _next );
+    // Perform search again
+    Idle.add(() => {
+      var index = _match_index;
+      search();
+      _match_index = index - 1;
 
-  }
+      // Jump to the next match
+      select_matched_text( _match_index + 1 );
 
-  //-------------------------------------------------------------
-  // Adds the replace all button and adds it to this box
-  private void add_replace_all() {
-
-    _replace_all = new Gtk.Button.with_label( _( "Replace All" ) );
-    _replace_all.clicked.connect( replace_all );
-
-    append( _replace_all );
+      return( false );
+    });
 
   }
 
@@ -421,7 +521,16 @@ public class NoteSearch : Box {
   // Performs the replacement for all text that matches the search text
   private void replace_all() {
 
-    _panel.replace_all( _search_entry.text, _replace_entry.text );
+    // Replace all of the matches
+    for( int i=((int)_matches.length - 1); i>=0; i-- ) {
+      replace_match( i, _replace_entry.text );
+    }
+
+    // Effectively clear the search
+    Idle.add(() => {
+      search();
+      return( false );
+    });
 
   }
 

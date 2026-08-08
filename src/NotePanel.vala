@@ -43,6 +43,8 @@ public class NotePanel : Box {
   private ListBox         _references;
   private bool            _ignore = false;
   private HashSet<string> _orig_link_titles;
+  private ToggleButton    _note_search;
+  private NoteSearch      _search_bar;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_copy_note_link",   action_copy_note_link },
@@ -59,6 +61,12 @@ public class NotePanel : Box {
   public SearchBox search {
     get {
       return( _search );
+    }
+  }
+
+  public ToggleButton note_search {
+    get {
+      return( _note_search );
     }
   }
 
@@ -220,6 +228,13 @@ public class NotePanel : Box {
   // Creates the note UI
   private Widget create_note_ui() {
 
+    _search_bar = new NoteSearch( this ) {
+      visible = false
+    };
+    _search_bar.close_requested.connect(() => {
+      _note_search.active = false;
+    });
+
     _tags = new TagBox( _win );
     _tags.added.connect((tag) => {
       _win.undo.add_item( new UndoTagAdd( _note, tag ) );
@@ -231,6 +246,14 @@ public class NotePanel : Box {
     });
     _tags.changed.connect(() => {
       _note.tags.copy( _tags.tags );
+    });
+
+    _note_search = new ToggleButton() {
+      icon_name = "edit-find-symbolic",
+      halign = Align.END
+    };
+    _note_search.notify["active"].connect(() => {
+      show_note_search( _note_search.active );
     });
 
     _favorite = new Button.from_icon_name( "non-starred-symbolic" ) {
@@ -296,6 +319,7 @@ public class NotePanel : Box {
       halign = Align.FILL
     };
     tbox.append( _tags );
+    tbox.append( _note_search );
     tbox.append( _favorite );
     tbox.append( more );
     tbox.append( _hist_prev );
@@ -394,6 +418,7 @@ public class NotePanel : Box {
 
     var box = new Box( Orientation.VERTICAL, 5 );
     box.append( tbox );
+    box.append( _search_bar );
     box.append( separator1 );
     box.append( sw );
 
@@ -489,7 +514,7 @@ public class NotePanel : Box {
 
   //-------------------------------------------------------------
   // Adds the list of footnotes in the note.
-  private void add_footnotes() {
+  public void add_footnotes() {
     Utils.clear_listbox( _footnotes );
     if( _note.footnotes.size == 0 ) {
       _footnotes.get_parent().visible = false;
@@ -511,7 +536,8 @@ public class NotePanel : Box {
         });
         var description = new EditableLabel( v ) {
           halign = Align.FILL,
-          hexpand = true
+          hexpand = true,
+          text = v
         };
         description.notify["editing"].connect(() => {
           if( !description.editing ) {
@@ -618,6 +644,26 @@ public class NotePanel : Box {
   }
 
   //-------------------------------------------------------------
+  // Toggles the note search UI.
+  public void show_note_search( bool show ) {
+    _search_bar.change_display( show );
+    _search_bar.visible = show;
+    if( !show ) {
+      var current = _content.get_current_pane();
+      if( current != null ) {
+        current.set_as_current();
+      }
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Performs search of the current note's items.
+  public void do_note_search( NoteSearchFunc command ) {
+    command( null, "title", _title.text, _title );
+    _content.do_search( command );
+  }
+
+  //-------------------------------------------------------------
   // Should be called for widgets that are not associated with
   // note item panes.
   private void handle_nonitem_focus( Widget w ) {
@@ -644,13 +690,13 @@ public class NotePanel : Box {
 
     // If we had a previously displayed note, save it before populating with the new note
     if( _note != null ) {
-      stdout.printf( "CALLING SAVE\n" );
       save();
     }
 
     if( note != null ) {
 
       _note = note;
+      _note_search.active = false;
 
       _title.text = note.title;
       _tags.clear_tags();

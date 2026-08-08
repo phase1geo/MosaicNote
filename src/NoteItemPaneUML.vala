@@ -41,15 +41,17 @@ public class NoteItemPaneUML : NoteItemPane {
     base( win, item, spell );
   }
 
+  ~NoteItemPaneUML() {
+    stdout.printf( "NoteItemPaneUML destroyed\n" );
+  }
+
+  //-------------------------------------------------------------
+  // Returns the text widget.
   public override GtkSource.View? get_text() {
     if( _stack.visible_child_name == "input" ) {
       return( _text );
     }
     return( null );
-  }
-
-  ~NoteItemPaneUML() {
-    stdout.printf( "NoteItemPaneUML destroyed\n" );
   }
 
   //-------------------------------------------------------------
@@ -260,6 +262,16 @@ public class NoteItemPaneUML : NoteItemPane {
 
     return( _stack );
 
+  }
+
+  //-------------------------------------------------------------
+  // Performs a note search on this UML item.
+  public override void do_search( NoteSearchFunc command ) {
+    command( this, "desc", uml_item.description, _h2_label );
+    if( command( this, "text", uml_item.content, _text ) ) {
+      _stack.visible_child_name = "input";
+      _hbbox.visible = true;
+    }
   }
 
   //-------------------------------------------------------------

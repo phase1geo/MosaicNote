@@ -86,8 +86,9 @@ public class Utils {
   //-------------------------------------------------------------
   // Returns the extension for the given filename
   public static string get_extension( string filename ) {
-    var parts = filename.split( "." );
-    return( parts[parts.length - 1] );
+    var parts      = filename.split( "/" );
+    var last_parts = parts[parts.length - 1].split( "." );
+    return( (last_parts.length == 1) ? "" : last_parts[last_parts.length - 1] );
   }
 
   /*

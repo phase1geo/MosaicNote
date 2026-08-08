@@ -254,6 +254,19 @@ public class NoteItemPanes : RemovableBox {
   }
 
   //-------------------------------------------------------------
+  // Iterates through each note item pane, calling the associated
+  // command on its text.
+  public void do_search( NoteSearchFunc command ) {
+
+    var child = (get_first_child() as NoteItemPaneRow);
+    while( child != null ) {
+      child.do_search( command );
+      child = (child.get_next_sibling() as NoteItemPaneRow);
+    }
+
+  }
+
+  //-------------------------------------------------------------
   // Returns the number of rows stored in this structure
   public int rows() {
     return( _rows );
@@ -292,6 +305,8 @@ public class NoteItemPanes : RemovableBox {
     } else {
       row_pane = new NoteItemPaneRow( item.row );
     }
+
+    stdout.printf( "Adding pane %s\n", item.item_type.to_string() );
 
     NoteItemPane pane;
     switch( item.item_type ) {
