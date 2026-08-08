@@ -196,6 +196,7 @@ public class NoteSearch : Box {
 
     var text = (win as TextView);
     if( text != null ) {
+      stdout.printf( "In search_match for text\n" );
       TextIter start_iter, end_iter;
       text.buffer.get_start_iter( out start_iter );
       text.buffer.get_end_iter( out end_iter );
@@ -473,13 +474,6 @@ public class NoteSearch : Box {
 
   }
 
-  /*
-  FOOBAR
-  buffer.mark_set.connect ((iter, mark) => {
-      if (mark.get_name () == "insert" ||
-          mark.get_name () == "selection_bound") {
-  */
-
   //-------------------------------------------------------------
   // Replaces the text at the given match index.
   private void replace_match( int index, string new_text ) {
@@ -510,12 +504,16 @@ public class NoteSearch : Box {
     replace_match( _match_index, _replace_entry.text );
 
     // Perform search again
-    var index = _match_index;
-    search();
-    _match_index = index - 1;
+    Idle.add(() => {
+      var index = _match_index;
+      search();
+      _match_index = index - 1;
 
-    // Jump to the next match
-    select_matched_text( _match_index + 1 );
+      // Jump to the next match
+      select_matched_text( _match_index + 1 );
+
+      return( false );
+    });
 
   }
 
@@ -529,7 +527,10 @@ public class NoteSearch : Box {
     }
 
     // Effectively clear the search
-    search();
+    Idle.add(() => {
+      search();
+      return( false );
+    });
 
   }
 

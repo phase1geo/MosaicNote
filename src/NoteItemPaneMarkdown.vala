@@ -200,28 +200,64 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
     if( (str.char_count() > 1) && settings.get_boolean( "enable-markdown-block-char" ) ) {
 
-      int row_pos, col_pos;
-      if( item.row.note.get_item_location( item, out row_pos, out col_pos ) ) {
+      // Create the version of the text that will normally get inserted
+      var text        = _text.buffer.text;
+      var char_offset = iter.get_offset();
+      var byte_offset = text.index_of_nth_char( char_offset );
+      text = text.splice( byte_offset, byte_offset, str );
 
-        // Create the note from the inserted text
-        var parser = new NoteParser();
-        var note   = parser.parse_markdown( item.row.note.notebook, str );
+      // Parse the entirety of the modified text.  If the note contains more than one block
+      // or the block is not a Markdown block, modify the current note with the new blocks,
+      // refresh the note UI, and tell the calling code to stop completing the insert.
+      var parser = new NoteParser();
+      var note   = parser.parse_markdown( item.row.note.notebook, text );
 
-        // Insert the note into the current note
-        var offset = iter.get_offset();
-        item.row.note.insert_note( note, row_pos, col_pos, offset );
+      if( (note.rows() > 1) ||
+          ((note.rows() == 1) && (note.get_item( 0, 0 ).item_type != NoteItemType.MARKDOWN)) ||
+          (note.footnotes.size > 0) ) {
 
-        // Update the note items panel
-        win.note.items.populate( item.row.note );
-        win.note.add_footnotes();
+        int row_pos, col_pos;
+        if( item.row.note.get_item_location( item, out row_pos, out col_pos ) ) {
 
-        // Set the insertion cursor to the correct location, give the new pane focus, and
-        // grab keyboard focus
-        var pane = win.note.items.get_pane( row_pos, col_pos );
-        pane.grab_item_focus( TextCursorPlacement.AT_OFFSET, offset );
-        pane.set_as_current( "check-for-paste" );
+          var start_row = 0;
 
-        return( true );
+          // Remove the existing item
+          item.row.note.delete_item( row_pos, col_pos );
+
+          if( col_pos > 0 ) {
+            item.row.note.add_item( note.get_item( 0, 0 ), row_pos, col_pos, true );
+            start_row = 1;
+          }
+
+          for( int i=start_row; i<note.rows(); i++ ) {
+            item.row.note.add_row( note.get_row( i ), (row_pos + i) );
+          }
+
+          // Re-populate the note
+          win.note.items.populate( item.row.note );
+
+          // Merge the footnotes
+          var footnotes_changed = false;
+          note.footnotes.map_iterator().foreach((k, v) => {
+            footnotes_changed |= item.row.note.add_footnote( k, v );
+            return( true );
+          });
+
+          // If the footnotes have changed, update the footnotes section
+          if( footnotes_changed ) {
+            win.note.add_footnotes();
+          }
+
+          // Set the insertion cursor to the correct location, give the new pane focus, and
+          // grab keyboard focus
+          var pane = win.note.items.get_pane( row_pos, col_pos );
+          pane.grab_item_focus( TextCursorPlacement.AT_OFFSET, char_offset );
+          pane.set_as_current( "check-for-paste" );
+
+          return( true );
+
+        }
+
       }
 
     }

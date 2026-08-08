@@ -328,7 +328,7 @@ public class Note : Object {
   //   appended to the current Markdown item.
   // - If the last item in the note is a Markdown item, it should be
   //   prepended to the split Markdown item.
-  public void insert_note( Note note, int row, int col, int char_offset ) {
+  public bool insert_note( Note note, int row, int col, int char_offset ) {
 
     var first_row   = get_row( row );
     var first_md    = get_item( row, col ) as NoteItemMarkdown;
@@ -342,6 +342,7 @@ public class Note : Object {
         first_md.content = first_md.content.slice( 0, byte_offset ) +
                            note.get_item( 0, 0 ).content +
                            first_md.content.slice( byte_offset, first_md.content.length );
+        return( false );
 
       } else {
 
@@ -401,6 +402,8 @@ public class Note : Object {
           }
         }
 
+        return( true );
+
       }
     }
 
@@ -409,6 +412,8 @@ public class Note : Object {
       add_footnote( k, v );
       return( true );
     });
+
+    return( false );
 
   }
 
@@ -568,19 +573,23 @@ public class Note : Object {
 
   //-------------------------------------------------------------
   // Adds a new footnote.
-  public void add_footnote( string id, string description ) {
+  public bool add_footnote( string id, string description ) {
     if( !_footnotes.has( id, description ) ) {
       _footnotes.set( id, description );
       _modified = true;
+      return( true );
     }
+    return( false );
   }
 
   //-------------------------------------------------------------
   // Removes an existing footnote.
-  public void remove_footnote( string id ) {
+  public bool remove_footnote( string id ) {
     if( _footnotes.unset( id ) ) {
       _modified = true;
+      return( true );
     }
+    return( false );
   }
 
   //-------------------------------------------------------------
