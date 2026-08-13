@@ -374,9 +374,9 @@ public class NoteParser {
   //-------------------------------------------------------------
   // Join the lines and append resulting Markdown into a new
   // Markdown item in the specified note.
-  private void add_markdown_item( Note note, string[] lines ) {
+  private void add_markdown_item( Note note, string[] lines, bool force_add = false ) {
     var text = string.joinv( "\n", lines ).strip();
-    if( text != "" ) {
+    if( (text != "") || force_add ) {
       var row = new NoteItemRow( note );
       var markdown_item = new NoteItemMarkdown( row ) {
         content = text
@@ -404,6 +404,7 @@ public class NoteParser {
       var id    = "";
       var description = "";
       var in_footnote = false;
+      var last = "";
       foreach( var line in lines ) {
         if( in_footnote ) {
           if( sp_re.match( line, 0, out matched ) ) {
@@ -418,13 +419,15 @@ public class NoteParser {
             id          = matched.fetch( 1 );
             description = matched.fetch( 2 );
             in_footnote = true;
-          } else if( line.has_prefix( "---" ) || line.has_prefix( "***" ) ) {
-            add_markdown_item( note, new_lines );
+          } else if( ((last.strip() == "") && line.has_prefix( "---" )) ||
+                     line.has_prefix( "***" ) || line.has_prefix( "___" ) ) {
+            add_markdown_item( note, new_lines, true );
             new_lines = {};
           } else if( line.strip() != "" ) {
             new_lines += line;
           }
         }
+        last = line;
       }
       if( in_footnote ) {
         note.add_footnote( id, description );
