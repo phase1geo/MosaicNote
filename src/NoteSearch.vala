@@ -196,7 +196,6 @@ public class NoteSearch : Box {
 
     var text = (win as TextView);
     if( text != null ) {
-      stdout.printf( "In search_match for text\n" );
       TextIter start_iter, end_iter;
       text.buffer.get_start_iter( out start_iter );
       text.buffer.get_end_iter( out end_iter );

@@ -126,8 +126,12 @@ public class NoteItemPane : RemovableBox {
 
   }
 
+  //-------------------------------------------------------------
+  // Destructor
   ~NoteItemPane () {
-    stdout.printf( "NoteItemPane destroyed\n" );
+    if( MosaicNote.debug ) {
+      stdout.printf( "NoteItemPane destroyed\n" );
+    }
   }
 
   public override void cleanup() {

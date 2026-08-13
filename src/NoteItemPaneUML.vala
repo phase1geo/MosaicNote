@@ -41,8 +41,12 @@ public class NoteItemPaneUML : NoteItemPane {
     base( win, item, spell );
   }
 
+  //-------------------------------------------------------------
+  // Destructor
   ~NoteItemPaneUML() {
-    stdout.printf( "NoteItemPaneUML destroyed\n" );
+    if( MosaicNote.debug ) {
+      stdout.printf( "NoteItemPaneUML destroyed\n" );
+    }
   }
 
   //-------------------------------------------------------------

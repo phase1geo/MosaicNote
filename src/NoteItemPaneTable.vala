@@ -66,8 +66,12 @@ public class NoteItemPaneTable : NoteItemPane {
 
   }
 
+  //-------------------------------------------------------------
+  // Destructor
   ~NoteItemPaneTable() {
-    stdout.printf( "NoteItemPaneTable destroyed\n" );
+    if( MosaicNote.debug ) {
+      stdout.printf( "NoteItemPaneTable destroyed\n" );
+    }
   }
 
   //-------------------------------------------------------------

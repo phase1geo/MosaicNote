@@ -50,8 +50,12 @@ public class NoteItemPaneCode : NoteItemPane {
     base( win, item, spell );
   }
 
+  //-------------------------------------------------------------
+  // Destructor
   ~NoteItemPaneCode() {
-    stdout.printf( "NoteItemPaneCode destroyed\n" );
+    if( MosaicNote.debug ) {
+      stdout.printf( "NoteItemPaneCode destroyed\n" );
+    }
   }
 
   //-------------------------------------------------------------

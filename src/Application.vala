@@ -31,6 +31,7 @@ public class MosaicNote : Gtk.Application {
   private static bool show_version = false;
   public  static GLib.Settings settings;
   public  static string        current_version = "1.0.0";
+  public  static bool          debug = false;
 
   private MainWindow appwin;
 

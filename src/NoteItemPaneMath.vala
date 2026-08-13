@@ -43,16 +43,20 @@ public class NoteItemPaneMath : NoteItemPane {
     }
   }
 
-  ~NoteItemPaneMath() {
-    stdout.printf( "NoteItemPaneMath destroyed\n" );
-  }
-
   //-------------------------------------------------------------
 	// Default constructor
 	public NoteItemPaneMath( MainWindow win, NoteItem item, SpellChecker? spell ) {
     base( win, item, spell );
     _cursor_pointer = new Gdk.Cursor.from_name( "pointer", null );
     _cursor_text    = new Gdk.Cursor.from_name( "text", null );
+  }
+
+  //-------------------------------------------------------------
+  // Destructor
+  ~NoteItemPaneMath() {
+    if( MosaicNote.debug ) {
+      stdout.printf( "NoteItemPaneMath destroyed\n" );
+    }
   }
 
   //-------------------------------------------------------------

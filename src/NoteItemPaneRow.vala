@@ -84,8 +84,12 @@ public class NoteItemPaneRow : RemovableBox {
 
   }
 
+  //-------------------------------------------------------------
+  // Destructor
   ~NoteItemPaneRow() {
-    stdout.printf( "NoteItemPaneRow destroyed\n" );
+    if( MosaicNote.debug ) {
+      stdout.printf( "NoteItemPaneRow destroyed\n" );
+    }
   }
 
   //-------------------------------------------------------------

@@ -53,10 +53,16 @@ public class NoteItemPaneAssets : NoteItemPane {
 
   }
 
+  //-------------------------------------------------------------
+  // Destructor
   ~NoteItemPaneAssets() {
-    stdout.printf( "NoteItemPaneAssets destructor called\n" );
+    if( MosaicNote.debug ) {
+      stdout.printf( "NoteItemPaneAssets destructor called\n" );
+    }
   }
 
+  //-------------------------------------------------------------
+  // Cleans up class to allow for proper destruction.
   public override void cleanup() {
     base.cleanup();
     insert_action_group( "assets", null );
@@ -356,7 +362,6 @@ public class NoteItemPaneAssets : NoteItemPane {
   //-------------------------------------------------------------
   // Performs text search over stored asset paths.
   public override void do_search( NoteSearchFunc command ) {
-    stdout.printf( "searching NoteItemPaneAssets\n" );
     for( int i=0; i<assets_item.size(); i++ ) {
       var asset = assets_item.get_asset( i );
       var label = Filename.display_basename( asset.orig_path ).replace( "%20", " " );

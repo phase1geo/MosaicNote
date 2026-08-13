@@ -306,8 +306,6 @@ public class NoteItemPanes : RemovableBox {
       row_pane = new NoteItemPaneRow( item.row );
     }
 
-    stdout.printf( "Adding pane %s\n", item.item_type.to_string() );
-
     NoteItemPane pane;
     switch( item.item_type ) {
       case NoteItemType.MARKDOWN :  pane = new NoteItemPaneMarkdown( _win, item, _spell );  break;
