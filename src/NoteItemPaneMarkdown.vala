@@ -745,12 +745,6 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     var green = Gdk.RGBA();
     green.parse( "#2E8B57" );  // This value comes from the style sheet
 
-    stdout.printf( "  green: %s, foreground_set: %s, rgba: %s, weight: %d\n",
-      green.to_string(), tag.foreground_set.to_string(),
-      (tag.foreground_set ? tag.foreground_rgba.to_string() : "NA"),
-      tag.weight
-    );
-
     return(
       tag.foreground_set &&
       tag.foreground_rgba.equal( green ) &&
@@ -781,7 +775,8 @@ public class NoteItemPaneMarkdown : NoteItemPane {
         if( header_start.backward_line() && header_end.backward_line() && (header_end.ends_line() || header_end.forward_to_line_end()) ) {
 
           // If the previous line of text is not empty, tag it with the appropriate tag
-          if( buffer.get_text( header_start, header_end, true ).strip() != "" ) {
+          var header_text = buffer.get_text( header_start, header_end, true ).strip();
+          if( (header_text != "") && !header_text.has_prefix( "=" ) && !header_text.has_prefix( "-" ) ) {
             buffer.apply_tag_by_name( (use_header1 ? "ul_header1" : "ul_header2"), header_start, header_end );
           }
         }
@@ -796,15 +791,32 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   // case.
   private void handle_underline_header_tag_remove( TextBuffer buffer, TextTag tag, TextIter start, TextIter end ) {
 
-    stdout.printf( "In handle_underline_header_tag_remove, tag: %s\n", tag.name );
     if( is_tag_header_underline( tag ) ) {
       TextIter header_start, header_end;
       header_start = start;
       header_end   = end;
       header_end.set_line_offset( 0 );
-      stdout.printf( "  Found tag_header_underline\n" );
       if( header_start.backward_line() && header_end.backward_line() && (header_end.ends_line() || header_end.forward_to_line_end()) ) {
-        stdout.printf( "    Removing tags\n" );
+        buffer.remove_tag_by_name( "ul_header1", header_start, header_end );
+        buffer.remove_tag_by_name( "ul_header2", header_start, header_end );
+      }
+    }
+
+  }
+
+  //-------------------------------------------------------------
+  // Called when text is deleted.  If we are deleting the last
+  // text from a given line, check to see if the text would be
+  // a header underline character and clean up the line above.
+  private void handle_underline_header_delete( TextBuffer buffer, TextIter start, TextIter end ) {
+
+    var line = buffer.get_text( start, end, true ).strip();
+    if( start.starts_line() && end.ends_line() && (line.has_prefix( "=" ) || line.has_prefix( "-" )) ) {
+      TextIter header_start, header_end;
+      header_start = start;
+      header_end   = end;
+      header_end.set_line_offset( 0 );
+      if( header_start.backward_line() && header_end.backward_line() && (header_end.ends_line() || header_end.forward_to_line_end()) ) {
         buffer.remove_tag_by_name( "ul_header1", header_start, header_end );
         buffer.remove_tag_by_name( "ul_header2", header_start, header_end );
       }
@@ -845,6 +857,11 @@ public class NoteItemPaneMarkdown : NoteItemPane {
       handle_underline_header_tag_remove( buffer, tag, start, end );
     });
     add_signal( buffer, remove_tag_id );
+
+    var delete_range_id = buffer.delete_range.connect((start, end) => {
+      handle_underline_header_delete( buffer, start, end );
+    });
+    add_signal( buffer, delete_range_id );
 
     var motion_id = motion.motion.connect((x, y) => {
       TextIter iter;
