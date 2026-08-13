@@ -45,7 +45,7 @@ public class NoteParser {
 
   //-------------------------------------------------------------
   // Default constructor
-  public Note parse_markdown( Notebook notebook, string markdown ) {
+  public Note parse_markdown( Notebook notebook, string markdown, bool include_front_matter ) {
 
     var first   = true;
     var index   = 0;
@@ -59,7 +59,9 @@ public class NoteParser {
       if( stripped != "" ) {
         if( stripped == "---" ) {
           if( in_yaml ) {
-            parse_yaml( note, lines[start_index:index] );
+            if( include_front_matter ) {
+              parse_yaml( note, lines[start_index:index] );
+            }
             parse_markdown_code( note, lines[index+1:lines.length] );
             break;
           } else if( first ) {
@@ -91,28 +93,21 @@ public class NoteParser {
     var in_tags = false;
 
     foreach( var line in lines ) {
-      stdout.printf( "Front matter: (%s)\n", line );
       var stripped = line.strip();
       if( _title_re.match( stripped, 0, out match ) ) {
-        stdout.printf( "Initializing title\n" );
         note.initialize_title( dequote( match.fetch( 1 ) ) );
       } else if( _created_re.match( stripped, 0, out match ) ) {
-        stdout.printf( "Created date\n" );
         var created = new DateTime.from_iso8601( dequote( match.fetch( 1 ) ), null );
         note.initialize_created( created );
       } else if( _updated_re.match( stripped, 0, out match ) ) {
-        stdout.printf( "Updated date\n" );
         var updated = new DateTime.from_iso8601( dequote( match.fetch( 1 ) ), null );
         note.initialize_updated( updated );
       } else if( _tag_block_re.match( stripped, 0, out match ) ) {
-        stdout.printf( "Parsing tag block\n" );
         parse_yaml_tag_block( note, match.fetch( 1 ) );
       } else if( _tag_list_re.match( stripped, 0, out match ) ) {
-        stdout.printf( "Parsing tag list\n" );
         in_tags = true;
       } else if( in_tags && stripped.has_prefix( "-" ) ) {
         var tag = stripped.substring( stripped.index_of_nth_char( 1 ) );
-        stdout.printf( "  Adding tag: %s\n", tag.strip() );
         note.tags.add_tag( dequote( tag.strip() ) );
       } else {
         in_tags = false;
@@ -408,6 +403,7 @@ public class NoteParser {
       MatchInfo matched;
       var fn_re = new Regex( """^\[\^(.*?)\]:\s*(.*)$""" );
       var sp_re = new Regex( """^ {4}(.*)$""" );
+      var hr_re = new Regex( """^[ ]{0,3}((-[ ]{0,2}){3,}|(_[ ]{0,2}){3,}|(\*[ ]{0,2}){3,})[ \t]*$""" );
       var id    = "";
       var description = "";
       var in_footnote = false;
@@ -426,11 +422,10 @@ public class NoteParser {
             id          = matched.fetch( 1 );
             description = matched.fetch( 2 );
             in_footnote = true;
-          } else if( ((last.strip() == "") && line.has_prefix( "---" )) ||
-                     line.has_prefix( "***" ) || line.has_prefix( "___" ) ) {
+          } else if( (last.strip() == "") && hr_re.match( line, 0 ) ) {
             add_markdown_item( note, new_lines, true );
             new_lines = {};
-          } else if( line.strip() != "" ) {
+          } else {
             new_lines += line;
           }
         }

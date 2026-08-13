@@ -111,7 +111,7 @@ public class Import {
         try {
           if( FileUtils.get_contents( item.get_path(), out contents ) ) {
             var parser = new NoteParser();
-            var note   = parser.parse_markdown( notebook, contents );
+            var note   = parser.parse_markdown( notebook, contents, true );
             notebook.add_note( note );
           }
         } catch( FileError e ) {}
@@ -135,7 +135,7 @@ public class Import {
     try {
       if( FileUtils.get_contents( filename, out contents ) ) {
         var parser = new NoteParser();
-        var note   = parser.parse_markdown( notebook, contents );
+        var note   = parser.parse_markdown( notebook, contents, true );
         callback( notebook, note, last );
       }
     } catch( FileError e ) {}
@@ -221,7 +221,7 @@ public class Import {
     }
 
     var parser = new NoteParser();
-    var note   = parser.parse_markdown( notebook, text );
+    var note   = parser.parse_markdown( notebook, text, true );
 
     if( callback != null ) {
       callback( notebook, note, true );

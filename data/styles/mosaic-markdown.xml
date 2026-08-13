@@ -71,7 +71,7 @@
   <style name="def:identifier"              foreground="cyan"/>
 
   <!-- Statements -->
-  <style name="def:statement"               foreground="bordeaux" bold="true"/>
+  <style name="def:statement"               foreground="bordeaux" bold="true" italic="true"/>
 
   <!-- Types -->
   <style name="def:type"                    foreground="green" bold="true"/>

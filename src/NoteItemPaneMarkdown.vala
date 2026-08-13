@@ -218,7 +218,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
       // or the block is not a Markdown block, modify the current note with the new blocks,
       // refresh the note UI, and tell the calling code to stop completing the insert.
       var parser = new NoteParser();
-      var note   = parser.parse_markdown( item.row.note.notebook, text );
+      var note   = parser.parse_markdown( item.row.note.notebook, text, false );
 
       if( (note.rows() > 1) ||
           ((note.rows() == 1) && (note.get_item( 0, 0 ).item_type != NoteItemType.MARKDOWN)) ||
@@ -754,18 +754,32 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Returns true if the given tag potentially indicates a definition
+  // list item.
+  private bool is_tag_def_list( TextTag tag ) {
+
+    var magenta = Gdk.RGBA();
+    magenta.parse( "#FF00FF" );
+
+    return( tag.foreground_set && tag.foreground_rgba.equal( magenta ) );
+
+  }
+
+  //-------------------------------------------------------------
   // Checks the given tag and text to see if a header underline
   // is occurring.  If so, tag the line above it with the appropriate
   // header tag.
   private void handle_underline_header_tag_add( TextBuffer buffer, TextTag tag, TextIter start, TextIter end ) {
 
     // If the tag starts on a linestart and is styled as an underline, continue.
-    if( start.starts_line() && is_tag_header_underline( tag ) ) {
+    if( start.starts_line() && (is_tag_header_underline( tag ) || is_tag_def_list( tag )) ) {
 
       // Next, check to see if the first character is an = or a - character
       var line = buffer.get_text( start, end, true );
-      var use_header1 = line.has_prefix( "=" );
-      if( use_header1 || line.has_prefix( "-" ) ) {
+      var tag_name = line.has_prefix( "=" ) ? "ul_header1" :
+                     line.has_prefix( "-" ) ? "ul_header2" :
+                     line.has_prefix( ":" ) ? "definition" : "";
+      if( tag_name != "" ) {
 
         // Position the header_start/end to get the previous line of text
         TextIter header_start, header_end;
@@ -776,8 +790,8 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
           // If the previous line of text is not empty, tag it with the appropriate tag
           var header_text = buffer.get_text( header_start, header_end, true ).strip();
-          if( (header_text != "") && !header_text.has_prefix( "=" ) && !header_text.has_prefix( "-" ) ) {
-            buffer.apply_tag_by_name( (use_header1 ? "ul_header1" : "ul_header2"), header_start, header_end );
+          if( (header_text != "") && !header_text.has_prefix( "=" ) && !header_text.has_prefix( "-" ) && !header_text.has_prefix( ":" ) ) {
+            buffer.apply_tag_by_name( tag_name, header_start, header_end );
           }
         }
       }
@@ -791,7 +805,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   // case.
   private void handle_underline_header_tag_remove( TextBuffer buffer, TextTag tag, TextIter start, TextIter end ) {
 
-    if( is_tag_header_underline( tag ) ) {
+    if( is_tag_header_underline( tag ) || is_tag_def_list( tag ) ) {
       TextIter header_start, header_end;
       header_start = start;
       header_end   = end;
@@ -824,6 +838,21 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
   }
 
+  private void handle_def_list_delete( TextBuffer buffer, TextIter start, TextIter end ) {
+
+    var line = buffer.get_text( start, end, true ).strip();
+    if( start.starts_line() && line.has_prefix( ":" ) ) {
+      TextIter def_start, def_end;
+      def_start = start;
+      def_end   = end;
+      def_end.set_line_offset( 0 );
+      if( def_start.backward_line() && def_end.backward_line() && (def_end.ends_line() || def_end.forward_to_line_end()) ) {
+        buffer.remove_tag_by_name( "definition", def_start, def_end );
+      }
+    }
+
+  }
+
   //-------------------------------------------------------------
   // Adds a new Markdown item at the given position in the content area
   protected override Widget create_pane() {
@@ -847,6 +876,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
     buffer.create_tag( "ul_header1", "scale", Pango.Scale.XX_LARGE, "weight", Pango.Weight.BOLD );
     buffer.create_tag( "ul_header2", "scale", Pango.Scale.X_LARGE, "weight", Pango.Weight.BOLD );
+    buffer.create_tag( "definition", "scale", Pango.Scale.LARGE, "weight", Pango.Weight.BOLD );
 
     var apply_tag_id = buffer.apply_tag.connect((tag, start, end) => {
       handle_underline_header_tag_add( buffer, tag, start, end );
@@ -860,6 +890,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
     var delete_range_id = buffer.delete_range.connect((start, end) => {
       handle_underline_header_delete( buffer, start, end );
+      handle_def_list_delete( buffer, start, end );
     });
     add_signal( buffer, delete_range_id );
 
