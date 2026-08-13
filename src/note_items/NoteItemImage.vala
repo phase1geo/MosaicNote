@@ -92,22 +92,28 @@ public class NoteItemImage : NoteItem {
   //-------------------------------------------------------------
   // Returns the Markdown code for this item
   public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc ) {
-  	var file = File.new_for_uri( uri );
-	  return( format_for_width( "![%s](%s)".printf( description, uri ), file.get_path(), pandoc ) );
+    if( uri != "" ) {
+    	var file = File.new_for_uri( uri );
+  	  return( format_for_width( "![%s](%s)".printf( description, uri ), file.get_path(), pandoc ) );
+    }
+    return( "" );
   }
 
   //-------------------------------------------------------------
   // Returns the Markdown code for this item and copies the asset
   // to the specified assets directory.
   public override string export( NotebookTree? notebooks, bool include_footnotes, string assets_dir ) {
-    var asset = copy_asset( assets_dir, get_resource_filename() );
-  	return( "![%s](%s)".printf( description, asset ) );
+    if( uri != "" ) {
+      var asset = copy_asset( assets_dir, get_resource_filename() );
+    	return( "![%s](%s)".printf( description, asset ) );
+    }
+    return( "" );
   }
 
   //-------------------------------------------------------------
   // Returns the resource filename
-  public override string get_resource_filename() {
-    return( get_resource_path( Utils.get_extension( uri ) ) );
+  public override string? get_resource_filename() {
+    return( (uri == "") ? null : get_resource_path( Utils.get_extension( uri ) ) );
   }
 
   //-------------------------------------------------------------

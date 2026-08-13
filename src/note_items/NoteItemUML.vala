@@ -87,7 +87,7 @@ public class NoteItemUML : NoteItem {
 
   //-------------------------------------------------------------
   // Returns the resource filename
-  public override string get_resource_filename() {
+  public override string? get_resource_filename() {
     return( get_resource_path( "png" ) );
   }
 

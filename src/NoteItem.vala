@@ -366,8 +366,8 @@ public class NoteItem : Object {
 
   //-------------------------------------------------------------
   // Returns the resource filename
-  public virtual string get_resource_filename() {
-    return( "" );
+  public virtual string? get_resource_filename() {
+    return( null );
   }
 
   //-------------------------------------------------------------

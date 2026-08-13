@@ -91,21 +91,28 @@ public class NoteParser {
     var in_tags = false;
 
     foreach( var line in lines ) {
+      stdout.printf( "Front matter: (%s)\n", line );
       var stripped = line.strip();
       if( _title_re.match( stripped, 0, out match ) ) {
+        stdout.printf( "Initializing title\n" );
         note.initialize_title( dequote( match.fetch( 1 ) ) );
       } else if( _created_re.match( stripped, 0, out match ) ) {
+        stdout.printf( "Created date\n" );
         var created = new DateTime.from_iso8601( dequote( match.fetch( 1 ) ), null );
         note.initialize_created( created );
       } else if( _updated_re.match( stripped, 0, out match ) ) {
+        stdout.printf( "Updated date\n" );
         var updated = new DateTime.from_iso8601( dequote( match.fetch( 1 ) ), null );
         note.initialize_updated( updated );
       } else if( _tag_block_re.match( stripped, 0, out match ) ) {
+        stdout.printf( "Parsing tag block\n" );
         parse_yaml_tag_block( note, match.fetch( 1 ) );
       } else if( _tag_list_re.match( stripped, 0, out match ) ) {
+        stdout.printf( "Parsing tag list\n" );
         in_tags = true;
-      } else if( in_tags && line.has_prefix( "-" ) ) {
-        var tag = line.substring( line.index_of_nth_char( 1 ) );
+      } else if( in_tags && stripped.has_prefix( "-" ) ) {
+        var tag = stripped.substring( stripped.index_of_nth_char( 1 ) );
+        stdout.printf( "  Adding tag: %s\n", tag.strip() );
         note.tags.add_tag( dequote( tag.strip() ) );
       } else {
         in_tags = false;

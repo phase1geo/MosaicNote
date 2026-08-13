@@ -91,7 +91,7 @@ public class NoteItemMath : NoteItem {
   //-------------------------------------------------------------
   // Returns the pathname to the resource containing the mathmatical
   // image.
-  public override string get_resource_filename() {
+  public override string? get_resource_filename() {
     return( get_resource_path( "png" ) );
   }
 
