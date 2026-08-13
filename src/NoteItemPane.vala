@@ -85,6 +85,7 @@ public class NoteItemPane : RemovableBox {
   public signal void move_item( bool row, MoveDirection dir, bool record_undo );
   public signal void set_as_current( string msg = "" );
   public signal void note_link_clicked( string link );
+  public signal void header_link_clicked( string header );
   public signal void footnote_clicked( string link );
   public signal void show_image();
 

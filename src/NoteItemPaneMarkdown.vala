@@ -24,6 +24,7 @@ using Gee;
 
 public enum MarkdownLinkType {
   NOTE_LINK,
+  HEADER_LINK,
   FOOTNOTE,
   URL
 }
@@ -158,6 +159,9 @@ public class NoteItemPaneMarkdown : NoteItemPane {
       link_type = MarkdownLinkType.NOTE_LINK;
     } else if( within_footnote_ref( start, end ) ) {
       link_type = MarkdownLinkType.FOOTNOTE;
+    } else if( link.has_prefix("#") ) {
+      link_type = MarkdownLinkType.HEADER_LINK;
+      link      = link.substring( link.index_of_nth_char( 1 ) );
     } else {
       link_type = MarkdownLinkType.URL;
     }
@@ -789,9 +793,10 @@ public class NoteItemPaneMarkdown : NoteItemPane {
             string link;
             get_link_info( start, link_tag, out link_type, out link );
             switch( link_type ) {
-              case MarkdownLinkType.NOTE_LINK :  note_link_clicked( link );  break;
-              case MarkdownLinkType.FOOTNOTE  :  footnote_clicked( link );  break;
-              default                         :  Utils.open_url( link );  break;
+              case MarkdownLinkType.NOTE_LINK   :  note_link_clicked( link );  break;
+              case MarkdownLinkType.HEADER_LINK :  header_link_clicked( link );  break;
+              case MarkdownLinkType.FOOTNOTE    :  footnote_clicked( link );  break;
+              default                           :  Utils.open_url( link );  break;
             }
           }
         }

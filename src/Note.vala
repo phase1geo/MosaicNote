@@ -560,6 +560,28 @@ public class Note : Object {
   }
 
   //-------------------------------------------------------------
+  // Returns the location of the Markdown header that matches the
+  // given header in #header-name format.  Returns true if the header
+  // was found and populates the row and col with the location of the
+  // header.
+  public bool get_header_location( string header, out int row_pos, out int col_pos ) {
+    row_pos = -1;
+    col_pos = -1;
+    for( int i=0; i<_rows.length; i++ ) {
+      var row = _rows.index( i );
+      for( int j=0; j<row.size(); j++ ) {
+        var item = row.get_item( j );
+        if( item.contains_header( header ) ) {
+          row_pos = i;
+          col_pos = j;
+          return( true );
+        }
+      }
+    }
+    return( false );
+  }
+
+  //-------------------------------------------------------------
   // Gets the note link titles from all of the note items.
   public void get_note_links( HashSet<string> note_titles ) {
     for( int i=0; i<_rows.length; i++ ) {

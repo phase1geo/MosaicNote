@@ -415,6 +415,13 @@ public class NoteItem : Object {
   }
 
   //-------------------------------------------------------------
+  // Returns true if the item contains the given Markdown header
+  // with the format of header-name.
+  public virtual bool contains_header( string header ) {
+    return( false );
+  }
+
+  //-------------------------------------------------------------
   // Adds any note links stored in the note item.
   public virtual void get_note_links( HashSet<string> note_titles ) {}
 
