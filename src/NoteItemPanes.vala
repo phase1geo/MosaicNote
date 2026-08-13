@@ -444,6 +444,11 @@ public class NoteItemPanes : RemovableBox {
     });
     add_signal( pane, note_link_id );
 
+    var header_link_id = pane.header_link_clicked.connect((link) => {
+      show_header( link );
+    });
+    add_signal( pane, header_link_id );
+
     var footnote_id = pane.footnote_clicked.connect((link) => {
       footnote_clicked( link );
     });
@@ -617,6 +622,16 @@ public class NoteItemPanes : RemovableBox {
   }
 
   //-------------------------------------------------------------
+  // Displays the pane with the given Markdown header.
+  private void show_header( string header ) {
+    int row, col;
+    if( _note.get_header_location( header, out row, out col ) ) {
+      var pane = get_pane( row, col );
+      show_pane( pane, false );
+    }
+  }
+
+  //-------------------------------------------------------------
   // Returns the row at the given location.
   public NoteItemPaneRow? get_row( int pos ) {
     return( (NoteItemPaneRow)Utils.get_child_at_index( this, pos ) );
@@ -641,14 +656,15 @@ public class NoteItemPanes : RemovableBox {
 
   //-------------------------------------------------------------
   // Makes sure that the given pane is within view.
-  public void show_pane( NoteItemPane pane ) {
+  public void show_pane( NoteItemPane pane, bool include_offset = true ) {
 
     Timeout.add( 100, () => {
       Graphene.Rect child_rect;
       if( pane.compute_bounds( this, out child_rect ) ) {
         Allocation parent_alloc;
         get_allocation( out parent_alloc );
-        see( (int)(pane.get_show_offset() + child_rect.get_y() + parent_alloc.y), (int)child_rect.get_height() );
+        var offset = include_offset ? pane.get_show_offset() : 0;
+        see( (int)(offset + child_rect.get_y() + parent_alloc.y), (int)child_rect.get_height() );
       }
       return( false );
     });

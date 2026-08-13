@@ -98,4 +98,69 @@ public class NoteItemMarkdown : NoteItem {
     } catch( RegexError e ) {}
   }
 
+  //-------------------------------------------------------------
+  // Converts a raw header from Markdown into a header link by
+  // converting all alpha-numeric values to their lowercase value,
+  // converting spaces to dashes, and removing all other characters.
+  private string convert_raw_header( string header ) {
+    var new_header = "";
+    for( int i=0; i<header.length; i++ ) {
+      if( header.valid_char( i ) ) {
+        var ch = header.get_char( i );
+        if( ch.isalnum() ) {
+          new_header += ch.to_string().down();
+        } else if( ch.isspace() ) {
+          new_header += "-";
+        }
+      }
+    }
+    return( new_header );
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if the contents of the Markdown text contains
+  // any hashed header that matches the link header.
+  private bool contains_hash_header( string header ) {
+    try {
+      MatchInfo matched;
+      var re = new Regex( """^#{1,6}\s(.*)$""" );
+      foreach( var line in content.split( "\n" ) ) {
+        if( re.match( line, 0, out matched ) ) {
+          var raw_header = matched.fetch( 1 );
+          if( convert_raw_header( raw_header ) == header ) {
+            return( true );
+          }
+        }
+      }
+    } catch( RegexError e ) {}
+    return( false );
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if we contain an underlined header that matches
+  // the given link header.
+  private bool contains_underline_header( string header ) {
+    try {
+      MatchInfo matched;
+      var re   = new Regex( """^(-+|=+)\s*$""" );
+      var last = "";
+      foreach( var line in content.split( "\n" ) ) {
+        if( re.match( line ) && (last != "") ) {
+          if( convert_raw_header( last ) == header ) {
+            return( true );
+          }
+        }
+        last = line;
+      }
+    } catch( RegexError e ) {}
+    return( false );
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if this item contains a Markdown header that
+  // matches the given header link.
+  public override bool contains_header( string header ) {
+    return( contains_hash_header( header ) || contains_underline_header( header ) );
+  }
+
 }
