@@ -758,6 +758,45 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     _text.add_controller( motion );
     _text.add_controller( key );
 
+    var green = Gdk.RGBA();
+    green.parse( "#2E8B57" );  // This value comes from the style sheet
+
+    var header1_tag = buffer.create_tag( "header1", "scale", Pango.Scale.XX_LARGE, "weight", Pango.Weight.BOLD );
+    var header2_tag = buffer.create_tag( "header2", "scale", Pango.Scale.X_LARGE, "weight", Pango.Weight.BOLD );
+
+    var apply_tag_id = buffer.apply_tag.connect((tag, start, end) => {
+      if( tag.foreground_set && tag.foreground_rgba.equal( green ) && (tag.weight == Pango.Weight.BOLD) && start.starts_line() ) {
+        var line = buffer.get_text( start, end, true );
+        if( line.has_prefix( "=" ) || line.has_prefix( "-" ) ) {
+          TextIter header_start, header_end;
+          header_start = start;
+          header_end   = end;
+          header_end.set_line_offset( 0 );
+          if( header_start.backward_line() && header_end.backward_line() && (header_end.ends_line() || header_end.forward_to_line_end()) ) {
+            var header_text = buffer.get_text( header_start, header_end, true ).strip();
+            if( header_text != "" ) {
+              buffer.apply_tag( (line.has_prefix( "=" ) ? header1_tag : header2_tag), header_start, header_end );
+            }
+          }
+        }
+      }
+    });
+    add_signal( buffer, apply_tag_id );
+
+    var remove_tag_id = buffer.remove_tag.connect((tag, start, end) => {
+      if( tag.foreground_set && tag.foreground_rgba.equal( green ) && (tag.weight == Pango.Weight.BOLD) ) {
+        TextIter header_start, header_end;
+        header_start = start;
+        header_end   = end;
+        header_end.set_line_offset( 0 );
+        if( header_start.backward_line() && header_end.backward_line() && (header_end.ends_line() || header_end.forward_to_line_end()) ) {
+          buffer.remove_tag( header1_tag, header_start, header_end );
+          buffer.remove_tag( header2_tag, header_start, header_end );
+        }
+      }
+    });
+    add_signal( buffer, remove_tag_id );
+
     var motion_id = motion.motion.connect((x, y) => {
       TextIter iter;
       TextTag  link_tag;
