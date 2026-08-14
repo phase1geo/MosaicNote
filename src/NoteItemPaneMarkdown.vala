@@ -876,7 +876,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
     buffer.create_tag( "ul_header1", "scale", Pango.Scale.XX_LARGE, "weight", Pango.Weight.BOLD );
     buffer.create_tag( "ul_header2", "scale", Pango.Scale.X_LARGE, "weight", Pango.Weight.BOLD );
-    buffer.create_tag( "definition", "scale", Pango.Scale.LARGE, "weight", Pango.Weight.BOLD );
+    buffer.create_tag( "definition", "underline", Pango.Underline.SINGLE, "weight", Pango.Weight.BOLD );
 
     var apply_tag_id = buffer.apply_tag.connect((tag, start, end) => {
       handle_underline_header_tag_add( buffer, tag, start, end );
