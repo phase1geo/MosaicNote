@@ -139,6 +139,7 @@ public class NoteItemPanes : RemovableBox {
   private NoteItemPane? _current_item = null;
   private int           _rows = 0;
   private SpellChecker  _spell;
+  private RemovableBox? _box = null;
 
   public signal void item_removed( NoteItemPane pane );
   public signal void item_selected( NoteItemPane pane );
@@ -331,7 +332,7 @@ public class NoteItemPanes : RemovableBox {
       }
       add_new_item( ((type == null) ? NoteItemType.MARKDOWN : type), row_pos, col_pos, use_row );
     });
-    add_signal( pane, add_item_id );
+    _box.add_signal( pane, add_item_id );
 
     var remove_item_id = pane.remove_item.connect((forward, record_undo) => {
       var pos      = new NoteItemPos.from_pane( pane );
@@ -345,7 +346,7 @@ public class NoteItemPanes : RemovableBox {
       item_removed( pane );
       pane_row.delete_pane( pos.col );
       if( pane_row.size == 0 ) {
-        remove( pane_row );
+        _box.remove( pane_row );
         _rows--;
       }
       _note.delete_item( pos.row, pos.col );
@@ -361,7 +362,7 @@ public class NoteItemPanes : RemovableBox {
         add_new_item( NoteItemType.MARKDOWN );
       }
     });
-    add_signal( pane, remove_item_id );
+    _box.add_signal( pane, remove_item_id );
 
     var remove_row_id = pane.remove_row.connect((forward, record_undo) => {
       var pos      = new NoteItemPos.from_pane( pane );
@@ -371,7 +372,7 @@ public class NoteItemPanes : RemovableBox {
       if( record_undo ) {
         _win.undo.add_item( new UndoRowDelete( _note, pos.row ) );
       }
-      remove( pane_row );
+      _box.remove( pane_row );
       _rows--;
       _note.delete_row( pos.row );
       if( (forward || (pos.row == 0)) && (get_pane( pos.row, 0 ) != null) ) {
@@ -391,7 +392,7 @@ public class NoteItemPanes : RemovableBox {
     var change_item_id = pane.change_item.connect((type) => {
       set_current_item_to_type( type );
     });
-    add_signal( pane, change_item_id );
+    _box.add_signal( pane, change_item_id );
 
     var move_item_id = pane.move_item.connect((move_row, dir, record_undo) => {
       var pos   = new NoteItemPos.from_pane( pane );
@@ -437,39 +438,39 @@ public class NoteItemPanes : RemovableBox {
       }
       show_pane( pane );
     });
-    add_signal( pane, current_id );
+    _box.add_signal( pane, current_id );
 
     var note_link_id = pane.note_link_clicked.connect((link) => {
       note_link_clicked( link );
     });
-    add_signal( pane, note_link_id );
+    _box.add_signal( pane, note_link_id );
 
     var header_link_id = pane.header_link_clicked.connect((link) => {
       show_header( link );
     });
-    add_signal( pane, header_link_id );
+    _box.add_signal( pane, header_link_id );
 
     var footnote_id = pane.footnote_clicked.connect((link) => {
       footnote_clicked( link );
     });
-    add_signal( pane, footnote_id );
+    _box.add_signal( pane, footnote_id );
 
     var show_image_id = pane.show_image.connect(() => {
       var items = new Array<NoteItem>();
       items.append_val( item );
       show_images( items, 0 );
     });
-    add_signal( pane, show_image_id );
+    _box.add_signal( pane, show_image_id );
 
     row_pane.add_pane( pane, col );
 
     // Add the pane at the given position
     if( !add_to_row ) {
       if( row == 0 ) {
-        prepend( row_pane );
+        _box.prepend( row_pane );
       } else {
         var sibling_row = get_row( row - 1 );
-        insert_child_after( row_pane, sibling_row );
+        _box.insert_child_after( row_pane, sibling_row );
       }
       _rows++;
     }
@@ -531,11 +532,11 @@ public class NoteItemPanes : RemovableBox {
       var pane = get_pane( row, col );
       get_row( row ).delete_pane( col );
       if( get_row( row ).size == 0 ) {
-        remove( get_row( row ) );
+        _box.remove( get_row( row ) );
       }
       if( !add_to_row ) {
         var row_pane = new NoteItemPaneRow( _note.get_row( new_row ) );
-        insert_child_after( row_pane, get_row( new_row - 1 ) );
+        _box.insert_child_after( row_pane, get_row( new_row - 1 ) );
         _rows++;
       }
       get_row( new_row ).add_pane( pane, new_col );
@@ -593,23 +594,16 @@ public class NoteItemPanes : RemovableBox {
     _current_item = null;
     _spell.detach();
 
-    var pane = get_pane( 0, 0 );
-    var frow = get_row( 0 );
-
-    var timer = new Timer();
-    timer.start();
-
     // Cleanup the signal handlers for all panes about to be removed
-    base.cleanup();
-
-    // Clear the pane box
-    Utils.clear_box( this );
+    var old_box = _box;
+    _box = new RemovableBox( Orientation.VERTICAL, 5 );
 
     _note = note;
     _rows = 0;
 
     // Add the panes
-    var start = get_monotonic_time();
+    var first_yield = true;
+    var start       = get_monotonic_time();
     for( int i=0; i<_note.rows(); i++ ) {
       var row = _note.get_row( i );
       for( int j=0; j<row.size(); j++ ) {
@@ -617,9 +611,28 @@ public class NoteItemPanes : RemovableBox {
       }
       var diff = get_monotonic_time() - start;
       if( diff > 50000 ) {
+        if( first_yield ) {
+          prepend( _box );
+          if( old_box != null ) {
+            old_box.unparent();
+          }
+          first_yield = false;
+        }
         yield yield_to_main_loop();
         start = get_monotonic_time();
       }
+    }
+
+    if( first_yield ) {
+      prepend( _box );
+      if( old_box != null ) {
+        old_box.unparent();
+      }
+    }
+
+    // Cleanup the old box
+    if( old_box != null ) {
+      old_box.cleanup();
     }
 
   }
@@ -650,7 +663,7 @@ public class NoteItemPanes : RemovableBox {
   //-------------------------------------------------------------
   // Returns the row at the given location.
   public NoteItemPaneRow? get_row( int pos ) {
-    return( (NoteItemPaneRow)Utils.get_child_at_index( this, pos ) );
+    return( (NoteItemPaneRow)Utils.get_child_at_index( _box, pos ) );
   }
 
   //-------------------------------------------------------------
