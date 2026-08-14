@@ -705,7 +705,7 @@ public class NotePanel : Box {
       _stack.visible_child_name = "note";
       _note.reviewed();
 
-      _content.populate( _note );
+      _content.populate.begin( _note );
 
       _orig_link_titles.clear();
       _note.get_note_links( _orig_link_titles );

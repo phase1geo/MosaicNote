@@ -587,17 +587,17 @@ public class NoteItemPanes : RemovableBox {
 
   //-------------------------------------------------------------
   // Adds the contents of the current note into the content area
-  public void populate( Note note ) {
+  public async void populate( Note note ) {
 
     // Remove references to any panes
     _current_item = null;
     _spell.detach();
 
-    // Hide the widget to avoid unnecessary layout calls
-    this.visible = false;
-
     var pane = get_pane( 0, 0 );
     var frow = get_row( 0 );
+
+    var timer = new Timer();
+    timer.start();
 
     // Cleanup the signal handlers for all panes about to be removed
     base.cleanup();
@@ -609,15 +609,31 @@ public class NoteItemPanes : RemovableBox {
     _rows = 0;
 
     // Add the panes
+    var start = get_monotonic_time();
     for( int i=0; i<_note.rows(); i++ ) {
       var row = _note.get_row( i );
       for( int j=0; j<row.size(); j++ ) {
         add_pane( _note.get_item( i, j ), i, j, (j > 0), false );
       }
+      var diff = get_monotonic_time() - start;
+      if( diff > 50000 ) {
+        yield yield_to_main_loop();
+        start = get_monotonic_time();
+      }
     }
 
-    // After all panes have been added, show this box
-    this.visible = true;
+  }
+
+  //-------------------------------------------------------------
+  // Helper function for populate.
+  private async void yield_to_main_loop () {
+
+    Idle.add (() => {
+      yield_to_main_loop.callback ();
+      return Source.REMOVE;
+    });
+
+    yield;
 
   }
 
