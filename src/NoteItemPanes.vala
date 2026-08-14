@@ -78,7 +78,11 @@ public class NoteItemPos {
   public NoteItemPane? get_next_pane( Widget panes, bool vertical = true ) {
     if( vertical ) {
       var pane_row = (NoteItemPaneRow)Utils.get_child_at_index( panes, (_row + 1) );
-      return( (pane_row == null) ? null : pane_row.get_pane( _col ) );
+      return(
+        (pane_row == null) ? null :
+        (_col < pane_row.size) ? pane_row.get_pane( _col ) :
+        pane_row.get_pane( pane_row.size - 1 )
+      );
     } else {
       var pane_row = (NoteItemPaneRow)Utils.get_child_at_index( panes, _row );
       return( (pane_row == null) ? null : pane_row.get_pane( _col + 1 ) );
@@ -87,7 +91,11 @@ public class NoteItemPos {
   public NoteItemPane? get_prev_pane( Widget panes, bool vertical = true ) {
     if( vertical ) {
       var pane_row = (NoteItemPaneRow)Utils.get_child_at_index( panes, (_row - 1) );
-      return( (pane_row == null) ? null : pane_row.get_pane( _col ) );
+      return(
+        (pane_row == null) ? null :
+        (_col < pane_row.size) ? pane_row.get_pane( _col ) :
+        pane_row.get_pane( pane_row.size - 1 )
+      );
     } else {
       var pane_row = (NoteItemPaneRow)Utils.get_child_at_index( panes, _row );
       return( (pane_row == null) ? null : pane_row.get_pane( _col - 1 ) );
@@ -302,7 +310,7 @@ public class NoteItemPanes : RemovableBox {
     NoteItemPaneRow? row_pane = null;
 
     if( add_to_row ) {
-      row_pane = (NoteItemPaneRow)Utils.get_child_at_index( this, row );
+      row_pane = (NoteItemPaneRow)Utils.get_child_at_index( _box, row );
     } else {
       row_pane = new NoteItemPaneRow( item.row );
     }
