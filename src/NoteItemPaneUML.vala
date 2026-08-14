@@ -230,7 +230,7 @@ public class NoteItemPaneUML : NoteItemPane {
       if( n_press == 1 ) {
         _image.grab_focus();
       } else if( n_press == 2 ) {
-        set_as_current();
+        set_as_current( false );
         _stack.visible_child_name = "input";
         _hbbox.visible = true;
         _text.grab_focus();
@@ -239,7 +239,7 @@ public class NoteItemPaneUML : NoteItemPane {
     add_signal( image_click, click_id );
 
     var enter_id = image_focus.enter.connect(() => {
-      set_as_current();
+      set_as_current( true );
     });
     add_signal( image_focus, enter_id );
 

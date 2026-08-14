@@ -290,7 +290,7 @@ public class NoteItemPanes : RemovableBox {
     var new_item = type.create( note_row );
     note_row.add_item( new_item, col );
     var new_pane = add_pane( new_item, row, col, add_to_row, true );
-    new_pane.set_as_current( "add-new-item" );
+    new_pane.set_as_current( true, "add-new-item" );
     _win.undo.add_item( new UndoItemAdd( _note, row, col ) );
   }
 
@@ -422,7 +422,7 @@ public class NoteItemPanes : RemovableBox {
     });
     add_signal( pane, move_item_id );
 
-    var current_id = pane.set_as_current.connect((msg) => {
+    var current_id = pane.set_as_current.connect((show, msg) => {
       if( _current_item == null ) {
         _current_item = pane;
         item_selected( pane );
@@ -436,7 +436,9 @@ public class NoteItemPanes : RemovableBox {
           item_selected( pane );
         }
       }
-      show_pane( pane );
+      if( show ) {
+        show_pane( pane );
+      }
     });
     _box.add_signal( pane, current_id );
 
@@ -580,7 +582,7 @@ public class NoteItemPanes : RemovableBox {
 
       // Add the modified pane back into the pane row
       var new_pane = add_pane( new_item, pos.row, pos.col, true, true );
-      new_pane.set_as_current( "add-new-item" );
+      new_pane.set_as_current( false, "add-new-item" );
 
     }
 
@@ -693,7 +695,7 @@ public class NoteItemPanes : RemovableBox {
         Allocation parent_alloc;
         get_allocation( out parent_alloc );
         var offset = include_offset ? pane.get_show_offset() : 0;
-        see( (int)(offset + child_rect.get_y() + parent_alloc.y), (int)child_rect.get_height() );
+        see( (int)(child_rect.get_y() + parent_alloc.y), (int)(offset + child_rect.get_y() + parent_alloc.y) );
       }
       return( false );
     });

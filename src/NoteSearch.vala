@@ -318,7 +318,7 @@ public class NoteSearch : Box {
 
     // Set the match pane to be the current one
     if( pane != null ) {
-      pane.set_as_current();
+      pane.set_as_current( true );
     }
 
     _match_index = index;

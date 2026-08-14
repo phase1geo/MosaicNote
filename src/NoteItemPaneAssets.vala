@@ -242,7 +242,7 @@ public class NoteItemPaneAssets : NoteItemPane {
     add_signal( key, press_id );
 
     var enter_id = focus.enter.connect(() => {
-      set_as_current();
+      set_as_current( true );
       _drop_box.visible = true;
     });
     add_signal( focus, enter_id );

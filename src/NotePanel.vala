@@ -407,12 +407,14 @@ public class NotePanel : Box {
       child = cbox
     };
 
-    _content.see.connect((y, height) => {
-      var dy  = (double)y;
-      var dh  = (double)height;
+    _content.see.connect((top, bottom) => {
+      var dt = (double)top;
+      var db = (double)bottom;
       var adj = sw.vadjustment;
-      if( (adj.value > dy) || ((dy + dh) >= (adj.value + adj.page_size)) ) {
-        adj.value = dy;
+      if( dt < adj.value ) {
+        adj.value = dt;
+      } else if( db > (adj.value + adj.page_size) ) {
+        adj.value = db - adj.page_size;
       }
     });
 
@@ -651,7 +653,7 @@ public class NotePanel : Box {
     if( !show ) {
       var current = _content.get_current_pane();
       if( current != null ) {
-        current.set_as_current();
+        current.set_as_current( true );
       }
     }
   }

@@ -344,7 +344,7 @@ public class NoteItemPaneImage : NoteItemPane {
     add_signal( image_click, click_id );
 
     var enter_id = image_focus.enter.connect(() => {
-      set_as_current();
+      set_as_current( true );
     });
     add_signal( image_focus, enter_id );
 

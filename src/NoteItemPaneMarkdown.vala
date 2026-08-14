@@ -260,7 +260,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
           // grab keyboard focus
           var pane = win.note.items.get_pane( row_pos, col_pos );
           pane.grab_item_focus( TextCursorPlacement.AT_OFFSET, char_offset );
-          pane.set_as_current( "check-for-paste" );
+          pane.set_as_current( true, "check-for-paste" );
 
           return( true );
 

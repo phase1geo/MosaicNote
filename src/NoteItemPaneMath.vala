@@ -220,7 +220,7 @@ public class NoteItemPaneMath : NoteItemPane {
     _web.add_controller( web_click );
 
     var click_id = web_click.pressed.connect((n_press, x, y) => {
-      set_as_current();
+      set_as_current( false );
       _text_frame.visible = true;
       _text.grab_focus();
     });

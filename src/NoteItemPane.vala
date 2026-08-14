@@ -83,7 +83,7 @@ public class NoteItemPane : RemovableBox {
   public signal void remove_row( bool forward, bool record_undo );
   public signal void change_item( NoteItemType type );
   public signal void move_item( bool row, MoveDirection dir, bool record_undo );
-  public signal void set_as_current( string msg = "" );
+  public signal void set_as_current( bool show, string msg = "" );
   public signal void note_link_clicked( string link );
   public signal void header_link_clicked( string header );
   public signal void footnote_clicked( string link );
@@ -328,6 +328,7 @@ public class NoteItemPane : RemovableBox {
       var shift   = (bool)(state & Gdk.ModifierType.SHIFT_MASK);
       var control = (bool)(state & Gdk.ModifierType.CONTROL_MASK);
       switch( keyval ) {
+
         case Gdk.Key.Return :
           if( control && shift ) {
             add_item( MoveDirection.UP, null );
@@ -337,58 +338,106 @@ public class NoteItemPane : RemovableBox {
             return( true );
           }
           break;
+
         case Gdk.Key.BackSpace :
           if( control ) {
             remove_item( false, true );
             return( true );
           }
           break;
+
         case Gdk.Key.Delete :
           if( control ) {
             remove_item( true, true );
             return( true );
           }
           break;
+
         case Gdk.Key.Up   :
-        case Gdk.Key.Left :
           var pos = new NoteItemPos.from_pane( this );
-          var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( this ), (keyval == Gdk.Key.Up) );
+          var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( this ), true );
           if( prev_pane != null ) {
             if( control ) {
-              move_item( shift, ((keyval == Gdk.Key.Up) ? MoveDirection.UP : MoveDirection.LEFT), true );
+              move_item( shift, MoveDirection.UP, true );
               return( true );
-            } else if( (keyval != Gdk.Key.Up) || !handled_up() ) {
+            } else if( !handled_up() ) {
               var text = get_text();
               if( text != null ) {
-                TextIter iter;
+                TextIter iter, start_iter;
                 text.buffer.get_iter_at_mark( out iter, text.buffer.get_insert() );
-                if( !iter.is_start() ) {
+                text.buffer.get_start_iter( out start_iter );
+                if( !iters_on_same_line( text, iter, start_iter ) ) {
                   return( false );
                 }
               }
-              prev_pane.grab_item_focus( TextCursorPlacement.NO_CHANGE ); 
+              prev_pane.grab_item_focus( TextCursorPlacement.END ); 
               return( true );
             }
           }
           return( false );
-        case Gdk.Key.Down  :
-        case Gdk.Key.Right :
+
+        case Gdk.Key.Left :
           var pos = new NoteItemPos.from_pane( this );
-          var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( this ), (keyval == Gdk.Key.Down) );
-          if( next_pane != null ) {
+          var prev_pane = pos.get_prev_pane( NoteItemPos.row_box_from_pane( this ), false );
+          if( prev_pane != null ) {
             if( control ) {
-              move_item( shift, ((keyval == Gdk.Key.Down) ? MoveDirection.DOWN : MoveDirection.RIGHT), true );
+              move_item( shift, MoveDirection.LEFT, true );
               return( true );
-            } else if( (keyval != Gdk.Key.Down) || !handled_down() ) {
+            } else {
               var text = get_text();
               if( text != null ) {
                 TextIter iter;
                 text.buffer.get_iter_at_mark( out iter, text.buffer.get_insert() );
-                if( !iter.is_end() ) {
+                if( !iter.starts_line() ) {
                   return( false );
                 }
               }
-              next_pane.grab_item_focus( TextCursorPlacement.NO_CHANGE );
+              prev_pane.grab_item_focus( TextCursorPlacement.END ); 
+              return( true );
+            }
+          }
+          return( false );
+
+        case Gdk.Key.Down  :
+          var pos = new NoteItemPos.from_pane( this );
+          var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( this ), true );
+          if( next_pane != null ) {
+            if( control ) {
+              move_item( shift, MoveDirection.DOWN, true );
+              return( true );
+            } else if( !handled_down() ) {
+              var text = get_text();
+              if( text != null ) {
+                TextIter iter, end_iter;
+                text.buffer.get_iter_at_mark( out iter, text.buffer.get_insert() );
+                text.buffer.get_end_iter( out end_iter );
+                if( !iters_on_same_line( text, iter, end_iter ) ) {
+                  return( false );
+                }
+              }
+              next_pane.grab_item_focus( TextCursorPlacement.START );
+              return( true );
+            }
+          }
+          return( false );
+
+        case Gdk.Key.Right :
+          var pos = new NoteItemPos.from_pane( this );
+          var next_pane = pos.get_next_pane( NoteItemPos.row_box_from_pane( this ), false );
+          if( next_pane != null ) {
+            if( control ) {
+              move_item( shift, MoveDirection.RIGHT, true );
+              return( true );
+            } else {
+              var text = get_text();
+              if( text != null ) {
+                TextIter iter;
+                text.buffer.get_iter_at_mark( out iter, text.buffer.get_insert() );
+                if( !iter.ends_line() ) {
+                  return( false );
+                }
+              }
+              next_pane.grab_item_focus( TextCursorPlacement.START );
               return( true );
             }
           }
@@ -397,6 +446,27 @@ public class NoteItemPane : RemovableBox {
       return( false );
     });
     add_signal( key, press_id );
+  }
+
+  //-------------------------------------------------------------
+  // Indicates if both text iterators exist on the same displayed
+  // line.
+  private bool iters_on_same_line( TextView text, TextIter first, TextIter second ) {
+
+    while( !text.starts_display_line( first ) ) {
+      if( !first.backward_char() ) {
+        break;
+      }
+    }
+
+    while( !text.starts_display_line( second ) ) {
+      if( !second.backward_char() ) {
+        break;
+      }
+    }
+
+    return first.equal( second );
+
   }
 
   //-------------------------------------------------------------
@@ -537,6 +607,7 @@ public class NoteItemPane : RemovableBox {
     }
 
     var focus = new EventControllerFocus();
+    var click = new GestureClick();
     var text = new GtkSource.View.with_buffer( buffer ) {
       halign    = Align.FILL,
       valign    = Align.FILL,
@@ -568,11 +639,20 @@ public class NoteItemPane : RemovableBox {
     });
     add_signal( _spell, spell_id );
 
+    var pressed = false;
+    var click_pressed_id = click.pressed.connect((n_press, x, y) => {
+      pressed = true;
+    });
+
+    var click_released_id = click.released.connect((x,y) => {
+      pressed = false;
+    });
+
     var enter_id = focus.enter.connect(() => {
       if( item.item_type.spell_checkable() ) {
         set_spellchecker();
       }
-      set_as_current( "pane (%s) getting focus".printf( item.content ) );
+      set_as_current( !pressed, "pane (%s) getting focus".printf( item.content ) );
     });
     add_signal( focus, enter_id );
 
@@ -848,7 +928,7 @@ public class NoteItemPane : RemovableBox {
     var click = new GestureClick();
     var id = click.released.connect((n_press, x, y) => {
       if( !has_css_class( "active-item" ) ) {
-        set_as_current();
+        set_as_current( true );
         grab_item_focus( TextCursorPlacement.NO_CHANGE );
       }
     });
