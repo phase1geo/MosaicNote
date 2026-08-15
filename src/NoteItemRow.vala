@@ -231,5 +231,14 @@ public class NoteItemRow : Object {
     _items.append_val( item );
   }
 
+  //-------------------------------------------------------------
+  // Outputs the string version of this row
+  public string to_string() {
+    var str = "";
+    for( int i=0; i<_items.length; i++ ) {
+      str += _items.index( i ).to_string();
+    }
+    return( str );
+  }
 
 }

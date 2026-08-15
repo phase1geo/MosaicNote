@@ -510,13 +510,13 @@ public class NoteItemPanes : RemovableBox {
     // Move the given row up, if possible
     if( (dir == MoveDirection.UP) && (row > 0) ) {
       _note.move_row( row, (row - 1) );
-      reorder_child_after( get_row( row ), get_row( row - 2 ) );
+      _box.reorder_child_after( get_row( row ), get_row( row - 2 ) );
       return( true );
 
     // Move the given row down, if possible
     } else if( (dir == MoveDirection.DOWN) && ((row + 1) < _note.rows()) ) {
       _note.move_row( row, (row + 1) );
-      reorder_child_after( get_row( row ), get_row( row + 1 ) );
+      _box.reorder_child_after( get_row( row ), get_row( row + 1 ) );
       return( true );
     }
 
@@ -535,18 +535,23 @@ public class NoteItemPanes : RemovableBox {
     _note.plan_move( row, col, dir, out new_row, out new_col, out add_to_row );
 
     // Move the note item
-    _note.move_item( row, col, new_row, new_col, add_to_row );
+    _note.move_item( row, col, dir.is_vertical(), new_row, new_col, add_to_row );
 
     // Move the pane to the new row, if necessary
-    if( (row != new_row) || !add_to_row ) {
+    if( dir.is_vertical() ) {
       var pane = get_pane( row, col );
       get_row( row ).delete_pane( col );
       if( get_row( row ).size == 0 ) {
         _box.remove( get_row( row ) );
+        _rows--;
       }
       if( !add_to_row ) {
         var row_pane = new NoteItemPaneRow( _note.get_row( new_row ) );
-        _box.insert_child_after( row_pane, get_row( new_row - 1 ) );
+        if( new_row == 0 ) {
+          _box.prepend( row_pane );
+        } else {
+          _box.insert_child_after( row_pane, get_row( new_row - 1 ) );
+        }
         _rows++;
       }
       get_row( new_row ).add_pane( pane, new_col );

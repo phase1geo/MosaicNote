@@ -442,11 +442,9 @@ public class Note : Object {
   // Moves the row located at old_pos to the new position.
   public void move_row( int old_pos, int new_pos ) {
     var row = _rows.index( old_pos );
-    if( old_pos < new_pos ) {
-      new_pos++;
-    }
     _rows.remove_index( old_pos );
     _rows.insert_val( new_pos, row );
+    stdout.printf( "Note\n----\n%s\n".printf( to_string() ) );
   }
 
   //-------------------------------------------------------------
@@ -459,8 +457,9 @@ public class Note : Object {
       new_col = (dir == MoveDirection.LEFT) ? (old_col - 1) : (old_col + 1);
       add_to_row = true;
     } else if( row.size() == 1 ) {
-      new_row = (dir == MoveDirection.UP) ? (old_row - 1) : (old_row + 1);
-      new_col = old_col;
+      new_row = (dir == MoveDirection.UP) ? (old_row - 1) : old_row;
+      row = _rows.index( new_row );
+      new_col = (dir == MoveDirection.UP) ? row.size() : 0;
       add_to_row = true;
     } else {
       new_row = (dir == MoveDirection.UP) ? old_row : (old_row + 1);
@@ -471,13 +470,11 @@ public class Note : Object {
 
   //-------------------------------------------------------------
   // Moves the item located at the old row/col to the new row/col
-  public void move_item( int old_row, int old_col, int new_row, int new_col, bool add_to_row ) {
+  public void move_item( int old_row, int old_col, bool vertical, int new_row, int new_col, bool add_to_row ) {
     var row = _rows.index( old_row );
-    if( (old_row != new_row) || !add_to_row ) {
+    if( vertical ) {
       var item = row.get_item( old_col );
-      if( delete_item( old_row, old_col ) ) {
-        new_row--;
-      }
+      delete_item( old_row, old_col );
       add_item( item, new_row, new_col, add_to_row );
     } else {
       row.move_item( old_col, new_col );
@@ -853,6 +850,16 @@ public class Note : Object {
         }
       }
     }
+  }
+
+  //-------------------------------------------------------------
+  // Outputs the string version of this note.
+  public string to_string() {
+    var str = "";
+    for( int i=0; i<_rows.length; i++ ) {
+      str += "%d: %s\n".printf( i, _rows.index( i ).to_string() );
+    }
+    return( str );
   }
 
 }

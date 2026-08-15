@@ -447,4 +447,10 @@ public class NoteItem : Object {
     _content = node->get_content();
   }
 
+  //-------------------------------------------------------------
+  // Displays this note type as a formatted string.
+  public string to_string() {
+    return( "%10s-%10d".printf( item_type.to_string(), id ) );
+  }
+
 }
