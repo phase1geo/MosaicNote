@@ -34,6 +34,11 @@ public class NoteItemPaneRow : RemovableBox {
       return( _size );
     }
   }
+  public Box box {
+    get {
+      return( _box );
+    }
+  }
 
   //-------------------------------------------------------------
   // Constructor
@@ -73,6 +78,12 @@ public class NoteItemPaneRow : RemovableBox {
       homogeneous = true
     };
 
+    var sw = new ScrolledWindow() {
+      hscrollbar_policy = PolicyType.AUTOMATIC,
+      vscrollbar_policy = PolicyType.NEVER,
+      child = _box
+    };
+
     var expand_id = expand.clicked.connect(() => {
       _row.expanded = !_row.expanded;
       expand.label  = _row.expanded ? "\u23f7" : "\u23f5";
@@ -80,7 +91,7 @@ public class NoteItemPaneRow : RemovableBox {
     add_signal( expand, expand_id );
 
     append( lbox );
-    append( _box );
+    append( sw );
 
   }
 

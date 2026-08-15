@@ -39,11 +39,11 @@ public class NoteItemPos {
   }
   public NoteItemPos() {}
   public NoteItemPos.from_pane( NoteItemPane pane ) {
-    var pane_row = (NoteItemPaneRow)pane.get_parent().get_parent();
-    var parent   = pane_row.get_parent();
+    var pane_row = pane_row_from_pane( pane );
+    var panes    = pane_row.get_parent();
     _valid       = true;
     _col         = pane_row.get_pane_col( pane );
-    _row         = Utils.get_child_index( parent, pane_row );
+    _row         = Utils.get_child_index( panes, pane_row );
   }
   public bool is_valid() {
     return( _valid );
@@ -54,11 +54,11 @@ public class NoteItemPos {
     _col   = col;
   }
   public void set_position_from_pane( Widget pane ) {
-    var pane_row = (NoteItemPaneRow)pane.get_parent().get_parent();
-    var parent   = pane_row.get_parent();
+    var pane_row = pane_row_from_pane( pane );
+    var panes    = pane_row.get_parent();
     _valid       = true;
     _col         = pane_row.get_pane_col( pane );
-    _row         = Utils.get_child_index( parent, pane_row );
+    _row         = Utils.get_child_index( panes, pane_row );
   }
   public void clear_position() {
     _valid = false;
@@ -101,8 +101,14 @@ public class NoteItemPos {
       return( (pane_row == null) ? null : pane_row.get_pane( _col - 1 ) );
     }
   }
+  public static NoteItemPaneRow pane_row_from_pane( Widget pane ) {
+    var box      = (Box)pane.get_parent();
+    var vp       = (Viewport)box.get_parent();
+    var sw       = (ScrolledWindow)vp.get_parent();
+    return( (NoteItemPaneRow)sw.get_parent() );
+  }
   public static Widget row_box_from_pane( Widget pane ) {
-    return( pane.get_parent().get_parent().get_parent() );
+    return( pane_row_from_pane( pane ).get_parent() );
   }
   public string to_string() {
     return( "valid: %s, row: %d, col: %d".printf( _valid.to_string(), _row, _col ) );
@@ -596,7 +602,7 @@ public class NoteItemPanes : RemovableBox {
       note_row.convert_note_item( pos.col, new_item );
 
       // Remove the old pane from the pane row
-      var row_pane = (NoteItemPaneRow)_current_item.get_parent().get_parent();
+      var row_pane = NoteItemPos.pane_row_from_pane( _current_item );
       row_pane.delete_pane( pos.col );
 
       // Add the modified pane back into the pane row
