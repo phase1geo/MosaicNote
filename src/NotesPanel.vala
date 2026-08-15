@@ -158,15 +158,17 @@ public class NoteSorter : Sorter {
 
 public class NotesPanel : Box {
 
-  private MainWindow    _win;
-	private BaseNotebook? _bn = null;
-	private ListBox       _list;
-  private SortListModel _model;
-  private Button        _add;
-  private bool          _ignore      = false;
-  private MenuButton    _sort;
-  private NoteSorter    _sorter;
+  private MainWindow        _win;
+	private BaseNotebook?     _bn = null;
+	private ListBox           _list;
+  private SortListModel     _model;
+  private Button            _add;
+  private bool              _ignore      = false;
+  private MenuButton        _sort;
+  private NoteSorter        _sorter;
   private SimpleActionGroup _actions;
+  private Note?             _selected_note = null;
+  private bool              _restoring_selection = false;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_duplicate_note",         action_duplicate_note, "i" },
@@ -188,6 +190,7 @@ public class NotesPanel : Box {
   public signal void note_moved( Notebook from_notebook, Note note );
 	public signal void note_selected( Note? note );
 
+  //-------------------------------------------------------------
 	// Default constructor
 	public NotesPanel( MainWindow win ) {
 
@@ -222,13 +225,15 @@ public class NotesPanel : Box {
 		_list.row_selected.connect((row) => {
       if( _ignore ) {
         _ignore = false;
-      } else {
-  			if( row == null ) {
-          note_selected( null );
-        } else {
-    			note_selected( (Note)_model.get_item( row.get_index() ) );
-        }
-        _list.grab_focus();
+        return;
+      }
+      if( _restoring_selection ) {
+        return;
+      }
+      if( row != null ) {
+        var note = (Note)_model.get_item( row.get_index() );
+        _selected_note = note;
+  			note_selected( note );
       }
   	});
 
@@ -479,12 +484,35 @@ public class NotesPanel : Box {
   //-------------------------------------------------------------
   // Update UI from the current notebook
   public void update_notes() {
-    var row = _list.get_selected_row();
-    if( row != null ) {
-      var pos = row.get_index();
-      _model.items_changed( pos, 1, 1 );
-      // TODO _list.select_row( _list.get_row_at_index( pos ) );
+
+    if( _selected_note == null ) {
+      return;
     }
+
+    var note_id = _selected_note.id;
+    var pos     = get_index_of( note_id );
+
+    if( pos >= 0 ) {
+      _model.items_changed( pos, 1, 1 );
+
+      // The model change may have caused the ListBox to lose
+      // its selection. Restore the row corresponding to the
+      // same note.
+      Idle.add(() => {
+        var index = get_index_of( note_id );
+        if( index >= 0 ) {
+          var row = _list.get_row_at_index( index );
+          if( (row != null) && (_list.get_selected_row() != row) ) {
+            _restoring_selection = true;
+            _list.select_row(row);
+            _restoring_selection = false;
+          }
+        }
+        return( false );
+      });
+
+    }
+
   }
 
   //-------------------------------------------------------------

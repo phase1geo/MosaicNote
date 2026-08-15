@@ -3,6 +3,11 @@ listview row:selected {
     color: inherit;
 }
 
+list row:selected {
+   background: alpha(@accent_color, 0.3);
+   color: inherit;
+}
+
 .listbox-head {
    font-size: 12pt;
 }
