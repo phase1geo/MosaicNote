@@ -181,7 +181,7 @@ public class NoteItemPanes : RemovableBox {
 
     // Handle save events
     save.connect(() => {
-      var child = get_first_child() as NoteItemPane;
+      var child = _box.get_first_child() as NoteItemPane;
       while( child != null ) {
         child.save();
         child = child.get_next_sibling() as NoteItemPane;
@@ -273,7 +273,7 @@ public class NoteItemPanes : RemovableBox {
   // command on its text.
   public void do_search( NoteSearchFunc command ) {
 
-    var child = (get_first_child() as NoteItemPaneRow);
+    var child = (_box.get_first_child() as NoteItemPaneRow);
     while( child != null ) {
       child.do_search( command );
       child = (child.get_next_sibling() as NoteItemPaneRow);
@@ -716,10 +716,10 @@ public class NoteItemPanes : RemovableBox {
 
     Timeout.add( 100, () => {
       Graphene.Rect child_rect;
-      if( pane.compute_bounds( this, out child_rect ) ) {
+      if( pane.compute_bounds( _box, out child_rect ) ) {
         Allocation parent_alloc;
         get_allocation( out parent_alloc );
-        var offset = include_offset ? pane.get_show_offset() : 0;
+        var offset = include_offset ? (pane.get_show_offset() + 100) : 0;
         see( (int)(child_rect.get_y() + parent_alloc.y), (int)(offset + child_rect.get_y() + parent_alloc.y) );
       }
       return( false );

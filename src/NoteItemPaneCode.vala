@@ -78,6 +78,12 @@ public class NoteItemPaneCode : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Returns the location of the top of the insertion point.
+  public override double get_show_offset() {
+    return( get_cursor_y_pos( _text ) );
+  }
+
+  //-------------------------------------------------------------
   // Returns any CSS data that this pane requires
   public static string get_css_data() {
     var font_size = MosaicNote.settings.get_int( "editor-font-size" );
