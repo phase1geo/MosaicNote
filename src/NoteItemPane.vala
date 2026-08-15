@@ -546,27 +546,30 @@ public class NoteItemPane : RemovableBox {
   //-------------------------------------------------------------
   // Returns the y-position of the current insertion point relative
   // to the position of the top of the panel.
-  protected double get_cursor_y_pos( GtkSource.View text ) {
+  protected void get_cursor_pos( GtkSource.View text, out double offset_x, out double offset_y ) {
 
     TextIter iter;
     Gdk.Rectangle location;
     text.buffer.get_iter_at_mark( out iter, text.buffer.get_insert() );
     text.get_iter_location( iter, out location );
 
+    offset_x = location.x;
+    offset_y = location.y;
+
     Graphene.Rect child_rect;
     if( text.compute_bounds( this, out child_rect ) ) {
-      return( child_rect.get_y() + location.y );
+      offset_x += child_rect.get_x();
+      offset_y += child_rect.get_y();
     }
-
-    return( location.y );
 
   }
 
   //-------------------------------------------------------------
   // Returns an additional offset from the top of the pane to make
   // sure is visible when this pane is forced to be seen.
-  public virtual double get_show_offset() {
-    return( (double)0 );
+  public virtual void get_show_offset( out double offset_x, out double offset_y ) {
+    offset_x = (double)0;
+    offset_y = (double)0;
   }
 
   //-------------------------------------------------------------

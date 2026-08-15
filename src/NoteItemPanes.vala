@@ -719,8 +719,16 @@ public class NoteItemPanes : RemovableBox {
       if( pane.compute_bounds( _box, out child_rect ) ) {
         Allocation parent_alloc;
         get_allocation( out parent_alloc );
-        var offset = include_offset ? (pane.get_show_offset() + 100) : 0;
-        see( (int)(child_rect.get_y() + parent_alloc.y), (int)(offset + child_rect.get_y() + parent_alloc.y) );
+        var offset_y = (double)0;
+        var offset_x = (double)0;
+        if( include_offset ) {
+          pane.get_show_offset( out offset_x, out offset_y );
+          offset_y += 100;
+          offset_x += 100;
+        }
+        var pane_row = NoteItemPos.pane_row_from_pane( pane );
+        pane_row.see( (int)(child_rect.get_x() + parent_alloc.x), (int)(offset_x + child_rect.get_x() + parent_alloc.x) );
+        see( (int)(child_rect.get_y() + parent_alloc.y), (int)(offset_y + child_rect.get_y() + parent_alloc.y) );
       }
       return( false );
     });

@@ -40,6 +40,8 @@ public class NoteItemPaneRow : RemovableBox {
     }
   }
 
+  public signal void see( int left, int right );
+
   //-------------------------------------------------------------
   // Constructor
   public NoteItemPaneRow( NoteItemRow note_row ) {
@@ -89,6 +91,17 @@ public class NoteItemPaneRow : RemovableBox {
       expand.label  = _row.expanded ? "\u23f7" : "\u23f5";
     });
     add_signal( expand, expand_id );
+
+    var see_id = see.connect((left, right) => {
+      var dl = (double)left;
+      var dr = (double)right;
+      var adj = sw.hadjustment;
+      if( dl < adj.value ) {
+        adj.value = dl;
+      } else if( dr > (adj.value + adj.page_size) ) {
+        adj.value = dr - adj.page_size;
+      }
+    });
 
     append( lbox );
     append( sw );

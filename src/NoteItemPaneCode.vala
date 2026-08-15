@@ -79,8 +79,8 @@ public class NoteItemPaneCode : NoteItemPane {
 
   //-------------------------------------------------------------
   // Returns the location of the top of the insertion point.
-  public override double get_show_offset() {
-    return( get_cursor_y_pos( _text ) );
+  public override void get_show_offset( out double offset_x, out double offset_y ) {
+    get_cursor_pos( _text, out offset_x, out offset_y );
   }
 
   //-------------------------------------------------------------
