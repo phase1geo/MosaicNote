@@ -444,27 +444,36 @@ public class Note : Object {
     var row = _rows.index( old_pos );
     _rows.remove_index( old_pos );
     _rows.insert_val( new_pos, row );
-    stdout.printf( "Note\n----\n%s\n".printf( to_string() ) );
   }
 
   //-------------------------------------------------------------
   // Plans the move operation, calculating the new_row, new_col and
   // add_row inputs to the move_item operation.
-  public void plan_move( int old_row, int old_col, MoveDirection dir, out int new_row, out int new_col, out bool add_to_row ) {
+  public void plan_move( int old_row, int old_col, MoveDirection dir, out int new_row, out int new_col, out bool add_to_row, out bool move_row ) {
     var row = _rows.index( old_row );
     if( dir.is_horizontal() ) {
       new_row = old_row;
       new_col = (dir == MoveDirection.LEFT) ? (old_col - 1) : (old_col + 1);
       add_to_row = true;
+      move_row = false;
     } else if( row.size() == 1 ) {
-      new_row = (dir == MoveDirection.UP) ? (old_row - 1) : old_row;
-      row = _rows.index( new_row );
-      new_col = (dir == MoveDirection.UP) ? row.size() : 0;
-      add_to_row = true;
+      if( _rows.index( (dir == MoveDirection.UP) ? (old_row - 1) : (old_row + 1) ).size() < 3 ) {
+        new_row = (dir == MoveDirection.UP) ? (old_row - 1) : old_row;
+        row = _rows.index( new_row );
+        new_col = (dir == MoveDirection.UP) ? row.size() : 0;
+        add_to_row = true;
+        move_row = false;
+      } else {
+        new_row = old_row;
+        new_col = old_col;
+        add_to_row = false;
+        move_row = true;
+      }
     } else {
       new_row = (dir == MoveDirection.UP) ? old_row : (old_row + 1);
       new_col = 0;
       add_to_row = false;
+      move_row = false;
     }
   }
 

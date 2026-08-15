@@ -529,10 +529,16 @@ public class NoteItemPanes : RemovableBox {
   private bool move_item( int row, int col, MoveDirection dir ) {
 
     int new_row, new_col;
-    bool add_to_row;
+    bool add_to_row, move_row;
 
     // Figure out how to make the move
-    _note.plan_move( row, col, dir, out new_row, out new_col, out add_to_row );
+    _note.plan_move( row, col, dir, out new_row, out new_col, out add_to_row, out move_row );
+
+    // If we have to move the item row, do it now
+    if( move_row ) {
+      move_item_row( row, dir );
+      return( true );
+    }
 
     // Move the note item
     _note.move_item( row, col, dir.is_vertical(), new_row, new_col, add_to_row );
