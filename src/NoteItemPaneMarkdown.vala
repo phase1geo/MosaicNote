@@ -718,6 +718,11 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     var footnote_id = footnote.clicked.connect( insert_footnote_ref );
     add_signal( footnote, footnote_id );
 
+    var sep = new Separator( Orientation.VERTICAL ) {
+      margin_start = 10,
+      margin_end   = 10
+    };
+
     var remove = new Button.from_icon_name( "edit-clear-all-symbolic" ) {
       has_frame = false,
       tooltip_markup = Utils.tooltip_with_accel( _( "Remove Markdown Formatting" ), "<Control><Shift>r" )
@@ -733,6 +738,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     box.append( hilite );
     box.append( link );
     box.append( footnote );
+    box.append( sep );
     box.append( remove );
 
     return( box );
