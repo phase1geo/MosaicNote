@@ -188,7 +188,7 @@ public class NotesPanel : Box {
   public signal void note_added( Note note );
   public signal void note_deleted( Note note );
   public signal void note_moved( Notebook from_notebook, Note note );
-	public signal void note_selected( Note? note );
+	public signal void note_selected( Note? note, bool note_focus );
 
   //-------------------------------------------------------------
 	// Default constructor
@@ -201,6 +201,7 @@ public class NotesPanel : Box {
 		_list = new ListBox() {
 			valign = Align.FILL,
       vexpand = true,
+      focusable = true,
 			selection_mode = SelectionMode.BROWSE,
       show_separators = true,
       activate_on_single_click = true
@@ -233,7 +234,7 @@ public class NotesPanel : Box {
       if( row != null ) {
         var note = (Note)_model.get_item( row.get_index() );
         _selected_note = note;
-  			note_selected( note );
+  			note_selected( note, false );
       }
   	});
 
@@ -504,7 +505,7 @@ public class NotesPanel : Box {
           var row = _list.get_row_at_index( index );
           if( (row != null) && (_list.get_selected_row() != row) ) {
             _restoring_selection = true;
-            _list.select_row(row);
+            _list.select_row( row );
             _restoring_selection = false;
           }
         }
@@ -539,7 +540,7 @@ public class NotesPanel : Box {
     if( row != null ) {
       _list.select_row( row );
     } else {
-      note_selected( null );
+      note_selected( null, false );
     }
   }
 
@@ -651,6 +652,13 @@ public class NotesPanel : Box {
   public void delete_note( Note note, bool move_to_trash ) {
     var index = get_index_of( note.id );
     if( index != -1 ) {
+      if( (index + 1) < _model.get_n_items() ) {
+        _selected_note = (Note)_model.get_item( index + 1 );
+      } else if( _model.get_n_items() > 1 ) {
+        _selected_note = (Note)_model.get_item( index - 1 );
+      } else {
+        _selected_note = null;
+      }
       if( (note.notebook == _win.notebooks.trash) || !move_to_trash ) {
         note.notebook.delete_note( note );
       } else {
@@ -665,6 +673,7 @@ public class NotesPanel : Box {
   // be added to.
   public void add_new_note_to_current_notebook() {
     if( _add.sensitive ) {
+      stdout.printf( "Adding new note\n" );
       var nb = bn_is_node() ? ((NotebookTree.Node)_bn).get_notebook() : (Notebook)_bn;
       var note = new Note( nb );
       nb.add_note( note );
@@ -678,9 +687,8 @@ public class NotesPanel : Box {
   // (unless the currently displayed notebook is the trash).
   private void action_delete() {
     _win.note.save();
-    var row = _list.get_selected_row();
-    if( row != null ) {
-      var note = (Note)_model.get_item( row.get_index() );
+    var note = _selected_note;
+    if( note != null ) {
       _win.undo.add_item( new UndoNoteDelete( note ) );
       delete_note( note, true );
     }

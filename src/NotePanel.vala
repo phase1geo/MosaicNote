@@ -683,7 +683,7 @@ public class NotePanel : Box {
   // Populates the note panel UI with the contents of the provided note.  If note is
   // null, clears the UI.  If add_to_history is set, we will add this note
   // to the note history.
-  public void populate_with_note( Note? note, bool add_to_history ) {
+  public void populate_with_note( Note? note, bool add_to_history, bool focus_title ) {
 
     // If we are populating with the same note as before, return immediately
     if( _note == note ) {
@@ -722,7 +722,7 @@ public class NotePanel : Box {
       _hist_next.sensitive = _win.history.can_go_forward();
 
       // Make sure that the title bar has the keyboard focus if it is empty
-      if( (_title.text == "") && !_note.locked ) {
+      if( focus_title ) {
         _title.grab_focus();
       }
 

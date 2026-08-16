@@ -107,9 +107,13 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     var task = new GLib.Menu();
     task.append( _( "Toggle Task" ), "win.action_text_toggle_task" );
 
+    var remove = new GLib.Menu();
+    remove.append( _( "Remove Markdown" ), "win.action_text_remove_markdown" );
+
     var extra = new GLib.Menu();
     extra.append_section( null, markup );
     extra.append_section( null, task );
+    extra.append_section( null, remove );
 
     _text.extra_menu = extra;
 
@@ -348,8 +352,10 @@ public class NoteItemPaneMarkdown : NoteItemPane {
               match.fetch_pos( 0, out start_pos, out end_pos );
               start_iter.set_line_offset( start_pos );
               end_iter.set_line_offset( end_pos );
+              buffer.begin_user_action();
               buffer.delete( ref start_iter, ref end_iter );
-              buffer.insert_text( ref start_iter, replace_str, replace_str.length );
+              buffer.insert( ref start_iter, replace_str, replace_str.length );
+              buffer.end_user_action();
             }
           }
         } catch( RegexError e ) {}
@@ -477,8 +483,10 @@ public class NoteItemPaneMarkdown : NoteItemPane {
                 ins_text += match.fetch( 9 );
                 var del_end = start_iter;
                 del_end.forward_chars( match.fetch( 0 ).char_count() );
+                buffer.begin_user_action();
                 buffer.delete( ref start_iter, ref del_end );
                 buffer.insert( ref start_iter, ins_text, ins_text.length );
+                buffer.end_user_action();
                 return( false );
               });
               return( true );
@@ -497,8 +505,10 @@ public class NoteItemPaneMarkdown : NoteItemPane {
                 ins_text += match.fetch( 5 ) + match.fetch( 6 ) + match.fetch( 9 );
                 var del_end = start_iter;
                 del_end.forward_chars( match.fetch( 0 ).char_count() );
+                buffer.begin_user_action();
                 buffer.delete( ref start_iter, ref del_end );
                 buffer.insert( ref start_iter, ins_text, ins_text.length );
+                buffer.end_user_action();
                 return( false );
               });
               return( true );
@@ -581,12 +591,55 @@ public class NoteItemPaneMarkdown : NoteItemPane {
       }
       buffer.get_iter_at_line_offset( out start_iter, cursor.get_line(), start_pos );
       buffer.get_iter_at_line_offset( out end_iter, cursor.get_line(), end_pos );
+      buffer.begin_user_action();
       buffer.delete( ref start_iter, ref end_iter );
       buffer.insert( ref start_iter, task, task.length );
+      buffer.end_user_action();
       return( true );
     }
 
     return( false );
+
+  }
+
+  //-------------------------------------------------------------
+  // Removes Markdown in this pane.  If text is selected, we will
+  // remove only the Markdown found in the selected range; otherwise,
+  // we will remove Markdown from the current line.
+  public void remove_markdown() {
+
+    var buffer = (GtkSource.Buffer)_text.buffer;
+
+    try {
+
+      TextIter start, end;
+
+      var re = new Regex( """(^#+\s+|^\s*(>\s*)+|`+|\*+|_{1,2}|~{2}|^-\s+|^[0-9]+\.\s+|\[[ xX]\]\s+|^\s*[=-]+|!?\[(.*?)\\]\s*\((.*?)\))""" );
+
+      if( !buffer.get_selection_bounds( out start, out end ) ) {
+        TextIter cursor;
+        buffer.get_iter_at_mark( out cursor, buffer.get_insert() );
+        start = cursor;
+        end   = cursor;
+        start.set_line_offset( 0 );
+        end.forward_to_line_end();
+      }
+
+      var str = buffer.get_text( start, end, true );
+
+      // Remove the markup
+      var replaced = re.replace_literal( str, str.length, 0, "" );
+
+      // Replace the start/end buffer range with the new string.
+      if( str != replaced ) {
+        buffer.begin_user_action();
+        buffer.delete( ref start, ref end );
+        buffer.insert( ref start, replaced, replaced.length );
+        buffer.end_user_action();
+      }
+
+
+    } catch( RegexError e ) {}
 
   }
 
@@ -629,7 +682,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
     var strike = new Button() {
       has_frame = false,
-      tooltip_markup = Utils.tooltip_with_accel( _( "Strikethrough" ), "<Control>minus" ),
+      tooltip_markup = Utils.tooltip_with_accel( _( "Strikethrough" ), "<Control>asciitilde" ),
       child = create_label( " <s>S</s>" )
     };
     var strike_id = strike.clicked.connect( insert_strike );
@@ -637,7 +690,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
 
     var code = new Button() {
       has_frame = false,
-      tooltip_text = _( "Code Block" ),
+      tooltip_markup = Utils.tooltip_with_accel( _( "Code Block" ), "<Control>grave" ),
       child = create_label( "{ }" )
     };
     var code_id = code.clicked.connect( insert_code );
@@ -665,6 +718,13 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     var footnote_id = footnote.clicked.connect( insert_footnote_ref );
     add_signal( footnote, footnote_id );
 
+    var remove = new Button.from_icon_name( "edit-clear-all-symbolic" ) {
+      has_frame = false,
+      tooltip_markup = Utils.tooltip_with_accel( _( "Remove Markdown Formatting" ), "<Control><Shift>r" )
+    };
+    var remove_id = remove.clicked.connect( remove_markdown );
+    add_signal( remove, remove_id );
+
     var box = new Box( Orientation.HORIZONTAL, 5 );
     box.append( bold );
     box.append( italics );
@@ -673,6 +733,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
     box.append( hilite );
     box.append( link );
     box.append( footnote );
+    box.append( remove );
 
     return( box );
 

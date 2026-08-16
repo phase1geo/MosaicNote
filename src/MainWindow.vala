@@ -124,6 +124,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     { "action_text_link",        action_text_link },
     { "action_text_toggle_task", action_text_toggle_task },
     { "action_text_footnote",    action_text_footnote },
+    { "action_text_remove_markdown", action_text_remove_markdown },
   };
 
   private bool on_elementary = Utils.on_elementary();
@@ -267,6 +268,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     _note    = new NotePanel( this );
 
     _sidebar.notebook_selected.connect((nb) => {
+      stdout.printf( "notebook_selected\n" );
       if( nb != null ) {
         Idle.add(() => {
           if( (nb as Gallery) != null ) {
@@ -312,12 +314,13 @@ public class MainWindow : Gtk.ApplicationWindow {
       }
     });
 
-    _notes.note_selected.connect((note) => {
+    _notes.note_selected.connect((note, focus_note) => {
       if( _ignore ) {
         _ignore = false;
         return;
       }
-      _note.populate_with_note( note, true );
+      stdout.printf( "note_selected\n" );
+      _note.populate_with_note( note, true, focus_note );
       MosaicNote.settings.set_int( "last-note", ((note == null) ? -1 : note.id) );
     });
 
@@ -530,12 +533,13 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     app.set_accels_for_action( "win.action_text_bold",        { "<Control>b" } );
     app.set_accels_for_action( "win.action_text_italicize",   { "<Control>i" } );
-    app.set_accels_for_action( "win.action_text_strike",      { "<Control>minus" } );
+    app.set_accels_for_action( "win.action_text_strike",      { "<Control>asciitilde" } );
     app.set_accels_for_action( "win.action_text_code",        { "<Control>grave" } );
     app.set_accels_for_action( "win.action_text_highlight",   { "<Control>h" } );
     app.set_accels_for_action( "win.action_text_link",        { "<Control>l" } );
     app.set_accels_for_action( "win.action_text_toggle_task", { "<Control>d" } );
     app.set_accels_for_action( "win.action_text_footnote",    { "<Control>t" } );
+    app.set_accels_for_action( "win.action_text_remove_markdown", { "<Control><Shift>r" } );
 
   }
 
@@ -793,6 +797,15 @@ public class MainWindow : Gtk.ApplicationWindow {
     var pane = _note.items.get_current_pane() as NoteItemPaneMarkdown;
     if( pane != null ) {
       pane.toggle_task();
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Removes Markdown syntax in the selected region.
+  private void action_text_remove_markdown() {
+    var pane = _note.items.get_current_pane() as NoteItemPaneMarkdown;
+    if( pane != null ) {
+      pane.remove_markdown();
     }
   }
 

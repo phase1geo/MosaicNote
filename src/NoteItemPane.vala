@@ -135,6 +135,9 @@ public class NoteItemPane : RemovableBox {
     }
   }
 
+  //-------------------------------------------------------------
+  // Cleans up the signal handlers so that this pane can be destroyed
+  // without memory leaks.
   public override void cleanup() {
 
     base.cleanup();
