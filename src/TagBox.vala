@@ -86,10 +86,12 @@ public class TagBox : Box {
     _box.append( _new_tag_entry );
 
     var scroller = new ScrolledWindow() {
-      hexpand = true,
-      valign  = Align.CENTER
+      hexpand           = true,
+      valign            = Align.CENTER,
+      vscrollbar_policy = PolicyType.NEVER,
+      hscrollbar_policy = PolicyType.AUTOMATIC,
+      child             = _box
     };
-    scroller.child = _box;
 
     append( scroller );
 
