@@ -350,7 +350,7 @@ public class NoteItemPanes : RemovableBox {
 
     var remove_item_id = pane.remove_item.connect((forward, record_undo) => {
       var pos      = new NoteItemPos.from_pane( pane );
-      var pane_row = (NoteItemPaneRow)pane.get_parent().get_parent();
+      var pane_row = NoteItemPos.pane_row_from_pane( pane );
       var row_pos  = pos.row;
       var col_pos  = pos.col;
       var rows     = _rows;
@@ -380,7 +380,7 @@ public class NoteItemPanes : RemovableBox {
 
     var remove_row_id = pane.remove_row.connect((forward, record_undo) => {
       var pos      = new NoteItemPos.from_pane( pane );
-      var pane_row = (NoteItemPaneRow)pane.get_parent().get_parent();
+      var pane_row = NoteItemPos.pane_row_from_pane( pane );
       var row_pos  = pos.row;
       var rows     = _rows;
       if( record_undo ) {

@@ -86,6 +86,12 @@ public class NoteItemRow : Object {
   }
 
   //-------------------------------------------------------------
+  // Returns true if this row is full.
+  public bool full() {
+    return( _items.length == 3 );
+  }
+
+  //-------------------------------------------------------------
   // Returns the item at the given column index.
   public NoteItem get_item( int col ) {
     return( _items.index( col ) );

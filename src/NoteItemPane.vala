@@ -38,11 +38,12 @@ public class NoteItemPane : RemovableBox {
 
   private const double control_opacity = 0.1;
 
-  private MainWindow    _win;
-  private NoteItem      _item;
-  private SpellChecker? _spell;
-  private Stack         _stack;
-  private Widget        _header1;
+  private MainWindow        _win;
+  private NoteItem          _item;
+  private SpellChecker?     _spell;
+  private Stack             _stack;
+  private Widget            _header1;
+  private SimpleActionGroup _actions;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_add_item_above",         action_add_item_above },
@@ -121,9 +122,9 @@ public class NoteItemPane : RemovableBox {
     add_signal( this, current_id );
 
     // Set the stage for menu actions
-    var actions = new SimpleActionGroup ();
-    actions.add_action_entries( action_entries, this );
-    insert_action_group( "item", actions );
+    _actions = new SimpleActionGroup();
+    _actions.add_action_entries( action_entries, this );
+    insert_action_group( "item", _actions );
 
   }
 
@@ -723,6 +724,13 @@ public class NoteItemPane : RemovableBox {
   }
 
   //-------------------------------------------------------------
+  // Sets the enable of the action of the given name.
+  private void set_action_enable( string action_str, bool enabled ) {
+    var action = (SimpleAction)_actions.lookup_action( action_str );
+    action.set_enabled( enabled );
+  }
+
+  //-------------------------------------------------------------
   // Adds a bar to the top of each section that will allow us to 
   // add UI elements to control the panel and provide an area for
   // panel data (if needed).
@@ -789,6 +797,18 @@ public class NoteItemPane : RemovableBox {
     var active_id = more.notify["active"].connect(() => {
       if( !more.active ) {
         more.opacity = control_opacity;
+      } else {
+        int row_pos, col_pos;
+        if( item.row.note.get_item_location( item, out row_pos, out col_pos ) ) {
+          set_action_enable( "action_add_item_left",  !item.row.full() );
+          set_action_enable( "action_add_item_right", !item.row.full() );
+          set_action_enable( "action_move_item_above", (row_pos > 0) );
+          set_action_enable( "action_move_item_below", (row_pos < (item.row.note.rows() - 1)) );
+          set_action_enable( "action_move_item_left",  (col_pos > 0) );
+          set_action_enable( "action_move_item_right", (col_pos < (item.row.size() - 1)) );
+          set_action_enable( "action_move_row_above",  (row_pos > 0) );
+          set_action_enable( "action_move_row_below",  (row_pos < (item.row.note.rows() - 1)) );
+        }
       }
     });
     add_signal( more, active_id );
