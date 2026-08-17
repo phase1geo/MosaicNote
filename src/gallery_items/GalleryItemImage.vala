@@ -73,12 +73,17 @@ public class GalleryItemImage : GalleryItem {
   protected override Widget? create_pane( int pane ) {
 
     if( pane == 0 ) {
-      var image = create_image_pane( image_item.get_resource_filename() );
-      return( image );
+      var filename = image_item.get_resource_filename();
+      if( filename != null ) {
+        var image = create_image_pane( filename );
+        return( image );
+      }
     } else {
       var label = new Label( image_item.uri );
       return( label );
     }
+
+    return( null );
 
   }
 
@@ -86,8 +91,16 @@ public class GalleryItemImage : GalleryItem {
   // Copies the given pane content to the clipboard.
   protected override void copy_pane_to_clipboard( int pane_index ) {
     switch( pane_index ) {
-      case 0 :  copy_image_to_clipboard( image_item.get_resource_filename() );  break;
-      case 1 :  copy_text_to_clipboard( image_item.uri );  break;
+      case 0 :  
+        var filename = image_item.get_resource_filename();
+        if( filename != null ) {
+          copy_image_to_clipboard( filename );
+        }
+        break;
+      case 1 :
+        copy_text_to_clipboard( image_item.uri );
+        break;
+      default :  break;
     }
   }
 

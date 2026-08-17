@@ -53,7 +53,16 @@ public class GalleryItem : Box {
   // Default constructor
   public GalleryItem( MainWindow win, NoteItem item ) {
 
-    Object( orientation: Orientation.VERTICAL, spacing: 5 );
+    Object(
+      orientation: Orientation.VERTICAL,
+      spacing: 5,
+      halign: Align.FILL,
+      hexpand: true,
+      margin_start: 5,
+      margin_end: 5,
+      margin_top: 5,
+      margin_bottom: 5
+    );
 
     _win  = win;
     _item = item;
@@ -287,8 +296,11 @@ public class GalleryItem : Box {
       margin_end    = 5,
       margin_top    = 5,
       margin_bottom = 5,
+      content_fit   = ContentFit.SCALE_DOWN,
+      can_shrink    = true,
       file          = File.new_for_path( filename )
     };
+    image.set_size_request( 300, 300 );
 
     image.add_controller( image_drag );
     image.add_controller( image_click );

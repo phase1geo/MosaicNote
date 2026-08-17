@@ -67,6 +67,7 @@ public class GalleryView : Box {
       homogeneous           = true,
       row_spacing           = 10,
       column_spacing        = 10,
+      min_children_per_line = 2,
       max_children_per_line = 2,
       selection_mode        = SelectionMode.NONE
     };
