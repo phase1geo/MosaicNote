@@ -275,6 +275,7 @@ public class MainWindow : Gtk.ApplicationWindow {
             _view_stack.visible_child_name = "gallery";
             _gallery_view.populate( (Gallery)nb );
           } else {
+            stdout.printf( "Notebook selected A\n" );
             _view_stack.visible_child_name = "notes";
             var node = (nb as NotebookTree.Node);
             _notes.populate_with_notebook( nb );

@@ -144,7 +144,8 @@ public class NoteSorter : Sorter {
   //-------------------------------------------------------------
   // Default constructor
   public NoteSorter() {
-    // base();
+    sort_type = NoteSortType.parse( MosaicNote.settings.get_string( "notes-sort-type" ) );
+    ascend    = MosaicNote.settings.get_boolean( "notes-sort-ascending" );
   }
 
   //-------------------------------------------------------------
@@ -169,6 +170,7 @@ public class NotesPanel : Box {
   private SimpleActionGroup _actions;
   private Note?             _selected_note = null;
   private bool              _restoring_selection = false;
+  private bool              _adding_note = false;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_duplicate_note",         action_duplicate_note, "i" },
@@ -428,6 +430,7 @@ public class NotesPanel : Box {
           action.set_state( new Variant.boolean( true ) );
           _sorter.sort_type = sort_type;
           _sorter.changed( SorterChange.DIFFERENT );
+          MosaicNote.settings.set_string( "notes-sort-type", _sorter.sort_type.to_string() );
         }
       });
     }
@@ -442,6 +445,7 @@ public class NotesPanel : Box {
         descending.set_state( new Variant.boolean( false ) );
         _sorter.ascend = true;
         _sorter.changed( SorterChange.INVERTED );
+        MosaicNote.settings.set_boolean( "notes-sort-ascending", true );
       }
     });
 
@@ -451,6 +455,7 @@ public class NotesPanel : Box {
         ascending.set_state( new Variant.boolean( false ) );
         _sorter.ascend = false;
         _sorter.changed( SorterChange.INVERTED );
+        MosaicNote.settings.set_boolean( "notes-sort-ascending", false );
       }
     });
 
@@ -526,6 +531,10 @@ public class NotesPanel : Box {
       var sensitive = bn_is_node() || (bn_is_notebook() && ((_win.notebooks.inbox == (Notebook)_bn) || (_win.notebooks.templates == (Notebook)_bn)));
       _add.sensitive  = sensitive;
       _sort.sensitive = sensitive;
+      Idle.add(() => {
+        _list.grab_focus();
+        return( false );
+      });
     } else {
       _model.set_model( null );
       _add.sensitive  = false;
@@ -567,11 +576,24 @@ public class NotesPanel : Box {
       ellipsize = Pango.EllipsizeMode.END
     };
 
-    var preview = new Label( "<small>" + note.created.format( "%b%e, %Y") + "</small>" ) {
+    var created = new Label( "<small>" + note.created.format( "%b%e, %Y") + "</small>" ) {
+      halign = Align.START,
       use_markup = true,
       xalign = 0,
       ellipsize = Pango.EllipsizeMode.END
     };
+
+    var notebook = new Label( "<small>" + note.notebook.name + "</small>" ) {
+      halign = Align.END,
+      hexpand = true,
+      use_markup = true,
+      xalign = 0,
+      ellipsize = Pango.EllipsizeMode.START
+    };
+
+    var info = new Box( Orientation.HORIZONTAL, 5 );
+    info.append( created );
+    info.append( notebook );
 
     var box = new Box( Orientation.VERTICAL, 5 ) {
     	margin_top = 5,
@@ -580,7 +602,7 @@ public class NotesPanel : Box {
     	margin_end = 5
     };
     box.append( title );
-    box.append( preview );
+    box.append( info );
 
     var drag = new DragSource() {
       actions = Gdk.DragAction.MOVE
@@ -673,12 +695,15 @@ public class NotesPanel : Box {
   // be added to.
   public void add_new_note_to_current_notebook() {
     if( _add.sensitive ) {
-      stdout.printf( "Adding new note\n" );
-      var nb = bn_is_node() ? ((NotebookTree.Node)_bn).get_notebook() : (Notebook)_bn;
+      var nb   = bn_is_node() ? ((NotebookTree.Node)_bn).get_notebook() : (Notebook)_bn;
       var note = new Note( nb );
+      stdout.printf( "Adding note true\n" );
+      _adding_note = true;
       nb.add_note( note );
       _win.undo.add_item( new UndoNoteAdd( note ) );
       note_added( note );
+      stdout.printf( "Adding note false\n" );
+      _adding_note = false;
     }
   }
 
@@ -759,6 +784,7 @@ public class NotesPanel : Box {
     if( variant != null ) {
       _sorter.sort_type = (NoteSortType)variant.get_int32();
       _sorter.changed( SorterChange.DIFFERENT );
+      MosaicNote.settings.set_string( "notes-sort-type", _sorter.sort_type.to_string() );
     }
   }
 
@@ -770,6 +796,7 @@ public class NotesPanel : Box {
       _sorter.ascend = (variant.get_int32() == 1);
       _sort.icon_name = _sorter.ascend ? "view-sort-ascending-symbolic" : "view-sort-descending-symbolic";
       _sorter.changed( SorterChange.INVERTED );
+      MosaicNote.settings.set_boolean( "notes-sort-ascending", _sorter.ascend );
     }
   }
 

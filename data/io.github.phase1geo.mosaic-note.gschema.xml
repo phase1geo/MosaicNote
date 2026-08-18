@@ -105,5 +105,14 @@
       <default>false</default>
       <summary>If true, enables case-sensitive matching when searching within a note.</summary>
     </key>
+    <key name="notes-sort-type" type="s">
+      <default>"created"</default>
+      <summary>Specifies the sorting order of the notes list.</summary>
+      <description>Valid values are:  "title", "created", "updated", "viewed".</description>
+    </key>
+    <key name="notes-sort-ascending" type="b">
+      <default>false</default>
+      <summary>Specifies if the notes list sort order should be ascending (true) or descending (false).</summary>
+    </key>
   </schema>
 </schemalist>

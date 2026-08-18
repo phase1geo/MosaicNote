@@ -723,6 +723,7 @@ public class NotePanel : Box {
 
       // Make sure that the title bar has the keyboard focus if it is empty
       if( focus_title ) {
+        stdout.printf( "Title grabbing focus\n" );
         _title.grab_focus();
       }
 
