@@ -136,8 +136,7 @@ public class Preferences : Granite.Dialog {
     var grid = new Grid() {
       row_spacing = 5,
       column_spacing = 5,
-      halign = Align.CENTER,
-      row_homogeneous = true
+      halign = Align.CENTER
     };
 
     var row = 0;
@@ -235,8 +234,7 @@ public class Preferences : Granite.Dialog {
     var grid = new Grid() {
       row_spacing = 5,
       column_spacing = 5,
-      halign = Align.CENTER,
-      row_homogeneous = true
+      halign = Align.CENTER
     };
 
     var row = 0;
