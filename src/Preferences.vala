@@ -267,15 +267,13 @@ public class Preferences : Granite.Dialog {
     var grid = new Grid() {
       row_spacing = 5,
       column_spacing = 5,
-      halign = Align.FILL,
-      row_homogeneous = true
+      halign = Align.FILL
     };
 
     var row = 0;
 
     var change_label = make_label( _( "Change MosaicNote Library Location" ) );
     change_label.halign  = Align.FILL;
-    // change_label.hexpand = true;
 
     var box = new Box( Orientation.VERTICAL, 5 ) {
       halign  = Align.FILL
