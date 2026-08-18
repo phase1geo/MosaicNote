@@ -576,6 +576,27 @@ public class NotesPanel : Box {
       ellipsize = Pango.EllipsizeMode.END
     };
 
+    Label? preview = null;
+    var first_item = note.get_item( 0, 0 );
+    if( first_item.item_type.is_text() ) {
+
+      var first_line = note.get_item( 0, 0 ).content.split( "\n" )[0];
+      if( first_line != null ) {
+
+        first_line = first_line.replace( "<", "&lt;" ).replace( ">", "&gt;" );
+
+        preview = new Label( "<small><i>%s</i></small>".printf( first_line ) ) {
+          use_markup = true,
+          lines = 2,  // We may want to make this value be configurable
+          xalign = 0,
+          ellipsize = Pango.EllipsizeMode.END,
+          margin_start = 5
+        };
+
+      }
+
+    }
+
     var created = new Label( "<small>" + note.created.format( "%b%e, %Y") + "</small>" ) {
       halign = Align.START,
       use_markup = true,
@@ -595,13 +616,16 @@ public class NotesPanel : Box {
     info.append( created );
     info.append( notebook );
 
-    var box = new Box( Orientation.VERTICAL, 5 ) {
+    var box = new Box( Orientation.VERTICAL, 10 ) {
     	margin_top = 5,
     	margin_bottom = 5,
     	margin_start = 5,
     	margin_end = 5
     };
     box.append( title );
+    if( preview != null ) {
+      box.append( preview );
+    }
     box.append( info );
 
     var drag = new DragSource() {

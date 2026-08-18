@@ -776,6 +776,7 @@ public class Note : Object {
 
   }
 
+  //-------------------------------------------------------------
   // Loads the note from XML format
   private void load( Xml.Node* node ) {
 
