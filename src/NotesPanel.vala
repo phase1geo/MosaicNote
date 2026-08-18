@@ -619,14 +619,13 @@ public class NotesPanel : Box {
       }
 
       if( pimage != null ) {
-        var picture = new Picture.for_filename( pimage ) {
+        var picture = new Image.from_file( pimage ) {
           halign = Align.END,
           hexpand = (ptext == null),
           valign = Align.START,
-          vexpand = true,
-          can_shrink = true
+          vexpand = true
         };
-        picture.set_size_request( 30, 30 );
+        picture.set_size_request( 60, 60 );
         preview_box.append( picture );
       }
 
