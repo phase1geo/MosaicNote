@@ -57,7 +57,7 @@ public enum BrowserType {
 
 }
 
-public class Preferences : Gtk.Dialog {
+public class Preferences : Granite.Dialog {
 
   private MainWindow                 _win;
   private HashMap<string,MenuButton> _menus;
@@ -113,6 +113,11 @@ public class Preferences : Gtk.Dialog {
 
     get_content_area().append( box );
 
+    var close_button = (Button)add_button( _( "Close" ), Gtk.ResponseType.CLOSE );
+    close_button.clicked.connect(() => {
+      destroy ();
+    });
+
     // Add the menu actions
     var actions = new SimpleActionGroup();
     actions.add_action_entries( action_entries, this );
@@ -145,12 +150,20 @@ public class Preferences : Gtk.Dialog {
     grid.attach( make_menu( "spellchecker-language", spell_lang_label(), create_spell_lang_menu() ), 1, row, 2 );
     row++;
 
-    grid.attach( make_label( _( "show Galleries section in sidebar" ) ), 0, row );
+    grid.attach( make_label( _( "Show Galleries section in sidebar" ) ), 0, row );
     grid.attach( make_switch( "sidebar-show-galleries" ), 1, row );
     row++;
 
     grid.attach( make_label( _( "Show Tags section in sidebar" ) ), 0, row );
     grid.attach( make_switch( "sidebar-show-tags" ), 1, row );
+    row++;
+
+    grid.attach( make_label( _( "Show preview text in notes list" ) ), 0, row );
+    grid.attach( make_switch( "notes-show-preview" ), 1, row );
+    row++;
+
+    grid.attach( make_label( _( "Maximum preview text line count" ) ), 0, row );
+    grid.attach( make_spinner( "notes-preview-lines", 1, 5, 1 ), 1, row );
     row++;
 
     return( grid );
@@ -237,7 +250,7 @@ public class Preferences : Gtk.Dialog {
     row++;
 
     grid.attach( make_label( _( "Line Spacing" ) ), 0, row );
-    grid.attach( make_spinner( "editor-line-spacing", 2, 20, 1 ), 1, row );
+    grid.attach( make_spinner( "editor-line-spacing", 1, 10, 1 ), 1, row );
     row++;
 
     grid.attach( make_label( _( "Enable Vim Mode" ) ), 0, row );
@@ -299,8 +312,7 @@ public class Preferences : Gtk.Dialog {
   //-------------------------------------------------------------
   // Creates label
   private Label make_label( string label ) {
-    var w = new Label( Utils.make_title( label ) ) {
-      use_markup = true,
+    var w = new Label( label ) {
       halign = Align.END
     };
     return( w );

@@ -145,6 +145,12 @@ public enum NoteItemType {
   }
 
   //-------------------------------------------------------------
+  // Returns true if the note item contains an image.
+  public bool is_image() {
+    return( (this == IMAGE) || (this == UML) || (this == MATH) );
+  }
+
+  //-------------------------------------------------------------
   // Returns true if this note item should have spellchecking enabled
   // for it.
   public bool spell_checkable() {

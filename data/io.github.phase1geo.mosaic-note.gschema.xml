@@ -114,5 +114,13 @@
       <default>false</default>
       <summary>Specifies if the notes list sort order should be ascending (true) or descending (false).</summary>
     </key>
+    <key name="notes-show-preview" type="b">
+      <default>true</default>
+      <summary>If the associated note contains text, display a sample of the text in the notes panel.</summary>
+    </key>
+    <key name="notes-preview-lines" type="i">
+      <default>2</default>
+      <summary>If notes-show-preview is set, controls the number of lines shown in the notes panel.</summary>
+    </key>
   </schema>
 </schemalist>

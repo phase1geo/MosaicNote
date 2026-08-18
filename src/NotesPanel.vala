@@ -331,6 +331,19 @@ public class NotesPanel : Box {
     _actions.add_action_entries( action_entries, this );
     insert_action_group( "notes", _actions );
 
+    MosaicNote.settings.changed["notes-show-preview"].connect(() => {
+      if( _bn != null ) {
+        _model.set_model( null );
+        _model.set_model( _bn.get_model() );
+      }
+    });
+    MosaicNote.settings.changed["notes-preview-lines"].connect(() => {
+      if( _bn != null ) {
+        _model.set_model( null );
+        _model.set_model( _bn.get_model() );
+      }
+    });
+
 	}
 
   //-------------------------------------------------------------
@@ -576,25 +589,37 @@ public class NotesPanel : Box {
       ellipsize = Pango.EllipsizeMode.END
     };
 
-    Label? preview = null;
-    var first_item = note.get_item( 0, 0 );
-    if( first_item.item_type.is_text() ) {
+    Widget? preview = null;
+    var preview_item = note.get_preview_item();
 
-      var first_line = note.get_item( 0, 0 ).content.split( "\n" )[0];
-      if( first_line != null ) {
+    if( (preview_item != null) && MosaicNote.settings.get_boolean( "notes-show-preview" ) ) {
+      if( preview_item.item_type.is_text() ) {
+        var line = preview_item.content.replace( "\n", "  " ).strip();
+        if( line != "" ) {
+          var lines = MosaicNote.settings.get_int( "notes-preview-lines" );
+          line = line.replace( "<", "&lt;" ).replace( ">", "&gt;" );
 
-        first_line = first_line.replace( "<", "&lt;" ).replace( ">", "&gt;" );
-
-        preview = new Label( "<small><i>%s</i></small>".printf( first_line ) ) {
-          use_markup = true,
-          lines = 2,  // We may want to make this value be configurable
-          xalign = 0,
-          ellipsize = Pango.EllipsizeMode.END,
-          margin_start = 5
-        };
-
+          preview = new Label( "<small><i>%s</i></small>".printf( line ) ) {
+            use_markup = true,
+            wrap = (lines > 1),
+            wrap_mode = Pango.WrapMode.WORD_CHAR,
+            lines = lines,
+            xalign = 0,
+            ellipsize = Pango.EllipsizeMode.END,
+            margin_start = 5
+          };
+        }
+      } else {
+        var resource = preview_item.get_resource_filename();
+        if( resource != null ) {
+          preview = new Picture.for_filename( resource ) {
+            halign = Align.START,
+            can_shrink = true,
+            margin_start = 5
+          };
+          preview.set_size_request( 40, 40 );
+        }
       }
-
     }
 
     var created = new Label( "<small>" + note.created.format( "%b%e, %Y") + "</small>" ) {

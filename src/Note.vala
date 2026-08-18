@@ -293,6 +293,21 @@ public class Note : Object {
   }
 
   //-------------------------------------------------------------
+  // Retrieves the item that should be used for previewing.
+  public NoteItem? get_preview_item() {
+    for( int i=0; i<_rows.length; i++ ) {
+      var row = _rows.index( i );
+      for( int j=0; j<row.size(); j++ ) {
+        var item = row.get_item( j );
+        if( item.item_type.is_text() || item.item_type.is_image() ) {
+          return( item );
+        }
+      }
+    }
+    return( null );
+  }
+
+  //-------------------------------------------------------------
   // Adds the row to the list of rows.
   public void add_row( NoteItemRow row, int pos = -1 ) {
     if( pos == -1 ) {
