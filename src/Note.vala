@@ -50,6 +50,8 @@ public class Note : Object {
   private Array<NoteItemRow> _rows;
   private HashSet<int>       _referred;
   private HashMap<string,string> _footnotes;
+  private NoteItem?              _preview_text  = null;
+  private NoteItem?              _preview_image = null;
 
   public bool modified { get; private set; default = false; }
 
@@ -143,6 +145,7 @@ public class Note : Object {
 
   public signal void changed();
   public signal void title_changed();
+  public signal void preview_changed();
 
   //-------------------------------------------------------------
   // Default constructor
@@ -293,18 +296,61 @@ public class Note : Object {
   }
 
   //-------------------------------------------------------------
-  // Retrieves the item that should be used for previewing.
-  public NoteItem? get_preview_item() {
+  // Returns the preview text to display in the NotesPanel.
+  public string? get_preview_text() {
+    return( (_preview_text == null) ? null : _preview_text.content.replace( "\n", "  " ) );
+  }
+
+  //-------------------------------------------------------------
+  // Returns the preview image filename to display in the NotesPanel.
+  public string? get_preview_image_filename() {
+    return( (_preview_image == null) ? null : _preview_image.get_resource_filename() );
+  }
+
+  //-------------------------------------------------------------
+  // Internal method that gets the first text item.
+  private NoteItem? get_text_preview_item() {
     for( int i=0; i<_rows.length; i++ ) {
       var row = _rows.index( i );
       for( int j=0; j<row.size(); j++ ) {
         var item = row.get_item( j );
-        if( item.item_type.is_text() || item.item_type.is_image() ) {
+        if( item.item_type.is_text() ) {
           return( item );
         }
       }
     }
     return( null );
+  }
+
+  //-------------------------------------------------------------
+  // Internal method that gets the first image item.
+  private NoteItem? get_image_preview_item() {
+    for( int i=0; i<_rows.length; i++ ) {
+      var row = _rows.index( i );
+      for( int j=0; j<row.size(); j++ ) {
+        var item = row.get_item( j );
+        if( item.item_type.is_image() ) {
+          return( item );
+        }
+      }
+    }
+    return( null );
+  }
+
+  //-------------------------------------------------------------
+  // Retrieves the item that should be used for previewing.
+  private void update_preview_items() {
+
+    var pre_text  = get_preview_text();
+    var pre_image = get_preview_image_filename();
+
+    _preview_text  = get_text_preview_item();
+    _preview_image = get_image_preview_item();
+
+    if( (pre_text != get_preview_text()) || (pre_image != get_preview_image_filename()) ) {
+      preview_changed();
+    }
+
   }
 
   //-------------------------------------------------------------
@@ -315,6 +361,7 @@ public class Note : Object {
     } else {
       _rows.insert_val( pos, row );
     }
+    update_preview_items();
     modified = true;
   }
 
@@ -329,6 +376,7 @@ public class Note : Object {
       add_row( row, row_pos );
     }
     row.add_item( item, col_pos );
+    update_preview_items();
   }
 
   //-------------------------------------------------------------
@@ -357,6 +405,7 @@ public class Note : Object {
         first_md.content = first_md.content.slice( 0, byte_offset ) +
                            note.get_item( 0, 0 ).content +
                            first_md.content.slice( byte_offset, first_md.content.length );
+        update_preview_items();
         return( false );
 
       } else {
@@ -417,6 +466,8 @@ public class Note : Object {
           }
         }
 
+        update_preview_items();
+
         return( true );
 
       }
@@ -436,6 +487,7 @@ public class Note : Object {
   // Deletes the row from the list of rows.
   public void delete_row( int pos ) {
     _rows.remove_index( pos );
+    update_preview_items();
     modified = true;
   }
 
@@ -448,8 +500,10 @@ public class Note : Object {
     row.delete_item( col_pos );
     if( row.size() == 0 ) {
       delete_row( row_pos );
+      update_preview_items();
       return( true );
     }
+    update_preview_items();
     return( false );
   }
 
@@ -459,6 +513,7 @@ public class Note : Object {
     var row = _rows.index( old_pos );
     _rows.remove_index( old_pos );
     _rows.insert_val( new_pos, row );
+    update_preview_items();
   }
 
   //-------------------------------------------------------------
@@ -503,6 +558,7 @@ public class Note : Object {
     } else {
       row.move_item( old_col, new_col );
     }
+    update_preview_items();
   }
 
   //-------------------------------------------------------------
@@ -861,6 +917,7 @@ public class Note : Object {
         _rows.append_val( row );
       }
     }
+    update_preview_items();
   }
 
   //-------------------------------------------------------------

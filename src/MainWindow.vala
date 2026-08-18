@@ -268,14 +268,12 @@ public class MainWindow : Gtk.ApplicationWindow {
     _note    = new NotePanel( this );
 
     _sidebar.notebook_selected.connect((nb) => {
-      stdout.printf( "notebook_selected\n" );
       if( nb != null ) {
         Idle.add(() => {
           if( (nb as Gallery) != null ) {
             _view_stack.visible_child_name = "gallery";
             _gallery_view.populate( (Gallery)nb );
           } else {
-            stdout.printf( "Notebook selected A\n" );
             _view_stack.visible_child_name = "notes";
             var node = (nb as NotebookTree.Node);
             _notes.populate_with_notebook( nb );
@@ -320,7 +318,6 @@ public class MainWindow : Gtk.ApplicationWindow {
         _ignore = false;
         return;
       }
-      stdout.printf( "note_selected\n" );
       _note.populate_with_note( note, true, focus_note );
       MosaicNote.settings.set_int( "last-note", ((note == null) ? -1 : note.id) );
     });
