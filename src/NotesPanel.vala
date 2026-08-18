@@ -591,34 +591,45 @@ public class NotesPanel : Box {
       ellipsize = Pango.EllipsizeMode.END
     };
 
-    Widget? preview_text  = null;
-    Widget? preview_image = null;
+    Box? preview_box = null;
 
-    var ptext  = note.get_preview_text();
-    var pimage = note.get_preview_image_filename();
+    if( MosaicNote.settings.get_boolean( "notes-show-preview" ) ) {
 
-    if( (ptext != null) && MosaicNote.settings.get_boolean( "notes-show-preview" ) ) {
-      var lines = MosaicNote.settings.get_int( "notes-preview-lines" );
-      ptext = ptext.replace( "<", "&lt;" ).replace( ">", "&gt;" );
-      preview_text = new Label( "<small><i>%s</i></small>".printf( ptext ) ) {
-        halign = Align.FILL,
-        hexpand = true,
-        use_markup = true,
-        wrap = (lines > 1),
-        wrap_mode = Pango.WrapMode.WORD_CHAR,
-        lines = lines,
-        xalign = 0,
-        ellipsize = Pango.EllipsizeMode.END,
+      var ptext  = note.get_preview_text();
+      var pimage = note.get_preview_image_filename();
+
+      preview_box = new Box( Orientation.HORIZONTAL, 5 ) {
         margin_start = 5
       };
-    }
 
-    if( (pimage != null) && MosaicNote.settings.get_boolean( "notes-show-preview" ) ) {
-      preview_image = new Picture.for_filename( pimage ) {
-        halign = Align.END,
-        can_shrink = true
-      };
-      preview_image.set_size_request( 30, 30 );
+      if( ptext != null ) {
+        var lines = MosaicNote.settings.get_int( "notes-preview-lines" );
+        ptext = ptext.replace( "<", "&lt;" ).replace( ">", "&gt;" );
+        var label = new Label( "<small><i>%s</i></small>".printf( ptext ) ) {
+          halign = Align.FILL,
+          hexpand = true,
+          use_markup = true,
+          wrap = (lines > 1),
+          wrap_mode = Pango.WrapMode.WORD_CHAR,
+          lines = lines,
+          xalign = 0,
+          ellipsize = Pango.EllipsizeMode.END
+        };
+        preview_box.append( label );
+      }
+
+      if( pimage != null ) {
+        var picture = new Picture.for_filename( pimage ) {
+          halign = Align.END,
+          hexpand = (ptext == null),
+          valign = Align.START,
+          vexpand = true,
+          can_shrink = true
+        };
+        picture.set_size_request( 30, 30 );
+        preview_box.append( picture );
+      }
+
     }
 
     var created = new Label( "<small>" + note.created.format( "%b%e, %Y") + "</small>" ) {
@@ -640,25 +651,16 @@ public class NotesPanel : Box {
     info.append( created );
     info.append( notebook );
 
-    var tbox = new Box( Orientation.VERTICAL, 5 );
-    tbox.append( title );
-    if( preview_text != null ) {
-      tbox.append( preview_text );
-    }
-
-    var fbox = new Box( Orientation.HORIZONTAL, 5 );
-    fbox.append( tbox );
-    if( preview_image != null ) {
-      fbox.append( preview_image );
-    }
-
     var box = new Box( Orientation.VERTICAL, 10 ) {
     	margin_top = 5,
     	margin_bottom = 5,
     	margin_start = 5,
     	margin_end = 5
     };
-    box.append( fbox );
+    box.append( title );
+    if( preview_box != null ) {
+      box.append( preview_box );
+    }
     box.append( info );
 
     var drag = new DragSource() {
