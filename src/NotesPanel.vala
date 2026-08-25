@@ -625,7 +625,7 @@ public class NotesPanel : Box {
           valign = Align.START,
           vexpand = true
         };
-        picture.set_size_request( 60, 60 );
+        picture.set_size_request( 80, 80 );
         preview_box.append( picture );
       }
 
@@ -650,7 +650,7 @@ public class NotesPanel : Box {
     info.append( created );
     info.append( notebook );
 
-    var box = new Box( Orientation.VERTICAL, 10 ) {
+    var box = new Box( Orientation.VERTICAL, 5 ) {
     	margin_top = 5,
     	margin_bottom = 5,
     	margin_start = 5,
