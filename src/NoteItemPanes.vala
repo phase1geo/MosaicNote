@@ -154,6 +154,7 @@ public class NoteItemPanes : RemovableBox {
   private int           _rows = 0;
   private SpellChecker  _spell;
   private RemovableBox? _box = null;
+  private uint          _populate_generation = 0;
 
   public signal void item_removed( NoteItemPane pane );
   public signal void item_selected( NoteItemPane pane );
@@ -614,8 +615,17 @@ public class NoteItemPanes : RemovableBox {
   }
 
   //-------------------------------------------------------------
+  // Cancels any currently running populate() method.
+  public void cancel_populate() {
+    _populate_generation++;
+  }
+
+  //-------------------------------------------------------------
   // Adds the contents of the current note into the content area
   public async void populate( Note note ) {
+
+    var generation    = ++_populate_generation;
+    var populate_note = note;
 
     // Remove references to any panes
     _current_item = null;
@@ -623,22 +633,37 @@ public class NoteItemPanes : RemovableBox {
 
     // Cleanup the signal handlers for all panes about to be removed
     var old_box = _box;
-    _box = new RemovableBox( Orientation.VERTICAL, 5 );
+    var new_box = new RemovableBox( Orientation.VERTICAL, 5 );
 
-    _note = note;
+    _box  = new_box;
+    _note = populate_note;
     _rows = 0;
 
     // Add the panes
     var first_yield = true;
     var start       = get_monotonic_time();
-    for( int i=0; i<_note.rows(); i++ ) {
-      var row = _note.get_row( i );
+    for( int i=0; i<populate_note.rows(); i++ ) {
+
+      if( generation != _populate_generation ) {
+        new_box.cleanup();
+        return;
+      }
+
+      var row = populate_note.get_row( i );
       for( int j=0; j<row.size(); j++ ) {
-        add_pane( _note.get_item( i, j ), i, j, (j > 0), false );
+        if( generation != _populate_generation ) {
+          new_box.cleanup();
+          return;
+        }
+        add_pane( populate_note.get_item( i, j ), i, j, (j > 0), false );
       }
       var diff = get_monotonic_time() - start;
       if( diff > 50000 ) {
         if( first_yield ) {
+          if( generation != _populate_generation ) {
+            new_box.cleanup();
+            return;
+          }
           prepend( _box );
           if( old_box != null ) {
             old_box.unparent();
@@ -646,8 +671,17 @@ public class NoteItemPanes : RemovableBox {
           first_yield = false;
         }
         yield yield_to_main_loop();
+        if( generation != _populate_generation ) {
+          new_box.cleanup();
+          return;
+        }
         start = get_monotonic_time();
       }
+    }
+
+    if( generation != _populate_generation ) {
+      new_box.cleanup();
+      return;
     }
 
     if( first_yield ) {
