@@ -442,7 +442,7 @@ public class Utils {
 
   //-------------------------------------------------------------
   // Displays a confirmation dialog.
-  public static void show_confirmation( MainWindow win, string question, string detail_msg, Object? obj, ConfirmationCallback callback ) {
+  public static void show_confirmation( MainWindow win, string question, string detail_msg, Object? user_object, ConfirmationCallback callback ) {
     var dialog = new AlertDialog( question ) {
       buttons = { _( "Yes" ), _( "No" ) },
       modal = true,
@@ -454,7 +454,7 @@ public class Utils {
       try {
         var result = dialog.choose.end( res );
         if( result == 0 ) {
-          callback( obj );
+          callback( user_object );
         }
       } catch( Error e ) {}
     });
