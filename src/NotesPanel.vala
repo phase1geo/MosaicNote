@@ -217,6 +217,16 @@ public class NotesPanel : Box {
     var list_key = new EventControllerKey();
     _list.add_controller( list_key );
 
+    var list_focus = new EventControllerFocus();
+    _list.add_controller( list_focus );
+
+    list_focus.enter.connect(() => {
+      stdout.printf( "List received focus\n" );
+    });
+    list_focus.leave.connect(() => {
+      stdout.printf( "List lost focus\n" );
+    });
+
     list_key.key_pressed.connect((keyval, keycode, state) => {
       if( (keyval == Gdk.Key.Delete) || (keyval == Gdk.Key.BackSpace) ) {
         action_delete();

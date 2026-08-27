@@ -340,8 +340,10 @@ public class MainWindow : Gtk.ApplicationWindow {
         update_note_links( note, orig_link_titles );
       }
       _notes.update_notes();
-      smart_notebooks.handle_note( note );
-      galleries.handle_note( note );
+      if( note.notebook != notebooks.trash ) {
+        smart_notebooks.handle_note( note );
+        galleries.handle_note( note );
+      }
     });
 
     _note.note_link_clicked.connect((link, start_note) => {
