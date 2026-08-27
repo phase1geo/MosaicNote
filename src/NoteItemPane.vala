@@ -614,7 +614,9 @@ public class NoteItemPane : RemovableBox {
     }
 
     var focus = new EventControllerFocus();
-    var click = new GestureClick();
+    var click = new GestureClick() {
+      propagation_phase = PropagationPhase.CAPTURE 
+    };
     var text = new GtkSource.View.with_buffer( buffer ) {
       halign    = Align.FILL,
       valign    = Align.FILL,
@@ -646,20 +648,24 @@ public class NoteItemPane : RemovableBox {
     });
     add_signal( _spell, spell_id );
 
-    var pressed = false;
+    add_controller( click );
     var click_pressed_id = click.pressed.connect((n_press, x, y) => {
-      pressed = true;
+      if( !is_active() ) {
+        place_cursor_at_coords( text, x, y );
+        if( item.item_type.spell_checkable() ) {
+          set_spellchecker();
+        }
+        set_as_current( true, "pane (%s) getting focus".printf( item.content ) );
+        click.set_state( Gtk.EventSequenceState.CLAIMED );
+      }
     });
-
-    var click_released_id = click.released.connect((x,y) => {
-      pressed = false;
-    });
+    add_signal( this, click_pressed_id );
 
     var enter_id = focus.enter.connect(() => {
       if( item.item_type.spell_checkable() ) {
         set_spellchecker();
       }
-      set_as_current( !pressed, "pane (%s) getting focus".printf( item.content ) );
+      set_as_current( true, "pane (%s) getting focus".printf( item.content ) );
     });
     add_signal( focus, enter_id );
 
@@ -712,6 +718,24 @@ public class NoteItemPane : RemovableBox {
     add_signal( MosaicNote.settings, setting3_id );
 
     return( text );
+
+  }
+
+  //-------------------------------------------------------------
+  // Places the cursor in the given text view at the given window
+  // location.
+  private void place_cursor_at_coords( GtkSource.View text, double x, double y ) {
+
+    Gtk.TextIter iter;
+    int buffer_x;
+    int buffer_y;
+
+    text.window_to_buffer_coords( Gtk.TextWindowType.WIDGET, (int) x, (int) y, out buffer_x, out buffer_y );
+
+    if( text.get_iter_at_location( out iter, buffer_x, buffer_y ) ) {
+      text.grab_focus();
+      text.buffer.place_cursor( iter );
+    }
 
   }
 
@@ -953,7 +977,7 @@ public class NoteItemPane : RemovableBox {
   protected void click_to_current( Widget widget ) {
     var click = new GestureClick();
     var id = click.released.connect((n_press, x, y) => {
-      if( !has_css_class( "active-item" ) ) {
+      if( !is_active() ) {
         set_as_current( true );
         grab_item_focus( TextCursorPlacement.NO_CHANGE );
       }
