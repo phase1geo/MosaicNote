@@ -21,6 +21,8 @@
 
 using Gtk;
 
+public delegate void ExportCallback( string filename );
+
 public enum ExportType {
   MARKDOWN,
   TEXTBUNDLE,
@@ -197,7 +199,7 @@ public class Export {
 
   //-------------------------------------------------------------
   // Performs the export operation.
-  private static bool do_export( MainWindow win, ExportType export_type, string filename, string markdown, Gee.HashSet<string> needed_langs ) {
+  public static bool do_export( MainWindow win, ExportType export_type, string filename, string markdown, Gee.HashSet<string> needed_langs, ExportCallback callback = null ) {
 
     var file_parts   = filename.split( "." );
     var extension    = file_parts[file_parts.length-1];
@@ -255,7 +257,22 @@ public class Export {
       command += ext_filename;
       command += md_filename;
 
-      Process.spawn_command_line_async( string.joinv( " ", command ) );
+      var command_str = string.joinv( " ", command );
+
+      if( callback != null ) {
+        Pid pid;
+        Process.spawn_async(
+          null, { "/bin/sh", "-c", command_str }, null, SpawnFlags.DO_NOT_REAP_CHILD, null, out pid
+        );
+        ChildWatch.add( pid, (pid, status) => {
+          Process.close_pid( pid );
+          if( Process.check_exit_status( status ) ) {
+            callback( ext_filename );
+          }
+        });
+      } else {
+        Process.spawn_command_line_async( command_str );
+      }
 
     } catch( SpawnError e ) {
       stdout.printf( "ERROR:  %s\n", e.message );

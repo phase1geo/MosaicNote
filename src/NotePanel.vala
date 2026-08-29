@@ -50,6 +50,7 @@ public class NotePanel : Box {
     { "action_copy_note_link",   action_copy_note_link },
     { "action_save_as_template", action_save_as_template },
     { "action_export_as",        action_export_as, "i" },
+    { "action_presenter",        action_presenter },
   };
 
   public TagBox tags {
@@ -283,8 +284,9 @@ public class NotePanel : Box {
 
     var more_menu = new GLib.Menu();
     more_menu.append( _( "Copy Note Link" ), "note.action_copy_note_link" );
-    more_menu.append( _( "Save Note As Template" ), "note.action_save_as_template" );
     more_menu.append_submenu( _( "Export Note As" ), export_menu );
+    more_menu.append( _( "Present Note" ), "note.action_presenter" );
+    more_menu.append( _( "Save Note As Template" ), "note.action_save_as_template" );
     // more_menu.append( _( "Lock note" ), "note.action_lock" );
 
     var more = new MenuButton() {
@@ -756,6 +758,14 @@ public class NotePanel : Box {
   private void action_save_as_template() {
     save();
     save_as_template( _note );
+  }
+
+  //-------------------------------------------------------------
+  // Presents the current note.
+  private void action_presenter() {
+    save();
+    var presenter = new Presenter( _win, _note );
+    presenter.present();
   }
 
   //-------------------------------------------------------------
