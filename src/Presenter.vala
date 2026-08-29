@@ -29,6 +29,9 @@ public class Presenter : Window {
   private int        _current_row = 0;
   private WebView    _viewer;
   private string     _temp_dir;
+  private Button     _next;
+  private Button     _prev;
+  private Label      _status;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_show_next", action_show_next },
@@ -40,7 +43,9 @@ public class Presenter : Window {
   public Presenter( MainWindow win, Note note ) {
 
     Object(
-      transient_for: win
+//      transient_for:  win//,
+//      default_width:  600,
+ //     default_height: 400
     );
 
     _win  = win;
@@ -51,11 +56,60 @@ public class Presenter : Window {
     };
 
     _viewer = new WebView() {
+      halign    = Align.FILL,
+      valign    = Align.FILL,
+      hexpand   = true,
+      vexpand   = true,
       focusable = true,
       settings  = settings
     };
 
-    child = _viewer;
+    _status = new Label( "" ) {
+      halign = Align.START
+    };
+
+    _next = new Button.from_icon_name( "go-next-symbolic" ) {
+      halign = Align.END,
+      tooltip_text = _( "Next Slide" )
+    };
+    _next.clicked.connect( action_show_next );
+
+    _prev = new Button.from_icon_name( "go-previous-symbolic" ) {
+      halign  = Align.END,
+      hexpand = true,
+      tooltip_text = _( "Previous Slide" )
+    };
+    _prev.clicked.connect( action_show_prev );
+
+    var close = new Button.from_icon_name( "window-close-symbolic" ) {
+      halign = Align.END,
+      tooltip_text = _( "End Presentation" )
+    };
+    close.clicked.connect(() => {
+      Utils.delete_directory( _temp_dir );
+      destroy();
+    });
+
+    var bbox = new Box( Orientation.HORIZONTAL, 5 );
+    bbox.append( _status );
+    bbox.append( _prev );
+    bbox.append( _next );
+    bbox.append( close );
+
+    var box = new Box( Orientation.VERTICAL, 5 ) {
+      halign        = Align.FILL,
+      valign        = Align.FILL,
+      hexpand       = true,
+      vexpand       = true,
+      margin_start  = 5,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 5
+    };
+    box.append( bbox );
+    box.append( _viewer );
+
+    child = box;
 
     // Make sure that the first slide is shown
     make_temp_dir();
@@ -68,17 +122,33 @@ public class Presenter : Window {
 
     add_keyboard_shortcuts();
 
+    fullscreen();
+    grab_focus();
+
   }
 
   //-------------------------------------------------------------
   // Adds keyboard shortcuts for the menu actions
   private void add_keyboard_shortcuts() {
 
-    var app = _win.application;
+    var controller = new ShortcutController();
 
-    stdout.printf( "HERE\n" );
-    app.set_accels_for_action( "presenter.action_show_next", { "<Control>Right" } );
-    app.set_accels_for_action( "presenter.action_show_prev", { "<Control>Left" } );
+    controller.scope = ShortcutScope.GLOBAL;
+
+    var next = new Shortcut(
+      new KeyvalTrigger( Gdk.Key.Right, Gdk.ModifierType.CONTROL_MASK ),
+      new NamedAction( "presenter.action_show_next" )
+    );
+
+    var prev = new Shortcut(
+      new KeyvalTrigger( Gdk.Key.Left, Gdk.ModifierType.NO_MODIFIER_MASK ),
+      new NamedAction( "presenter.action_show_prev" )
+    );
+
+    controller.add_shortcut( next );
+    controller.add_shortcut( prev );
+
+    add_controller( controller );
 
   }
 
@@ -96,8 +166,6 @@ public class Presenter : Window {
   //-------------------------------------------------------------
   // Displays the current slide.
   private void show_current_slide() {
-
-    stdout.printf( "Showing current slide\n" );
 
     var langs    = new Gee.HashSet<string>();
     var item     = _note.get_item( _current_row, 0 );
@@ -119,12 +187,16 @@ public class Presenter : Window {
       }
     } );
 
+    // Update the UI state
+    _status.label = "%d / %d".printf( (_current_row + 1), _note.rows() );
+    _next.sensitive = (_current_row + 1) < _note.rows();
+    _prev.sensitive = (_current_row - 1) >= 0;
+
   }
 
   //-------------------------------------------------------------
   // Displays the next slide if there is a slide to show.
   private void action_show_next() {
-    stdout.printf( "Show next\n" );
     if( (_current_row + 1) < _note.rows() ) {
       _current_row++;
       show_current_slide();
@@ -134,7 +206,6 @@ public class Presenter : Window {
   //-------------------------------------------------------------
   // Displays the previous slide if there is a slide to show.
   private void action_show_prev() {
-    stdout.printf( "Show previous\n" );
     if( (_current_row - 1) >= 0 ) {
       _current_row--;
       show_current_slide();
