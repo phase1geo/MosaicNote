@@ -78,7 +78,7 @@ public class NotebookTree {
       _notebook = nb;
       _children = new Array<Node>();
       _modified = true;
-      changed();
+      changed( nb );
     }
 
     //-------------------------------------------------------------
@@ -91,8 +91,8 @@ public class NotebookTree {
 
     //-------------------------------------------------------------
     // Called when the node has changed in some way.
-    private void node_changed() {
-      changed();
+    private void node_changed( BaseNotebook nb ) {
+      changed( nb );
     }
 
     //-------------------------------------------------------------
@@ -102,7 +102,7 @@ public class NotebookTree {
       node.changed.connect( node_changed );
       _children.append_val( node );
       _modified = true;
-      changed();
+      changed( nb );
       return( node );
     }
 
@@ -123,7 +123,7 @@ public class NotebookTree {
           node.changed.disconnect( node_changed );
           _children.remove_index( i );
           _modified = true;
-          changed();
+          changed( null );
           break;
         }
       }
@@ -420,7 +420,7 @@ public class NotebookTree {
     }
   }
 
-  public signal void changed();
+  public signal void changed( Array<BaseNotebook> nbs );
 
   //-------------------------------------------------------------
   // Default constructor
@@ -431,20 +431,29 @@ public class NotebookTree {
 
   //-------------------------------------------------------------
   // Sets the modified indicator.
-  private void set_modified() {
+  private void set_modified( BaseNotebook nb ) {
     _modified = true;
-    changed();
+
+    var nbs = new Array<BaseNotebook>();
+    nbs.append_val( nb );
+    changed( nbs );
   }
 
   //-------------------------------------------------------------
   // Adds the given notebook to the end of the list
   public Node add_notebook( Notebook nb ) {
+
     var node = new Node( null, nb );
     node.changed.connect( set_modified );
     _nodes.append_val( node );
     _modified = true;
-    changed();
+
+    var nbs = new Array<BaseNotebook>();
+    nbs.append_val( nb );
+    changed( nbs );
+
     return( node );
+
   }
 
   //-------------------------------------------------------------
@@ -456,7 +465,8 @@ public class NotebookTree {
         _nodes.index( i ).changed.disconnect( set_modified );
         _nodes.remove_index( i );
         _modified = true;
-        changed();
+        var nbs = new Array<BaseNotebook>();
+        changed( nbs );
         break;
       }
     }
@@ -666,17 +676,17 @@ public class NotebookTree {
 
     _inbox = new Notebook( _( "Inbox" ) );
     _inbox.changed.connect(() => {
-      set_modified();
+      set_modified( _inbox );
     });
 
     _trash = new Notebook( _( "Trash" ) );
     _trash.changed.connect(() => {
-      set_modified();
+      set_modified( _trash );
     });
 
     _templates = new Notebook( _( "Templates" ) );
     _templates.changed.connect(() => {
-      set_modified();
+      set_modified( _templates );
     });
 
   }
@@ -721,19 +731,19 @@ public class NotebookTree {
     var ib_id = root->get_prop( "inbox-id" );
     _inbox = new Notebook.from_xml( ((ib_id != null) ? int.parse( ib_id ) : -1), _( "Inbox" ) );
     _inbox.changed.connect(() => {
-      set_modified();
+      set_modified( _inbox );
     });
 
     var tr_id = root->get_prop( "trash-id" );
     _trash = new Notebook.from_xml( ((tr_id != null) ? int.parse( tr_id ) : -1), _( "Trash" ) );
     _trash.changed.connect(() => {
-      set_modified();
+      set_modified( _trash );
     });
 
     var tp_id = root->get_prop( "templates-id" );
     _templates = new Notebook.from_xml( ((tp_id != null) ? int.parse( tp_id ) : -1), _( "Templates" ) );
     _templates.changed.connect(() => {
-      set_modified();
+      set_modified( _templates );
     });
 
     for( Xml.Node* it = root->children; it != null; it = it->next ) {

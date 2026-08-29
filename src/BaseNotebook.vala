@@ -24,7 +24,7 @@ public class BaseNotebook : Object {
   protected string _name     = "";
   private   bool   _modified = false;
 
-  public signal void changed();
+  public signal void changed( BaseNotebook nb );
 
   public string name {
     get {
@@ -34,7 +34,7 @@ public class BaseNotebook : Object {
       if( _name != value ) {
         _name = value;
         _modified = true;
-        changed();
+        changed( this );
       }
     }
   }

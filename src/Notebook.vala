@@ -78,7 +78,7 @@ public class Notebook : BaseNotebook {
   public void add_note( Note note ) {
   	_notes.append( note );
   	_modified = true;
-  	changed();
+  	changed( this );
   }	
 
   //-------------------------------------------------------------
@@ -91,7 +91,7 @@ public class Notebook : BaseNotebook {
         _notes.append( note );
       }
       _modified = true;
-      changed();
+      changed( this );
     }
   }
 
@@ -102,7 +102,7 @@ public class Notebook : BaseNotebook {
       if( get_note( i ) == note ) {
         _notes.remove( i );
         _modified = true;
-        changed();
+        changed( this );
         break;
       }
     }
@@ -115,7 +115,7 @@ public class Notebook : BaseNotebook {
     if( count() > 0 ) {
       _notes.remove_all();
       _modified = true;
-      changed();
+      changed( this );
     }
   }
 
@@ -125,7 +125,7 @@ public class Notebook : BaseNotebook {
     var new_note = new Note.copy( this, note );
     _notes.append( new_note );
     _modified = true;
-    changed();
+    changed( this );
   }
 
   //-------------------------------------------------------------
@@ -136,7 +136,7 @@ public class Notebook : BaseNotebook {
     note.notebook.delete_note( note );
     note.notebook = this;
     _modified = true;
-    changed();
+    changed( this );
   }
 
   //-------------------------------------------------------------

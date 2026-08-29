@@ -79,7 +79,7 @@ public class Gallery : BaseNotebook {
       }
     }
     if( modified ) {
-      changed();
+      changed( this );
     }
   }
 
@@ -87,7 +87,7 @@ public class Gallery : BaseNotebook {
   // Removes a specific note item from our list
   public void remove_note_item( NoteItem item ) {
     if( _item_id.remove( item.id ) ) {
-      changed();
+      changed( this );
     }
   }
 
@@ -106,7 +106,7 @@ public class Gallery : BaseNotebook {
       }
     }
     if( modified ) {
-      changed();
+      changed( this );
     }
   }
 

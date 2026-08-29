@@ -669,6 +669,13 @@ public class NoteItemPane : RemovableBox {
     });
     add_signal( focus, enter_id );
 
+    /*
+    var leave_id = focus.leave.connect(() => {
+      item.content = buffer.text;
+    });
+    add_signal( focus, leave_id );
+    */
+
     var save_id = save.connect(() => {
       item.content = buffer.text;
     });

@@ -25,7 +25,7 @@ public class FullTags {
   private NotebookTree   _notebooks;
   private bool           _modified = false;
 
-  public signal void changed();
+  public signal void changed( BaseNotebook? nb );
 
   //-------------------------------------------------------------
   // Default constructor
@@ -82,7 +82,7 @@ public class FullTags {
       _tags.sort( compare );
     }
     _modified = true;
-    changed();
+    changed( tag );
   }
 
   //-------------------------------------------------------------
@@ -100,7 +100,7 @@ public class FullTags {
         _tags.remove( match_tag );
       }
       _modified = true;
-       changed();
+       changed( tag );
     }
   }
 

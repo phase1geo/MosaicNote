@@ -25,7 +25,7 @@ public class SmartNotebooks {
   private NotebookTree         _notebook_tree;
   private bool                 _modified = false;
 
-  public signal void changed();
+  public signal void changed( Array<BaseNotebook> nbs );
 
   //-------------------------------------------------------------
   // Default constructor
@@ -37,8 +37,12 @@ public class SmartNotebooks {
 
   //-------------------------------------------------------------
   // Sets the modified indicator and calls changed.
-  private void set_modified() {
-    changed();
+  private void set_modified( BaseNotebook? bn ) {
+    var nbs = new Array<BaseNotebook>();
+    if( bn != null ) {
+      nbs.append_val( bn );
+    }
+    changed( nbs );
     _modified = true;
   }
 
@@ -59,8 +63,7 @@ public class SmartNotebooks {
   public void add_notebook( SmartNotebook notebook ) {
     _notebook_tree.populate_smart_notebook( notebook );
     _notebooks.append_val( notebook );
-    changed();
-    _modified = true;
+    set_modified( notebook );
   }
 
   //-------------------------------------------------------------
@@ -70,8 +73,7 @@ public class SmartNotebooks {
       if( _notebooks.index( i ) == notebook ) {
         _notebooks.index( i ).changed.disconnect( set_modified );
         _notebooks.remove_index( i );
-        changed();
-        _modified = true;
+        set_modified( null );
         break;
       }
     }
@@ -81,12 +83,14 @@ public class SmartNotebooks {
   // Removes the given note from the smart notebooks if they are
   // stored there.
   public void remove_note( Note note ) {
-    var local_modified = false;
+    var nbs = new Array<BaseNotebook>();
     for( int i=0; i<_notebooks.length; i++ ) {
-      local_modified |= _notebooks.index( i ).remove_note( note );
+      if( _notebooks.index( i ).remove_note( note ) ) {
+        nbs.append_val( _notebooks.index( i ) );
+      }
     }
-    if( local_modified ) {
-      changed();
+    if( nbs.length > 0 ) {
+      changed( nbs );
       _modified = true;
     }
   }
@@ -101,7 +105,9 @@ public class SmartNotebooks {
     }
     var search = new SmartNotebook( _( "Last Search" ), SmartNotebookType.SEARCH, _notebook_tree );
     _notebooks.insert_val( 3, search );
-    changed();
+    var nbs = new Array<BaseNotebook>();
+    nbs.append_val( search );
+    changed( nbs );
     return( search );
   }
 
@@ -109,19 +115,15 @@ public class SmartNotebooks {
   // Handles any changes to the given note, updating all stored
   // smart notebooks.
   public void handle_note( Note note ) {
-    var local_modified = false;
+    var nbs = new Array<BaseNotebook>();
     for( int i=0; i<_notebooks.length; i++ ) {
-      local_modified |= _notebooks.index( i ).handle_note( note );
+      if( _notebooks.index( i ).handle_note( note ) ) {
+        nbs.append_val( _notebooks.index( i ) );
+      }
     }
-    if( local_modified ) {
-      changed();
-    }
-    _modified |= local_modified;
-  }
-
-  public void refresh_notebooks() {
-    for( int i=0; i<_notebooks.length; i++ ) {
-      // FOOBAR
+    if( nbs.length > 0 ) {
+      changed( nbs );
+      _modified = true;
     }
   }
 

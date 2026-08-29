@@ -113,16 +113,36 @@ public class Sidebar : Box {
       notebook_selected( _selected_notebook );
     });
 
-    _win.notebooks.changed.connect(() => {
+    _win.notebooks.changed.connect((nbs) => {
       update_notes_panel( selection.selected );
+      var row = _model.get_row( selection.selected );
+      if( row != null ) {
+        var selected = (BaseNotebook)row.get_item();
+        for( int i=0; i<nbs.length; i++ ) {
+          if( selected == nbs.index( i ) ) {
+            update_notes_panel( selection.selected );
+          }
+        }
+      }
       populate_tree();
     });
-    _win.smart_notebooks.changed.connect(() => {
-      update_notes_panel( selection.selected );
+    _win.smart_notebooks.changed.connect((nbs) => {
+      var row = _model.get_row( selection.selected );
+      if( row != null ) {
+        var selected = (BaseNotebook)row.get_item();
+        for( int i=0; i<nbs.length; i++ ) {
+          if( selected == nbs.index( i ) ) {
+            update_notes_panel( selection.selected );
+          }
+        }
+      }
       populate_tree();
     });
-    _win.full_tags.changed.connect(() => {
-      update_notes_panel( selection.selected );
+    _win.full_tags.changed.connect((nb) => {
+      var row = _model.get_row( selection.selected );
+      if( (row != null) && ((BaseNotebook)row.get_item() == nb) ) {
+        update_notes_panel( selection.selected );
+      }
       populate_tree();
     });
     _win.galleries.changed.connect(() => {

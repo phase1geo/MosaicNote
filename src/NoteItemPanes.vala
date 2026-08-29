@@ -182,10 +182,10 @@ public class NoteItemPanes : RemovableBox {
 
     // Handle save events
     save.connect(() => {
-      var child = _box.get_first_child() as NoteItemPane;
+      var child = _box.get_first_child() as NoteItemPaneRow;
       while( child != null ) {
         child.save();
-        child = child.get_next_sibling() as NoteItemPane;
+        child = child.get_next_sibling() as NoteItemPaneRow;
       }
     });
 
@@ -657,6 +657,7 @@ public class NoteItemPanes : RemovableBox {
         }
         add_pane( populate_note.get_item( i, j ), i, j, (j > 0), false );
       }
+
       var diff = get_monotonic_time() - start;
       if( diff > 50000 ) {
         if( first_yield ) {
@@ -677,6 +678,7 @@ public class NoteItemPanes : RemovableBox {
         }
         start = get_monotonic_time();
       }
+
     }
 
     if( generation != _populate_generation ) {

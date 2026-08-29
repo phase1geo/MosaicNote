@@ -343,14 +343,12 @@ public class NotesPanel : Box {
 
     MosaicNote.settings.changed["notes-show-preview"].connect(() => {
       if( _bn != null ) {
-        _model.set_model( null );
-        _model.set_model( _bn.get_model() );
+        update_notes();
       }
     });
     MosaicNote.settings.changed["notes-preview-lines"].connect(() => {
       if( _bn != null ) {
-        _model.set_model( null );
-        _model.set_model( _bn.get_model() );
+        update_notes();
       }
     });
 
@@ -514,6 +512,9 @@ public class NotesPanel : Box {
   // Update UI from the current notebook
   public void update_notes() {
 
+    _model.set_model( null );
+    _model.set_model( _bn.get_model() );
+
     if( _selected_note == null ) {
       return;
     }
@@ -521,12 +522,10 @@ public class NotesPanel : Box {
     var note_id = _selected_note.id;
     var pos     = get_index_of( note_id );
 
+    // The model change may have caused the ListBox to lose
+    // its selection. Restore the row corresponding to the
+    // same note.
     if( pos >= 0 ) {
-      _model.items_changed( pos, 1, 1 );
-
-      // The model change may have caused the ListBox to lose
-      // its selection. Restore the row corresponding to the
-      // same note.
       Idle.add(() => {
         var index = get_index_of( note_id );
         if( index >= 0 ) {
@@ -765,13 +764,11 @@ public class NotesPanel : Box {
     if( _add.sensitive ) {
       var nb   = bn_is_node() ? ((NotebookTree.Node)_bn).get_notebook() : (Notebook)_bn;
       var note = new Note( nb );
-      stdout.printf( "Adding note true\n" );
-      _adding_note = true;
+      _selected_note = note;
       nb.add_note( note );
+      // FOOBAR - We need to select the new note
       _win.undo.add_item( new UndoNoteAdd( note ) );
       note_added( note );
-      stdout.printf( "Adding note false\n" );
-      _adding_note = false;
     }
   }
 
