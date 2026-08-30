@@ -88,7 +88,7 @@ public class NoteItemUML : NoteItem {
   //-------------------------------------------------------------
   // Returns the resource filename
   public override string? get_resource_filename() {
-    return( get_resource_path( "png" ) );
+    return( get_resource_path( "svg" ) );
   }
 
   //-------------------------------------------------------------
@@ -100,13 +100,16 @@ public class NoteItemUML : NoteItem {
       Utils.create_dir( get_resource_dir() );
 
       var input  = get_resource_path( "txt" );
-      var output = get_resource_path( "png" );
+      var output = get_resource_path( "svg" );
 
       FileUtils.remove( output );
 
+      // Insert a scaling factor after the @startuml line
+      var scaled_content = content.replace( "@startuml", "@startuml\n  scale 800*600" );
+
       // Save the current content to a file
       try {
-        FileUtils.set_contents( input, content );
+        FileUtils.set_contents( input, scaled_content );
       } catch( FileError e ) {
         stdout.printf( "Error saving UML diagram contents to file %s: %s\n", input, e.message );
         diagram_updated( null );
@@ -116,7 +119,7 @@ public class NoteItemUML : NoteItem {
       var loop = new MainLoop();
 
       try {
-        string[] spawn_args = { "plantuml", "-tpng", "-o", get_resource_dir(), input };
+        string[] spawn_args = { "plantuml", "-tsvg", "-o", get_resource_dir(), input };
         string[] spawn_env  = Environ.get();
         Pid child_pid;
 

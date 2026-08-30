@@ -284,8 +284,6 @@ public class Export {
 
       var command_str = string.joinv( " ", command );
 
-      stdout.printf( "Command: %s\n", command_str );
-
       if( callback != null ) {
         Pid pid;
         Process.spawn_async(
