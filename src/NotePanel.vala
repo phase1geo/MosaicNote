@@ -766,6 +766,7 @@ public class NotePanel : Box {
     save();
     var presenter = new Presenter( _win, _note );
     presenter.show();
+    presenter.grab_focus();
   }
 
   //-------------------------------------------------------------

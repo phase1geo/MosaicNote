@@ -33,20 +33,9 @@ public class Presenter : Window {
   private Button     _prev;
   private Label      _status;
 
-  private const GLib.ActionEntry[] action_entries = {
-    { "action_show_next", action_show_next },
-    { "action_show_prev", action_show_prev },
-  };
-
   //-------------------------------------------------------------
   // Constructor
   public Presenter( MainWindow win, Note note ) {
-
-    Object(
-//      transient_for:  win//,
-//      default_width:  600,
- //     default_height: 400
-    );
 
     _win  = win;
     _note = note;
@@ -91,10 +80,7 @@ public class Presenter : Window {
       halign = Align.END,
       tooltip_text = _( "End Presentation" )
     };
-    close.clicked.connect(() => {
-      Utils.delete_directory( _temp_dir );
-      destroy();
-    });
+    close.clicked.connect( action_close );
 
     var bbox = new Box( Orientation.HORIZONTAL, 5 );
     bbox.append( _status );
@@ -121,11 +107,6 @@ public class Presenter : Window {
     make_temp_dir();
     show_current_slide();
 
-    // Set the stage for menu actions
-    var actions = new SimpleActionGroup ();
-    actions.add_action_entries( action_entries, this );
-    insert_action_group( "presenter", actions );
-
     add_keyboard_shortcuts();
 
     fullscreen();
@@ -137,24 +118,26 @@ public class Presenter : Window {
   // Adds keyboard shortcuts for the menu actions
   private void add_keyboard_shortcuts() {
 
-    var controller = new ShortcutController();
+    var controller = new EventControllerKey() {
+      propagation_phase = PropagationPhase.CAPTURE
+    };
 
-    controller.scope = ShortcutScope.GLOBAL;
+    controller.key_pressed.connect((keyval, keycode, state) => {
+      switch( keyval ) {
+        case Gdk.Key.Right :
+          action_show_next();
+          return( true );
+        case Gdk.Key.Left :
+          action_show_prev();
+          return( true );
+        case Gdk.Key.Escape :
+          action_close();
+          return( true );
+      }
+      return( false );
+    });
 
-    var next = new Shortcut(
-      new KeyvalTrigger( Gdk.Key.Right, Gdk.ModifierType.CONTROL_MASK ),
-      new NamedAction( "presenter.action_show_next" )
-    );
-
-    var prev = new Shortcut(
-      new KeyvalTrigger( Gdk.Key.Left, Gdk.ModifierType.NO_MODIFIER_MASK ),
-      new NamedAction( "presenter.action_show_prev" )
-    );
-
-    controller.add_shortcut( next );
-    controller.add_shortcut( prev );
-
-    add_controller( controller );
+    ((Gtk.Widget) this).add_controller( controller );
 
   }
 
@@ -167,6 +150,103 @@ public class Presenter : Window {
     } catch( FileError e ) {
       critical( e.message );
     }
+  }
+
+  //-------------------------------------------------------------
+  // Overrides Pandoc's "readable document" CSS with presentation-
+  // friendly styling before handing HTML to the WebView.
+  private string make_presentation_html( string html ) {
+
+    string override_css = """
+    <style>
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box;
+        width: 100% !important;
+        height: 100vh !important;
+        max-width: none !important;
+        max-height: 100vh !important;
+        overflow: hidden !important;
+        font-size: 200% !important;
+      }
+
+      body {
+        display: flex !important;
+        flex-direction: column !important;
+      }
+
+      /* The title: fixed height, small top margin, never shrinks */
+      body > h1.slide-title {
+        flex: 0 0 auto !important;
+        margin: 0.2em 0.3em 0.1em 0.3em !important;
+        text-align: center;
+      }
+
+      /* Everything else, grouped into one flexible region that
+         absorbs all remaining vertical space */
+      .slide-content {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        width: 100%;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        overflow: hidden !important;
+        padding: 0 40px 20px 40px;
+        box-sizing: border-box;
+      }
+
+      .slide-content img {
+        max-width: 100% !important;
+        max-height: 100% !important;
+        width: auto !important;
+        height: auto !important;
+        object-fit: contain !important;
+        flex: 1 1 auto;
+        min-height: 0;
+        display: block;
+        margin: 0 auto;
+      }
+
+      .slide-content ul, .slide-content ol {
+        flex: 0 0 auto;
+        margin: 0.2em 0;
+      }
+    </style>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var body = document.body;
+        var title = body.querySelector('h1');
+        var wrapper = document.createElement('div');
+        wrapper.className = 'slide-content';
+
+        // Move every sibling except the title into the wrapper,
+        // preserving order.
+        var nodes = Array.prototype.slice.call(body.childNodes);
+        nodes.forEach(function(node) {
+          if (node !== title) {
+            wrapper.appendChild(node);
+          }
+        });
+
+        if (title) {
+          title.classList.add('slide-title');
+          body.appendChild(title);
+        }
+        body.appendChild(wrapper);
+      });
+    </script>
+    """;
+
+    // Insert right before </head> so it overrides earlier rules
+    // (later rules win on equal specificity/order).
+    int idx = html.index_of( "</head>" );
+    if( idx >= 0 ) {
+      return html.substring( 0, idx ) + override_css + html.substring( idx );
+    }
+    return override_css + html; // fallback if no <head> found
   }
 
   //-------------------------------------------------------------
@@ -186,7 +266,8 @@ public class Presenter : Window {
       try {
         string html;
         if( FileUtils.get_contents( filename, out html ) ) {
-          _viewer.load_html( html, null );
+          _viewer.zoom_level = 1.0;
+          _viewer.load_html( make_presentation_html( html ), null );
         }
       } catch( FileError e ) {
         critical( e.message );
@@ -219,6 +300,40 @@ public class Presenter : Window {
   }
 
   //-------------------------------------------------------------
+  // Closes the presentation window and ends the presentation.
+  private void action_close() {
+    Utils.delete_directory( _temp_dir );
+    destroy();
+  }
+
+  //-------------------------------------------------------------
+  // Convert the javascript result into an appropriate zoom level
+  // for the content.
+  private void handle_javascript_zoom_result( JSC.Value result, int width, int height ) {
+
+    var context      = result.get_context();
+    var width_value  = result.object_get_property( "width" );
+    var height_value = result.object_get_property( "height" );
+
+    var content_width  = width_value.to_double();
+    var content_height = height_value.to_double();
+
+    if( (content_width <= 0) || (content_height <= 0) ) {
+      return;
+    }
+
+    var zoom_x = (double)width  / content_width;
+    var zoom_y = (double)height / content_height;
+    var zoom   = Math.fmin( zoom_x, zoom_y );
+
+    // Don't make the content absurdly small/large.
+    zoom = Math.fmax( 0.1, Math.fmin( zoom, 5.0 ) );
+
+    _viewer.zoom_level = zoom;
+
+  }
+
+  //-------------------------------------------------------------
   // Zooms the content to fit the window.
   private void zoom_to_fit () {
 
@@ -245,7 +360,9 @@ public class Presenter : Window {
     _viewer.evaluate_javascript.begin( javascript, -1, null, null, null, (obj, res) => {
       try {
         var result = _viewer.evaluate_javascript.end (res);
-        // Extract the JavaScript result here...
+        if( result != null ) {
+          handle_javascript_zoom_result( result, width, height );
+        }
       } catch( Error e ) {
         warning ("JavaScript error: %s", e.message);
       }
