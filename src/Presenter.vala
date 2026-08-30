@@ -52,7 +52,7 @@ public class Presenter : Window {
     _note = note;
 
     var settings = new WebKit.Settings() {
-      enable_javascript = false
+      enable_javascript = true
     };
 
     _viewer = new WebView() {
@@ -63,6 +63,12 @@ public class Presenter : Window {
       focusable = true,
       settings  = settings
     };
+
+    _viewer.load_changed.connect((event) => {
+      if( event == WebKit.LoadEvent.FINISHED ) {
+        zoom_to_fit();
+      }
+    });
 
     _status = new Label( "" ) {
       halign = Align.START
@@ -169,7 +175,7 @@ public class Presenter : Window {
 
     var langs    = new Gee.HashSet<string>();
     var item     = _note.get_item( _current_row, 0 );
-    var markdown = item.to_markdown( _win.notebooks, true, true );
+    var markdown = item.get_markdown( _win.notebooks, true, true );
     var file     = Path.build_filename( _temp_dir, "slide.html" );
 
     if( item.item_type == NoteItemType.CODE ) {
@@ -210,6 +216,41 @@ public class Presenter : Window {
       _current_row--;
       show_current_slide();
     }
+  }
+
+  //-------------------------------------------------------------
+  // Zooms the content to fit the window.
+  private void zoom_to_fit () {
+
+    var width  = _viewer.get_width();
+    var height = _viewer.get_height();
+
+    if( (width <= 0) || (height <= 0) ) {
+      return;
+    }
+
+    string javascript = """
+      ({
+        width: Math.max(
+          document.documentElement.scrollWidth,
+          document.body ? document.body.scrollWidth : 0
+        ),
+        height: Math.max(
+          document.documentElement.scrollHeight,
+          document.body ? document.body.scrollHeight : 0
+        )
+      })
+      """;
+
+    _viewer.evaluate_javascript.begin( javascript, -1, null, null, null, (obj, res) => {
+      try {
+        var result = _viewer.evaluate_javascript.end (res);
+        // Extract the JavaScript result here...
+      } catch( Error e ) {
+        warning ("JavaScript error: %s", e.message);
+      }
+    });
+
   }
 
 }

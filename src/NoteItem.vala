@@ -303,6 +303,16 @@ public class NoteItem : Object {
   }
 
   //-------------------------------------------------------------
+  // Creates the final version of the markdown string
+  public string get_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc ) {
+    var str = to_markdown( notebooks, include_footnotes, pandoc );
+    if( pandoc ) {
+      return( "---\ntitle: '%s'\n---\n\n%s".printf( row.note.title, str ) );
+    }
+    return( str );
+  }
+
+  //-------------------------------------------------------------
 	// Returns the markdown text for this item
 	public virtual string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc ) {
 		return( "" );
