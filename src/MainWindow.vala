@@ -125,6 +125,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     { "action_text_toggle_task", action_text_toggle_task },
     { "action_text_footnote",    action_text_footnote },
     { "action_text_remove_markdown", action_text_remove_markdown },
+    { "action_note_present",         action_note_present },
   };
 
   private bool on_elementary = Utils.on_elementary();
@@ -541,6 +542,8 @@ public class MainWindow : Gtk.ApplicationWindow {
     app.set_accels_for_action( "win.action_text_footnote",    { "<Control>t" } );
     app.set_accels_for_action( "win.action_text_remove_markdown", { "<Control><Shift>r" } );
 
+    app.set_accels_for_action( "win.action_note_present",         { "<Control><Shift>p" } );
+
   }
 
   //-------------------------------------------------------------
@@ -807,6 +810,13 @@ public class MainWindow : Gtk.ApplicationWindow {
     if( pane != null ) {
       pane.remove_markdown();
     }
+  }
+
+  //-------------------------------------------------------------
+  // Displays the current note in the note panel in a presentation
+  // format.
+  private void action_note_present() {
+    _note.present_note();
   }
 
   //-------------------------------------------------------------

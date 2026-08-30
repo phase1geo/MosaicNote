@@ -27,6 +27,7 @@ public enum ExportType {
   MARKDOWN,
   TEXTBUNDLE,
   HTML,
+  PRESENTER,
   LATEX,
   EPUB,
   DOCX,
@@ -41,6 +42,7 @@ public enum ExportType {
       case MARKDOWN   :  return( "markdown" );
       case TEXTBUNDLE :  return( "textbundle" );
       case HTML       :  return( "html" );
+      case PRESENTER  :  return( "presenter" );
       case LATEX      :  return( "latex" );
       case EPUB       :  return( "epub" );
       case DOCX       :  return( "docx" );
@@ -57,6 +59,7 @@ public enum ExportType {
       case MARKDOWN   :  return( _( "Markdown" ) );
       case TEXTBUNDLE :  return( _( "TextBundle" ) );
       case HTML       :  return( _( "HTML" ) );
+      case PRESENTER  :  return( _( "Presentation" ) );
       case LATEX      :  return( _( "Latex" ) );
       case EPUB       :  return( _( "EPub" ) );
       case DOCX       :  return( _( "Microsoft Word" ) );
@@ -73,6 +76,7 @@ public enum ExportType {
       case "markdown"   :  return( MARKDOWN );
       case "textbundle" :  return( TEXTBUNDLE );
       case "html"       :  return( HTML );
+      case "presenter"  :  return( PRESENTER );
       case "latex"      :  return( LATEX );
       case "epub"       :  return( EPUB );
       case "docx"       :  return( DOCX );
@@ -84,11 +88,14 @@ public enum ExportType {
     }
   }
 
+  //-------------------------------------------------------------
+  // Specifies the output extension.
   public string extension() {
     switch( this ) {
       case MARKDOWN   :  return( "md" );
       case TEXTBUNDLE :  return( "textbundle" );
       case HTML       :  return( "html" );
+      case PRESENTER  :  return( "html" );
       case LATEX      :  return( "latex" );
       case EPUB       :  return( "epub" );
       case DOCX       :  return( "docx" );
@@ -98,6 +105,18 @@ public enum ExportType {
       case TEXT       :  return( "txt" );
       default         :  assert_not_reached();
     }
+  }
+
+  //-------------------------------------------------------------
+  // Specifies if this export type is available to users.
+  public bool exportable() {
+    return( this != PRESENTER );
+  }
+
+  //-------------------------------------------------------------
+  // Specifies if Pandoc should be told to not include CSS.
+  public bool omit_css() {
+    return( this == PRESENTER );
   }
 
 }
@@ -246,6 +265,11 @@ public class Export {
         });
       }
 
+      if( export_type.omit_css() ) {
+        command += "-M";
+        command += "document-css=false";
+      }
+
       command += "-f";
 
       // Added extensions:
@@ -253,11 +277,14 @@ public class Export {
       command += "markdown+mark";
       command += "--embed-resources";
       command += "--standalone";
+      command += "--lua-filter=%s".printf( Path.build_filename( DATADIR, "mosaic-note", "lua-filters", "checkbox-table.lua" ) );
       command += "-o";
       command += ext_filename;
       command += md_filename;
 
       var command_str = string.joinv( " ", command );
+
+      stdout.printf( "Command: %s\n", command_str );
 
       if( callback != null ) {
         Pid pid;

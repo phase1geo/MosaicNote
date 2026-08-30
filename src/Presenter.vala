@@ -65,20 +65,20 @@ public class Presenter : Window {
 
     _next = new Button.from_icon_name( "go-next-symbolic" ) {
       halign = Align.END,
-      tooltip_text = _( "Next Slide" )
+      tooltip_markup = Utils.tooltip_with_accel( _( "Next Slide" ), "Right" )
     };
     _next.clicked.connect( action_show_next );
 
     _prev = new Button.from_icon_name( "go-previous-symbolic" ) {
       halign  = Align.END,
       hexpand = true,
-      tooltip_text = _( "Previous Slide" )
+      tooltip_markup = Utils.tooltip_with_accel( _( "Previous Slide" ), "Left" )
     };
     _prev.clicked.connect( action_show_prev );
 
     var close = new Button.from_icon_name( "window-close-symbolic" ) {
       halign = Align.END,
-      tooltip_text = _( "End Presentation" )
+      tooltip_markup = Utils.tooltip_with_accel( _( "End Presentation" ), "Escape" )
     };
     close.clicked.connect( action_close );
 
@@ -176,8 +176,81 @@ public class Presenter : Window {
         flex-direction: column !important;
       }
 
+      input[type="checkbox"],
+      input[type="radio"] {
+        appearance: none;
+        -webkit-appearance: none;
+        font-size: inherit !important;
+        box-sizing: border-box !important;
+        width: 0.7em !important;
+        height: 0.7em !important;
+        margin: 0 0.4em 0 0 !important;
+        border: 0.08em solid currentColor;
+        vertical-align: middle;
+        position: relative;
+        background: #fff;
+        flex-shrink: 0;
+      }
+
+      input[type="checkbox"] { border-radius: 0.15em; }
+      input[type="radio"]    { border-radius: 50%; }
+
+      input[type="checkbox"]:checked,
+      input[type="radio"]:checked {
+        background: #1a1a1a;
+      }
+
+      input[type="checkbox"]:checked::after {
+        content: "";
+        position: absolute;
+        left: 0.18em;
+        top: 0.01em;
+        width: 0.18em;
+        height: 0.38em;
+        border: solid white;
+        border-width: 0 0.13em 0.13em 0;
+        transform: rotate(45deg);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1em 0;
+        font-size: 0.85em;
+        box-shadow: 0 0 0 1px #1a1a1a;
+        border-radius: 0.3em;
+        overflow: hidden;
+      }
+
+      thead th {
+        background: #1a1a1a;
+        color: #fdfdfd;
+        font-weight: bold;
+        text-align: left;
+        padding: 0.5em 0.75em;
+        border-bottom: 2px solid #1a1a1a;
+      }
+
+      tbody td {
+        padding: 0.5em 0.75em;
+        border-bottom: 1px solid #d0d0d0;
+        vertical-align: middle !important;
+      }
+
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      tbody tr:nth-child(even) {
+        background: #f0f0f0;
+      }
+
+      tbody tr:hover {
+        background: #e6e6e6;
+      }
+
       /* The title: fixed height, small top margin, never shrinks */
-      body > h1.slide-title {
+      .title {
         flex: 0 0 auto !important;
         margin: 0.2em 0.3em 0.1em 0.3em !important;
         text-align: center;
@@ -232,10 +305,66 @@ public class Presenter : Window {
         });
 
         if (title) {
-          title.classList.add('slide-title');
+          title.classList.add('title');
           body.appendChild(title);
         }
         body.appendChild(wrapper);
+
+        var content = document.querySelector('.slide-content');
+        if (!content) return;
+
+        function overflowing() {
+          return content.scrollHeight > content.clientHeight + 1;
+        }
+
+        function fitContent() {
+          var maxPercent = 200;  // your normal base size, used when it fits
+          var minPercent = 20;   // absolute floor, just to guarantee we terminate
+          var lo = minPercent, hi = maxPercent, best = minPercent;
+
+          // Binary search for the largest font-size percentage that
+          // does not overflow.
+          for (var i = 0; i < 8; i++) {
+            var mid = Math.round((lo + hi) / 2);
+            document.body.style.fontSize = mid + '%';
+
+            if (overflowing()) {
+              hi = mid - 1;
+            } else {
+              best = mid;
+              lo = mid + 1;
+            }
+          }
+
+          document.body.style.fontSize = best + '%';
+        }
+
+        fitContent();
+
+        // Re-fit once every image on the slide has finished loading, in
+        // case an image's final size changes how much room text has.
+        var images = content.querySelectorAll('img');
+        var pending = images.length;
+
+        if (pending === 0) return;
+
+        images.forEach(function(img) {
+          if (img.complete) {
+            pending--;
+            if (pending === 0) fitContent();
+          } else {
+            img.addEventListener('load', function() {
+              pending--;
+              if (pending === 0) fitContent();
+            });
+            // Also count a failed image load as "settled" so we don't
+            // wait forever on a broken image reference.
+            img.addEventListener('error', function() {
+              pending--;
+              if (pending === 0) fitContent();
+            });
+          }
+        });
       });
     </script>
     """;
@@ -262,7 +391,7 @@ public class Presenter : Window {
       langs.add( ((NoteItemCode)item).lang );
     }
 
-    Export.do_export( _win, ExportType.HTML, file, markdown, langs, (filename) => {
+    Export.do_export( _win, ExportType.PRESENTER, file, markdown, langs, (filename) => {
       try {
         string html;
         if( FileUtils.get_contents( filename, out html ) ) {

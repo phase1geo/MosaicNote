@@ -801,7 +801,9 @@ public class NoteItemPane : RemovableBox {
     var export_menu = new GLib.Menu();
     for( int i=0; i<ExportType.NUM; i++ ) {
       var etype = (ExportType)i;
-      export_menu.append( etype.label(), "item.action_export_item(%d)".printf( i ) );
+      if( etype.exportable() ) {
+        export_menu.append( etype.label(), "item.action_export_item(%d)".printf( i ) );
+      }
     }
     var exp_menu = new GLib.Menu();
     exp_menu.append_submenu( _( "Export Item" ), export_menu );

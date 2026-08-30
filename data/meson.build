@@ -50,6 +50,14 @@ foreach style : styles
     )
 endforeach
 
+filters = ['checkbox-table.lua']
+foreach filter : filters
+    install_data(
+        join_paths('lua-filters', filter),
+        install_dir: join_paths(get_option('datadir'), 'mosaic-note', 'lua-filters')
+    )
+endforeach
+
 install_subdir(
     'pandoc-langs',
     install_dir: join_paths(get_option('datadir'), 'mosaic-note')

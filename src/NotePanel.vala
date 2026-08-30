@@ -50,7 +50,6 @@ public class NotePanel : Box {
     { "action_copy_note_link",   action_copy_note_link },
     { "action_save_as_template", action_save_as_template },
     { "action_export_as",        action_export_as, "i" },
-    { "action_presenter",        action_presenter },
   };
 
   public TagBox tags {
@@ -279,13 +278,15 @@ public class NotePanel : Box {
     var export_menu = new GLib.Menu();
     for( int i=0; i<ExportType.NUM; i++ ) {
       var etype = (ExportType)i;
-      export_menu.append( etype.label(), "note.action_export_as(%d)".printf( i ) );
+      if( etype.exportable() ) {
+        export_menu.append( etype.label(), "note.action_export_as(%d)".printf( i ) );
+      }
     }
 
     var more_menu = new GLib.Menu();
     more_menu.append( _( "Copy Note Link" ), "note.action_copy_note_link" );
     more_menu.append_submenu( _( "Export Note As" ), export_menu );
-    more_menu.append( _( "Present Note" ), "note.action_presenter" );
+    more_menu.append( _( "Present Note" ), "win.action_note_present" );
     more_menu.append( _( "Save Note As Template" ), "note.action_save_as_template" );
     // more_menu.append( _( "Lock note" ), "note.action_lock" );
 
@@ -762,7 +763,7 @@ public class NotePanel : Box {
 
   //-------------------------------------------------------------
   // Presents the current note.
-  private void action_presenter() {
+  public void present_note() {
     save();
     var presenter = new Presenter( _win, _note );
     presenter.show();
