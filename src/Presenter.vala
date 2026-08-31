@@ -283,14 +283,56 @@ public class Presenter : Window {
         margin: 0 auto;
       }
 
+      .slide-content figure {
+        flex: 1 1 auto;
+        min-height: 0;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      .slide-content figcaption {
+        flex: 0 0 auto;
+        margin-top: 0.3em;
+        font-size: 0.7em;
+        text-align: center;
+        color: #606060;
+        overflow-wrap: anywhere;
+      }
+
       .slide-content ul, .slide-content ol {
         flex: 0 0 auto;
         margin: 0.2em 0;
+      }
+
+      .columns {
+        display: flex;
+        gap: min(4vw, 1.5em);
+        width: 100%;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .column {
+        flex: 1;
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
       }
     </style>
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         var body = document.body;
+        // var boilerplate = body.querySelector('#title-block-header');
+        // if (boilerplate) boilerplate.remove();
         var title = body.querySelector('h1');
         var wrapper = document.createElement('div');
         wrapper.className = 'slide-content';
@@ -314,7 +356,19 @@ public class Presenter : Window {
         if (!content) return;
 
         function overflowing() {
-          return content.scrollHeight > content.clientHeight + 1;
+          if (content.scrollHeight > content.clientHeight + 1) return true;
+          if (content.scrollWidth > content.clientWidth + 1) return true;
+
+          var tables = content.querySelectorAll('table');
+          for (var i = 0; i < tables.length; i++) {
+            if (tables[i].scrollWidth > tables[i].clientWidth + 1) return true;
+          }
+
+          var columns = content.querySelectorAll('.column');
+          for (var i = 0; i < columns.length; i++) {
+            if (columns[i].scrollHeight > columns[i].clientHeight + 1) return true;
+          }
+          return false;
         }
 
         function fitContent() {
@@ -379,17 +433,41 @@ public class Presenter : Window {
   }
 
   //-------------------------------------------------------------
+  // Generates the Pandoc Markdown for the given row.
+  private string row_markdown( NoteItemRow row, ref Gee.HashSet<string> langs ) {
+
+    var title      = row.note.title;
+    var first_item = row.get_item( 0 );
+    var first_md   = first_item.to_markdown( _win.notebooks, true, true );
+    if( first_item.item_type == NoteItemType.CODE ) {
+      langs.add( ((NoteItemCode)first_item).lang );
+    }
+
+    var markdown = "---\ntitle: '%s'\n---\n\n".printf( first_item.pandoc_title() );
+
+    if( row.size() == 3 ) {
+      var second_item = row.get_item( 1 );
+      var second_md   = second_item.to_markdown( _win.notebooks, true, true );
+      if( second_item.item_type == NoteItemType.CODE ) {
+        langs.add( ((NoteItemCode)second_item).lang );
+      }
+      markdown += "::: columns\n\n:::: column\n%s\n::::\n\n:::: column\n%s\n::::\n\n:::".printf( first_md, second_md );
+    } else {
+      markdown += first_md;
+    }
+
+    return( markdown );
+
+  }
+
+  //-------------------------------------------------------------
   // Displays the current slide.
   private void show_current_slide() {
 
     var langs    = new Gee.HashSet<string>();
-    var item     = _note.get_item( _current_row, 0 );
-    var markdown = item.get_markdown( _win.notebooks, true, true );
+    var row      = _note.get_row( _current_row );
+    var markdown = row_markdown( row, ref langs );
     var file     = Path.build_filename( _temp_dir, "slide.html" );
-
-    if( item.item_type == NoteItemType.CODE ) {
-      langs.add( ((NoteItemCode)item).lang );
-    }
 
     Export.do_export( _win, ExportType.PRESENTER, file, markdown, langs, (filename) => {
       try {

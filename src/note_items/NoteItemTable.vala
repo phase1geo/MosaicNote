@@ -553,6 +553,16 @@ public class NoteItemTable : NoteItem {
   }
 
   //-------------------------------------------------------------
+  // Returns the pandoc title to use for this item.
+  public override string pandoc_title() {
+    if( description != "" ) {
+      return( description );
+    } else {
+      return( base.pandoc_title() );
+    }
+  }
+
+  //-------------------------------------------------------------
   // Creates the markdown header.
   private string create_markdown_header() {
     string[] columns = {};

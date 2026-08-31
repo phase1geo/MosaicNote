@@ -303,11 +303,17 @@ public class NoteItem : Object {
   }
 
   //-------------------------------------------------------------
+  // Returns the title that can be used for Pandoc input files.
+  public virtual string pandoc_title() {
+    return( row.note.title );
+  }
+
+  //-------------------------------------------------------------
   // Creates the final version of the markdown string
   public string get_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc ) {
     var str = to_markdown( notebooks, include_footnotes, pandoc );
     if( pandoc ) {
-      return( "---\ntitle: '%s'\n---\n\n%s".printf( row.note.title, str ) );
+      return( "---\ntitle: '%s'\n---\n\n%s".printf( pandoc_title(), str ) );
     }
     return( str );
   }

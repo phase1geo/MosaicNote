@@ -71,6 +71,16 @@ public class NoteItemUML : NoteItem {
   }
 
   //-------------------------------------------------------------
+  // Returns the pandoc title to use for this item.
+  public override string pandoc_title() {
+    if( description != null ) {
+      return( description );
+    } else {
+      return( base.pandoc_title() );
+    }
+  }
+
+  //-------------------------------------------------------------
   // Returns the Markdown version of this item
   public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc ) {
     var filename = get_resource_filename();

@@ -83,6 +83,16 @@ public class NoteItemCode : NoteItem {
   }
 
   //-------------------------------------------------------------
+  // Returns the pandoc title to use for this item.
+  public override string pandoc_title() {
+    if( description != "" ) {
+      return( description );
+    } else {
+      return( base.pandoc_title() );
+    }
+  }
+
+  //-------------------------------------------------------------
   // Returns the Markdown version of this item
   public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc ) {
     var str = "```%s\n%s\n```".printf( _lang, content );
