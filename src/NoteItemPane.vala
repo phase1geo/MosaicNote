@@ -917,11 +917,11 @@ public class NoteItemPane : RemovableBox {
     };
     _stack.add_named( h1_box, "selected" );
     _stack.add_named( h2_box, "unselected" );
-    _stack.visible_child_name = item.row.expanded ? "selected" : "unselected";
+    _stack.visible_child_name = "unselected";
 
     var header = new Box( Orientation.HORIZONTAL, 5 ) {
       halign        = Align.FILL,
-      visible       = (!item.row.expanded || is_active()),
+      visible       = (!item.row.expanded || header2_exists()),
       margin_start  = 5,
       margin_end    = 5,
       margin_top    = 5,

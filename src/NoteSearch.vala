@@ -184,12 +184,12 @@ public class NoteSearch : Box {
     // Clear any matched patterns in the widget
     var label = (win as Label);
     if( label != null ) {
-      label.label = str;
-      label.use_markup = false;
+      label.label = Utils.make_title( str );
+      // label.use_markup = false;
       return(
         find_matched_text( pane, win, pattern, str, (match, start, end) => {
-          label.label = label.label.splice( start, end, "<span background=\"orange\" foreground=\"black\">%s</span>".printf( match ) );
-          label.use_markup = true;
+          label.label = Utils.make_title( str.splice( start, end, "<span background=\"orange\" foreground=\"black\">%s</span>".printf( match ) ) );
+          // label.use_markup = true;
         })
       );
     }
