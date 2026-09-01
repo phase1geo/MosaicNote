@@ -101,6 +101,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private Button          _undo_btn;
   private Button          _redo_btn;
   private Widget?         _last_focus = null;
+  private SimpleActionGroup _actions;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_save",             action_save },
@@ -228,9 +229,9 @@ public class MainWindow : Gtk.ApplicationWindow {
     set_default_size( window_w, window_h );
 
     // Set the stage for menu actions
-    var actions = new SimpleActionGroup ();
-    actions.add_action_entries( action_entries, this );
-    insert_action_group( "win", actions );
+    _actions = new SimpleActionGroup();
+    _actions.add_action_entries( action_entries, this );
+    insert_action_group( "win", _actions );
 
     // Add keyboard shortcuts
     add_keyboard_shortcuts( app );
@@ -816,7 +817,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   // Displays the current note in the note panel in a presentation
   // format.
   private void action_note_present() {
-    _note.present_note();
+    _note.show_presentation();
   }
 
   //-------------------------------------------------------------
@@ -827,6 +828,13 @@ public class MainWindow : Gtk.ApplicationWindow {
     _undo_btn.set_tooltip_markup( Utils.tooltip_with_accel( buf.undo_tooltip(), "<Control>z" ) );
     _redo_btn.set_sensitive( buf.redoable() );
     _redo_btn.set_tooltip_markup( Utils.tooltip_with_accel( buf.redo_tooltip(), "<Control><Shift>z" ) );
+  }
+
+  //-------------------------------------------------------------
+  // Sets the enable of the action of the given name.
+  public void set_action_enable( string action_str, bool enabled ) {
+    var action = (SimpleAction)_actions.lookup_action( action_str );
+    action.set_enabled( enabled );
   }
 
   //-------------------------------------------------------------

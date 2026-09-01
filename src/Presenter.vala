@@ -33,6 +33,9 @@ public class Presenter : Window {
   private Button     _prev;
   private Label      _status;
 
+  public signal void user_slide_change( int row );
+  public signal void user_close();
+
   //-------------------------------------------------------------
   // Constructor
   public Presenter( MainWindow win, Note note ) {
@@ -489,11 +492,27 @@ public class Presenter : Window {
   }
 
   //-------------------------------------------------------------
+  // Forces the current slide to be updated.
+  public void refresh() {
+    show_current_slide();
+  }
+
+  //-------------------------------------------------------------
+  // Can be called by external code to display a given slide.
+  public void show_slide( int row ) {
+    if( (row >= 0) && (row < _note.rows()) ) {
+      _current_row = row;
+      show_current_slide();
+    }
+  }
+
+  //-------------------------------------------------------------
   // Displays the next slide if there is a slide to show.
   private void action_show_next() {
     if( (_current_row + 1) < _note.rows() ) {
       _current_row++;
       show_current_slide();
+      user_slide_change( _current_row );
     }
   }
 
@@ -503,6 +522,7 @@ public class Presenter : Window {
     if( (_current_row - 1) >= 0 ) {
       _current_row--;
       show_current_slide();
+      user_slide_change( _current_row );
     }
   }
 
@@ -510,6 +530,7 @@ public class Presenter : Window {
   // Closes the presentation window and ends the presentation.
   private void action_close() {
     Utils.delete_directory( _temp_dir );
+    user_close();
     destroy();
   }
 

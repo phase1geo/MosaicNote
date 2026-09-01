@@ -45,6 +45,9 @@ public class NotePanel : Box {
   private HashSet<string> _orig_link_titles;
   private ToggleButton    _note_search;
   private NoteSearch      _search_bar;
+  private Presenter?      _presenter = null;
+  private ulong           _presenter_slide_id = 0;
+  private ulong           _presenter_close_id = 0;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_copy_note_link",   action_copy_note_link },
@@ -298,6 +301,10 @@ public class NotePanel : Box {
       menu_model = more_menu
     };
 
+    more.notify["active"].connect(() => {
+      _win.set_action_enable( "action_note_present", (_presenter == null) );
+    });
+
     _hist_prev = new Button.from_icon_name( "go-previous-symbolic" ) {
       sensitive = false,
       has_frame = false,
@@ -358,6 +365,12 @@ public class NotePanel : Box {
       valign = Align.START,
       vexpand = true,
     };
+    _content.item_selected.connect((pane) => {
+      if( _presenter != null ) {
+        var pos = new NoteItemPos.from_pane( pane );
+        _presenter.show_slide( pos.row );
+      }
+    });
     _content.item_removed.connect((pane) => {
       note_item_removed( pane.item );
     });
@@ -434,6 +447,9 @@ public class NotePanel : Box {
         _content.save();
         if( _note.update_all_footnotes() ) {
           add_footnotes();
+        }
+        if( _presenter != null ) {
+          _presenter.refresh();
         }
         note_saved( _note, _orig_link_titles );
       }
@@ -763,14 +779,49 @@ public class NotePanel : Box {
 
   //-------------------------------------------------------------
   // Presents the current note.
-  public void present_note() {
+  public void show_presentation() {
+
+    // Make sure that the note is saved
     save();
-    var presenter = new Presenter( _win, _note );
-    Idle.add(() => {
-      presenter.show();
-      presenter.grab_focus();
-      return( false );
-    });
+
+    if( _presenter == null ) {
+
+      // Create the presenter
+      _presenter = new Presenter( _win, _note );
+
+      // If the user changes the slide, make sure that the current pane
+      // is updated and made visible.
+      _presenter_slide_id = _presenter.user_slide_change.connect((row_pos) => {
+        var pane = _content.get_pane( row_pos, 0 );
+        if( pane != null ) {
+          pane.set_as_current( true );
+        }
+      });
+
+      _presenter_close_id = _presenter.user_close.connect( end_presentation );
+
+      Idle.add(() => {
+        if( _presenter != null ) {
+          _presenter.show();
+          _presenter.grab_focus();
+        }
+        return( false );
+      });
+
+    }
+
+  }
+
+  //-------------------------------------------------------------
+  // Called when the presentation has been ended.
+  private void end_presentation() {
+    if( _presenter != null ) {
+      SignalHandler.disconnect( _presenter, _presenter_slide_id );
+      SignalHandler.disconnect( _presenter, _presenter_close_id );
+      _presenter = null;
+      _presenter_slide_id = 0;
+      _presenter_close_id = 0;
+    }
   }
 
   //-------------------------------------------------------------
