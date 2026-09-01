@@ -275,6 +275,7 @@ public class Export {
       // Added extensions:
       // +mark = Adds support for highlighting text surrounded by "=="
       command += "markdown+mark";
+      command += "--quiet";
       command += "--embed-resources";
       command += "--standalone";
       command += "--lua-filter=%s".printf( Path.build_filename( DATADIR, "mosaic-note", "lua-filters", "checkbox-table.lua" ) );
