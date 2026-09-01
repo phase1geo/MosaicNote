@@ -789,6 +789,12 @@ public class NotePanel : Box {
       // Create the presenter
       _presenter = new Presenter( _win, _note );
 
+      // Force the first pane to be current
+      var first_pane = _content.get_pane( 0, 0 );
+      if( first_pane != null ) {
+        first_pane.set_as_current( true );
+      }
+
       // If the user changes the slide, make sure that the current pane
       // is updated and made visible.
       _presenter_slide_id = _presenter.user_slide_change.connect((row_pos) => {
