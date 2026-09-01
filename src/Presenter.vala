@@ -60,8 +60,27 @@ public class Presenter : Window {
     _viewer.load_changed.connect((event) => {
       if( (event == WebKit.LoadEvent.FINISHED) && _awaiting_zoom ) {
         _awaiting_zoom = false;
-        zoom_to_fit();
+        // zoom_to_fit();
       }
+    });
+
+    // Handle link clicking
+    _viewer.decide_policy.connect((decision, decision_type) => {
+      if( decision_type == WebKit.PolicyDecisionType.NAVIGATION_ACTION ) {
+        var nav_decision = (WebKit.NavigationPolicyDecision)decision;
+        var action        = nav_decision.get_navigation_action();
+        if( action.get_navigation_type() == WebKit.NavigationType.LINK_CLICKED ) {
+          var uri = action.get_request().uri;
+          decision.ignore();  // stop the WebView from navigating itself
+          try {
+            AppInfo.launch_default_for_uri( uri, null );
+          } catch( Error e ) {
+            warning( "Unable to open link: %s", e.message );
+          }
+          return true;
+        }
+      }
+      return false;
     });
 
     _status = new Label( "" ) {
@@ -493,7 +512,8 @@ public class Presenter : Window {
         if( FileUtils.get_contents( filename, out html ) ) {
           _awaiting_zoom     = true;
           _viewer.zoom_level = 1.0;
-          _viewer.load_html( make_presentation_html( html ), null );
+          var base_uri = File.new_for_path( _temp_dir ).get_uri() + "/";
+          _viewer.load_html( make_presentation_html( html ), base_uri );
         }
       } catch( FileError e ) {
         critical( e.message );
