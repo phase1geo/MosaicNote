@@ -45,6 +45,9 @@ public class NotePanel : Box {
   private HashSet<string> _orig_link_titles;
   private ToggleButton    _note_search;
   private NoteSearch      _search_bar;
+  private Presenter?      _presenter = null;
+  private ulong           _presenter_slide_id = 0;
+  private ulong           _presenter_close_id = 0;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_copy_note_link",   action_copy_note_link },
@@ -278,13 +281,16 @@ public class NotePanel : Box {
     var export_menu = new GLib.Menu();
     for( int i=0; i<ExportType.NUM; i++ ) {
       var etype = (ExportType)i;
-      export_menu.append( etype.label(), "note.action_export_as(%d)".printf( i ) );
+      if( etype.exportable() ) {
+        export_menu.append( etype.label(), "note.action_export_as(%d)".printf( i ) );
+      }
     }
 
     var more_menu = new GLib.Menu();
     more_menu.append( _( "Copy Note Link" ), "note.action_copy_note_link" );
-    more_menu.append( _( "Save Note As Template" ), "note.action_save_as_template" );
     more_menu.append_submenu( _( "Export Note As" ), export_menu );
+    more_menu.append( _( "Present Note" ), "win.action_note_present" );
+    more_menu.append( _( "Save Note As Template" ), "note.action_save_as_template" );
     // more_menu.append( _( "Lock note" ), "note.action_lock" );
 
     var more = new MenuButton() {
@@ -294,6 +300,10 @@ public class NotePanel : Box {
       margin_end = 5,
       menu_model = more_menu
     };
+
+    more.notify["active"].connect(() => {
+      _win.set_action_enable( "action_note_present", (_presenter == null) );
+    });
 
     _hist_prev = new Button.from_icon_name( "go-previous-symbolic" ) {
       sensitive = false,
@@ -355,6 +365,12 @@ public class NotePanel : Box {
       valign = Align.START,
       vexpand = true,
     };
+    _content.item_selected.connect((pane) => {
+      if( _presenter != null ) {
+        var pos = new NoteItemPos.from_pane( pane );
+        _presenter.show_slide( pos.row );
+      }
+    });
     _content.item_removed.connect((pane) => {
       note_item_removed( pane.item );
     });
@@ -431,6 +447,9 @@ public class NotePanel : Box {
         _content.save();
         if( _note.update_all_footnotes() ) {
           add_footnotes();
+        }
+        if( _presenter != null ) {
+          _presenter.refresh();
         }
         note_saved( _note, _orig_link_titles );
       }
@@ -756,6 +775,59 @@ public class NotePanel : Box {
   private void action_save_as_template() {
     save();
     save_as_template( _note );
+  }
+
+  //-------------------------------------------------------------
+  // Presents the current note.
+  public void show_presentation() {
+
+    // Make sure that the note is saved
+    save();
+
+    if( _presenter == null ) {
+
+      // Create the presenter
+      _presenter = new Presenter( _win, _note );
+
+      // Force the first pane to be current
+      var first_pane = _content.get_pane( 0, 0 );
+      if( first_pane != null ) {
+        first_pane.set_as_current( true );
+      }
+
+      // If the user changes the slide, make sure that the current pane
+      // is updated and made visible.
+      _presenter_slide_id = _presenter.user_slide_change.connect((row_pos) => {
+        var pane = _content.get_pane( row_pos, 0 );
+        if( pane != null ) {
+          pane.set_as_current( true );
+        }
+      });
+
+      _presenter_close_id = _presenter.user_close.connect( end_presentation );
+
+      Idle.add(() => {
+        if( _presenter != null ) {
+          _presenter.show();
+          _presenter.grab_focus();
+        }
+        return( false );
+      });
+
+    }
+
+  }
+
+  //-------------------------------------------------------------
+  // Called when the presentation has been ended.
+  private void end_presentation() {
+    if( _presenter != null ) {
+      SignalHandler.disconnect( _presenter, _presenter_slide_id );
+      SignalHandler.disconnect( _presenter, _presenter_close_id );
+      _presenter = null;
+      _presenter_slide_id = 0;
+      _presenter_close_id = 0;
+    }
   }
 
   //-------------------------------------------------------------

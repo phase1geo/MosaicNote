@@ -23,25 +23,69 @@ using Gee;
 
 public class NoteItemMarkdown : NoteItem {
 
+  private static Regex? _header_re = null;
+
   //-------------------------------------------------------------
 	// Default constructor
 	public NoteItemMarkdown( NoteItemRow row ) {
 		base( row, NoteItemType.MARKDOWN );
+    make_header_re();
 	}
 
   //-------------------------------------------------------------
 	// Constructor from XML node
 	public NoteItemMarkdown.from_xml( NoteItemRow row, Xml.Node* node ) {
 		base( row, NoteItemType.MARKDOWN );
+    make_header_re();
 		load( node );
 	}
 
   //-------------------------------------------------------------
+  // Creates the header regular expression if it does not exist.
+  private void make_header_re() {
+    if( _header_re == null ) {
+      try {
+        _header_re = new Regex( """^(#{1,6})\s+(.*)(\s+\1)?$""" );
+      } catch( RegexError e ) {
+        assert_not_reached();
+      }
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Provides the title for the pandoc output.
+  public override string pandoc_title() {
+    MatchInfo match;
+    var lines = content.split( "\n" );
+    if( _header_re.match( lines[0], 0, out match ) ) {
+      return( match.fetch( 2 ) );
+    } else if( (lines.length >= 2) && (lines[0].strip() != "") && lines[0].get_char( 0 ).isalpha() && (lines[1].has_prefix( "-" ) || lines[1].has_prefix( "=" )) ) {
+      return( lines[0].strip() );
+    } else {
+      return( base.pandoc_title() );
+    }
+  }
+
+  //-------------------------------------------------------------
 	// Converts the content to markdown text
-	public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc ) {
+	public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc, bool presenter ) {
     try {
+      var markdown = content;
+      if( presenter ) {
+        var lines = content.split( "\n" );
+        var curr  = 0;
+        if( _header_re.match( lines[0] ) ) {
+          curr = 1;
+        } else if( (lines.length >= 2) && (lines[0].strip() != "") && lines[0].get_char( 0 ).isalpha() && (lines[1].has_prefix( "-" ) || lines[1].has_prefix( "=" )) ) {
+          curr = 2;
+        }
+        while( (curr < lines.length) && (lines[curr].strip() == "") ) {
+          curr++;
+        }
+        markdown = string.joinv( "\n", lines[curr:lines.length] );
+      }
       var nl_re = new Regex( """\[\[(.*?)\]\]""" );
-      var str = nl_re.replace_eval( content, content.length, 0, 0, (match, result) => {
+      var str = nl_re.replace_eval( markdown, markdown.length, 0, 0, (match, result) => {
         var link = match.fetch( 1 );
         var note = notebooks.find_note_by_title( link );
         var uri  = "mosaicnote://show-note?id=%d".printf( note.id );
@@ -53,7 +97,7 @@ public class NoteItemMarkdown : NoteItem {
         var fn_re     = new Regex( """\[\^(.*?)\]""" );
         var start     = 0;
         var footnotes = get_note().footnotes;
-        while( fn_re.match_full( content, -1, start, 0, out matched ) ) {
+        while( fn_re.match_full( markdown, -1, start, 0, out matched ) ) {
           int s, e;
           var id = matched.fetch( 1 );
           matched.fetch_pos( 0, out s, out e );
@@ -71,7 +115,7 @@ public class NoteItemMarkdown : NoteItem {
   public override string export( NotebookTree? notebooks, bool include_footnotes, string assets_dir ) {
     try {
       var re  = new Regex( """\[(.*?)\]\s*\((.*?)\)""" );
-      var md  = to_markdown( notebooks, include_footnotes, false );
+      var md  = to_markdown( notebooks, include_footnotes, false, false );
       var str = re.replace_eval( md, md.length, 0, 0, (match, result) => {
         var asset = copy_asset( assets_dir, match.fetch( 2 ) );
         result.append( "[" + match.fetch( 1 ) + "](" + asset + ")" ); 

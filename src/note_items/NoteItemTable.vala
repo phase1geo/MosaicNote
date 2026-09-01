@@ -553,6 +553,16 @@ public class NoteItemTable : NoteItem {
   }
 
   //-------------------------------------------------------------
+  // Returns the pandoc title to use for this item.
+  public override string pandoc_title() {
+    if( description != "" ) {
+      return( description );
+    } else {
+      return( base.pandoc_title() );
+    }
+  }
+
+  //-------------------------------------------------------------
   // Creates the markdown header.
   private string create_markdown_header() {
     string[] columns = {};
@@ -570,7 +580,7 @@ public class NoteItemTable : NoteItem {
 
   //-------------------------------------------------------------
   // Converts the content to markdown text
-  public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc ) {
+  public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc, bool presenter ) {
     var str = create_markdown_header();
     if( _auto_number ) {
       for( int i=0; i<rows(); i++ ) {
@@ -587,7 +597,7 @@ public class NoteItemTable : NoteItem {
   //-------------------------------------------------------------
   // Exports the table and returns the generated Markdown.
   public override string export( NotebookTree? notebooks, bool include_footnotes, string assets_dir ) {
-    return( to_markdown( notebooks, include_footnotes, false ) );
+    return( to_markdown( notebooks, include_footnotes, false, false ) );
   }
 
   //-------------------------------------------------------------

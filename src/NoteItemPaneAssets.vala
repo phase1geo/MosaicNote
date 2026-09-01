@@ -26,6 +26,7 @@ using Gee;
 // Note item pane that represents asset links.
 public class NoteItemPaneAssets : NoteItemPane {
 
+  private Label   _h2_label;
   private Button  _add;
   private ListBox _listbox;
   private Box     _drop_box;
@@ -150,6 +151,35 @@ public class NoteItemPaneAssets : NoteItemPane {
   // Add elements to the note item header bar
   protected override Widget create_header1() {
 
+    var default_text = _( "Description (Optional)" );
+
+    var entry = new EditableLabel( (assets_item.description == "") ? default_text : assets_item.description ) {
+      halign = Align.FILL,
+      hexpand = true
+    };
+
+    var editing_id = entry.notify["editing"].connect(() => {
+      if( !entry.editing ) {
+        var text = (entry.text == default_text) ? "" : entry.text;
+        if( assets_item.description != text ) {
+          win.undo.add_item( new UndoItemDescChange( item, assets_item.description ) );
+          assets_item.description = text;
+          _h2_label.label = Utils.make_title( text );
+        }
+      }
+    });
+    add_signal( entry, editing_id );
+
+    var save_id = save.connect(() => {
+      var text = (entry.text == default_text) ? "" : entry.text;
+      if( assets_item.description != text ) {
+        win.undo.add_item( new UndoItemDescChange( item, assets_item.description ) );
+        assets_item.description = text;
+        _h2_label.label = Utils.make_title( text );
+      }
+    });
+    add_signal( this, save_id );
+
     _add = new Button.from_icon_name( "list-add-symbolic" ) {
       halign       = Align.END,
       hexpand      = true,
@@ -159,7 +189,31 @@ public class NoteItemPaneAssets : NoteItemPane {
     var add_id = _add.clicked.connect( show_file_dialog );
     add_signal( _add, add_id );
 
-    return( _add );
+    var box = new Box( Orientation.HORIZONTAL, 5 );
+    box.append( entry );
+    box.append( _add );
+
+    return( box );
+
+  }
+
+  //-------------------------------------------------------------
+  // Indicate that we have a valid header2.
+  protected override bool header2_exists() {
+    return( assets_item.description.chomp() != "" );
+  }
+
+  //-------------------------------------------------------------
+  // Creates header bar shown when the pane is not selected
+  protected override Widget? create_header2() {
+
+    _h2_label = new Label( Utils.make_title( assets_item.description ) ) {
+      use_markup = true,
+      halign = Align.FILL,
+      justify = Justification.CENTER
+    };
+
+    return( _h2_label );
 
   }
 

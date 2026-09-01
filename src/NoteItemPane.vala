@@ -121,9 +121,18 @@ public class NoteItemPane : RemovableBox {
     });
     add_signal( this, current_id );
 
+    // Create the presentable checkbutton
+    var presentable_action = new SimpleAction.stateful( "action_presentable", null, new Variant.boolean( item.presentable ) );
+    presentable_action.activate.connect((parm) => {
+      var state = presentable_action.get_state().get_boolean();
+      presentable_action.set_state( new Variant.boolean( !state ) );
+      _item.presentable = !state;
+    });
+
     // Set the stage for menu actions
     _actions = new SimpleActionGroup();
     _actions.add_action_entries( action_entries, this );
+    _actions.add_action( presentable_action );
     insert_action_group( "item", _actions );
 
   }
@@ -801,10 +810,13 @@ public class NoteItemPane : RemovableBox {
     var export_menu = new GLib.Menu();
     for( int i=0; i<ExportType.NUM; i++ ) {
       var etype = (ExportType)i;
-      export_menu.append( etype.label(), "item.action_export_item(%d)".printf( i ) );
+      if( etype.exportable() ) {
+        export_menu.append( etype.label(), "item.action_export_item(%d)".printf( i ) );
+      }
     }
     var exp_menu = new GLib.Menu();
     exp_menu.append_submenu( _( "Export Item" ), export_menu );
+    exp_menu.append( _( "Show In Presentations" ), "item.action_presentable" );
 
     var clip_menu = create_clipboard_menu();
 
@@ -915,11 +927,11 @@ public class NoteItemPane : RemovableBox {
     };
     _stack.add_named( h1_box, "selected" );
     _stack.add_named( h2_box, "unselected" );
-    _stack.visible_child_name = item.row.expanded ? "selected" : "unselected";
+    _stack.visible_child_name = "unselected";
 
     var header = new Box( Orientation.HORIZONTAL, 5 ) {
       halign        = Align.FILL,
-      visible       = (!item.row.expanded || is_active()),
+      visible       = (!item.row.expanded || header2_exists()),
       margin_start  = 5,
       margin_end    = 5,
       margin_top    = 5,

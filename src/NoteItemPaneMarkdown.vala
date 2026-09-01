@@ -83,7 +83,6 @@ public class NoteItemPaneMarkdown : NoteItemPane {
   // Grabs the focus of the note item at the specified position.
   public override void grab_item_focus( TextCursorPlacement placement, int offset = 0 ) {
     place_cursor( _text, placement, offset );
-    stdout.printf( "Markdown grab_item_focus\n" );
     _text.grab_focus();
   }
 
@@ -422,6 +421,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
           // If we have only the list item on the line, clear the list item
           if( match.fetch( 0 ) == line ) {
             Idle.add(() => {
+              var tmp_line = line;
               start_iter.forward_chars( match.fetch( 1 ).char_count() );
               buffer.delete( ref start_iter, ref end_iter );
               return( false );
@@ -431,6 +431,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
           // Otherwise, create the list item on the new line  
           } else {
             Idle.add(() => {
+              var tmp_line = line;
               var ins_text = "\n" + match.fetch( 1 );
               if( match.fetch( 3 ) != "" ) {
                 ins_text += match.fetch( 3 );
@@ -441,6 +442,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
                 ins_text += num.to_string() + ".";
               }
               ins_text += match.fetch( 9 );
+              start_iter.forward_chars( line.char_count() );
               buffer.insert( ref start_iter, ins_text, ins_text.length );
               return( false );
             });
@@ -472,6 +474,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
             // to change the current line to indent
             if( prev_match.fetch( 1 ).length == match.fetch( 1 ).length ) {
               Idle.add(() => {
+                var tmp_line = prev_line;
                 var ins_text = start_fill + match.fetch( 1 );
                 switch( prev_match.fetch( 4 ) ) {
                   case "-" :  ins_text += "*";  break;
@@ -496,6 +499,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
             // indentation, make the current line match the previous line
             } else if( prev_match.fetch( 1 ).length == (match.fetch( 1 ).length + start_fill.length) ) {
               Idle.add(() => {
+                var tmp_line = prev_line;
                 var ins_text = prev_match.fetch( 1 );
                 if( prev_match.fetch( 2 ) != "" ) {
                   ins_text += prev_match.fetch( 4 );

@@ -48,7 +48,6 @@ public class NoteItemImage : NoteItem {
 		}
 		set {
 			if( _description != value ) {
-        stdout.printf( "Setting description to %s\n", value );
 				_description = value;
 				modified = true;
 				changed();
@@ -90,11 +89,21 @@ public class NoteItemImage : NoteItem {
   }
 
   //-------------------------------------------------------------
+  // Returns the pandoc title to use for this item.
+  public override string pandoc_title() {
+    if( description != "" ) {
+      return( description );
+    } else {
+      return( base.pandoc_title() );
+    }
+  }
+
+  //-------------------------------------------------------------
   // Returns the Markdown code for this item
-  public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc ) {
+  public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc, bool presenter ) {
     if( uri != "" ) {
     	var file = File.new_for_uri( uri );
-  	  return( format_for_width( "![%s](%s)".printf( description, uri ), file.get_path(), pandoc ) );
+  	  return( format_for_width( "![%s](%s)".printf( (presenter ? "" : description), uri ), file.get_path(), pandoc ) );
     }
     return( "" );
   }

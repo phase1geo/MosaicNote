@@ -21,10 +21,13 @@
 
 using Gtk;
 
+public delegate void ExportCallback( string filename );
+
 public enum ExportType {
   MARKDOWN,
   TEXTBUNDLE,
   HTML,
+  PRESENTER,
   LATEX,
   EPUB,
   DOCX,
@@ -39,6 +42,7 @@ public enum ExportType {
       case MARKDOWN   :  return( "markdown" );
       case TEXTBUNDLE :  return( "textbundle" );
       case HTML       :  return( "html" );
+      case PRESENTER  :  return( "presenter" );
       case LATEX      :  return( "latex" );
       case EPUB       :  return( "epub" );
       case DOCX       :  return( "docx" );
@@ -55,6 +59,7 @@ public enum ExportType {
       case MARKDOWN   :  return( _( "Markdown" ) );
       case TEXTBUNDLE :  return( _( "TextBundle" ) );
       case HTML       :  return( _( "HTML" ) );
+      case PRESENTER  :  return( _( "Presentation" ) );
       case LATEX      :  return( _( "Latex" ) );
       case EPUB       :  return( _( "EPub" ) );
       case DOCX       :  return( _( "Microsoft Word" ) );
@@ -71,6 +76,7 @@ public enum ExportType {
       case "markdown"   :  return( MARKDOWN );
       case "textbundle" :  return( TEXTBUNDLE );
       case "html"       :  return( HTML );
+      case "presenter"  :  return( PRESENTER );
       case "latex"      :  return( LATEX );
       case "epub"       :  return( EPUB );
       case "docx"       :  return( DOCX );
@@ -82,11 +88,14 @@ public enum ExportType {
     }
   }
 
+  //-------------------------------------------------------------
+  // Specifies the output extension.
   public string extension() {
     switch( this ) {
       case MARKDOWN   :  return( "md" );
       case TEXTBUNDLE :  return( "textbundle" );
       case HTML       :  return( "html" );
+      case PRESENTER  :  return( "html" );
       case LATEX      :  return( "latex" );
       case EPUB       :  return( "epub" );
       case DOCX       :  return( "docx" );
@@ -96,6 +105,18 @@ public enum ExportType {
       case TEXT       :  return( "txt" );
       default         :  assert_not_reached();
     }
+  }
+
+  //-------------------------------------------------------------
+  // Specifies if this export type is available to users.
+  public bool exportable() {
+    return( this != PRESENTER );
+  }
+
+  //-------------------------------------------------------------
+  // Specifies if Pandoc should be told to not include CSS.
+  public bool omit_css() {
+    return( this == PRESENTER );
   }
 
 }
@@ -182,7 +203,7 @@ public class Export {
               note.get_needed_languages( langs );
               do_export( win, export_type, file.get_path(), markdown, langs );
             } else if( item != null ) {
-              markdown = item.to_markdown( win.notebooks, true, true );
+              markdown = item.get_markdown( win.notebooks, true, true, false );
               if( item.item_type == NoteItemType.CODE ) {
                 langs.add( ((NoteItemCode)item).lang );
               }
@@ -197,7 +218,7 @@ public class Export {
 
   //-------------------------------------------------------------
   // Performs the export operation.
-  private static bool do_export( MainWindow win, ExportType export_type, string filename, string markdown, Gee.HashSet<string> needed_langs ) {
+  public static bool do_export( MainWindow win, ExportType export_type, string filename, string markdown, Gee.HashSet<string> needed_langs, ExportCallback callback = null ) {
 
     var file_parts   = filename.split( "." );
     var extension    = file_parts[file_parts.length-1];
@@ -244,18 +265,40 @@ public class Export {
         });
       }
 
+      if( export_type.omit_css() ) {
+        command += "-M";
+        command += "document-css=false";
+      }
+
       command += "-f";
 
       // Added extensions:
       // +mark = Adds support for highlighting text surrounded by "=="
       command += "markdown+mark";
+      command += "--quiet";
       command += "--embed-resources";
       command += "--standalone";
+      command += "--lua-filter=%s".printf( Path.build_filename( DATADIR, "mosaic-note", "lua-filters", "checkbox-table.lua" ) );
       command += "-o";
       command += ext_filename;
       command += md_filename;
 
-      Process.spawn_command_line_async( string.joinv( " ", command ) );
+      var command_str = string.joinv( " ", command );
+
+      if( callback != null ) {
+        Pid pid;
+        Process.spawn_async(
+          null, { "/bin/sh", "-c", command_str }, null, SpawnFlags.DO_NOT_REAP_CHILD, null, out pid
+        );
+        ChildWatch.add( pid, (pid, status) => {
+          Process.close_pid( pid );
+          if( Process.check_exit_status( status ) ) {
+            callback( ext_filename );
+          }
+        });
+      } else {
+        Process.spawn_command_line_async( command_str );
+      }
 
     } catch( SpawnError e ) {
       stdout.printf( "ERROR:  %s\n", e.message );
