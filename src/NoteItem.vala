@@ -305,7 +305,7 @@ public class NoteItem : Object {
   //-------------------------------------------------------------
   // Returns the title that can be used for Pandoc input files.
   public virtual string pandoc_title() {
-    return( row.note.title );
+    return( "" );
   }
 
   //-------------------------------------------------------------

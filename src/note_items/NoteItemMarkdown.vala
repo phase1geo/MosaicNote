@@ -46,9 +46,7 @@ public class NoteItemMarkdown : NoteItem {
     if( _header_re == null ) {
       try {
         _header_re = new Regex( """^(#{1,6})\s+(.*)(\s+\1)?$""" );
-        stdout.printf( "Figured out header_re\n" );
       } catch( RegexError e ) {
-        stdout.printf( "Error: %s\n", e.message );
         assert_not_reached();
       }
     }

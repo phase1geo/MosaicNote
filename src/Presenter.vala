@@ -45,7 +45,9 @@ public class Presenter : Window {
     _note = note;
 
     var settings = new WebKit.Settings() {
-      enable_javascript = true
+      enable_javascript                     = true,
+      allow_file_access_from_file_urls      = true,
+      allow_universal_access_from_file_urls = true
     };
 
     _viewer = new WebView() {
@@ -73,7 +75,7 @@ public class Presenter : Window {
           var uri = action.get_request().uri;
           decision.ignore();  // stop the WebView from navigating itself
           try {
-            AppInfo.launch_default_for_uri( uri, null );
+            bool launched = AppInfo.launch_default_for_uri( uri, null );
           } catch( Error e ) {
             warning( "Unable to open link: %s", e.message );
           }
@@ -457,6 +459,14 @@ public class Presenter : Window {
           }
         });
       });
+    </script>
+    <script>
+      MathJax = {
+        loader: {load: ['input/asciimath', 'output/chtml', 'ui/menu']},
+      };
+    </script>
+    <script type='text/javascript' id='MathJax-script' async
+       src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/startup.js'>
     </script>
     """;
 

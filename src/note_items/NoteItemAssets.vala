@@ -50,6 +50,20 @@ public class NoteItemAsset {
 public class NoteItemAssets : NoteItem {
 
   private Array<NoteItemAsset> _assets;
+  private string _description = "";
+
+  public string description {
+    get {
+      return( _description );
+    }
+    set {
+      if( _description != value ) {
+        _description = value;
+        modified = true;
+        changed();
+      }
+    }
+  }
 
   //-------------------------------------------------------------
 	// Default constructor
@@ -138,13 +152,31 @@ public class NoteItemAssets : NoteItem {
   }
 
   //-------------------------------------------------------------
+  // Returns the title to display for pandoc.
+  public override string pandoc_title() {
+    if( description != "" ) {
+      return( description );
+    } else {
+      return( base.pandoc_title() );
+    }
+  }
+
+  //-------------------------------------------------------------
   // Returns the Markdown version of this item
   public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc, bool presenter ) {
     string[] str = {};
-    for( int i=0; i<_assets.length; i++ ) {
-      var asset = _assets.index( i );
-    	str += "- [%s](%s)".printf( Filename.display_basename( asset.orig_path ), asset.orig_path );
-  	}
+    if( presenter ) {
+      for( int i=0; i<_assets.length; i++ ) {
+        var asset = _assets.index( i );
+        var file  = File.new_for_uri( asset.orig_path );
+        str += "- %s".printf( file.get_path() );
+      }
+    } else {
+      for( int i=0; i<_assets.length; i++ ) {
+        var asset = _assets.index( i );
+      	str += "- [%s](%s)".printf( Filename.display_basename( asset.orig_path ), asset.orig_path );
+    	}
+    }
   	return( string.joinv( "\n", str ) );
   }
 
@@ -158,6 +190,7 @@ public class NoteItemAssets : NoteItem {
 	// Saves the content in XML format
 	public override Xml.Node* save() {
     Xml.Node* node = base.save();
+    node->set_prop( "description", description );
     for( int i=0; i<_assets.length; i++ ) {
       Xml.Node* asset = new Xml.Node( null, "asset" );
       asset->set_prop( "id", _assets.index( i ).id.to_string() );
@@ -171,6 +204,10 @@ public class NoteItemAssets : NoteItem {
 	// Loads the content from XML format
 	protected override void load( Xml.Node* node ) {
     base.load( node );
+    var d = node->get_prop( "description" );
+    if( d != null ) {
+      description = d;
+    }
     for( Xml.Node* it = node->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "asset") ) {
         var i = it->get_prop( "id" );

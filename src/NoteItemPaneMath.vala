@@ -153,7 +153,6 @@ public class NoteItemPaneMath : NoteItemPane {
     _h2_label = new Label( Utils.make_title( math_item.description ) ) {
       use_markup = true,
       halign = Align.FILL,
-      hexpand = true,
       justify = Justification.CENTER
     };
 
