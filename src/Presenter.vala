@@ -177,6 +177,11 @@ public class Presenter : Window {
       }
 
       body {
+        opacity: 0;
+        transition: opacity 0.12s ease-out;
+      }
+ 
+      body {
         display: flex !important;
         flex-direction: column !important;
       }
@@ -357,8 +362,15 @@ public class Presenter : Window {
         }
         body.appendChild(wrapper);
 
+        function reveal() {
+          document.body.style.opacity = '1';
+        }
+
         var content = document.querySelector('.slide-content');
-        if (!content) return;
+        if (!content) {
+          reveal();
+          return;
+        }
 
         function overflowing() {
           if (content.scrollHeight > content.clientHeight + 1) return true;
@@ -405,23 +417,24 @@ public class Presenter : Window {
         var images = content.querySelectorAll('img');
         var pending = images.length;
 
-        if (pending === 0) return;
+        if (pending === 0) {
+          reveal();
+          return;
+        }
 
         images.forEach(function(img) {
-          if (img.complete) {
+          function settled() {
             pending--;
-            if (pending === 0) fitContent();
+            if (pending === 0) {
+              fitContent();
+              reveal();
+            }
+          }
+          if (img.complete) {
+            settled();
           } else {
-            img.addEventListener('load', function() {
-              pending--;
-              if (pending === 0) fitContent();
-            });
-            // Also count a failed image load as "settled" so we don't
-            // wait forever on a broken image reference.
-            img.addEventListener('error', function() {
-              pending--;
-              if (pending === 0) fitContent();
-            });
+            img.addEventListener('load', settled);
+            img.addEventListener('error', settled);
           }
         });
       });
@@ -478,7 +491,6 @@ public class Presenter : Window {
       try {
         string html;
         if( FileUtils.get_contents( filename, out html ) ) {
-          _viewer.opacity    = 0.0;
           _awaiting_zoom     = true;
           _viewer.zoom_level = 1.0;
           _viewer.load_html( make_presentation_html( html ), null );
@@ -573,7 +585,6 @@ public class Presenter : Window {
     var height = _viewer.get_height();
 
     if( (width <= 0) || (height <= 0) ) {
-      _viewer.opacity = 1.0;
       return;
     }
 
@@ -598,8 +609,6 @@ public class Presenter : Window {
         }
       } catch( Error e ) {
         warning ("JavaScript error: %s", e.message);
-      } finally {
-        _viewer.opacity = 1.0;
       }
     });
 
