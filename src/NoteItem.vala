@@ -310,8 +310,8 @@ public class NoteItem : Object {
 
   //-------------------------------------------------------------
   // Creates the final version of the markdown string
-  public string get_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc ) {
-    var str = to_markdown( notebooks, include_footnotes, pandoc );
+  public string get_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc, bool presenter ) {
+    var str = to_markdown( notebooks, include_footnotes, pandoc, presenter );
     if( pandoc ) {
       return( "---\ntitle: '%s'\n---\n\n%s".printf( pandoc_title(), str ) );
     }
@@ -320,7 +320,7 @@ public class NoteItem : Object {
 
   //-------------------------------------------------------------
 	// Returns the markdown text for this item
-	public virtual string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc ) {
+	public virtual string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc, bool presenter ) {
 		return( "" );
 	}
 

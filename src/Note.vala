@@ -577,7 +577,7 @@ public class Note : Object {
         if( markdown && last_markdown ) {
           str += "---\n\n";
         }
-        str += "%s\n\n".printf( item.to_markdown( notebooks, false, pandoc ) );
+        str += "%s\n\n".printf( item.to_markdown( notebooks, false, pandoc, false ) );
         last_markdown = markdown;
       }
     }

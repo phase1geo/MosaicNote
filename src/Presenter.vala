@@ -32,6 +32,7 @@ public class Presenter : Window {
   private Button     _next;
   private Button     _prev;
   private Label      _status;
+  private bool       _awaiting_zoom = false;
 
   public signal void user_slide_change( int row );
   public signal void user_close();
@@ -57,7 +58,8 @@ public class Presenter : Window {
     };
 
     _viewer.load_changed.connect((event) => {
-      if( event == WebKit.LoadEvent.FINISHED ) {
+      if( (event == WebKit.LoadEvent.FINISHED) && _awaiting_zoom ) {
+        _awaiting_zoom = false;
         zoom_to_fit();
       }
     });
@@ -441,7 +443,7 @@ public class Presenter : Window {
 
     var title      = row.note.title;
     var first_item = row.get_item( 0 );
-    var first_md   = first_item.to_markdown( _win.notebooks, true, true );
+    var first_md   = first_item.to_markdown( _win.notebooks, true, true, true );
     if( first_item.item_type == NoteItemType.CODE ) {
       langs.add( ((NoteItemCode)first_item).lang );
     }
@@ -450,7 +452,7 @@ public class Presenter : Window {
 
     if( row.size() == 3 ) {
       var second_item = row.get_item( 1 );
-      var second_md   = second_item.to_markdown( _win.notebooks, true, true );
+      var second_md   = second_item.to_markdown( _win.notebooks, true, true, true );
       if( second_item.item_type == NoteItemType.CODE ) {
         langs.add( ((NoteItemCode)second_item).lang );
       }
@@ -476,6 +478,8 @@ public class Presenter : Window {
       try {
         string html;
         if( FileUtils.get_contents( filename, out html ) ) {
+          _viewer.opacity    = 0.0;
+          _awaiting_zoom     = true;
           _viewer.zoom_level = 1.0;
           _viewer.load_html( make_presentation_html( html ), null );
         }
@@ -569,6 +573,7 @@ public class Presenter : Window {
     var height = _viewer.get_height();
 
     if( (width <= 0) || (height <= 0) ) {
+      _viewer.opacity = 1.0;
       return;
     }
 
@@ -593,6 +598,8 @@ public class Presenter : Window {
         }
       } catch( Error e ) {
         warning ("JavaScript error: %s", e.message);
+      } finally {
+        _viewer.opacity = 1.0;
       }
     });
 

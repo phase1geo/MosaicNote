@@ -100,10 +100,10 @@ public class NoteItemImage : NoteItem {
 
   //-------------------------------------------------------------
   // Returns the Markdown code for this item
-  public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc ) {
+  public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc, bool presenter ) {
     if( uri != "" ) {
     	var file = File.new_for_uri( uri );
-  	  return( format_for_width( "![%s](%s \"%s\")".printf( uri, uri, description ), file.get_path(), pandoc ) );
+  	  return( format_for_width( "![%s](%s)".printf( (presenter ? "" : description), uri ), file.get_path(), pandoc ) );
     }
     return( "" );
   }

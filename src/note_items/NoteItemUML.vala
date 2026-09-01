@@ -82,9 +82,9 @@ public class NoteItemUML : NoteItem {
 
   //-------------------------------------------------------------
   // Returns the Markdown version of this item
-  public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc ) {
+  public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc, bool presenter ) {
     var filename = get_resource_filename();
-    return( format_for_width( "![%s](file://%s)".printf( description, filename ), filename, pandoc ) );
+    return( format_for_width( "![%s](file://%s)".printf( (presenter ? "" : description), filename ), filename, pandoc ) );
   }
 
   //-------------------------------------------------------------

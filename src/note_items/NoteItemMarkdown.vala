@@ -38,7 +38,7 @@ public class NoteItemMarkdown : NoteItem {
 
   //-------------------------------------------------------------
 	// Converts the content to markdown text
-	public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc ) {
+	public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc, bool presenter ) {
     try {
       var nl_re = new Regex( """\[\[(.*?)\]\]""" );
       var str = nl_re.replace_eval( content, content.length, 0, 0, (match, result) => {
@@ -71,7 +71,7 @@ public class NoteItemMarkdown : NoteItem {
   public override string export( NotebookTree? notebooks, bool include_footnotes, string assets_dir ) {
     try {
       var re  = new Regex( """\[(.*?)\]\s*\((.*?)\)""" );
-      var md  = to_markdown( notebooks, include_footnotes, false );
+      var md  = to_markdown( notebooks, include_footnotes, false, false );
       var str = re.replace_eval( md, md.length, 0, 0, (match, result) => {
         var asset = copy_asset( assets_dir, match.fetch( 2 ) );
         result.append( "[" + match.fetch( 1 ) + "](" + asset + ")" ); 
