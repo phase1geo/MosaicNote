@@ -92,6 +92,16 @@ public class NoteItemRow : Object {
   }
 
   //-------------------------------------------------------------
+  // Returns the number of items in the row that are presentable.
+  public int num_presentable() {
+    int count = 0;
+    for( int i=0; i<_items.length; i++ ) {
+      count += _items.index( i ).presentable ? 1 : 0;
+    }
+    return( count );
+  }
+
+  //-------------------------------------------------------------
   // Returns the item at the given column index.
   public NoteItem get_item( int col ) {
     return( _items.index( col ) );

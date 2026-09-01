@@ -266,15 +266,23 @@ public class Note : Object {
 
   //-------------------------------------------------------------
   // Returns the note item at the given index
-  public NoteItemRow get_row( int index ) {
-    return( _rows.index( index ) );
+  public NoteItemRow? get_row( int index ) {
+    if( (index >= 0) && (index < _rows.length) ) {
+      return( _rows.index( index ) );
+    } else {
+      return( null );
+    }
   }
 
   //-------------------------------------------------------------
   // Returns the item located at the specified row/column.
-  public NoteItem get_item( int row, int col ) {
-    var note_row = _rows.index( row );
-    return( note_row.get_item( col ) );
+  public NoteItem? get_item( int row, int col ) {
+    var note_row = get_row( row );
+    if( note_row != null ) {
+      return( note_row.get_item( col ) );
+    } else {
+      return( null );
+    }
   }
 
   //-------------------------------------------------------------

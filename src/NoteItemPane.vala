@@ -121,9 +121,18 @@ public class NoteItemPane : RemovableBox {
     });
     add_signal( this, current_id );
 
+    // Create the presentable checkbutton
+    var presentable_action = new SimpleAction.stateful( "action_presentable", null, new Variant.boolean( item.presentable ) );
+    presentable_action.activate.connect((parm) => {
+      var state = presentable_action.get_state().get_boolean();
+      presentable_action.set_state( new Variant.boolean( !state ) );
+      _item.presentable = !state;
+    });
+
     // Set the stage for menu actions
     _actions = new SimpleActionGroup();
     _actions.add_action_entries( action_entries, this );
+    _actions.add_action( presentable_action );
     insert_action_group( "item", _actions );
 
   }
@@ -807,6 +816,7 @@ public class NoteItemPane : RemovableBox {
     }
     var exp_menu = new GLib.Menu();
     exp_menu.append_submenu( _( "Export Item" ), export_menu );
+    exp_menu.append( _( "Show In Presentations" ), "item.action_presentable" );
 
     var clip_menu = create_clipboard_menu();
 

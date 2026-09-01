@@ -26,13 +26,14 @@ public class Presenter : Window {
 
   private MainWindow _win;
   private Note       _note;
-  private int        _current_row = 0;
+  private int        _current_slide = 0;
   private WebView    _viewer;
   private string     _temp_dir;
   private Button     _next;
   private Button     _prev;
   private Label      _status;
   private bool       _awaiting_zoom = false;
+  private Array<int> _available_rows;
 
   public signal void user_slide_change( int row );
   public signal void user_close();
@@ -43,6 +44,9 @@ public class Presenter : Window {
 
     _win  = win;
     _note = note;
+
+    // Get the available rows
+    _available_rows = new Array<int>();
 
     var settings = new WebKit.Settings() {
       enable_javascript                     = true,
@@ -131,6 +135,7 @@ public class Presenter : Window {
 
     // Make sure that the first slide is shown
     make_temp_dir();
+    update_available_rows();
     show_current_slide();
 
     add_keyboard_shortcuts();
@@ -483,36 +488,79 @@ public class Presenter : Window {
   // Generates the Pandoc Markdown for the given row.
   private string row_markdown( NoteItemRow row, ref Gee.HashSet<string> langs ) {
 
-    var title      = row.note.title;
-    var first_item = row.get_item( 0 );
-    var first_md   = first_item.to_markdown( _win.notebooks, true, true, true );
-    if( first_item.item_type == NoteItemType.CODE ) {
-      langs.add( ((NoteItemCode)first_item).lang );
-    }
+    var markdown    = "";
+    var presentable = row.num_presentable();
+    var first       = true;
 
-    var markdown = "---\ntitle: '%s'\n---\n\n".printf( first_item.pandoc_title() );
+    stdout.printf( "presentable: %d\n", presentable );
 
-    if( row.size() == 3 ) {
-      var second_item = row.get_item( 1 );
-      var second_md   = second_item.to_markdown( _win.notebooks, true, true, true );
-      if( second_item.item_type == NoteItemType.CODE ) {
-        langs.add( ((NoteItemCode)second_item).lang );
+    assert( presentable > 0 );
+
+    for( int i=0; i<row.size(); i++ ) {
+      var item = row.get_item( i );
+      if( item.presentable ) {
+        if( first ) {
+          markdown += "---\ntitle: '%s'\n---\n\n".printf( item.pandoc_title() );
+          if( presentable > 1 ) {
+            markdown += "::: columns\n\n";
+          }
+          first = false;
+        }
+        if( item.item_type == NoteItemType.CODE ) {
+          langs.add( ((NoteItemCode)item).lang );
+        }
+        if( presentable > 1 ) {
+          markdown += ":::: column\n";
+        }
+        markdown += item.to_markdown( _win.notebooks, true, true, true ) + "\n";
+        if( presentable > 1 ) {
+          markdown += "::::\n\n";
+        }
       }
-      markdown += "::: columns\n\n:::: column\n%s\n::::\n\n:::: column\n%s\n::::\n\n:::".printf( first_md, second_md );
-    } else {
-      markdown += first_md;
     }
+
+    if( presentable > 1 ) {
+      markdown += ":::";
+    }
+
+    stdout.printf( "markdown:\n%s\n", markdown );
 
     return( markdown );
 
   }
 
   //-------------------------------------------------------------
+  // Updates the list of available rows.
+  private void update_available_rows() {
+    _available_rows.remove_range( 0, _available_rows.length );
+    for( int i=0; i<_note.rows(); i++ ) {
+      var row = _note.get_row( i );
+      if( (row != null) && (row.num_presentable() > 0) ) {
+        _available_rows.append_val( i );
+      }
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Returns the index of the slide based on the given row.
+  private int get_slide_from_row( int row ) {
+    var slide = -1;
+    for( int i=0; i<_available_rows.length; i++ ) {
+      if( row >= _available_rows.index( i ) ) {
+        slide = i;
+      }
+    }
+    return( ((slide == -1) && (_available_rows.length > 0)) ? 0 : slide );
+  }
+
+  //-------------------------------------------------------------
   // Displays the current slide.
   private void show_current_slide() {
 
+    if( _current_slide == -1 ) return;
+
     var langs    = new Gee.HashSet<string>();
-    var row      = _note.get_row( _current_row );
+    var row      = _note.get_row( _available_rows.index( _current_slide ) );
     var markdown = row_markdown( row, ref langs );
     var file     = Path.build_filename( _temp_dir, "slide.html" );
 
@@ -531,23 +579,25 @@ public class Presenter : Window {
     } );
 
     // Update the UI state
-    _status.label = "%d / %d".printf( (_current_row + 1), _note.rows() );
-    _next.sensitive = (_current_row + 1) < _note.rows();
-    _prev.sensitive = (_current_row - 1) >= 0;
+    _status.label   = "%d / %u".printf( (_current_slide + 1), _available_rows.length );
+    _next.sensitive = (_current_slide + 1) < _available_rows.length;
+    _prev.sensitive = (_current_slide - 1) >= 0;
 
   }
 
   //-------------------------------------------------------------
   // Forces the current slide to be updated.
   public void refresh() {
+    update_available_rows();
     show_current_slide();
   }
 
   //-------------------------------------------------------------
   // Can be called by external code to display a given slide.
-  public void show_slide( int row ) {
-    if( (row >= 0) && (row < _note.rows()) ) {
-      _current_row = row;
+  public void show_slide( int row_pos ) {
+    var row = _note.get_row( row_pos );
+    if( (row != null) && (row.num_presentable() > 0) ) {
+      _current_slide = get_slide_from_row( row_pos );
       show_current_slide();
     }
   }
@@ -555,20 +605,20 @@ public class Presenter : Window {
   //-------------------------------------------------------------
   // Displays the next slide if there is a slide to show.
   private void action_show_next() {
-    if( (_current_row + 1) < _note.rows() ) {
-      _current_row++;
+    if( (_current_slide + 1) < _available_rows.length ) {
+      _current_slide++;
       show_current_slide();
-      user_slide_change( _current_row );
+      user_slide_change( _available_rows.index( _current_slide ) );
     }
   }
 
   //-------------------------------------------------------------
   // Displays the previous slide if there is a slide to show.
   private void action_show_prev() {
-    if( (_current_row - 1) >= 0 ) {
-      _current_row--;
+    if( (_current_slide - 1) >= 0 ) {
+      _current_slide--;
       show_current_slide();
-      user_slide_change( _current_row );
+      user_slide_change( _available_rows.index( _current_slide ) );
     }
   }
 

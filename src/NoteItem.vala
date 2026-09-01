@@ -238,12 +238,13 @@ public class NoteItem : Object {
   public static int current_resource_id = 0;
   private const int max_image_width = 800;
 
-  private string _content  = "";
+  private string _content     = "";
+  private bool   _presentable = true;
 
-	public NoteItemRow  row       { get; private set; }
-	public int          id        { get; private set; }
-  public NoteItemType item_type { get; private set; default = NoteItemType.MARKDOWN; }
-	public bool         modified  { get; protected set; default = false; }
+	public NoteItemRow  row         { get; private set; }
+	public int          id          { get; private set; }
+  public NoteItemType item_type   { get; private set; default = NoteItemType.MARKDOWN; }
+	public bool         modified    { get; protected set; default = false; }
 
 	public signal void changed();
 
@@ -254,6 +255,19 @@ public class NoteItem : Object {
     set {
       if( _content != value ) {
         _content = value;
+        modified = true;
+        changed();
+      }
+    }
+  }
+
+  public bool presentable {
+    get {
+      return( _presentable );
+    }
+    set {
+      if( _presentable != value ) {
+        _presentable = value;
         modified = true;
         changed();
       }
@@ -452,6 +466,7 @@ public class NoteItem : Object {
 	public virtual Xml.Node* save() {
 		Xml.Node* node = new Xml.Node( null, item_type.to_string() );
 		node->set_prop( "id", id.to_string() );
+    node->set_prop( "presentable", presentable.to_string() );
     node->add_content( content );
 		modified = false;
 		return( node );
@@ -466,6 +481,10 @@ public class NoteItem : Object {
   	} else {
   		id = current_id++;
   	}
+    var p = node->get_prop( "presentable" );
+    if( p != null ) {
+      _presentable = bool.parse( p );
+    }
     _content = node->get_content();
   }
 
