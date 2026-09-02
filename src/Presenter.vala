@@ -51,7 +51,8 @@ public class Presenter : Window {
     var settings = new WebKit.Settings() {
       enable_javascript                     = true,
       allow_file_access_from_file_urls      = true,
-      allow_universal_access_from_file_urls = true
+      allow_universal_access_from_file_urls = true,
+      enable_developer_extras               = true
     };
 
     _viewer = new WebView() {
@@ -363,6 +364,10 @@ public class Presenter : Window {
         flex-direction: column;
         overflow: hidden;
       }
+
+      div.column {
+        overflow: hidden !important;
+      }
     </style>
     <script>
       document.addEventListener('DOMContentLoaded', function() {
@@ -409,6 +414,7 @@ public class Presenter : Window {
 
           var columns = content.querySelectorAll('.column');
           for (var i = 0; i < columns.length; i++) {
+            if (columns[i].scrollWidth  > columns[i].clientWidth  + 1) return true;
             if (columns[i].scrollHeight > columns[i].clientHeight + 1) return true;
           }
           return false;
@@ -436,38 +442,65 @@ public class Presenter : Window {
           document.body.style.fontSize = best + '%';
         }
 
-        fitContent();
-
-        // Re-fit once every image on the slide has finished loading, in
-        // case an image's final size changes how much room text has.
-        var images = content.querySelectorAll('img');
-        var pending = images.length;
-
-        if (pending === 0) {
-          reveal();
-          return;
+        function shrinkMath() {
+          var mathEls = content.querySelectorAll('mjx-container');
+          mathEls.forEach(function(el) {
+            el.style.transform = '';
+            el.style.transformOrigin = '';
+            var container = el.closest('.column') || content;
+            var available = container.clientWidth;
+            if (el.scrollWidth > available && available > 0) {
+              var ratio = available / el.scrollWidth;
+              el.style.display = 'inline-block';
+              el.style.transformOrigin = 'left center';
+              el.style.transform = 'scale(' + ratio + ')';
+            }
+          });
         }
 
+        // Track everything that must settle before it's safe to reveal:
+        // images still loading, and MathJax still typesetting asciimath.
+        var waitCount = 0, settled = false;
+        function begin()  { waitCount++; }
+        function finish() {
+          waitCount--;
+          if (waitCount === 0 && !settled) {
+            settled = true;
+            fitContent();
+            shrinkMath();
+            reveal();
+          }
+        }
+
+        fitContent();
+
+        var images = content.querySelectorAll('img');
         images.forEach(function(img) {
-          function settled() {
-            pending--;
-            if (pending === 0) {
-              fitContent();
-              reveal();
-            }
-          }
-          if (img.complete) {
-            settled();
-          } else {
-            img.addEventListener('load', settled);
-            img.addEventListener('error', settled);
-          }
+          if (img.complete) return;
+          begin();
+          img.addEventListener('load', finish);
+          img.addEventListener('error', finish);
         });
+
+        if (window.MathJax) {
+          begin();
+          window.__mosaicMathReady = finish;
+          setTimeout(finish, 4000);  // reveal anyway if MathJax never loads
+        }
+
+        if (waitCount === 0) reveal();
       });
     </script>
     <script>
       MathJax = {
-        loader: {load: ['input/asciimath', 'output/chtml', 'ui/menu']},
+        loader: { load: ['input/asciimath', 'output/chtml', 'ui/menu'] },
+        startup: {
+          pageReady: function () {
+            return MathJax.startup.defaultPageReady().then(function () {
+              if (window.__mosaicMathReady) window.__mosaicMathReady();
+            });
+          }
+        }
       };
     </script>
     <script type='text/javascript' id='MathJax-script' async
@@ -491,8 +524,6 @@ public class Presenter : Window {
     var markdown    = "";
     var presentable = row.num_presentable();
     var first       = true;
-
-    stdout.printf( "presentable: %d\n", presentable );
 
     assert( presentable > 0 );
 
@@ -522,8 +553,6 @@ public class Presenter : Window {
     if( presentable > 1 ) {
       markdown += ":::";
     }
-
-    stdout.printf( "markdown:\n%s\n", markdown );
 
     return( markdown );
 

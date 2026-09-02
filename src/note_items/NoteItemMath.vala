@@ -83,7 +83,7 @@ public class NoteItemMath : NoteItem {
 	public override string to_markdown( NotebookTree? notebooks, bool include_footnotes, bool pandoc, bool presenter ) {
     if( presenter ) {
       if( content != "" ) {
-        return( "<center>\\`%s\\`</center>".printf( content ) );
+        return( "\\`%s\\`".printf( content ) );
       }
     } else if( (content != "") && FileUtils.test( get_resource_filename(), FileTest.EXISTS ) ) {
   		return( "![%s](file://%s)".printf( (presenter ? "" : _description), get_resource_filename() ) );
