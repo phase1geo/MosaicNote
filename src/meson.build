@@ -35,6 +35,7 @@ sources += files(
     'NoteParser.vala',
     'NoteSearch.vala',
     'NotesPanel.vala',
+    'Outline.vala',
     'Preferences.vala',
     'Presenter.vala',
     'RemovableBox.vala',
