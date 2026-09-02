@@ -260,22 +260,30 @@ public class NotePanel : Box {
       show_note_search( _note_search.active );
     });
 
-    var outline = new Button.from_icon_name( "view-list-symbolic" ) {
-      has_frame = false,
-      halign = Align.END,
-      tooltip_text = _( "View Outline" )
+    _outline = new Outline();
+    _outline.header_selected.connect((row, col, offset) => {
+      var pane = _content.get_pane( row, col );
+      pane.set_as_current( true );
+      if( offset != -1 ) {
+        pane.grab_item_focus( TextCursorPlacement.AT_OFFSET, offset );
+      }
+    });
+
+    var outline_popup = new Popover() {
+      child = _outline
     };
-    outline.clicked.connect(() => {
-      if( _outline == null ) {
-        _outline = new Outline( _win, _note );
-        _outline.header_selected.connect((row, col, offset) => {
-          var pane = _content.get_pane( row, col );
-          pane.set_as_current( true );
-          if( offset != -1 ) {
-            pane.grab_item_focus( TextCursorPlacement.AT_OFFSET, offset );
-          }
-        });
-        _outline.show();
+
+    var outline    = new MenuButton() {
+      icon_name    = "view-list-symbolic",
+      has_frame    = false,
+      halign       = Align.END,
+      tooltip_text = _( "View Outline" ),
+      popover      = outline_popup
+    };
+
+    outline.notify["active"].connect(() => {
+      if( outline.active ) {
+        _outline.parse_note( _note );
       }
     });
 

@@ -58,10 +58,8 @@ public class OutlineHeader : Object {
 
 }
 
-public class Outline : Gtk.Window {
+public class Outline : Box {
 
-  private MainWindow     _win;
-  private Note           _note;
   private Regex          _header_re;
   private ListBox        _list;
   private GLib.ListStore _model;
@@ -70,15 +68,9 @@ public class Outline : Gtk.Window {
 
   //-------------------------------------------------------------
   // Constructor
-  public Outline( MainWindow win, Note note ) {
+  public Outline() {
 
-    Object(
-      transient_for: win,
-      title: _( "Note Outline" )
-    );
-
-    _win  = win;
-    _note = note;
+    Object( orientation: Orientation.VERTICAL, spacing: 5 );
 
     try {
       _header_re = new Regex( """^(#{1,6})\s+(.*)(\s+\1)?$""" );
@@ -104,12 +96,10 @@ public class Outline : Gtk.Window {
       header_selected( header.row, header.col, header.offset );
     });
 
-    child = _list;
+    append( _list );
 
     _model = new GLib.ListStore( typeof( OutlineHeader ) );
     _list.bind_model( _model, create_header );
-
-    parse_note();
 
   }
 
@@ -233,14 +223,14 @@ public class Outline : Gtk.Window {
 
   //-------------------------------------------------------------
   // Parses the note for headers and descriptions.
-  private void parse_note() {
+  public void parse_note( Note note ) {
 
     var depth = 0;
 
     _model.remove_all();
 
-    for( int i=0; i<_note.rows(); i++ ) {
-      var row = _note.get_row( i );
+    for( int i=0; i<note.rows(); i++ ) {
+      var row = note.get_row( i );
       for( int j=0; j<row.size(); j++ ) {
         var item = row.get_item( j );
         switch( item.item_type ) {
