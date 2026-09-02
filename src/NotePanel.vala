@@ -269,7 +269,6 @@ public class NotePanel : Box {
       if( _outline == null ) {
         _outline = new Outline( _win, _note );
         _outline.header_selected.connect((row, col, offset) => {
-          stdout.printf( "header selected, row: %d, col: %d, offset: %d\n", row, col, offset );
           var pane = _content.get_pane( row, col );
           pane.set_as_current( true );
           if( offset != -1 ) {

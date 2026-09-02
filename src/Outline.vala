@@ -27,23 +27,26 @@ public class OutlineHeader : Object {
   public int    col    { get; private set; default = -1; }
   public int    offset { get; private set; default = -1; }
   public int    depth  { get; private set; default = 0; }
+  public string prefix { get; private set; default = ""; }
   public string title  { get; private set; default = ""; }
 
   //-------------------------------------------------------------
   // Constructor
-  public OutlineHeader( int r, int c, int o, int d, string t ) {
+  public OutlineHeader( int r, int c, int o, int d, string t, string p = "" ) {
     row    = r;
     col    = c;
     offset = o;
     depth  = d;
+    prefix = p;
     title  = t;
   }
 
   //-------------------------------------------------------------
   // Returns the label to display in the outline viewer.
   public string label() {
-    var prefix = string.nfill( (depth * 5), ' ' );
-    return( "%s%s".printf( prefix, title ) );
+    var indent     = string.nfill( (depth * 5), ' ' );
+    var title_type = (prefix == "") ? "" : "<u>%s</u>: ".printf( prefix );
+    return( "%s%s%s".printf( indent, title_type, "<b>" + title + "</b>" ) );
   }
 
   //-------------------------------------------------------------
@@ -70,7 +73,8 @@ public class Outline : Gtk.Window {
   public Outline( MainWindow win, Note note ) {
 
     Object(
-      transient_for: win
+      transient_for: win,
+      title: _( "Note Outline" )
     );
 
     _win  = win;
@@ -115,7 +119,7 @@ public class Outline : Gtk.Window {
 
     var header = (OutlineHeader)obj;
 
-    var lbl = new Label( Utils.make_title( header.label() ) ) {
+    var lbl = new Label( header.label() ) {
       halign        = Align.START,
       use_markup    = true,
       margin_start  = 5,
@@ -133,7 +137,7 @@ public class Outline : Gtk.Window {
   private void parse_note_assets( NoteItem item, int row, int col, ref int depth ) {
     var assets_item = (item as NoteItemAssets);
     if( (assets_item != null) && (assets_item.description != "") ) {
-      var header = new OutlineHeader( row, col, -1, depth, assets_item.description );
+      var header = new OutlineHeader( row, col, -1, depth, assets_item.description, _( "Assets" ) );
       _model.append( header );
     }
   }
@@ -143,7 +147,7 @@ public class Outline : Gtk.Window {
   private void parse_note_code( NoteItem item, int row, int col, ref int depth ) {
     var code_item = (item as NoteItemCode);
     if( (code_item != null) && (code_item.description != "") ) {
-      var header = new OutlineHeader( row, col, -1, depth, code_item.description );
+      var header = new OutlineHeader( row, col, -1, depth, code_item.description, _( "Code" ) );
       _model.append( header );
     }
   }
@@ -153,7 +157,7 @@ public class Outline : Gtk.Window {
   private void parse_note_image( NoteItem item, int row, int col, ref int depth ) {
     var image_item = (item as NoteItemImage);
     if( (image_item != null) && (image_item.description != "") ) {
-      var header = new OutlineHeader( row, col, -1, depth, image_item.description );
+      var header = new OutlineHeader( row, col, -1, depth, image_item.description, _( "Image" ) );
       _model.append( header );
     }
   }
@@ -202,7 +206,7 @@ public class Outline : Gtk.Window {
   private void parse_note_math( NoteItem item, int row, int col, ref int depth ) {
     var math_item = (item as NoteItemMath);
     if( (math_item != null) && (math_item.description != "") ) {
-      var header = new OutlineHeader( row, col, -1, depth, math_item.description );
+      var header = new OutlineHeader( row, col, -1, depth, math_item.description, _( "Formula" ) );
       _model.append( header );
     }
   }
@@ -212,7 +216,7 @@ public class Outline : Gtk.Window {
   private void parse_note_table( NoteItem item, int row, int col, ref int depth ) {
     var table_item = (item as NoteItemTable);
     if( (table_item != null) && (table_item.description != "") ) {
-      var header = new OutlineHeader( row, col, -1, depth, table_item.description );
+      var header = new OutlineHeader( row, col, -1, depth, table_item.description, _( "Table" ) );
       _model.append( header );
     }
   }
@@ -222,7 +226,7 @@ public class Outline : Gtk.Window {
   private void parse_note_uml( NoteItem item, int row, int col, ref int depth ) {
     var uml_item = (item as NoteItemUML);
     if( (uml_item != null) && (uml_item.description != "") ) {
-      var header = new OutlineHeader( row, col, -1, depth, uml_item.description );
+      var header = new OutlineHeader( row, col, -1, depth, uml_item.description, _( "Figure" ) );
       _model.append( header );
     }
   }
