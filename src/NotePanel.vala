@@ -274,7 +274,7 @@ public class NotePanel : Box {
     };
 
     var outline    = new MenuButton() {
-      icon_name    = "view-list-symbolic",
+      icon_name    = "outline-symbolic",
       has_frame    = false,
       halign       = Align.END,
       tooltip_text = _( "View Outline" ),
