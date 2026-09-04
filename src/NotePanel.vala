@@ -48,6 +48,7 @@ public class NotePanel : Box {
   private Presenter?      _presenter = null;
   private ulong           _presenter_slide_id = 0;
   private ulong           _presenter_close_id = 0;
+  private Outline         _outline = null;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_copy_note_link",   action_copy_note_link },
@@ -259,6 +260,33 @@ public class NotePanel : Box {
       show_note_search( _note_search.active );
     });
 
+    _outline = new Outline();
+    _outline.header_selected.connect((row, col, offset) => {
+      var pane = _content.get_pane( row, col );
+      pane.set_as_current( true );
+      if( offset != -1 ) {
+        pane.grab_item_focus( TextCursorPlacement.AT_OFFSET, offset );
+      }
+    });
+
+    var outline_popup = new Popover() {
+      child = _outline
+    };
+
+    var outline    = new MenuButton() {
+      icon_name    = "outline-symbolic",
+      has_frame    = false,
+      halign       = Align.END,
+      tooltip_text = _( "View Outline" ),
+      popover      = outline_popup
+    };
+
+    outline.notify["active"].connect(() => {
+      if( outline.active ) {
+        _outline.parse_note( _note );
+      }
+    });
+
     _favorite = new Button.from_icon_name( "non-starred-symbolic" ) {
       has_frame = false,
       halign = Align.END,
@@ -330,6 +358,7 @@ public class NotePanel : Box {
     };
     tbox.append( _tags );
     tbox.append( _note_search );
+    tbox.append( outline );
     tbox.append( _favorite );
     tbox.append( more );
     tbox.append( _hist_prev );
