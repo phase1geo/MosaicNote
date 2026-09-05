@@ -4,6 +4,7 @@ sources += files(
     'UndoItemAssetsRemove.vala',
     'UndoItemDelete.vala',
     'UndoItemDescChange.vala',
+    'UndoItemFlashRemove.vala',
     'UndoItemImageChange.vala',
     'UndoItemMove.vala',
     'UndoItemTableColFormat.vala',

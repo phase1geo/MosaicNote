@@ -331,6 +331,7 @@ public class NoteItemPanes : RemovableBox {
       case NoteItemType.TABLE    :  pane = new NoteItemPaneTable( _win, item, _spell );     break;
       case NoteItemType.ASSETS   :  pane = new NoteItemPaneAssets( _win, item, _spell );    break;
       case NoteItemType.MATH     :  pane = new NoteItemPaneMath( _win, item, _spell );      break;
+      case NoteItemType.FLASH    :  pane = new NoteItemPaneFlash( _win, item, _spell );     break;
       default                    :  return( null );
     }
 
