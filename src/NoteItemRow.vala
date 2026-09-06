@@ -192,6 +192,7 @@ public class NoteItemRow : Object {
           case NoteItemType.MATH     :  load_math_item( it );      break;
           case NoteItemType.TABLE    :  load_table_item( it );     break;
           case NoteItemType.ASSETS   :  load_assets_item( it );    break;
+          case NoteItemType.FLASH    :  load_flash_item( it );     break;
           default                    :  break;
         }
       }
@@ -244,6 +245,13 @@ public class NoteItemRow : Object {
   // Loads an asset item from XML data
   private void load_assets_item( Xml.Node* node ) {
     var item = new NoteItemAssets.from_xml( this, node );
+    _items.append_val( item );
+  }
+
+  //-------------------------------------------------------------
+  // Loads a flash card item from XML data
+  private void load_flash_item( Xml.Node* node ) {
+    var item = new NoteItemFlash.from_xml( this, node );
     _items.append_val( item );
   }
 

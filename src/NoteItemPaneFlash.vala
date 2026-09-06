@@ -22,6 +22,12 @@
 using Gtk;
 using Gee;
 
+public class FlashTestResults {
+  public int right { set; get; default = 0; }
+  public int wrong { set; get; default = 0; }
+  public FlashTestResults() {}
+}
+
 //-------------------------------------------------------------
 // Note item pane that represents asset links.
 public class NoteItemPaneFlash : NoteItemPane {
@@ -32,9 +38,15 @@ public class NoteItemPaneFlash : NoteItemPane {
   private ListBox           _listbox;
   private Entry             _edit_side1;
   private GtkSource.View    _edit_side2;
-  private Stack             _test_stack;
   private Stack             _stack;
   private int               _edit_index = -1;
+  private Stack             _test_stack;
+  private Label             _question;
+  private Label             _answer;
+  private Label             _result;
+  private int               _test_index = 0;
+  private GLib.List<NoteItemFlashCard> _test_cards;
+  private FlashTestResults        _test_results;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_remove_card", action_remove_card, "i" },
@@ -196,9 +208,17 @@ public class NoteItemPaneFlash : NoteItemPane {
     });
     add_signal( add_right_click, add_right_id );
 
+    var run = new Button.with_label( _( "Quiz" ) ) {
+      halign = Align.END
+    };
+    run.clicked.connect(() => {
+      _stack.visible_child_name = "test";
+    });
+
     var box = new Box( Orientation.HORIZONTAL, 5 );
     box.append( entry );
     box.append( _add );
+    box.append( run );
 
     return( box );
 
@@ -402,10 +422,177 @@ public class NoteItemPaneFlash : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Randomize the cards
+  private void initialize_test() {
+
+    _test_index   = 0;
+    _test_results = new FlashTestResults();
+    _test_cards   = new GLib.List<NoteItemFlashCard>();
+
+    for( int i=0; i<flash_item.size(); i++ ) {
+      var card = flash_item.get_card( i );
+      _test_cards.append( card );
+    }
+    _test_cards.sort((a, b) => {
+      return( Random.boolean() ? -1 : 1 );
+    });
+
+  }
+
+  //-------------------------------------------------------------
+  // Shows the question frame.
+  private void show_question() {
+
+    var card = _test_cards.nth_data( _test_index );
+
+    _question.label = card.side1;
+    _test_stack.visible_child_name = "question";
+
+  }
+
+  //-------------------------------------------------------------
+  // Displays the anser frame.
+  private void show_answer() {
+
+    var card = _test_cards.nth_data( _test_index );
+
+    _answer.label = card.side2;
+    _test_stack.visible_child_name = "answer";
+
+  }
+
+  //-------------------------------------------------------------
+  // Displays the results frame.
+  private void show_results() {
+
+    _result.label = "%d of %d passed".printf( _test_results.right, (int)_test_cards.length() );
+    _test_stack.visible_child_name = "result";
+
+  }
+
+  //-------------------------------------------------------------
+  // Displays the next
+  private void show_next() {
+
+    _test_index++;
+
+    if( (int)_test_cards.length() == _test_index ) {
+      show_results();
+    } else {
+      show_question();
+    }
+
+  }
+
+  //-------------------------------------------------------------
+  // Displays the test start page.
+  private Widget create_test_start() {
+
+    var run = new Button.with_label( _( "Run Quiz" ) );
+    run.clicked.connect(() => {
+      initialize_test();
+      show_question();
+    });
+
+    var box = new Box( Orientation.VERTICAL, 5 );
+    box.append( run );
+
+    return( box );
+
+  }
+
+  //-------------------------------------------------------------
+  // Displays the question slide.
+  private Widget create_test_question() {
+
+    _question = new Label( "" ) {
+      focusable = true,
+      halign = Align.FILL,
+      valign = Align.FILL
+    };
+
+    var click = new GestureClick();
+    _question.add_controller( click );
+    click.pressed.connect( show_answer );
+
+    var key = new EventControllerKey();
+    _question.add_controller( key );
+    key.key_pressed.connect((keyval, keymod, state) => {
+      if( (keyval == Gdk.Key.space) || (keyval == Gdk.Key.Return) ) {
+        show_answer();
+        return( true );
+      }
+      return( false );
+    });
+
+    return( _question );
+
+  }
+
+  //-------------------------------------------------------------
+  // Displays the answer to the question slide.
+  private Widget create_test_answer() {
+
+    _answer = new Label( "" ) {
+      halign = Align.FILL,
+      valign = Align.FILL
+    };
+
+    var wrong = new Button.with_label( _( "Wrong" ) ) {
+      halign = Align.START
+    };
+
+    wrong.clicked.connect(() => {
+      _test_results.wrong++;
+      show_next();
+    });
+
+    var right = new Button.with_label( _( "Correct" ) ) {
+      halign = Align.END
+    };
+
+    right.clicked.connect(() => {
+      _test_results.right++;
+      show_next();
+    });
+
+    var bbox = new Box( Orientation.HORIZONTAL, 5 );
+    bbox.append( wrong );
+    bbox.append( right );
+
+    var box = new Box( Orientation.VERTICAL, 5 );
+    box.append( _answer );
+    box.append( bbox );
+
+    return( box );
+
+  }
+
+  //-------------------------------------------------------------
+  // Creates the test result frame.
+  private Widget create_test_result() {
+
+    _result = new Label( "" );
+
+    var box = new Box( Orientation.VERTICAL, 5 );
+    box.append( _result );
+
+    return( box );
+
+  }
+
+  //-------------------------------------------------------------
   // Displays the flash card test.
   private Widget create_test() {
 
+    _test_stack = new Stack();
+    _test_stack.add_named( create_test_start(),    "start" );
+    _test_stack.add_named( create_test_question(), "question" );
+    _test_stack.add_named( create_test_answer(),   "answer" );
+    _test_stack.add_named( create_test_result(),   "result" );
+
     var box = new Box( Orientation.VERTICAL, 5 );
+    box.append( _test_stack );
 
     return( box );
 
