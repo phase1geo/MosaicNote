@@ -13,6 +13,7 @@ sources += files(
     'GalleryView.vala',
     'ImageView.vala',
     'Import.vala',
+    'ListChooser.vala',
     'MainWindow.vala',
     'MarkdownFuncs.vala',
     'Note.vala',

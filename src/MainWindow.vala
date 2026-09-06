@@ -838,6 +838,19 @@ public class MainWindow : Gtk.ApplicationWindow {
   }
 
   //-------------------------------------------------------------
+  // Chooses notebook from user.
+  public async int choose_from_list( string title, Array<string> list ) {
+
+    var chooser = new ListChooser( this, title, list );
+    var result  = yield chooser.choose();
+
+    chooser.destroy();
+
+    return( result );
+
+  }
+
+  //-------------------------------------------------------------
   // Generate a notification.
   public void notification( string title, string msg, NotificationPriority priority = NotificationPriority.NORMAL ) {
     GLib.Application? app = null;

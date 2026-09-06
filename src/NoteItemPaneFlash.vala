@@ -26,17 +26,21 @@ using Gee;
 // Note item pane that represents asset links.
 public class NoteItemPaneFlash : NoteItemPane {
 
-  private Label          _h2_label;
-  private Button         _add;
-  private ListBox        _listbox;
-  private Entry          _edit_side1;
-  private GtkSource.View _edit_side2;
-  private Stack          _test_stack;
-  private Stack          _stack;
-  private int            _edit_index = -1;
+  private SimpleActionGroup _actions;
+  private Label             _h2_label;
+  private Button            _add;
+  private ListBox           _listbox;
+  private Entry             _edit_side1;
+  private GtkSource.View    _edit_side2;
+  private Stack             _test_stack;
+  private Stack             _stack;
+  private int               _edit_index = -1;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_remove_card", action_remove_card, "i" },
+    { "action_add_defs_from_note", action_add_defs_from_note },
+    { "action_add_defs_from_notebook", action_add_defs_from_notebook },
+    { "action_add_defs_from_clipboard", action_add_defs_from_clipboard },
   };
 
   public NoteItemFlash flash_item {
@@ -51,9 +55,9 @@ public class NoteItemPaneFlash : NoteItemPane {
     base( win, item, spell );
 
     // Set the stage for menu actions
-    var actions = new SimpleActionGroup ();
-    actions.add_action_entries( action_entries, this );
-    insert_action_group( "flash", actions );
+    _actions = new SimpleActionGroup ();
+    _actions.add_action_entries( action_entries, this );
+    insert_action_group( "flash", _actions );
 
   }
 
@@ -169,12 +173,42 @@ public class NoteItemPaneFlash : NoteItemPane {
     });
     add_signal( _add, add_id );
 
+    var add_right_click = new GestureClick() {
+      button = Gdk.BUTTON_SECONDARY
+    };
+    _add.add_controller( add_right_click );
+
+    var popover = new PopoverMenu.from_model( null ) {
+      position   = PositionType.TOP,
+      menu_model = create_add_contextual_menu()
+    };
+    popover.set_parent( _add );
+
+    var add_right_id = add_right_click.released.connect((n_press, x, y) => {
+      var clipboard = Gdk.Display.get_default().get_clipboard();
+      var nb          = win.smart_notebooks.get_definitions_notebook();
+      var enable_note = (nb.count() > 0);
+      var enable_cb   = clipboard.get_formats().contain_gtype( Type.STRING );
+      set_action_enable( "action_add_defs_from_note",      enable_note );
+      set_action_enable( "action_add_defs_from_notebook",  enable_note );
+      set_action_enable( "action_add_defs_from_clipboard", enable_cb );
+      popover.popup();
+    });
+    add_signal( add_right_click, add_right_id );
+
     var box = new Box( Orientation.HORIZONTAL, 5 );
     box.append( entry );
     box.append( _add );
 
     return( box );
 
+  }
+
+  //-------------------------------------------------------------
+  // Sets the enablement an action.
+  private void set_action_enable( string action_str, bool enabled ) {
+    var action = (SimpleAction)_actions.lookup_action( action_str );
+    action.set_enabled( enabled );
   }
 
   //-------------------------------------------------------------
@@ -205,8 +239,18 @@ public class NoteItemPaneFlash : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Creates contextual menu associated with the add button.
+  private GLib.Menu create_add_contextual_menu() {
+    var menu = new GLib.Menu();
+    menu.append( _( "Add Markdown Definitions From Note" ),      "flash.action_add_defs_from_note" );
+    menu.append( _( "Add Markdown Definitions From Notebook" ),  "flash.action_add_defs_from_notebook" );
+    menu.append( _( "Add Markdown Definitions From Clipboard" ), "flash.action_add_defs_from_clipboard" );
+    return( menu );
+  }
+
+  //-------------------------------------------------------------
   // Creates a contextual menu for a given row in the listbox.
-  private GLib.Menu create_contextual_menu( int pos ) {
+  private GLib.Menu create_list_contextual_menu( int pos ) {
     var del_menu = new GLib.Menu();
     del_menu.append( _( "Remove Card" ), "flash.action_remove_card(%d)".printf( pos ) );
     var menu = new GLib.Menu();
@@ -214,6 +258,8 @@ public class NoteItemPaneFlash : NoteItemPane {
     return( menu );
   }
 
+  //-------------------------------------------------------------
+  // Creates the listbox containing all of the cards.
   private Widget create_card_list() {
 
     var label = new Label( Utils.make_title( _( "Cards" ) ) ) {
@@ -272,7 +318,7 @@ public class NoteItemPaneFlash : NoteItemPane {
       if( row != null ) {
         Gdk.Rectangle rect = {(int)x, (int)y, 1, 1};
         _listbox.select_row( row );
-        var popover = new PopoverMenu.from_model( create_contextual_menu( row.get_index() ) ) {
+        var popover = new PopoverMenu.from_model( create_list_contextual_menu( row.get_index() ) ) {
           pointing_to = rect,
           position    = PositionType.TOP
         };
@@ -392,8 +438,12 @@ public class NoteItemPaneFlash : NoteItemPane {
       var card = flash_item.get_card( card_index );
       _edit_side1.text        = card.side1;
       _edit_side2.buffer.text = card.side2;
+    } else {
+      _edit_side1.text        = "";
+      _edit_side2.buffer.text = "";
     }
     _stack.visible_child_name = "editor";
+    _edit_side1.grab_focus();
   }
 
   //-------------------------------------------------------------
@@ -415,6 +465,142 @@ public class NoteItemPaneFlash : NoteItemPane {
       flash_item.remove_card( index );
       remove_card( index );
     }
+  }
+
+  //-------------------------------------------------------------
+  // Parses the given string for Markdown definitions.  When a
+  // definition is found, it is added to the list of flash cards.
+  private void add_defs_from_string( string str ) {
+
+    var lines  = str.split( "\n" );
+    var in_def = false;
+    var slide1 = "";
+    var slide2 = "";
+
+    foreach( var line in lines ) {
+      var stripped = line.strip();
+      if( stripped != "" ) {
+        if( line.has_prefix( ": " ) ) {
+          in_def = true;
+          var start = line.index_of_nth_char( 2 );
+          slide2 = line.substring( start ).strip();
+        } else if( in_def ) {
+          slide2 += "\n" + stripped;
+        } else if( slide1 == "" ) {
+          slide1 = stripped;
+        } else {
+          slide1 += "\n" + stripped;
+        }
+      } else {
+        if( in_def ) {
+          add_card( slide1, slide2, true );
+          in_def = false;
+        }
+        slide1 = "";
+        slide2 = "";
+      }
+    }
+
+    if( in_def ) {
+      add_card( slide1, slide2, true );
+    }
+
+  }
+
+  //-------------------------------------------------------------
+  // Parses the note to find any definitions found within its Markdown
+  // items.  If any definitions are found, they are added to the list.
+  private void add_defs_from_note( Note note ) {
+    for( int i=0; i<note.rows(); i++ ) {
+      var row = note.get_row( i );
+      for( int j=0; j<row.size(); j++ ) {
+        var item = row.get_item( j );
+        if( item.item_type == NoteItemType.MARKDOWN ) {
+          add_defs_from_string( item.content );
+        }
+      }
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Asks the user to select a note from a list that contains
+  // potential definitions.  If the selected note contains a
+  // definition, those definitions are added as cards to our list.
+  private void action_add_defs_from_note() {
+
+    var nb    = win.smart_notebooks.get_definitions_notebook();
+    var model = nb.get_model();
+
+    var string_list = new Array<string>();
+    for( int i=0; i<model.get_n_items(); i++ ) {
+      var note = (Note)model.get_item( i );
+      string_list.append_val( note.title );
+    }
+
+    // Display list of notes with search field in a window
+    win.choose_from_list.begin( _( "Choose Note" ), string_list, (obj, res) => {
+      var index = win.choose_from_list.end( res );
+      if( index >= 0 ) {
+        var note = (Note)model.get_item( index );
+        add_defs_from_note( note );
+      }
+    });
+
+  }
+
+  //-------------------------------------------------------------
+  // Asks the user to select a notebook known to contain potential
+  // Markdown definitions.  If a notebook is selected, all notes
+  // within the notebook are parsed for definitions and added as
+  // cards to our list.
+  private void action_add_defs_from_notebook() {
+
+    var nb    = win.smart_notebooks.get_definitions_notebook();
+    var model = nb.get_model();
+
+    var ids         = new Gee.HashSet<int>();
+    var notebooks   = new Array<Notebook>();
+    var string_list = new Array<string>();
+    for( int i=0; i<model.get_n_items(); i++ ) {
+      var note = (Note)model.get_item( i );
+      if( !ids.contains( note.notebook.id ) ) {
+        ids.add( note.notebook.id );
+        notebooks.append_val( note.notebook );
+        string_list.append_val( note.notebook.name );
+      }
+    }
+
+    // Display list of notebooks with search field in a window
+    win.choose_from_list.begin( _( "Choose Notebook" ), string_list, (obj, res) => {
+      var index = win.choose_from_list.end( res );
+      if( index >= 0 ) {
+        var selected_nb = notebooks.index( index );
+        for( int i=0; i<model.get_n_items(); i++ ) {
+          var note = (Note)model.get_item( i );
+          if( note.notebook == selected_nb ) {
+            add_defs_from_note( note );
+          }
+        }
+      }
+    });
+
+  }
+
+  //-------------------------------------------------------------
+  // Takes the text that is on the clipboard
+  private void action_add_defs_from_clipboard() {
+
+    var clipboard = Gdk.Display.get_default().get_clipboard();
+
+    if( clipboard.get_formats().contain_gtype( Type.STRING ) ) {
+      clipboard.read_text_async.begin( null, (obj,res) => {
+        try {
+          var str = clipboard.read_text_async.end( res );
+          add_defs_from_string( str );
+        } catch( Error e ) {}
+      });
+    }
+
   }
 
   //-------------------------------------------------------------
