@@ -22,6 +22,24 @@
 using Gtk;
 using Gee;
 
+public enum FlashTestType {
+  QA,
+  AQ,
+  MIXED,
+  CHOICE,
+  NUM;
+
+  public string label() {
+    switch( this ) {
+      case QA     :  return( _( "Question - Answer" ) );
+      case AQ     :  return( _( "Answer - Question" ) );
+      case MIXED  :  return( _( "Mixed Question/Answer" ) );
+      case CHOICE :  return( _( "Multiple Choice" ) );
+      default     :  assert_not_reached();
+    }
+  }
+}
+
 public class FlashTestResults {
   public int right { set; get; default = 0; }
   public int wrong { set; get; default = 0; }
@@ -41,12 +59,19 @@ public class NoteItemPaneFlash : NoteItemPane {
   private Stack             _stack;
   private int               _edit_index = -1;
   private Stack             _test_stack;
-  private Label             _question;
-  private Label             _answer;
-  private Label             _result;
-  private int               _test_index = 0;
+  private AutoFitLabel      _question;
+  private AutoFitLabel      _answer;
+  private AutoFitLabel      _choice_question;
+  private AutoFitLabel      _choice_a;
+  private AutoFitLabel      _choice_b;
+  private AutoFitLabel      _choice_c;
+  private AutoFitLabel      _choice_d;
+  private AutoFitLabel      _result;
+  private int                          _test_index = 0;
+  private bool                         _test_in_question = false;
+  private FlashTestType                _test_type  = FlashTestType.QA;
   private GLib.List<NoteItemFlashCard> _test_cards;
-  private FlashTestResults        _test_results;
+  private FlashTestResults             _test_results;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_remove_card", action_remove_card, "i" },
@@ -212,7 +237,8 @@ public class NoteItemPaneFlash : NoteItemPane {
       halign = Align.END
     };
     run.clicked.connect(() => {
-      _stack.visible_child_name = "test";
+      _test_stack.visible_child_name = "start";
+      _stack.visible_child_name      = "test";
     });
 
     var box = new Box( Orientation.HORIZONTAL, 5 );
@@ -247,7 +273,19 @@ public class NoteItemPaneFlash : NoteItemPane {
       justify = Justification.CENTER
     };
 
-    return( _h2_label );
+    var run = new Button.with_label( _( "Quiz" ) ) {
+      halign = Align.END,
+      hexpand = true
+    };
+    run.clicked.connect(() => {
+      _stack.visible_child_name = "test";
+    });
+
+    var box = new Box( Orientation.HORIZONTAL, 5 );
+    box.append( _h2_label );
+    box.append( run );
+
+    return( box );
 
   }
 
@@ -440,24 +478,113 @@ public class NoteItemPaneFlash : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Generates random answers for the given card for multiple
+  // choice questions.
+  private void gen_choices( NoteItemFlashCard good_card, out string? a, out string? b, out string? c, out string? d ) {
+
+    a = good_card.side2;
+    b = null;
+    c = null;
+    d = null;
+
+    var bad_cards = new GLib.List<NoteItemFlashCard>();
+    for( int i=0; i<flash_item.size(); i++ ) {
+      var card = flash_item.get_card( i );
+      if( card != good_card ) {
+        bad_cards.append( card );
+      }
+    }
+    if( bad_cards.length() > 0 ) {
+      bad_cards.sort((a, b) => {
+        return( Random.boolean() ? -1 : 1 );
+      });
+      var choices = (int)((bad_cards.length() < 3) ? (bad_cards.length() + 1) : 4);
+      var rn = Random.int_range( 0, choices );
+      a = (rn == 0) ? good_card.side2 : bad_cards.nth_data( 0 ).side2;
+      b = (rn == 1) ? good_card.side2 : bad_cards.nth_data( (rn < 1) ? 0 : 1 ).side2;
+      if( choices >= 3 ) {
+        c = (rn == 2) ? good_card.side2 : bad_cards.nth_data( (rn < 2) ? 1 : 2 ).side2;
+      }
+      if( choices == 4 ) {
+        d = (rn == 3) ? good_card.side2 : bad_cards.nth_data( (rn < 3) ? 2 : 3 ).side2;
+      }
+    }
+  }
+
+  //-------------------------------------------------------------
   // Shows the question frame.
   private void show_question() {
 
     var card = _test_cards.nth_data( _test_index );
 
-    _question.label = card.side1;
-    _test_stack.visible_child_name = "question";
+    switch( _test_type ) {
+      case QA    :  _question.label = card.side1;  break;
+      case AQ    :  _question.label = card.side2;  break;
+      case MIXED :  _question.label = Random.boolean() ? card.side1 : card.side2;  break;
+      default    :
+        string? a, b, c, d;
+        gen_choices( card, out a, out b, out c, out d );
+        _choice_question.label = card.side1;
+        _choice_a.label = a ?? "";
+        _choice_b.label = b ?? "";
+        _choice_c.label = c ?? "";
+        _choice_d.label = d ?? "";
+        _choice_a.visible = (a != null);
+        _choice_b.visible = (b != null);
+        _choice_c.visible = (c != null);
+        _choice_d.visible = (d != null);
+        break;
+    }
+
+    _test_in_question = true;
+
+    if( _test_type == FlashTestType.CHOICE ) {
+      _test_stack.visible_child_name = "choice";
+    } else {
+      _test_stack.visible_child_name = "question";
+    }
 
   }
 
   //-------------------------------------------------------------
+  // Marks and grades the user-selected choice for the given
+  // multiple choice answer.
+  private void grade_choice( NoteItemFlashCard card, AutoFitLabel label, int answer, int choice, ref bool correct ) {
+    if( label.label == card.side2 ) {
+      label.label = "<span foreground=\"green\">%s</span>".printf( label.label );
+      correct = (choice == answer);
+    } else if( choice == answer ) {
+      label.label = "<span foreground=\"red\">%s</span>".printf( label.label );
+    }
+  }
+
+  //-------------------------------------------------------------
   // Displays the anser frame.
-  private void show_answer() {
+  private void show_answer( int choice ) {
 
-    var card = _test_cards.nth_data( _test_index );
+    var card    = _test_cards.nth_data( _test_index );
+    var correct = false;
 
-    _answer.label = card.side2;
-    _test_stack.visible_child_name = "answer";
+    switch( _test_type ) {
+      case QA    :  _answer.label = card.side2;  break;
+      case AQ    :  _answer.label = card.side1;  break;
+      case MIXED :  _answer.label = (card.side1 == _question.label) ? card.side2 : card.side1;  break;
+      default    :
+        grade_choice( card, _choice_a, 0, choice, ref correct );
+        grade_choice( card, _choice_b, 1, choice, ref correct );
+        grade_choice( card, _choice_c, 2, choice, ref correct );
+        grade_choice( card, _choice_d, 3, choice, ref correct );
+        break;
+    }
+
+    _test_in_question = false;
+
+    if( _test_type == FlashTestType.CHOICE ) {
+      _test_results.wrong += !correct ? 1 : 0;
+      _test_results.right +=  correct ? 1 : 0;
+    } else {
+      _test_stack.visible_child_name = "answer";
+    }
 
   }
 
@@ -465,7 +592,10 @@ public class NoteItemPaneFlash : NoteItemPane {
   // Displays the results frame.
   private void show_results() {
 
-    _result.label = "%d of %d passed".printf( _test_results.right, (int)_test_cards.length() );
+    _result.label = "%d of %d (%d%%) correct".printf(
+      _test_results.right, (int)_test_cards.length(),
+      (int)(((double)_test_results.right / _test_cards.length()) * 100)
+    );
     _test_stack.visible_child_name = "result";
 
   }
@@ -488,6 +618,26 @@ public class NoteItemPaneFlash : NoteItemPane {
   // Displays the test start page.
   private Widget create_test_start() {
 
+    var type_lbl = new Label( _( "Quiz Type" ) ) {
+      halign = Align.START
+    };
+
+    string[] types = {};
+    for( int i=0; i<FlashTestType.NUM; i++ ) {
+      var tt = (FlashTestType)i;
+      types += tt.label();
+    }
+    var type_dd = new DropDown.from_strings( types ) {
+      halign = Align.START
+    };
+    type_dd.notify["selected"].connect(() => {
+      _test_type = (FlashTestType)type_dd.selected;
+    });
+
+    var type_box = new Box( Orientation.HORIZONTAL, 5 );
+    type_box.append( type_lbl );
+    type_box.append( type_dd );
+
     var run = new Button.with_label( _( "Run Quiz" ) );
     run.clicked.connect(() => {
       initialize_test();
@@ -495,6 +645,7 @@ public class NoteItemPaneFlash : NoteItemPane {
     });
 
     var box = new Box( Orientation.VERTICAL, 5 );
+    box.append( type_box );
     box.append( run );
 
     return( box );
@@ -505,10 +656,10 @@ public class NoteItemPaneFlash : NoteItemPane {
   // Displays the question slide.
   private Widget create_test_question() {
 
-    _question = new Label( "" ) {
+    _question = new AutoFitLabel( "" ) {
       focusable = true,
-      halign = Align.FILL,
-      valign = Align.FILL
+      halign = Align.CENTER,
+      valign = Align.CENTER
     };
 
     var click = new GestureClick();
@@ -519,7 +670,7 @@ public class NoteItemPaneFlash : NoteItemPane {
     _question.add_controller( key );
     key.key_pressed.connect((keyval, keymod, state) => {
       if( (keyval == Gdk.Key.space) || (keyval == Gdk.Key.Return) ) {
-        show_answer();
+        show_answer( -1 );
         return( true );
       }
       return( false );
@@ -533,9 +684,9 @@ public class NoteItemPaneFlash : NoteItemPane {
   // Displays the answer to the question slide.
   private Widget create_test_answer() {
 
-    _answer = new Label( "" ) {
-      halign = Align.FILL,
-      valign = Align.FILL
+    _answer = new AutoFitLabel( "" ) {
+      halign = Align.CENTER,
+      valign = Align.CENTER
     };
 
     var wrong = new Button.with_label( _( "Wrong" ) ) {
@@ -569,13 +720,72 @@ public class NoteItemPaneFlash : NoteItemPane {
   }
 
   //-------------------------------------------------------------
+  // Configures the given choice widget.
+  private void configure_choice_answer( AutoFitLabel label, int choice ) {
+
+    var click = new GestureClick();
+    label.add_controller( click );
+
+    click.pressed.connect((n_press, x, y) => {
+      if( _test_in_question ) {
+        show_answer( choice );
+      } else {
+        show_next();
+      }
+    });
+
+  }
+
+  private Widget create_test_choice() {
+
+    _choice_question = new AutoFitLabel( "" ) {
+      margin_bottom = 10
+    };
+    _choice_a = new AutoFitLabel( "" );
+    _choice_b = new AutoFitLabel( "" );
+    _choice_c = new AutoFitLabel( "" );
+    _choice_d = new AutoFitLabel( "" );
+
+    configure_choice_answer( _choice_a, 0 );
+    configure_choice_answer( _choice_b, 1 );
+    configure_choice_answer( _choice_c, 2 );
+    configure_choice_answer( _choice_d, 3 );
+
+    var box = new Box( Orientation.VERTICAL, 5 );
+    box.append( _choice_question );
+    box.append( _choice_a );
+    box.append( _choice_b );
+    box.append( _choice_c );
+    box.append( _choice_d );
+
+    return( box );
+
+  }
+
+  //-------------------------------------------------------------
   // Creates the test result frame.
   private Widget create_test_result() {
 
-    _result = new Label( "" );
+    _result = new AutoFitLabel( "" );
+
+    var done = new Button.with_label( _( "Done" ) );
+    done.clicked.connect(() => {
+      _stack.visible_child_name = "list";
+    });
+
+    var retake = new Button.with_label( _( "Retake" ) );
+    retake.clicked.connect(() => {
+      initialize_test();
+      show_question();
+    });
+
+    var bbox = new Box( Orientation.HORIZONTAL, 5 );
+    bbox.append( retake );
+    bbox.append( done );
 
     var box = new Box( Orientation.VERTICAL, 5 );
     box.append( _result );
+    box.append( bbox );
 
     return( box );
 
@@ -589,6 +799,7 @@ public class NoteItemPaneFlash : NoteItemPane {
     _test_stack.add_named( create_test_start(),    "start" );
     _test_stack.add_named( create_test_question(), "question" );
     _test_stack.add_named( create_test_answer(),   "answer" );
+    _test_stack.add_named( create_test_choice(),   "choice" );
     _test_stack.add_named( create_test_result(),   "result" );
 
     var box = new Box( Orientation.VERTICAL, 5 );

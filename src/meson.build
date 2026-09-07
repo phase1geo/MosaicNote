@@ -1,6 +1,7 @@
 sources += files(
     'About.vala',
     'Application.vala',
+    'AutoFitLabel.vala',
     'BaseNotebook.vala',
     'Export.vala',
     'Favorite.vala',
