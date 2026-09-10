@@ -6,6 +6,7 @@ sources += files(
     'Export.vala',
     'Favorite.vala',
     'Favorites.vala',
+    'FlashWindow.vala',
     'FullTag.vala',
     'FullTags.vala',
     'Galleries.vala',
