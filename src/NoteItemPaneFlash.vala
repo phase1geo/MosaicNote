@@ -66,6 +66,7 @@ public class NoteItemPaneFlash : NoteItemPane {
   private AutoFitLabel      _choice_b;
   private AutoFitLabel      _choice_c;
   private AutoFitLabel      _choice_d;
+  private Button            _choice_next;
   private AutoFitLabel      _result;
   private int                          _test_index = 0;
   private bool                         _test_in_question = false;
@@ -480,7 +481,7 @@ public class NoteItemPaneFlash : NoteItemPane {
   //-------------------------------------------------------------
   // Generates random answers for the given card for multiple
   // choice questions.
-  private void gen_choices( NoteItemFlashCard good_card, out string? a, out string? b, out string? c, out string? d ) {
+  private void gen_choices( NoteItemFlashCard good_card, bool use_side1, out string? a, out string? b, out string? c, out string? d ) {
 
     a = good_card.side2;
     b = null;
@@ -500,13 +501,24 @@ public class NoteItemPaneFlash : NoteItemPane {
       });
       var choices = (int)((bad_cards.length() < 3) ? (bad_cards.length() + 1) : 4);
       var rn = Random.int_range( 0, choices );
-      a = (rn == 0) ? good_card.side2 : bad_cards.nth_data( 0 ).side2;
-      b = (rn == 1) ? good_card.side2 : bad_cards.nth_data( (rn < 1) ? 0 : 1 ).side2;
-      if( choices >= 3 ) {
-        c = (rn == 2) ? good_card.side2 : bad_cards.nth_data( (rn < 2) ? 1 : 2 ).side2;
-      }
-      if( choices == 4 ) {
-        d = (rn == 3) ? good_card.side2 : bad_cards.nth_data( (rn < 3) ? 2 : 3 ).side2;
+      if( use_side1 ) {
+        a = (rn == 0) ? good_card.side1 : bad_cards.nth_data( 0 ).side1;
+        b = (rn == 1) ? good_card.side1 : bad_cards.nth_data( (rn < 1) ? 0 : 1 ).side1;
+        if( choices >= 3 ) {
+          c = (rn == 2) ? good_card.side1 : bad_cards.nth_data( (rn < 2) ? 1 : 2 ).side1;
+        }
+        if( choices == 4 ) {
+          d = (rn == 3) ? good_card.side1 : bad_cards.nth_data( (rn < 3) ? 2 : 3 ).side1;
+        }
+      } else {
+        a = (rn == 0) ? good_card.side2 : bad_cards.nth_data( 0 ).side2;
+        b = (rn == 1) ? good_card.side2 : bad_cards.nth_data( (rn < 1) ? 0 : 1 ).side2;
+        if( choices >= 3 ) {
+          c = (rn == 2) ? good_card.side2 : bad_cards.nth_data( (rn < 2) ? 1 : 2 ).side2;
+        }
+        if( choices == 4 ) {
+          d = (rn == 3) ? good_card.side2 : bad_cards.nth_data( (rn < 3) ? 2 : 3 ).side2;
+        }
       }
     }
   }
@@ -523,16 +535,23 @@ public class NoteItemPaneFlash : NoteItemPane {
       case MIXED :  _question.label = Random.boolean() ? card.side1 : card.side2;  break;
       default    :
         string? a, b, c, d;
-        gen_choices( card, out a, out b, out c, out d );
-        _choice_question.label = card.side1;
-        _choice_a.label = a ?? "";
-        _choice_b.label = b ?? "";
-        _choice_c.label = c ?? "";
-        _choice_d.label = d ?? "";
+        var use_side1 = Random.boolean();
+        gen_choices( card, use_side1, out a, out b, out c, out d );
+        _choice_question.label = use_side1 ? card.side2 : card.side1;
+        _choice_a.label = _( "a) %s" ).printf( a ?? "" );
+        _choice_b.label = _( "b) %s" ).printf( b ?? "" );
+        _choice_c.label = _( "c) %s" ).printf( c ?? "" );
+        _choice_d.label = _( "d) %s" ).printf( d ?? "" );
+        _choice_a.opacity = 1.0;
+        _choice_b.opacity = 1.0;
+        _choice_c.opacity = 1.0;
+        _choice_d.opacity = 1.0;
         _choice_a.visible = (a != null);
         _choice_b.visible = (b != null);
         _choice_c.visible = (c != null);
         _choice_d.visible = (d != null);
+        _choice_next.opacity = 0.0;
+        _choice_next.sensitive = false;
         break;
     }
 
@@ -549,12 +568,15 @@ public class NoteItemPaneFlash : NoteItemPane {
   //-------------------------------------------------------------
   // Marks and grades the user-selected choice for the given
   // multiple choice answer.
-  private void grade_choice( NoteItemFlashCard card, AutoFitLabel label, int answer, int choice, ref bool correct ) {
-    if( label.label == card.side2 ) {
-      label.label = "<span foreground=\"green\">%s</span>".printf( label.label );
+  private void grade_choice( NoteItemFlashCard card, AutoFitLabel label, string prefix, int answer, int choice, ref bool correct ) {
+    var answer_str = (_choice_question.label == card.side1) ? card.side2 : card.side1;
+    if( label.label == prefix.printf( answer_str ) ) {
+      label.label = "<span foreground=\"green\">\u2714 %s</span>".printf( label.label );
       correct = (choice == answer);
     } else if( choice == answer ) {
-      label.label = "<span foreground=\"red\">%s</span>".printf( label.label );
+      label.label = "<span foreground=\"red\">\u2718 %s</span>".printf( label.label );
+    } else {
+      label.opacity = 0.0;
     }
   }
 
@@ -570,10 +592,12 @@ public class NoteItemPaneFlash : NoteItemPane {
       case AQ    :  _answer.label = card.side1;  break;
       case MIXED :  _answer.label = (card.side1 == _question.label) ? card.side2 : card.side1;  break;
       default    :
-        grade_choice( card, _choice_a, 0, choice, ref correct );
-        grade_choice( card, _choice_b, 1, choice, ref correct );
-        grade_choice( card, _choice_c, 2, choice, ref correct );
-        grade_choice( card, _choice_d, 3, choice, ref correct );
+        grade_choice( card, _choice_a, _( "a) %s" ), 0, choice, ref correct );
+        grade_choice( card, _choice_b, _( "b) %s" ), 1, choice, ref correct );
+        grade_choice( card, _choice_c, _( "c) %s" ), 2, choice, ref correct );
+        grade_choice( card, _choice_d, _( "d) %s" ), 3, choice, ref correct );
+        _choice_next.opacity   = 1.0;
+        _choice_next.sensitive = true;
         break;
     }
 
@@ -729,8 +753,6 @@ public class NoteItemPaneFlash : NoteItemPane {
     click.pressed.connect((n_press, x, y) => {
       if( _test_in_question ) {
         show_answer( choice );
-      } else {
-        show_next();
       }
     });
 
@@ -741,22 +763,45 @@ public class NoteItemPaneFlash : NoteItemPane {
     _choice_question = new AutoFitLabel( "" ) {
       margin_bottom = 10
     };
-    _choice_a = new AutoFitLabel( "" );
-    _choice_b = new AutoFitLabel( "" );
-    _choice_c = new AutoFitLabel( "" );
-    _choice_d = new AutoFitLabel( "" );
+
+    _choice_a = new AutoFitLabel( "" ) {
+      halign = Align.FILL
+    };
+    _choice_b = new AutoFitLabel( "" ) {
+      halign = Align.FILL
+    };
+    _choice_c = new AutoFitLabel( "" ) {
+      halign = Align.FILL
+    };
+    _choice_d = new AutoFitLabel( "" ) {
+      halign = Align.FILL
+    };
 
     configure_choice_answer( _choice_a, 0 );
     configure_choice_answer( _choice_b, 1 );
     configure_choice_answer( _choice_c, 2 );
     configure_choice_answer( _choice_d, 3 );
 
-    var box = new Box( Orientation.VERTICAL, 5 );
+    _choice_next = new Button.with_label( _( "Next" ) ) {
+      halign = Align.CENTER,
+      margin_top = 10,
+      opacity = 0.0,
+      sensitive = false
+    };
+    _choice_next.clicked.connect(() => {
+      show_next();
+    });
+
+    var box = new Box( Orientation.VERTICAL, 5 ) {
+      halign = Align.CENTER
+    };
     box.append( _choice_question );
     box.append( _choice_a );
     box.append( _choice_b );
     box.append( _choice_c );
     box.append( _choice_d );
+    box.append( _choice_next );
+    box.set_size_request( 500, -1 );
 
     return( box );
 
@@ -766,7 +811,10 @@ public class NoteItemPaneFlash : NoteItemPane {
   // Creates the test result frame.
   private Widget create_test_result() {
 
-    _result = new AutoFitLabel( "" );
+    _result = new AutoFitLabel( "" ) {
+      halign = Align.CENTER,
+      valign = Align.CENTER
+    };
 
     var done = new Button.with_label( _( "Done" ) );
     done.clicked.connect(() => {
@@ -779,7 +827,11 @@ public class NoteItemPaneFlash : NoteItemPane {
       show_question();
     });
 
-    var bbox = new Box( Orientation.HORIZONTAL, 5 );
+    var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign = Align.CENTER,
+      valign = Align.END,
+      vexpand = true
+    };
     bbox.append( retake );
     bbox.append( done );
 

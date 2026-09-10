@@ -35,6 +35,22 @@ public class AutoFitLabel : Box {
       _label.label = value;
     }
   }
+  public Align halign {
+    get {
+      return( _label.halign );
+    }
+    set {
+      _label.halign = value;
+    }
+  }
+  public Align valign {
+    get {
+      return( _label.valign );
+    }
+    set {
+      _label.valign = value;
+    }
+  }
   public double min_font_size { get; set; default = 8.0; }
   public double max_font_size { get; set; default = 100.0; }
 
