@@ -206,7 +206,7 @@ public class FlashWindow : Window {
     } else if( choice == answer ) {
       label.label = "<span foreground=\"red\">\u2718 %s</span>".printf( label.label );
     } else {
-      label.opacity = 0.0;
+      label.opacity = 0.5;
     }
   }
 
@@ -320,7 +320,8 @@ public class FlashWindow : Window {
     _question = new AutoFitLabel( "" ) {
       focusable = true,
       halign = Align.CENTER,
-      valign = Align.CENTER
+      valign = Align.CENTER,
+      vexpand = true
     };
 
     var click = new GestureClick();
@@ -347,12 +348,14 @@ public class FlashWindow : Window {
 
     _answer = new AutoFitLabel( "" ) {
       halign = Align.CENTER,
-      valign = Align.CENTER
+      valign = Align.CENTER,
+      vexpand = true
     };
 
     var wrong = new Button.with_label( _( "Wrong" ) ) {
       halign = Align.START
     };
+    wrong.add_css_class( "wrong-answer" );
 
     wrong.clicked.connect(() => {
       _test_results.wrong++;
@@ -362,6 +365,7 @@ public class FlashWindow : Window {
     var right = new Button.with_label( _( "Correct" ) ) {
       halign = Align.END
     };
+    right.add_css_class( "right-answer" );
 
     right.clicked.connect(() => {
       _test_results.right++;
@@ -370,8 +374,7 @@ public class FlashWindow : Window {
 
     var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
       halign = Align.CENTER,
-      valign = Align.END,
-      vexpand = true
+      valign = Align.END
     };
     bbox.append( wrong );
     bbox.append( right );
@@ -399,6 +402,8 @@ public class FlashWindow : Window {
 
   }
 
+  //-------------------------------------------------------------
+  // Create a multiple choice UI for up to 4 choices.
   private Widget create_test_choice() {
 
     _choice_question = new AutoFitLabel( "" ) {
@@ -454,7 +459,8 @@ public class FlashWindow : Window {
 
     _result = new AutoFitLabel( "" ) {
       halign = Align.CENTER,
-      valign = Align.CENTER
+      valign = Align.CENTER,
+      vexpand = true
     };
 
     var done = new Button.with_label( _( "Done" ) );
@@ -471,7 +477,6 @@ public class FlashWindow : Window {
     var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
       halign = Align.CENTER,
       valign = Align.END,
-      vexpand = true
     };
     bbox.append( retake );
     bbox.append( done );

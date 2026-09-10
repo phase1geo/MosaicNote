@@ -51,6 +51,14 @@ public class AutoFitLabel : Box {
       _label.valign = value;
     }
   }
+  public bool vexpand {
+    get {
+      return( _label.vexpand );
+    }
+    set {
+      _label.vexpand = value;
+    }
+  }
   public double min_font_size { get; set; default = 8.0; }
   public double max_font_size { get; set; default = 100.0; }
 
