@@ -60,7 +60,7 @@ public class AutoFitLabel : Box {
     }
   }
   public double min_font_size { get; set; default = 8.0; }
-  public double max_font_size { get; set; default = 100.0; }
+  public double max_font_size { get; set; default = 40.0; }
 
   //-------------------------------------------------------------
   // Space to leave around the text, in pixels.
@@ -80,16 +80,19 @@ public class AutoFitLabel : Box {
     };
 
     // Width/height changes cause us to recalculate the font size.
-    _label.notify["width"].connect(() => {
-      adjust_font_size();
+    notify["width"].connect(() => {
+      adjust_font_size( "width" );
     });
 
-    _label.notify["height"].connect(() => {
-      adjust_font_size();
+    notify["height"].connect(() => {
+      adjust_font_size( "height" );
     });
 
     _label.notify["label"].connect(() => {
-      adjust_font_size();
+      Idle.add(() => {
+        adjust_font_size( "label" );
+        return( false );
+      });
     });
 
     append( _label );
@@ -98,17 +101,17 @@ public class AutoFitLabel : Box {
 
   protected override void size_allocate( int width, int height, int baseline ) {
     base.size_allocate( width, height, baseline );
-    adjust_font_size();
+    adjust_font_size( "size_allocate" );
   }
 
-  private void adjust_font_size() {
+  private void adjust_font_size( string msg ) {
 
     if( _adjusting ) {
       return;
     }
 
-    var width  = _label.get_width()  - padding * 2;
-    var height = _label.get_height() - padding * 2;
+    var width  = get_width()  - padding * 2;
+    var height = get_height() - padding * 2;
 
     if( (width <= 0) || (height <= 0) ) {
       return;

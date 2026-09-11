@@ -58,7 +58,7 @@ public class FlashWindow : Window {
   private AutoFitLabel                 _choice_d;
   private Button                       _choice_next;
   private AutoFitLabel                 _result;
-  private int                          _test_index = 0;
+  private int                          _test_index = -1;
   private bool                         _test_in_question = false;
   private FlashTestType                _test_type  = FlashTestType.QA;
   private GLib.List<NoteItemFlashCard> _test_cards;
@@ -68,7 +68,9 @@ public class FlashWindow : Window {
     Object(
       title: _( "Flash Card Quiz" ),
       transient_for: win,
-      modal: true
+      modal: true,
+      default_width: 800,
+      default_height: 600
     );
 
     _item = item;
@@ -88,6 +90,16 @@ public class FlashWindow : Window {
 
     child = _test_stack;
 
+    update_title();
+
+  }
+
+  //-------------------------------------------------------------
+  // Sets the title of this window
+  private void update_title() {
+    title = (_test_index == -1)
+            ? _( "Flash Card Quiz" )
+            : _( "Flash Card Quiz (%d of %d)" ).printf( (_test_index + 1), _item.size() );
   }
 
   //-------------------------------------------------------------
@@ -189,9 +201,13 @@ public class FlashWindow : Window {
 
     if( _test_type == FlashTestType.CHOICE ) {
       _test_stack.visible_child_name = "choice";
+      _choice_question.grab_focus();
     } else {
       _test_stack.visible_child_name = "question";
+      _question.grab_focus();
     }
+
+    update_title();
 
   }
 
@@ -252,6 +268,9 @@ public class FlashWindow : Window {
     );
     _test_stack.visible_child_name = "result";
 
+    _test_index = -1;
+    update_title();
+
   }
 
   //-------------------------------------------------------------
@@ -289,15 +308,17 @@ public class FlashWindow : Window {
     });
 
     var type_box = new Box( Orientation.HORIZONTAL, 5 ) {
-      halign = Align.CENTER
+      halign = Align.CENTER,
+      valign = Align.CENTER,
+      vexpand = true
     };
     type_box.append( type_lbl );
     type_box.append( type_dd );
 
-    var run = new Button.with_label( _( "Run Quiz" ) ) {
+    var run = new Button.with_mnemonic( _( "_Take Quiz" ) ) {
       halign = Align.CENTER,
       valign = Align.END,
-      vexpand = true
+      use_underline = true
     };
 
     run.clicked.connect(() => {
@@ -308,6 +329,16 @@ public class FlashWindow : Window {
     var box = new Box( Orientation.VERTICAL, 5 );
     box.append( type_box );
     box.append( run );
+
+    var key = new EventControllerKey();
+    box.add_controller( key );
+    key.key_pressed.connect((keyval, keymod, state) => {
+      if( (keyval == Gdk.Key.t) || (keyval == Gdk.Key.Return) || (keyval == Gdk.Key.space) ) {
+        run.clicked();
+        return( true );
+      }
+      return( false );
+    });
 
     return( box );
 
@@ -352,8 +383,9 @@ public class FlashWindow : Window {
       vexpand = true
     };
 
-    var wrong = new Button.with_label( _( "Wrong" ) ) {
-      halign = Align.START
+    var wrong = new Button.with_mnemonic( _( "_Wrong" ) ) {
+      halign = Align.START,
+      use_underline = true
     };
     wrong.add_css_class( "wrong-answer" );
 
@@ -362,8 +394,9 @@ public class FlashWindow : Window {
       show_next();
     });
 
-    var right = new Button.with_label( _( "Correct" ) ) {
-      halign = Align.END
+    var right = new Button.with_mnemonic( _( "_Correct" ) ) {
+      halign = Align.END,
+      use_underline = true
     };
     right.add_css_class( "right-answer" );
 
@@ -382,6 +415,16 @@ public class FlashWindow : Window {
     var box = new Box( Orientation.VERTICAL, 5 );
     box.append( _answer );
     box.append( bbox );
+
+    var key = new EventControllerKey();
+    box.add_controller( key );
+    key.key_pressed.connect((keyval, keymod, state) => {
+      switch( keyval ) {
+        case Gdk.Key.w :  wrong.clicked();  return( true );
+        case Gdk.Key.c :  right.clicked();  return( true );
+        default        :  return( false );
+      }
+    });
 
     return( box );
 
@@ -407,20 +450,33 @@ public class FlashWindow : Window {
   private Widget create_test_choice() {
 
     _choice_question = new AutoFitLabel( "" ) {
+      halign        = Align.FILL,
+      valign        = Align.FILL,
+      vexpand       = true,
+      focusable     = true,
+      margin_top    = 10,
       margin_bottom = 10
     };
 
     _choice_a = new AutoFitLabel( "" ) {
-      halign = Align.FILL
+      halign = Align.FILL,
+      valign = Align.FILL,
+      vexpand = true,
     };
     _choice_b = new AutoFitLabel( "" ) {
-      halign = Align.FILL
+      halign = Align.FILL,
+      valign = Align.FILL,
+      vexpand = true,
     };
     _choice_c = new AutoFitLabel( "" ) {
-      halign = Align.FILL
+      halign = Align.FILL,
+      valign = Align.FILL,
+      vexpand = true,
     };
     _choice_d = new AutoFitLabel( "" ) {
-      halign = Align.FILL
+      halign = Align.FILL,
+      valign = Align.FILL,
+      vexpand = true,
     };
 
     configure_choice_answer( _choice_a, 0 );
@@ -439,6 +495,7 @@ public class FlashWindow : Window {
     });
 
     var box = new Box( Orientation.VERTICAL, 5 ) {
+      focusable = true,
       halign = Align.CENTER
     };
     box.append( _choice_question );
@@ -448,6 +505,24 @@ public class FlashWindow : Window {
     box.append( _choice_d );
     box.append( _choice_next );
     box.set_size_request( 500, -1 );
+
+    var key = new EventControllerKey();
+    box.add_controller( key );
+    key.key_pressed.connect((keyval, keymod, state) => {
+      if( _test_in_question ) {
+        switch( keyval ) {
+          case Gdk.Key.a :  show_answer( 0 );  return( true );  break;
+          case Gdk.Key.b :  show_answer( 1 );  return( true );  break;
+          case Gdk.Key.c :  show_answer( 2 );  return( true );  break;
+          case Gdk.Key.d :  show_answer( 3 );  return( true );  break;
+          default        :  return( false );
+        }
+      } else if( (keyval == Gdk.Key.space) || (keyval == Gdk.Key.Return) ) {
+        show_next();
+        return( true );
+      }
+      return( false );
+    });
 
     return( box );
 
@@ -463,12 +538,16 @@ public class FlashWindow : Window {
       vexpand = true
     };
 
-    var done = new Button.with_label( _( "Done" ) );
+    var done = new Button.with_mnemonic( _( "_Done" ) ) {
+      use_underline = true
+    };
     done.clicked.connect(() => {
       destroy();
     });
 
-    var retake = new Button.with_label( _( "Retake" ) );
+    var retake = new Button.with_mnemonic( _( "_Retake" ) ) {
+      use_underline = true
+    };
     retake.clicked.connect(() => {
       initialize_test();
       show_question();
@@ -484,6 +563,16 @@ public class FlashWindow : Window {
     var box = new Box( Orientation.VERTICAL, 5 );
     box.append( _result );
     box.append( bbox );
+
+    var key = new EventControllerKey();
+    box.add_controller( key );
+    key.key_pressed.connect((keyval, keymod, state) => {
+      switch( keyval ) {
+        case Gdk.Key.d :  done.clicked();    return( true );
+        case Gdk.Key.r :  retake.clicked();  return( true );
+        default        :  return( false );
+      }
+    });
 
     return( box );
 
