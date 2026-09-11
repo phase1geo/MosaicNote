@@ -77,7 +77,7 @@ public class SmartTextFilter : SmartFilter {
     if( match_type == TextMatchType.CONTAINS ) {
       return( text.contains( pattern ) );
     } else {
-      return( Regex.match_simple( pattern, text ) );
+      return( Regex.match_simple( pattern, text, RegexCompileFlags.MULTILINE ) );
     }
   }
 

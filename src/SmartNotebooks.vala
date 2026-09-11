@@ -112,6 +112,25 @@ public class SmartNotebooks {
   }
 
   //-------------------------------------------------------------
+  // Returns the definition notebook from this list.  If one does
+  // not exist, one is created and automatically added.
+  public SmartNotebook get_definitions_notebook() {
+    var search   = get_search_notebook();
+    var notebook = _notebooks.index( 4 );
+    if( (notebook != null) && (notebook.notebook_type == SmartNotebookType.DEFS) ) {
+      return( notebook );
+    }
+    var defs = new SmartNotebook( _( "Definitions" ), SmartNotebookType.DEFS, _notebook_tree );
+    defs.filter = new FilterItemText( NoteItemType.MARKDOWN, TextMatchType.REGEXP, "^: " );
+    _notebook_tree.populate_smart_notebook( defs );
+    _notebooks.insert_val( 4, defs );
+    var nbs = new Array<BaseNotebook>();
+    nbs.append_val( defs );
+    changed( nbs );
+    return( defs );
+  }
+
+  //-------------------------------------------------------------
   // Handles any changes to the given note, updating all stored
   // smart notebooks.
   public void handle_note( Note note ) {

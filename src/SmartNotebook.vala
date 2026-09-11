@@ -25,6 +25,7 @@ public enum SmartNotebookType {
   FAVORITE,
   TAG,
   SEARCH,
+  DEFS,
   NUM;
 
   //-------------------------------------------------------------
@@ -36,6 +37,7 @@ public enum SmartNotebookType {
       case FAVORITE :  return( "favorite" );
       case TAG      :  return( "tag" );
       case SEARCH   :  return( "search" );
+      case DEFS     :  return( "defs" );  
       default       :  assert_not_reached();
     }
   }
@@ -50,6 +52,7 @@ public enum SmartNotebookType {
       case "favorite" :  return( FAVORITE );
       case "tag"      :  return( TAG );
       case "search"   :  return( SEARCH );
+      case "defs"     :  return( DEFS );
       default         :  return( USER );
     }
   }

@@ -81,3 +81,11 @@ columnview.column-separators * {
 columnview.column-separators header button:not(:first-child) {
   border-left: 1px solid alpha(currentColor, 0.15);
 }
+
+.right-answer {
+  background-color: #00ff0080;
+}
+
+.wrong-answer {
+  background-color: #ff000080;
+}

@@ -429,7 +429,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     // Array the panel layout
     arrange_panels();
 
-    show();
+    present();
 
     // Select the notebook and note that was last saved (if valid)
     var last_notebook_id = settings.get_int( "last-notebook" );
@@ -659,7 +659,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   // Displays the preferences window and then handles its closing
   private void action_preferences() {
     var prefs = new Preferences( this );
-    prefs.show();
+    prefs.present();
   }
 
   //-------------------------------------------------------------
@@ -835,6 +835,19 @@ public class MainWindow : Gtk.ApplicationWindow {
   public void set_action_enable( string action_str, bool enabled ) {
     var action = (SimpleAction)_actions.lookup_action( action_str );
     action.set_enabled( enabled );
+  }
+
+  //-------------------------------------------------------------
+  // Chooses notebook from user.
+  public async int choose_from_list( string title, Array<string> list ) {
+
+    var chooser = new ListChooser( this, title, list );
+    var result  = yield chooser.choose();
+
+    chooser.destroy();
+
+    return( result );
+
   }
 
   //-------------------------------------------------------------
