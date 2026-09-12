@@ -30,6 +30,7 @@ public enum NoteItemType {
   TABLE,
   ASSETS,
   FLASH,
+  VIDEO,
 	NUM;
 
   //-------------------------------------------------------------
@@ -45,6 +46,7 @@ public enum NoteItemType {
       case TABLE    :  return( "table" );
       case ASSETS   :  return( "assets" );
       case FLASH    :  return( "flash" );
+      case VIDEO    :  return( "video" );
 			default       :  assert_not_reached();
 		}
 	}
@@ -62,6 +64,7 @@ public enum NoteItemType {
       case TABLE    :  return( _( "table" ) );
       case ASSETS   :  return( _( "assets" ) );
       case FLASH    :  return( _( "flash" ) );
+      case VIDEO    :  return( _( "video" ) );
       default       :  assert_not_reached();
     }
   }
@@ -79,6 +82,7 @@ public enum NoteItemType {
       case TABLE    :  return( _( "Table" ) );
       case ASSETS   :  return( _( "Files" ) );
       case FLASH    :  return( _( "Flash Cards" ) );
+      case VIDEO    :  return( _( "Video" ) );
 			default       :  assert_not_reached();
 		}
 	}
@@ -96,6 +100,7 @@ public enum NoteItemType {
       case "table"    :  return( TABLE );
       case "assets"   :  return( ASSETS );
       case "flash"    :  return( FLASH );
+      case "video"    :  return( VIDEO );
 			default         :  return( NUM );
 		}
 	}
@@ -114,6 +119,7 @@ public enum NoteItemType {
       case '|' :  return( TABLE );
       case '[' :  return( ASSETS );
       case '%' :  return( FLASH );
+      case '?' :  return( VIDEO );
       default  :  return( NUM );
     }
 
@@ -140,6 +146,8 @@ public enum NoteItemType {
       return( MATH );
     } else if( down == _( "flash" ) ) {
       return( FLASH );
+    } else if( down == _( "video" ) ) {
+      return( VIDEO );
     } else {
       return( NUM );
     }
@@ -183,6 +191,7 @@ public enum NoteItemType {
       case TABLE    :  return( new NoteItemTable( row, 0, 0 ) );
       case ASSETS   :  return( new NoteItemAssets( row ) );
       case FLASH    :  return( new NoteItemFlash( row ) );
+      case VIDEO    :  return( new NoteItemVideo( row ) );
 			default       :  assert_not_reached();
 		}
 	}

@@ -33,6 +33,7 @@ sources += files(
     'NoteItemPaneRow.vala',
     'NoteItemPaneTable.vala',
     'NoteItemPaneUML.vala',
+    'NoteItemPaneVideo.vala',
     'NoteItemPanes.vala',
     'NoteItemRow.vala',
     'NotePanel.vala',

@@ -7,5 +7,6 @@ sources += files(
     'NoteItemMath.vala',
     'NoteItemTable.vala',
     'NoteItemUML.vala',
+    'NoteItemVideo.vala',
 )
 
