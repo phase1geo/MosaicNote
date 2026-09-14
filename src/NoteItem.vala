@@ -29,6 +29,7 @@ public enum NoteItemType {
   MATH,
   TABLE,
   ASSETS,
+  MEDIA,
   FLASH,
 	NUM;
 
@@ -44,6 +45,7 @@ public enum NoteItemType {
       case MATH     :  return( "math" );
       case TABLE    :  return( "table" );
       case ASSETS   :  return( "assets" );
+      case MEDIA    :  return( "media" );
       case FLASH    :  return( "flash" );
 			default       :  assert_not_reached();
 		}
@@ -61,6 +63,7 @@ public enum NoteItemType {
       case MATH     :  return( _( "math" ) );
       case TABLE    :  return( _( "table" ) );
       case ASSETS   :  return( _( "assets" ) );
+      case MEDIA    :  return( _( "media" ) );
       case FLASH    :  return( _( "flash" ) );
       default       :  assert_not_reached();
     }
@@ -78,6 +81,7 @@ public enum NoteItemType {
       case MATH     :  return( _( "Math Formula" ) );
       case TABLE    :  return( _( "Table" ) );
       case ASSETS   :  return( _( "Files" ) );
+      case MEDIA    :  return( _( "Media" ) );
       case FLASH    :  return( _( "Flash Cards" ) );
 			default       :  assert_not_reached();
 		}
@@ -95,6 +99,7 @@ public enum NoteItemType {
       case "math"     :  return( MATH );
       case "table"    :  return( TABLE );
       case "assets"   :  return( ASSETS );
+      case "media"    :  return( MEDIA );
       case "flash"    :  return( FLASH );
 			default         :  return( NUM );
 		}
@@ -113,6 +118,7 @@ public enum NoteItemType {
       case '$' :  return( MATH );
       case '|' :  return( TABLE );
       case '[' :  return( ASSETS );
+      case '?' :  return( MEDIA );
       case '%' :  return( FLASH );
       default  :  return( NUM );
     }
@@ -140,6 +146,8 @@ public enum NoteItemType {
       return( MATH );
     } else if( down == _( "flash" ) ) {
       return( FLASH );
+    } else if( down == _( "media" ) ) {
+      return( MEDIA );
     } else {
       return( NUM );
     }
@@ -182,6 +190,7 @@ public enum NoteItemType {
       case MATH     :  return( new NoteItemMath( row ) );
       case TABLE    :  return( new NoteItemTable( row, 0, 0 ) );
       case ASSETS   :  return( new NoteItemAssets( row ) );
+      case MEDIA    :  return( new NoteItemMedia( row ) );
       case FLASH    :  return( new NoteItemFlash( row ) );
 			default       :  assert_not_reached();
 		}

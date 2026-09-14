@@ -5,6 +5,7 @@ sources += files(
     'NoteItemImage.vala',
     'NoteItemMarkdown.vala',
     'NoteItemMath.vala',
+    'NoteItemMedia.vala',
     'NoteItemTable.vala',
     'NoteItemUML.vala',
 )

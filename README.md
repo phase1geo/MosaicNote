@@ -43,6 +43,9 @@ You will need the following dependencies to build Journaler from source:
 * libenchant-2-dev
 * libyaml-dev
 * libwebkitgtk-6.0-dev
+* gstreamer1.0-plugins-good
+* gstreamer1.0-plugins-bad
+* gstreamer1.0-libav
 
 To install, run `sudo ./app install` and then run the application from your application launcher or from
 the command-line with `./app run`.

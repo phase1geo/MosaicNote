@@ -12,6 +12,25 @@ sdk: org.gnome.Sdk
 # as your app ID
 command: io.github.phase1geo.mosaic-note
 
+# Gtk.Video decodes files through GStreamer, whose codec plugins aren't part of
+# the base org.gnome.Platform runtime (mainly for licensing reasons). This
+# declares the extension point so the codec extension gets mounted into the
+# sandbox at /app/lib/codecs-extra.
+#
+# NOTE: org.gnome.Platform 49 is built on freedesktop-sdk 25.08, which
+# replaced the old "ffmpeg-full" extension with "codecs-extra". If you ever
+# target an older runtime (48 or earlier), use org.freedesktop.Platform.ffmpeg-full
+# with directory: lib/ffmpeg instead. Verify the exact id/directory for your
+# runtime version with:
+#   flatpak remote-info --log flathub org.freedesktop.Platform.codecs-extra
+add-extensions:
+  org.freedesktop.Platform.codecs-extra:
+    directory: lib/codecs-extra
+    add-ld-path: .
+    version: '25.08'
+    no-autodownload: false
+    autodelete: false
+    
 # Here we can specify the kinds of permissions our app needs to run. Since we're
 # not using hardware like webcams, making sound, or reading external files, we
 # only need permission to draw our app on screen using either X11 or Wayland.
@@ -137,3 +156,7 @@ modules:
       - type: dir
         path: ..
 
+# The extension point above needs an existing directory to mount onto, or
+# flatpak-builder will fail at finish time with a missing-directory error.
+cleanup-commands:
+  - mkdir -p /app/lib/codecs-extra
