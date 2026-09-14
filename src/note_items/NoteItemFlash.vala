@@ -61,12 +61,8 @@ public class NoteItemFlashCard {
   // Saves the content of this card in a node called "card".
   public Xml.Node* save() {
     Xml.Node* node  = new Xml.Node( null, "card" );
-    Xml.Node* node1 = new Xml.Node( null, "side1" );
-    Xml.Node* node2 = new Xml.Node( null, "side2" );
-    node1->set_content( side1 );
-    node2->set_content( side2 );
-    node->add_child( node1 );
-    node->add_child( node2 );
+    node->new_text_child( null, "side1", side1 );
+    node->new_text_child( null, "side2", side2 );
     return( node );
   }
 
@@ -211,12 +207,18 @@ public class NoteItemFlash : NoteItem {
   //-------------------------------------------------------------
 	// Saves the content in XML format
 	public override Xml.Node* save() {
+
+    // Make sure that we never save any stored content
+    content = "";
+
     Xml.Node* node = base.save();
     node->set_prop( "description", description );
     for( int i=0; i<_cards.length; i++ ) {
       node->add_child( _cards.index( i ).save() );
     }
+
     return( node );
+
 	}
 
   //-------------------------------------------------------------

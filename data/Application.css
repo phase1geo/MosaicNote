@@ -16,10 +16,17 @@ list row:selected {
   font-size: 1.5em;
 }
 
+/*
 .active-item {
    border-style: solid;
    border-width: 1px;
    border-radius: 5px;
+}
+*/
+
+.active-item {
+  border-left: 3px solid @accent_color;
+  background-color: alpha(@accent_color, 0.04);
 }
 
 .selected-item {
@@ -88,4 +95,24 @@ columnview.column-separators header button:not(:first-child) {
 
 .wrong-answer {
   background-color: #ff000080;
+}
+
+.fade-btn {
+  opacity: 0;
+  transition: opacity 150ms ease-in-out;
+}
+
+/* Partial reveal when hovering anywhere in the content box */
+.note-item-pane:hover .fade-btn {
+  opacity: 0.1;
+}
+
+/* Full reveal when hovering the right-side box specifically */
+.rbox:hover .fade-btn {
+  opacity: 1;
+}
+
+/* Stay fully visible while its popover menu is open */
+.fade-btn:checked {
+  opacity: 1;
 }

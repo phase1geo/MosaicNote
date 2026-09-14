@@ -842,15 +842,29 @@ public class NoteItemPane : RemovableBox {
     var more = new MenuButton() {
       halign = Align.END,
       has_frame = false,
-      opacity = 0.0,
       icon_name = "view-more-horizontal-symbolic",
       menu_model = menu
     };
 
-    var active_id = more.notify["active"].connect(() => {
+    more.add_css_class( "fade-btn" );
+
+    var more_focus = new EventControllerFocus();
+    more.add_controller( more_focus );
+
+    var more_enter_id = more_focus.enter.connect(() => {
+      more.opacity = 1.0;
+    });
+    add_signal( more_focus, more_enter_id );
+
+    var more_leave_id = more_focus.leave.connect(() => {
       if( !more.active ) {
         more.opacity = control_opacity;
-      } else {
+      }
+    });
+    add_signal( more_focus, more_enter_id );
+
+    var active_id = more.notify["active"].connect(() => {
+      if( more.active ) {
         int row_pos, col_pos;
         if( item.row.note.get_item_location( item, out row_pos, out col_pos ) ) {
           set_action_enable( "action_add_item_left",  !item.row.full() );
@@ -871,22 +885,8 @@ public class NoteItemPane : RemovableBox {
       margin_top    = 5,
       margin_bottom = 5
     };
+    rbox.add_css_class( "rbox" );
     rbox.append( more );
-
-    var rbox_motion = new EventControllerMotion();
-    rbox.add_controller( rbox_motion );
-
-    var enter_id = rbox_motion.enter.connect((x, y) => {
-      more.opacity = 1.0;
-    });
-    add_signal( rbox_motion, enter_id );
-
-    var leave_id = rbox_motion.leave.connect(() => {
-      if( !more.active ) {
-        more.opacity = control_opacity;
-      }
-    });
-    add_signal( rbox_motion, leave_id );
 
     string[] item_types = {};
     for( int i=0; i<NoteItemType.NUM; i++ ) {
@@ -957,24 +957,11 @@ public class NoteItemPane : RemovableBox {
     pane.visible = item.row.expanded;
 
     var cbox = new Box( Orientation.VERTICAL, 5 );
+    cbox.add_css_class( "cbox" );
     cbox.append( header );
     cbox.append( pane );
 
-    var cbox_motion = new EventControllerMotion();
-    cbox.add_controller( cbox_motion );
-
-    var cbox_enter_id = cbox_motion.enter.connect((x, y) => {
-      if( !more.active ) {
-        more.opacity = control_opacity;
-      }
-    });
-    add_signal( cbox_motion, cbox_enter_id );
-
-    var cbox_leave_id = cbox_motion.leave.connect(() => {
-      more.opacity = 0.0;
-    });
-    add_signal( cbox_motion, cbox_leave_id );
-
+    add_css_class( "note-item-pane" );
     append( cbox );
     append( rbox );
 
