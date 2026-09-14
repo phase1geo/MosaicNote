@@ -5,3 +5,7 @@ build/
 src/*.o
 src/*.c
 .DS_Store
+tools/mosaic-mcp/mosaic_mcp/__pycache__
+tools/mosaic-mcp/mosaic_mcp/venv
+tools/mosaic-mcp/venv
+tools/mosaic-mcp/mosaic_mcp.egg-info
