@@ -11,6 +11,8 @@ If MOSAIC_NOTE_DATA_DIR is not set, it defaults to
 
 from __future__ import annotations
 
+import subprocess
+import shlex
 import os
 from typing import Any, Optional
 
@@ -159,6 +161,30 @@ def search_notes(query: str, notebook_id: Optional[str] = None) -> list[dict[str
         for nb, note in results
     ]
 
+@mcp.tool()
+def open_note(note_id: str) -> str:
+    """Open a note in the MosaicNote desktop app via its mosaicnote:// URI scheme.
+
+    Launches the note in the user's running (or newly started) MosaicNote
+    instance. This only works when the MCP server and MosaicNote are running
+    on the same machine with a desktop session (X11/Wayland) available.
+    """
+    uri = f"mosaicnote://show-note?id={note_id}"
+    try:
+        subprocess.run(
+            ["gio", "open", uri],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        return f"Opened note {note_id} in MosaicNote."
+    except FileNotFoundError:
+        return "Error: gio open not found. Is this running in a desktop environment?"
+    except subprocess.CalledProcessError as e:
+        return f"Error opening note {note_id}: {e.stderr.strip() or e}"
+    except subprocess.TimeoutExpired:
+        return f"Timed out trying to open note {note_id}."
 
 def main() -> None:
     mcp.run()

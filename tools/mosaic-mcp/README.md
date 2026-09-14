@@ -101,8 +101,10 @@ your data directory isn't the default `~/.local/share/mosaic-note`.
 | `list_notes(notebook_id)` | List notes in a notebook: id, title, timestamps, favorite/locked flags, tags, and a short text preview. |
 | `get_note(notebook_id, note_id)` | Full content of one note: every row and block in order, with type-specific fields (markdown text, table columns/rows, math/UML source, image URI, flashcard sides, asset paths). |
 | `search_notes(query, notebook_id=None)` | Case-insensitive substring search over title, tags, and all block content/text fields, optionally scoped to one notebook. |
+| `open_note(note_id)' | Displays the note with the given ID within MosaicNote, launching the application if it is not
+currently running. |
 
-All four are read-only — nothing in this server writes to the XML files.
+All five are read-only — nothing in this server writes to the XML files.
 
 ## Project layout
 

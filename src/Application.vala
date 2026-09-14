@@ -103,7 +103,8 @@ public class MosaicNote : Gtk.Application {
     if( uri_query != null ) {
       var query_items = uri_query.split( "=" );
       if( (query_items[0] != "id") || !appwin.show_note( int.parse( query_items[1] ) ) ) {
-        appwin.notification( "MosaicNote", "Linked note could not be found\n" );
+        stderr.printf( "Error:  Unable to find note with id %s\n", query_items[1] );
+        Process.exit( 1 );
       }
     }
 
