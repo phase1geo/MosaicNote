@@ -121,6 +121,16 @@ public class NoteItemPane : RemovableBox {
     });
     add_signal( this, current_id );
 
+    // Handle any keyboard focus changes to make ourselves the current pane.
+    var pane_focus = new EventControllerFocus();
+    var pane_focus_enter_id = pane_focus.enter.connect(() => {
+      if( !is_active() ) {
+        set_as_current( true, "pane subtree gained focus" );
+      }
+    });
+    add_signal( pane_focus, pane_focus_enter_id );
+    add_controller( pane_focus );
+
     // Create the presentable checkbutton
     var presentable_action = new SimpleAction.stateful( "action_presentable", null, new Variant.boolean( item.presentable ) );
     presentable_action.activate.connect((parm) => {
@@ -994,8 +1004,10 @@ public class NoteItemPane : RemovableBox {
   // This function will make the given widget cause the pane to
   // become the current pane when it is clicked.
   protected void click_to_current( Widget widget ) {
-    var click = new GestureClick();
-    var id = click.released.connect((n_press, x, y) => {
+    var click = new GestureClick() {
+      propagation_phase = PropagationPhase.CAPTURE 
+    };
+    var id = click.pressed.connect((n_press, x, y) => {
       if( !is_active() ) {
         set_as_current( true );
         grab_item_focus( TextCursorPlacement.NO_CHANGE );
