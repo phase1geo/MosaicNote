@@ -192,8 +192,8 @@ public class NoteItemRow : Object {
           case NoteItemType.MATH     :  load_math_item( it );      break;
           case NoteItemType.TABLE    :  load_table_item( it );     break;
           case NoteItemType.ASSETS   :  load_assets_item( it );    break;
+          case NoteItemType.MEDIA    :  load_media_item( it );     break;
           case NoteItemType.FLASH    :  load_flash_item( it );     break;
-          case NoteItemType.VIDEO    :  load_video_item( it );     break;
           default                    :  break;
         }
       }
@@ -258,8 +258,8 @@ public class NoteItemRow : Object {
 
   //-------------------------------------------------------------
   // Loads a video item from XML data
-  private void load_video_item( Xml.Node* node ) {
-    var item = new NoteItemVideo.from_xml( this, node );
+  private void load_media_item( Xml.Node* node ) {
+    var item = new NoteItemMedia.from_xml( this, node );
     _items.append_val( item );
   }
 

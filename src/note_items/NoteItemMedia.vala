@@ -19,7 +19,7 @@
 * Authored by: Trevor Williams <phase1geo@gmail.com>
 */
 
-public class NoteItemVideo : NoteItem {
+public class NoteItemMedia : NoteItem {
 
   private string _uri = "";
   private string _description = "";
@@ -55,14 +55,14 @@ public class NoteItemVideo : NoteItem {
 
   //-------------------------------------------------------------
   // Constructor
-  public NoteItemVideo( NoteItemRow row ) {
-    base( row, NoteItemType.VIDEO );
+  public NoteItemMedia( NoteItemRow row ) {
+    base( row, NoteItemType.MEDIA );
   }
 
   //-------------------------------------------------------------
   // Constructor from XML input.
-  public NoteItemVideo.from_xml( NoteItemRow row, Xml.Node* node ) {
-    base( row, NoteItemType.VIDEO );
+  public NoteItemMedia.from_xml( NoteItemRow row, Xml.Node* node ) {
+    base( row, NoteItemType.MEDIA );
     load( node );
   }
 
@@ -70,10 +70,10 @@ public class NoteItemVideo : NoteItem {
   // Copies the given note item to ourselves
   public override void copy( NoteItem item ) {
     base.copy( item );
-    var video = (item as NoteItemVideo);
-    if( video != null ) {
-      this.uri = video.uri;
-      this.description = video.description;
+    var media = (item as NoteItemMedia);
+    if( media != null ) {
+      this.uri = media.uri;
+      this.description = media.description;
     } else if( Utils.is_url( item.content ) ) {
       this.uri = item.content;
       this.content = "";

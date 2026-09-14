@@ -21,15 +21,15 @@
 
 using GLib;
 
-public class UndoItemVideoChange : UndoItem {
+public class UndoItemMediaChange : UndoItem {
 
-  private NoteItemVideo _item;
+  private NoteItemMedia _item;
   private string        _uri;
 
   //-------------------------------------------------------------
   // Default constructor
-  public UndoItemVideoChange( NoteItemVideo item ) {
-    base( _( "Change Video" ) );
+  public UndoItemMediaChange( NoteItemMedia item ) {
+    base( _( "Change Media" ) );
     _item = item;
     _uri  = item.uri;
   }
