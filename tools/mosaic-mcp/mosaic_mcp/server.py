@@ -170,15 +170,19 @@ def open_note(note_id: str) -> str:
     on the same machine with a desktop session (X11/Wayland) available.
     """
     uri = f"mosaicnote://show-note?id={note_id}"
+    env_debug = {
+        k: os.environ.get(k, "<unset>")
+        for k in ("DISPLAY", "WAYLAND_DISPLAY", "DBUS_SESSION_BUS_ADDRESS", "XDG_RUNTIME_DIR")
+    }
     try:
         subprocess.run(
             ["gio", "open", uri],
             check=True,
-            capture_output=True,
-            text=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
             timeout=5,
         )
-        return f"Opened note {note_id} in MosaicNote."
+        return f"Opened note {note_id} in MosaicNote. env={env_debug}"
     except FileNotFoundError:
         return "Error: gio open not found. Is this running in a desktop environment?"
     except subprocess.CalledProcessError as e:
