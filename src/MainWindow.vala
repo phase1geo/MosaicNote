@@ -501,7 +501,10 @@ public class MainWindow : Gtk.ApplicationWindow {
     var note = _notebooks.find_note_by_id( id );
     if( note != null ) {
       _sidebar.select_notebook( note.notebook );
-      _notes.select_note( note.id, true );
+      Idle.add(() => {
+        _notes.select_note( note.id, true );
+        return( false );
+      });
       return( true );
     }
     return( false );
