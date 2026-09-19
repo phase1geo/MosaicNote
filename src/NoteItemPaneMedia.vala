@@ -176,7 +176,7 @@ public class NoteItemPaneMedia : NoteItemPane {
         _display.set_paintable( media );
         _controls.media_stream = media;
         _display.visible  = media.has_video;
-        _controls.visible = media.has_audio;
+        _controls.visible = media.has_video || media.has_audio;
         media.disconnect( prepared_id );
       });
     }
