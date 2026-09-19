@@ -191,7 +191,7 @@ public class NoteParser {
 
   //-------------------------------------------------------------
   // Repairs the given URI if it is not valid.
-  private string fix_uri( string uri, string base_dir ) {
+  private string fix_uri( string uri ) {
     var parts = uri.split( " " );
     try {
       if( !Uri.is_valid( parts[0], UriFlags.PARSE_RELAXED ) ) {
