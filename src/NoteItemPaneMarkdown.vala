@@ -222,7 +222,7 @@ public class NoteItemPaneMarkdown : NoteItemPane {
       // or the block is not a Markdown block, modify the current note with the new blocks,
       // refresh the note UI, and tell the calling code to stop completing the insert.
       var parser = new NoteParser();
-      var note   = parser.parse_markdown( item.row.note.notebook, text, false );
+      var note   = parser.parse_markdown( item.row.note.notebook, null, text, false );
 
       if( (note.rows() > 1) ||
           ((note.rows() == 1) && (note.get_item( 0, 0 ).item_type != NoteItemType.MARKDOWN)) ||

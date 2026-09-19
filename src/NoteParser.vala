@@ -21,13 +21,14 @@
 
 public class NoteParser {
 
-  private Regex _image_re;
-  private Regex _check_re;
-  private Regex _title_re;
-  private Regex _created_re;
-  private Regex _updated_re;
-  private Regex _tag_block_re;
-  private Regex _tag_list_re;
+  private Regex   _image_re;
+  private Regex   _check_re;
+  private Regex   _title_re;
+  private Regex   _created_re;
+  private Regex   _updated_re;
+  private Regex   _tag_block_re;
+  private Regex   _tag_list_re;
+  private string? _from_dir = null;
 
   //-------------------------------------------------------------
   // Default constructor
@@ -45,7 +46,9 @@ public class NoteParser {
 
   //-------------------------------------------------------------
   // Default constructor
-  public Note parse_markdown( Notebook notebook, string markdown, bool include_front_matter ) {
+  public Note parse_markdown( Notebook notebook, string? from_filename, string markdown, bool include_front_matter ) {
+
+    _from_dir = (from_filename == null) ? null : Path.get_dirname( from_filename );
 
     var first   = true;
     var index   = 0;
@@ -188,16 +191,16 @@ public class NoteParser {
 
   //-------------------------------------------------------------
   // Repairs the given URI if it is not valid.
-  private string fix_uri( string uri ) {
+  private string fix_uri( string uri, string base_dir ) {
     var parts = uri.split( " " );
     try {
       if( !Uri.is_valid( parts[0], UriFlags.PARSE_RELAXED ) ) {
-        var absolute_path = Path.get_absolute_path( parts[0] );
+        var absolute_path = Filename.canonicalize( parts[0], _from_dir );
         return( "file://" + absolute_path );
       }
       return( parts[0] );
     } catch( UriError e ) {
-      var absolute_path = Path.get_absolute_path( parts[0] );
+      var absolute_path = Filename.canonicalize( parts[0], _from_dir );
       return( "file://" + absolute_path );
     }
   }

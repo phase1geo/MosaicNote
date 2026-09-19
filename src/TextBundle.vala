@@ -67,7 +67,7 @@ public class TextBundle {
       FileUtils.get_contents( filename, out contents );
 
       var parser = new NoteParser();
-      var note   = parser.parse_markdown( notebook, contents, true );
+      var note   = parser.parse_markdown( notebook, filename, contents, true );
       notebook.add_note( note );
 
       // Display the newly imported note
