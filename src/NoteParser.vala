@@ -192,11 +192,13 @@ public class NoteParser {
     var parts = uri.split( " " );
     try {
       if( !Uri.is_valid( parts[0], UriFlags.PARSE_RELAXED ) ) {
-        return( "file://" + parts[0] );
+        var absolute_path = Path.get_absolute_path( parts[0] );
+        return( "file://" + absolute_path );
       }
       return( parts[0] );
     } catch( UriError e ) {
-      return( "file://" + parts[0] );
+      var absolute_path = Path.get_absolute_path( parts[0] );
+      return( "file://" + absolute_path );
     }
   }
 
