@@ -62,9 +62,10 @@ public class Utils {
   //-------------------------------------------------------------
   // Returns the location of the given subdirectory path within
   // the user storage directory
-  public static string user_location( string path ) {
+  public static string user_location( string? path = null ) {
     var location = MosaicNote.settings.get_string( "library-location" );
-    return( GLib.Path.build_filename( ((location == "default") ? default_library_location() : location), path ) );
+    var user_dir = (location == "default") ? default_library_location() : location;
+    return( (path == null) ? user_dir : GLib.Path.build_filename( user_dir, path ) );
   }
 
   //-------------------------------------------------------------

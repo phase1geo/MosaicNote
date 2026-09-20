@@ -352,11 +352,11 @@ public class NotebookTree {
 
     //-------------------------------------------------------------
     // Saves all of the modified notebooks
-    public void save_notebooks() {
+    public void save_notebooks( FileManager files ) {
       var nb = get_notebook();
-      nb.save();
+      nb.save( files );
       for( int i=0; i<_children.length; i++ ) {
-        _children.index( i ).save_notebooks();
+        _children.index( i ).save_notebooks( files );
       }
     }
 
@@ -630,7 +630,7 @@ public class NotebookTree {
 
   //-------------------------------------------------------------
   // Saves the current notebook tree in XML format
-  public void save() {
+  public void save( FileManager files ) {
 
     Xml.Doc*  doc  = new Xml.Doc( "1.0" );
     Xml.Node* root = new Xml.Node( null, "notebooks" );
@@ -654,9 +654,9 @@ public class NotebookTree {
     delete doc;
 
     // Save the inbox and trash
-    _inbox.save();
-    _trash.save();
-    _templates.save();
+    _inbox.save( files );
+    _trash.save( files );
+    _templates.save( files );
 
     _modified = false;
 
@@ -664,9 +664,9 @@ public class NotebookTree {
 
   //-------------------------------------------------------------
   // Saves all of the modified notebooks
-  public void save_notebooks() {
+  public void save_notebooks( FileManager files ) {
     for( int i=0; i<_nodes.length; i++ ) {
-      _nodes.index( i ).save_notebooks();
+      _nodes.index( i ).save_notebooks( files );
     }
   }
 

@@ -102,6 +102,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private Button          _redo_btn;
   private Widget?         _last_focus = null;
   private SimpleActionGroup _actions;
+  private FileManager       _files;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_save",             action_save },
@@ -203,6 +204,12 @@ public class MainWindow : Gtk.ApplicationWindow {
     }
   }
 
+  public FileManager files {
+    get {
+      return( _files );
+    }
+  }
+
   //-------------------------------------------------------------
   // Create the main window UI
   public MainWindow( Gtk.Application app, GLib.Settings settings ) {
@@ -214,6 +221,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _undo = new UndoBuffer( this );
     _undo.buffer_changed.connect( do_buffer_changed );
+
+    _files = new FileManager();
 
     var window_w = settings.get_int( "window-w" );
     var window_h = settings.get_int( "window-h" );
@@ -626,8 +635,8 @@ public class MainWindow : Gtk.ApplicationWindow {
   // Save everything
   public void action_save() {
     _note.save();
-    _notebooks.save();
-    _notebooks.save_notebooks();
+    _notebooks.save( files );
+    _notebooks.save_notebooks( files );
     _full_tags.save();
     _smart_notebooks.save();
     _galleries.save();

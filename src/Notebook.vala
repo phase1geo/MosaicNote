@@ -271,8 +271,14 @@ public class Notebook : BaseNotebook {
   }
 
   //-------------------------------------------------------------
+  // Returns the pathname for this notebook's file manager instance.
+  private string inst_name( int id ) {
+    return( GLib.Path.build_filename( "notebooks", "notebook-%d".printf( id ), "notebook.xml" ) );
+  }
+
+  //-------------------------------------------------------------
   // Saves the contents of the notebook to XML formatted file
-	public void save() {
+	public void save( FileManager files ) {
 
 		// Make sure that the notebook directory exists
 		Utils.create_dir( notebook_directory( _id ) );
@@ -291,8 +297,7 @@ public class Notebook : BaseNotebook {
 	  } 
 	
 	  doc->set_root_element( root );
-	  doc->save_format_file( xml_file( _id ), 1 );
-	
+    files.write_xml( doc, inst_name( _id ) );
 	  delete doc;
 
 	  _modified = false;

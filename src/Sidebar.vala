@@ -794,7 +794,7 @@ public class Sidebar : Box {
   private void action_import_notebook() {
     Import.import_folder( _win, (_selected_notebook as NotebookTree.Node), () => {
       // TODO
-      _win.notebooks.save();
+      _win.notebooks.save( _win.files );
     });
   }
 
