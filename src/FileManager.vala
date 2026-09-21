@@ -33,6 +33,12 @@ public class FileInstance {
     this.etag = etag;
   }
 
+  //-------------------------------------------------------------
+  // Returns the name of the backup file for this instance.
+  public string backup_filepath() {
+    return( path + ".bak" );
+  }
+
 }
 
 public class FileManager {
@@ -53,6 +59,80 @@ public class FileManager {
   }
 
   //-------------------------------------------------------------
+  // Returns the etag value associated with the given file.
+  private string? get_etag( File file ) {
+    try {
+      var info = file.query_info( FileAttribute.ETAG_VALUE, FileQueryInfoFlags.NONE );
+      return info.get_etag();
+    } catch( Error e ) {
+      return null;
+    }
+  }
+
+  //-------------------------------------------------------------
+  // Returns true if a backup file exists for the given instance name.
+  public bool backup_exists( string inst_name ) {
+    if( !_instances.has_key( inst_name ) ) {
+      make_instance( inst_name );
+    }
+    var inst = _instances.get( inst_name );
+    return( FileUtils.test( inst.backup_filepath(), FileTest.EXISTS ) );
+  }
+
+  //-------------------------------------------------------------
+  // Called to replace the original file with the backup file, if
+  // one exists.
+  public bool use_backup( string inst_name ) {
+    if( backup_exists( inst_name ) ) {
+      // TBD
+    }
+    return( false );
+  }
+
+  //-------------------------------------------------------------
+  // Reads the given XML document from a file.
+  public Xml.Doc* read_xml( string inst_name ) {
+
+    if( !_instances.has_key( inst_name ) ) {
+      make_instance( inst_name );
+    }
+
+    var inst = _instances.get( inst_name );
+    var file = File.new_for_path( inst.path );
+
+    if( !file.query_exists() ) {
+      inst.etag = null;
+      return( null );
+    }
+
+    uint8[] contents;
+    string? read_etag = null;
+
+    try {
+      if( !file.load_contents( null, out contents, out read_etag ) ) {
+        return( null );
+      }
+    } catch( Error e ) {
+      return( null );
+    }
+
+    var doc = Xml.Parser.read_memory(
+      (string)contents,
+      contents.length,
+      file.get_uri(),
+      null,
+      (Xml.ParserOption.NONET | Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING)
+    );
+
+    if( doc != null ) {
+      inst.etag = read_etag;
+    }
+
+    return( doc );
+
+  }
+
+  //-------------------------------------------------------------
   // Writes the given XML document to a file.
   public bool write_xml( Xml.Doc* doc, string inst_name ) {
 
@@ -69,7 +149,7 @@ public class FileManager {
     // 2. Keep the previous version as <name>.bak (only if it exists).
     var file = File.new_for_path( inst.path );
     if( file.query_exists() ) {
-      var bak = File.new_for_path( file.get_path() + ".bak" );
+      var bak = File.new_for_path( inst.backup_filepath() );
       try {
         file.copy( bak, FileCopyFlags.OVERWRITE );
       } catch( Error e ) {

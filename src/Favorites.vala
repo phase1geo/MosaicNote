@@ -21,8 +21,9 @@
 
 public class Favorites {
 
-  private ListStore _model;
-  private bool      _modified = false;
+  private FileManager _files;
+  private ListStore   _model;
+  private bool        _modified = false;
 
   public ListStore model {
     get {
@@ -32,8 +33,9 @@ public class Favorites {
 
   //-------------------------------------------------------------
   // Default constructor
-  public Favorites() {
+  public Favorites( FileManager files ) {
     _model = new ListStore( Type.OBJECT );
+    _files = files;
     load();
   }
 
@@ -64,12 +66,6 @@ public class Favorites {
   }
 
   //-------------------------------------------------------------
-  // Returns the pathname of the XML file
-  private string xml_file() {
-    return( Utils.user_location( "favorites.xml" ) );
-  }
-
-  //-------------------------------------------------------------
   // Saves the current state of this list of favorites
   public void save() {
 
@@ -84,7 +80,7 @@ public class Favorites {
     } 
   
     doc->set_root_element( root );
-    doc->save_format_file( xml_file(), 1 );
+    _files.write_xml( doc, "favorites.xml" );
   
     delete doc;
 
@@ -96,7 +92,7 @@ public class Favorites {
   // Loads the contents of this
   public void load() {
 
-    var doc = Xml.Parser.read_file( xml_file(), null, (Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING) );
+    var doc = _files.read_xml( "favorites.xml" );
     if( doc == null ) {
       return;
     }

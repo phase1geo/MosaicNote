@@ -23,9 +23,10 @@ public class Notebook : BaseNotebook {
 
 	public static int current_id = 0;
 
-	private int       _id;
-  private ListStore _notes;
-	private bool      _modified = false;
+  private FileManager _files;
+	private int         _id;
+  private ListStore   _notes;
+	private bool        _modified = false;
 
 	public int id {
 		get {
@@ -35,16 +36,18 @@ public class Notebook : BaseNotebook {
 
   //-------------------------------------------------------------
 	// Default constructor
-	public Notebook( string name ) {
+	public Notebook( FileManager files, string name ) {
     base( name );
+    _files = files;
 		_id    = current_id++;
     _notes = new ListStore( typeof( Note ) );
 	}
 
   //-------------------------------------------------------------
 	// Construct from XML file
-	public Notebook.from_xml( int id, string? build_name = null ) {
+	public Notebook.from_xml( FileManager files, int id, string? build_name = null ) {
     base( "" );
+    _files = files;
     _notes = new ListStore( typeof( Note ) );
 		load( id, build_name );
 	}
@@ -278,7 +281,7 @@ public class Notebook : BaseNotebook {
 
   //-------------------------------------------------------------
   // Saves the contents of the notebook to XML formatted file
-	public void save( FileManager files ) {
+	public void save() {
 
 		// Make sure that the notebook directory exists
 		Utils.create_dir( notebook_directory( _id ) );
@@ -297,7 +300,7 @@ public class Notebook : BaseNotebook {
 	  } 
 	
 	  doc->set_root_element( root );
-    files.write_xml( doc, inst_name( _id ) );
+    _files.write_xml( doc, inst_name( _id ) );
 	  delete doc;
 
 	  _modified = false;
@@ -308,7 +311,7 @@ public class Notebook : BaseNotebook {
   // Loads the contents of this notebook from XML format
   private void load( int id, string? build_name ) {
 
-    var doc = Xml.Parser.read_file( xml_file( id ), null, (Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING) );
+    var doc = _files.read_xml( inst_name( _id ) );
     if( doc == null ) {
       if( build_name != null ) {
         _id = current_id++;

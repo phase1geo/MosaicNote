@@ -29,6 +29,7 @@ public class NotebookTree {
   // children of this notebook node.
   public class Node : BaseNotebook {
 
+    private FileManager _files;
     private Node?       _parent;
     private int         _id;
     private Notebook?   _notebook;
@@ -71,8 +72,9 @@ public class NotebookTree {
 
     //-------------------------------------------------------------
     // Default constructor
-    public Node( Node? parent, Notebook nb ) {
+    public Node( FileManager files, Node? parent, Notebook nb ) {
       base( nb.name );
+      _files    = files;
       _parent   = parent;
       _id       = nb.id;
       _notebook = nb;
@@ -83,8 +85,9 @@ public class NotebookTree {
 
     //-------------------------------------------------------------
     // Constructor from XML format
-    public Node.from_xml( Xml.Node* node, Node? parent ) {
+    public Node.from_xml( FileManager files, Xml.Node* node, Node? parent ) {
       base( "" );
+      _files    = files;
       _children = new Array<Node>();
       load( node, parent );
     }
@@ -98,7 +101,7 @@ public class NotebookTree {
     //-------------------------------------------------------------
     // Adds the given notebook to the list of children
     public Node add_notebook( Notebook nb ) {
-      var node = new Node( this, nb );
+      var node = new Node( _files, this, nb );
       node.changed.connect( node_changed );
       _children.append_val( node );
       _modified = true;
@@ -189,7 +192,7 @@ public class NotebookTree {
     // Returns the notebook associated with this node
     public Notebook get_notebook() {
       if( _notebook == null ) {
-        _notebook = new Notebook.from_xml( id );
+        _notebook = new Notebook.from_xml( _files, id );
         _notebook.changed.connect( node_changed );
       }
       return( _notebook );
@@ -352,11 +355,11 @@ public class NotebookTree {
 
     //-------------------------------------------------------------
     // Saves all of the modified notebooks
-    public void save_notebooks( FileManager files ) {
+    public void save_notebooks() {
       var nb = get_notebook();
-      nb.save( files );
+      nb.save();
       for( int i=0; i<_children.length; i++ ) {
-        _children.index( i ).save_notebooks( files );
+        _children.index( i ).save_notebooks();
       }
     }
 
@@ -372,7 +375,7 @@ public class NotebookTree {
       _notebook = null;
       for( Xml.Node* it = node->children; it != null; it = it->next ) {
         if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "node") ) {
-          var n = new Node.from_xml( it, this );
+          var n = new Node.from_xml( _files, it, this );
           n.changed.connect( node_changed );
           _children.append_val( n );
         }
@@ -396,6 +399,7 @@ public class NotebookTree {
   // START OF NotebookTree CLASS
   //-------------------------------------------------------------
 
+  private FileManager _files;
   private Notebook    _inbox;
   private Notebook    _trash;
   private Notebook    _templates;
@@ -424,8 +428,9 @@ public class NotebookTree {
 
   //-------------------------------------------------------------
   // Default constructor
-  public NotebookTree() {
+  public NotebookTree( FileManager files ) {
     _nodes = new Array<Node>();
+    _files = files;
     load();
   }
 
@@ -443,7 +448,7 @@ public class NotebookTree {
   // Adds the given notebook to the end of the list
   public Node add_notebook( Notebook nb ) {
 
-    var node = new Node( null, nb );
+    var node = new Node( _files, null, nb );
     node.changed.connect( set_modified );
     _nodes.append_val( node );
     _modified = true;
@@ -623,14 +628,8 @@ public class NotebookTree {
   }
 
   //-------------------------------------------------------------
-  // Returns the full filename of the notebooks XML file.
-  private string xml_file() {
-    return( Utils.user_location( "notebooks.xml" ) );
-  }
-
-  //-------------------------------------------------------------
   // Saves the current notebook tree in XML format
-  public void save( FileManager files ) {
+  public void save() {
 
     Xml.Doc*  doc  = new Xml.Doc( "1.0" );
     Xml.Node* root = new Xml.Node( null, "notebooks" );
@@ -649,14 +648,14 @@ public class NotebookTree {
     }
   
     doc->set_root_element( root );
-    doc->save_format_file( xml_file(), 1 );
+    _files.write_xml( doc, "notebooks.xml" );
   
     delete doc;
 
     // Save the inbox and trash
-    _inbox.save( files );
-    _trash.save( files );
-    _templates.save( files );
+    _inbox.save();
+    _trash.save();
+    _templates.save();
 
     _modified = false;
 
@@ -664,9 +663,9 @@ public class NotebookTree {
 
   //-------------------------------------------------------------
   // Saves all of the modified notebooks
-  public void save_notebooks( FileManager files ) {
+  public void save_notebooks() {
     for( int i=0; i<_nodes.length; i++ ) {
-      _nodes.index( i ).save_notebooks( files );
+      _nodes.index( i ).save_notebooks();
     }
   }
 
@@ -674,17 +673,17 @@ public class NotebookTree {
   // Create the first two notebooks
   private void create_default_notebooks() {
 
-    _inbox = new Notebook( _( "Inbox" ) );
+    _inbox = new Notebook( _files, _( "Inbox" ) );
     _inbox.changed.connect(() => {
       set_modified( _inbox );
     });
 
-    _trash = new Notebook( _( "Trash" ) );
+    _trash = new Notebook( _files, _( "Trash" ) );
     _trash.changed.connect(() => {
       set_modified( _trash );
     });
 
-    _templates = new Notebook( _( "Templates" ) );
+    _templates = new Notebook( _files, _( "Templates" ) );
     _templates.changed.connect(() => {
       set_modified( _templates );
     });
@@ -695,7 +694,7 @@ public class NotebookTree {
   // Loads the contents of this notebook from XML format
   private void load() {
 
-    var doc = Xml.Parser.read_file( xml_file(), null, (Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING) );
+    var doc = _files.read_xml( "notebooks.xml" );
     if( doc == null ) {
       create_default_notebooks();
       return;
@@ -729,26 +728,26 @@ public class NotebookTree {
     }
 
     var ib_id = root->get_prop( "inbox-id" );
-    _inbox = new Notebook.from_xml( ((ib_id != null) ? int.parse( ib_id ) : -1), _( "Inbox" ) );
+    _inbox = new Notebook.from_xml( _files, ((ib_id != null) ? int.parse( ib_id ) : -1), _( "Inbox" ) );
     _inbox.changed.connect(() => {
       set_modified( _inbox );
     });
 
     var tr_id = root->get_prop( "trash-id" );
-    _trash = new Notebook.from_xml( ((tr_id != null) ? int.parse( tr_id ) : -1), _( "Trash" ) );
+    _trash = new Notebook.from_xml( _files, ((tr_id != null) ? int.parse( tr_id ) : -1), _( "Trash" ) );
     _trash.changed.connect(() => {
       set_modified( _trash );
     });
 
     var tp_id = root->get_prop( "templates-id" );
-    _templates = new Notebook.from_xml( ((tp_id != null) ? int.parse( tp_id ) : -1), _( "Templates" ) );
+    _templates = new Notebook.from_xml( _files, ((tp_id != null) ? int.parse( tp_id ) : -1), _( "Templates" ) );
     _templates.changed.connect(() => {
       set_modified( _templates );
     });
 
     for( Xml.Node* it = root->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "node") ) {
-        var node = new Node.from_xml( it, null );
+        var node = new Node.from_xml( _files, it, null );
         node.changed.connect( set_modified );
         _nodes.append_val( node );
       }

@@ -89,7 +89,7 @@ public class Import {
   // Imports all notebooks and notes from a given folder.
   private static void do_folder_import( MainWindow win, File folder, NotebookTree.Node node, ImportFolderCallback? callback ) {
 
-    var notebook = new Notebook( folder.get_basename() );
+    var notebook = new Notebook( win.files, folder.get_basename() );
 
     NotebookTree.Node new_node;
     if( node != null ) {

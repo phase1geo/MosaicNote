@@ -21,14 +21,16 @@
 
 public class Galleries {
 
+  private FileManager    _files;
   private Array<Gallery> _galleries;
 
   public signal void changed();
 
   //-------------------------------------------------------------
   // Default constructor
-  public Galleries( NotebookTree notebooks ) {
+  public Galleries( FileManager files, NotebookTree notebooks ) {
     _galleries = new Array<Gallery>();
+    _files     = files;
     load( notebooks );
   }
 
@@ -75,12 +77,6 @@ public class Galleries {
   }
 
   //-------------------------------------------------------------
-  // Returns the full filename of the notebooks XML file.
-  private string xml_file() {
-    return( Utils.user_location( "galleries.xml" ) );
-  }
-
-  //-------------------------------------------------------------
   // Saves the gallery information to an XML formatted file.
   public void save() {
 
@@ -94,7 +90,7 @@ public class Galleries {
     }
   
     doc->set_root_element( root );
-    doc->save_format_file( xml_file(), 1 );
+    _files.write_xml( doc, "galleries.xml" );
   
     delete doc;
 
@@ -117,7 +113,7 @@ public class Galleries {
   // Loads the gallery information from an XML-formatted file.
   public void load( NotebookTree notebooks ) {
 
-    var doc = Xml.Parser.read_file( xml_file(), null, (Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING) );
+    var doc = _files.read_xml( "galleries.xml" );
     if( doc == null ) {
       create_default_galleries( notebooks );
       return;

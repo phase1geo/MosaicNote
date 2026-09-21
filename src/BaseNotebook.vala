@@ -53,6 +53,8 @@ public class BaseNotebook : Object {
     return( 0 );
   }
 
+  //-------------------------------------------------------------
+  // Returns the notebook contents as a ListModel.
   public virtual ListModel? get_model() {
     return( null );
   }

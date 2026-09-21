@@ -246,10 +246,10 @@ public class MainWindow : Gtk.ApplicationWindow {
     add_keyboard_shortcuts( app );
 
     // Load application data
-    _notebooks       = new NotebookTree();
-    _full_tags       = new FullTags( _notebooks );
-    _smart_notebooks = new SmartNotebooks( _notebooks );
-    _galleries       = new Galleries( _notebooks );
+    _notebooks       = new NotebookTree( _files );
+    _full_tags       = new FullTags( _files, _notebooks );
+    _smart_notebooks = new SmartNotebooks( _files, _notebooks );
+    _galleries       = new Galleries( _files, _notebooks );
     _themes          = new Themes();
     _parser          = new SmartParser( _notebooks );
     _history         = new NoteHistory();
@@ -635,8 +635,8 @@ public class MainWindow : Gtk.ApplicationWindow {
   // Save everything
   public void action_save() {
     _note.save();
-    _notebooks.save( files );
-    _notebooks.save_notebooks( files );
+    _notebooks.save();
+    _notebooks.save_notebooks();
     _full_tags.save();
     _smart_notebooks.save();
     _galleries.save();

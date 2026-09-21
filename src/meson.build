@@ -4,8 +4,6 @@ sources += files(
     'AutoFitLabel.vala',
     'BaseNotebook.vala',
     'Export.vala',
-    'Favorite.vala',
-    'Favorites.vala',
     'FileManager.vala',
     'FlashWindow.vala',
     'FullTag.vala',

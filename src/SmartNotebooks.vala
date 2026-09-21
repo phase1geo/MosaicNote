@@ -21,6 +21,7 @@
 
 public class SmartNotebooks {
 
+  private FileManager          _files;
   private Array<SmartNotebook> _notebooks;
   private NotebookTree         _notebook_tree;
   private bool                 _modified = false;
@@ -29,8 +30,9 @@ public class SmartNotebooks {
 
   //-------------------------------------------------------------
   // Default constructor
-  public SmartNotebooks( NotebookTree notebook_tree ) {
-    _notebooks = new Array<SmartNotebook>();
+  public SmartNotebooks( FileManager files, NotebookTree notebook_tree ) {
+    _notebooks     = new Array<SmartNotebook>();
+    _files         = files;
     _notebook_tree = notebook_tree;
     load();
   }
@@ -191,6 +193,7 @@ public class SmartNotebooks {
     }
   
     doc->set_root_element( root );
+    _files.write_xml( doc, "smart-notebooks.xml" );
     doc->save_format_file( xml_file(), 1 );
   
     delete doc;
@@ -203,7 +206,7 @@ public class SmartNotebooks {
   // Loads the XML data and recreates the list of smart notebooks.
   private void load() {
 
-    var doc = Xml.Parser.read_file( xml_file(), null, (Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING) );
+    var doc = _files.read_xml( "smart-notebooks.xml" );
     if( doc == null ) {
       create_default_notebooks();
       return;

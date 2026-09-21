@@ -546,7 +546,7 @@ public class Sidebar : Box {
         }
       } else if( nb_is_hidden( nb ) ) {
         if( entry.text.chomp() != "" ) {
-          var new_nb = new Notebook( entry.text );
+          var new_nb = new Notebook( _win.files, entry.text );
           row = row.get_parent();
           if( row == null ) {
             _win.notebooks.add_notebook( new_nb );
@@ -794,7 +794,7 @@ public class Sidebar : Box {
   private void action_import_notebook() {
     Import.import_folder( _win, (_selected_notebook as NotebookTree.Node), () => {
       // TODO
-      _win.notebooks.save( _win.files );
+      _win.notebooks.save();
     });
   }
 

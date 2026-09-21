@@ -21,6 +21,7 @@
 
 public class FullTags {
 
+  private FileManager    _files;
   private SList<FullTag> _tags;
   private NotebookTree   _notebooks;
   private bool           _modified = false;
@@ -29,8 +30,9 @@ public class FullTags {
 
   //-------------------------------------------------------------
   // Default constructor
-  public FullTags( NotebookTree notebooks ) {
+  public FullTags( FileManager files, NotebookTree notebooks ) {
     _tags = new SList<FullTag>();
+    _files     = files;
     _notebooks = notebooks;
     load();
   }
@@ -147,7 +149,7 @@ public class FullTags {
   	});
   
     doc->set_root_element( root );
-    doc->save_format_file( xml_file(), 1 );
+    _files.write_xml( doc, "tags.xml" );
   
     delete doc;
 
@@ -159,7 +161,7 @@ public class FullTags {
   // Loads the contents of the full list of tags from XML format
   private void load() {
 
-    var doc = Xml.Parser.read_file( xml_file(), null, (Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING) );
+    var doc = _files.read_xml( "tags.xml" );
     if( doc == null ) {
       return;
     }
