@@ -338,23 +338,24 @@ public class NoteParser {
         if( (start_index != index) && (table_item == null) ) {
           parse_markdown_markdown( note, lines[start_index:index] );
         }
-        var columns = stripped.split( "|" );
+        var columns  = stripped.split( "|" );
+        var last_col = stripped.has_suffix( "|" ) ? (columns.length - 1) : columns.length;
         if( in_header ) {
           row = new NoteItemRow( note );
-          table_item = new NoteItemTable( row, (columns.length - 2) );
-          parse_markdown_table_header( table_item, columns[1:columns.length-1] );
+          table_item = new NoteItemTable( row, (last_col - 1) );
+          parse_markdown_table_header( table_item, columns[1:last_col] );
           in_header = false;
           in_align  = true;
         } else if( in_align ) {
-          parse_markdown_table_align( table_item, columns[1:columns.length-1] );
+          parse_markdown_table_align( table_item, columns[1:last_col] );
           in_align     = false;
           in_first_row = true;
         } else if( in_first_row ) {
-          parse_markdown_table_first_row( table_item, columns[1:columns.length-1] );
-          parse_markdown_table_row( table_item, columns[1:columns.length-1] );
+          parse_markdown_table_first_row( table_item, columns[1:last_col] );
+          parse_markdown_table_row( table_item, columns[1:last_col] );
           in_first_row = false;
         } else {
-          parse_markdown_table_row( table_item, columns[1:columns.length-1] );
+          parse_markdown_table_row( table_item, columns[1:last_col] );
         }
         start_index = index + 1;
       } else if( table_item != null ) {
